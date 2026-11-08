@@ -28,11 +28,11 @@ The on-screen STOP button (and the Esc key) is **not** an emergency stop. The ma
 Get the code (or download the ZIP from GitHub and extract it), then go into the project folder:
 
 ```bash
-git clone https://github.com/alevaldo05/Senior-Design-Tensile-Tester.git
+git clone https://github.com/alevaldo05/Biomaterials-Tensile-Tester.git
 ```
 
 ```bash
-cd Senior-Design-Tensile-Tester
+cd Biomaterials-Tensile-Tester
 ```
 
 Start a local web server. On Mac or Linux:
@@ -136,6 +136,6 @@ There is no build and no automated test suite in this repository. Changes are ch
 
 ## Review and publishing
 
-Nothing is uploaded to GitHub, merged, or published without the project owner's okay. AI assistants prepare changes on a separate branch and show a preview; the owner decides whether the branch is uploaded, opens the pull request into `main`, merges, and publishes. The site is published with GitHub Pages (https, so USB still works in Chrome): merging into `main` publishes it. Expected address: <https://alevaldo05.github.io/Senior-Design-Tensile-Tester/> (to be confirmed on the first deploy). How to set it up and how to tell when a deploy has finished: [docs/DEPLOY.md](docs/DEPLOY.md). Backups and branch organization: [docs/BRANCHES.md](docs/BRANCHES.md).
+Nothing is uploaded to GitHub, merged, or published without the project owner's okay. AI assistants prepare changes on a separate branch and show a preview; the owner decides whether the branch is uploaded, opens the pull request into `main`, merges, and publishes. The site is published with GitHub Pages (https, so USB still works in Chrome): merging into `main` publishes it. Expected address: <https://alevaldo05.github.io/Biomaterials-Tensile-Tester/> (to be confirmed on the first deploy). How to set it up and how to tell when a deploy has finished: [docs/DEPLOY.md](docs/DEPLOY.md). Backups and branch organization: [docs/BRANCHES.md](docs/BRANCHES.md).
 
 [AGENTS.md](AGENTS.md) holds the workflow for AI assistants (Claude, ChatGPT, Gemini); `CLAUDE.md` loads it in Claude Code.
