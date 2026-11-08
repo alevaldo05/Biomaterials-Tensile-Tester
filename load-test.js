@@ -61,4 +61,20 @@
     };
     reader.readAsText(file);
   });
+
+  /* Dropping a file (or, in Compare mode, several) anywhere on the page opens it exactly as the Choose button does.
+     Nothing is uploaded; the browser only hands the page the file. */
+  var dragDepth = 0, main = document.querySelector('main');
+  function hasFiles(e) { return !!(e.dataTransfer && [].indexOf.call(e.dataTransfer.types || [], 'Files') >= 0); }
+  document.addEventListener('dragenter', function (e) { if (!hasFiles(e)) return; e.preventDefault(); dragDepth++; if (main) main.classList.add('drop-active'); });
+  document.addEventListener('dragover', function (e) { if (hasFiles(e)) { e.preventDefault(); e.dataTransfer.dropEffect = 'copy'; } });
+  document.addEventListener('dragleave', function (e) { if (!hasFiles(e)) return; dragDepth = Math.max(0, dragDepth - 1); if (!dragDepth && main) main.classList.remove('drop-active'); });
+  document.addEventListener('drop', function (e) {
+    if (!hasFiles(e)) return;
+    e.preventDefault(); dragDepth = 0; if (main) main.classList.remove('drop-active');
+    var compare = !document.getElementById('mode-compare').hidden;
+    var target = compare ? document.getElementById('cmp-file') : input;
+    try { target.files = e.dataTransfer.files; } catch (err) { msg('The dropped file could not be taken. Use the Choose button instead.', true); return; }
+    target.dispatchEvent(new Event('change', { bubbles: true }));
+  });
 })();
