@@ -13,10 +13,11 @@ window.SITE_TEXT.learn = {
   sections: {
 
     /* "Before you test": the items come from data/checklist.js, the same file the optional pre-test
-       pop-up uses. Change the items there, not here. */
+       pop-up uses. Change the items there, not here. printButton is the label of the button that prints
+       a blank one-page run sheet; delete that line to remove the button. */
     "before-title": {
       heading: "Before you test",
-      blocks: [ { pretest: true } ]
+      blocks: [ { pretest: true, printButton: "Print blank run sheet" } ]
     },
 
     "bg-title": {

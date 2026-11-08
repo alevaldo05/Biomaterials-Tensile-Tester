@@ -746,6 +746,29 @@ dialog.pretest h3 { margin: 1rem 0 0.35rem; font-size: 1rem; }
   .rp-foot { margin-top: 0.5rem; font-size: 8.3pt; border-top: 1px solid #000; padding-top: 3pt; }
   .rp-foot p { margin: 0 0 6pt; }
   .rp-sign { display: flex; justify-content: space-between; gap: 1rem; margin-top: 12pt; }
+  /* Blank run sheet (report.js printBlank). Lines and boxes are drawn with borders so they print even when background graphics are off.
+     Spacing is in points and headings are restated, so the sheet stays on one page whatever the text size or style on screen. */
+  .report.rp-blank h2 { margin: 7pt 0 3pt; padding-bottom: 1pt; border-bottom: 1px solid #000; color: #000; font-size: 10.5pt; font-weight: 700; text-transform: none; letter-spacing: normal; }
+  .report.rp-blank h3 { margin: 4pt 0 2pt; color: #000; font-size: 9.5pt; font-weight: 700; text-transform: none; letter-spacing: normal; }
+  .rp-blank .rp-head { gap: 12pt; }
+  .rp-blank .rp-source { margin: 5pt 0 0; }
+  .rp-form { display: grid; grid-template-columns: 1fr 1fr; gap: 8pt 18pt; margin: 5pt 0 2pt; }
+  .rp-field { display: flex; align-items: flex-end; gap: 5pt; break-inside: avoid; }
+  .rp-field span { flex: none; font-weight: 700; }
+  .rp-field i { flex: 1; min-height: 12pt; border-bottom: 1px solid #000; }
+  .rp-field b { flex: 1; display: flex; align-items: flex-end; gap: 14pt; font-weight: 400; }
+  .rp-wide { grid-column: 1 / -1; }
+  .rp-check { display: inline-flex; align-items: center; white-space: nowrap; }
+  .rp-box { display: inline-block; flex: none; width: 8.5pt; height: 8.5pt; margin-right: 5pt; border: 1px solid #000; }
+  .rp-cols { display: grid; grid-template-columns: 1fr 1fr; gap: 0 18pt; }
+  .rp-checklist { list-style: none; margin: 2pt 0; padding: 0; }
+  .rp-checklist li { display: flex; align-items: flex-start; margin: 0 0 3.5pt; break-inside: avoid; }
+  .rp-checklist .rp-box { margin-top: 1.5pt; }
+  .rp-blank .rp-note { margin: 3pt 0; }
+  .rp-notes { margin-top: 7pt; }
+  .rp-notes > span { font-weight: 700; }
+  .rp-line { height: 15pt; border-bottom: 1px solid #000; }
+  .rp-blank .rp-foot { margin-top: 10pt; }
   .rp-table tr, .rp-foot, .rp-method, .rp-warn { break-inside: avoid; }
   .rp-compare .rp-graph svg { max-height: 6.2cm; }
 }
