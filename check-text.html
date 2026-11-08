@@ -2,18 +2,15 @@
 <html lang="en">
 <head>
   <meta charset="utf-8">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' blob:; font-src 'self'; connect-src 'none'; form-action 'none'; base-uri 'none'; object-src 'none'">
+  <meta name="referrer" content="no-referrer">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Text checker – Biomaterials Tensile Tester</title>
   <link rel="stylesheet" href="styles.css">
   <link rel="stylesheet" href="styles-looks.css">
   <link rel="stylesheet" href="layouts.css">
   <script src="display-settings.js"></script>
-  <script>
-    /* A mistake in a text file (a missing quote or comma) stops that file from loading. Catch it here so the
-       checker can say which file and which line. */
-    window.__textErrors = [];
-    window.addEventListener('error', function (e) { window.__textErrors.push({ file: e.filename || '', line: e.lineno, message: e.message }); });
-  </script>
+  <script src="check-text-errors.js"></script>
 </head>
 <body>
   <header class="topbar">

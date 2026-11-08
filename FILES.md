@@ -22,6 +22,8 @@ Everything is in the project root except `data/`, which holds the content and se
 
 Each page has its own header, navigation, and text in its HTML. The interactive parts are drawn by the scripts below. The chosen layout rearranges what is already on the page; content is written only once.
 
+Every page has a Content Security Policy `<meta>` tag in its `<head>`. It allows only this site's own files (plus `blob:` images for graph downloads), so pages must not use inline `<script>` blocks or `onclick=` attributes; put code in a `.js` file.
+
 ## Scripts and styles
 
 | File | Used by | What it does |
@@ -61,6 +63,7 @@ Each page has its own header, navigation, and text in its HTML. The interactive 
 | `README.md` | What the site is, how to run it, settings, safety. |
 | `EDITING-TEXT.md` | Plain-language guide to editing the page words in `data/text/`. |
 | `check-text.html` | Checks the text files and says what to fix. Uses `check-text.js` and `text.js`. |
+| `check-text-errors.js` | Loads first on `check-text.html` and records which text file has a typing mistake, so the checker can name it. A separate file because pages allow no inline scripts. |
 | `text.js` | Fills Home, Learn, and About from the files in `data/text/`. Shows a visible box if a text file has a mistake. |
 | `data/text/home.js`, `learn.js`, `about.js`, `help.js` | The words for Home, Learn, About, and Help. Edit these to change a paragraph. |
 | `data/references.js` | The 37 numbered references shown on the Help page. Supplied by the owner's research; not independently opened or verified. |

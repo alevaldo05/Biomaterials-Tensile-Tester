@@ -132,7 +132,7 @@ Every graph (protocol examples, Load Test, and the test pages once a test has en
 
 ## Checks
 
-There is no build and no automated test suite in this repository. Changes are checked by previewing in Chrome's engine at desktop widths (1280 px and 1024 px; phone widths are not checked for now), in every theme, layout, and style, and by running the simulator on both test pages. See the pull request descriptions for the exact steps used.
+There is no build and no automated test suite in this repository. Changes are checked by previewing in Chrome's engine at desktop widths (1280 px and 1024 px; phone widths are not checked for now), in every theme, layout, and style, and by running the simulator on both test pages. See the pull request descriptions for the exact steps used. Every page has a Content Security Policy tag (see `FILES.md`). After changing a page, open it in Chrome with the console open and look for "Refused to …" messages.
 
 ## Review and publishing
 
