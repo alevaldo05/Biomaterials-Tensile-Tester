@@ -637,13 +637,20 @@
           u += '<text x="' + cx.toFixed(1) + '" y="' + (M.t + 23 + t * 13) + '" text-anchor="middle" style="fill:' + pal.text + ';font-size:11px;font-style:italic;paint-order:stroke;stroke:' + pal.ring + ';stroke-width:3px">' + esc(rg[0]) + '</text>';
         });
       }
+      var placed = []; /* label boxes already drawn, so two results marked at the same place do not print on top of each other */
       function pt(p, label, strong, below) {
         if (!p || !inX(p.x)) return;
         var cx = g.sx(p.x), cy = g.sy(p.y);
         if (cy < M.t - 1 || cy > H - M.b + 1) return;
         var right = cx > W - M.r - 90;
         v += '<circle cx="' + cx.toFixed(1) + '" cy="' + cy.toFixed(1) + '" r="' + (strong ? 8 : 5) + '" style="fill:' + pal.ring + ';stroke:' + mark + ';stroke-width:' + (strong ? 3.5 : 2.5) + '"/>';
-        if (label) v += '<text x="' + (cx + (right ? -11 : 11)).toFixed(1) + '" y="' + (cy + (below ? 17 : -9)).toFixed(1) + '" text-anchor="' + (right ? 'end' : 'start') + '" style="fill:' + pal.text + ';font-size:12px;font-weight:' + (strong ? 700 : 600) + ';paint-order:stroke;stroke:' + pal.ring + ';stroke-width:3px">' + esc(label) + '</text>';
+        if (label) {
+          var lx = cx + (right ? -11 : 11), ly = cy + (below ? 17 : -9), lw = label.length * 6.8 + 4, step = below ? 14 : -14, tries = 0;
+          function hit() { var x0 = right ? lx - lw : lx; return placed.some(function (b) { return x0 < b.x1 && x0 + lw > b.x0 && ly - 12 < b.y1 && ly + 3 > b.y0; }); }
+          while (tries < 6 && hit()) { ly += step; tries++; }
+          placed.push({ x0: right ? lx - lw : lx, x1: (right ? lx - lw : lx) + lw, y0: ly - 12, y1: ly + 3 });
+          v += '<text x="' + lx.toFixed(1) + '" y="' + ly.toFixed(1) + '" text-anchor="' + (right ? 'end' : 'start') + '" style="fill:' + pal.text + ';font-size:12px;font-weight:' + (strong ? 700 : 600) + ';paint-order:stroke;stroke:' + pal.ring + ';stroke-width:3px">' + esc(label) + '</text>';
+        }
       }
       function seg(x1, y1, x2, y2, strong, dash) {
         v += '<line x1="' + g.sx(x1).toFixed(1) + '" y1="' + g.sy(y1).toFixed(1) + '" x2="' + g.sx(x2).toFixed(1) + '" y2="' + g.sy(y2).toFixed(1) + '"' + (dash ? ' stroke-dasharray="6 4"' : '') + ' clip-path="url(#plot-clip)" style="stroke:' + mark + ';stroke-width:' + (strong ? 3 : 2) + '"/>';
@@ -828,7 +835,8 @@
       if (!n && opts.emptyText) {
         s += '<text x="' + (M.l + pw / 2) + '" y="' + (M.t + ph / 2) + '" text-anchor="middle" style="fill:' + pal.muted + ';font-size:15px">' + esc(opts.emptyText) + '</text>';
       }
-      s += '<text x="' + (W - M.r) + '" y="' + (H - 16) + '" text-anchor="end" style="fill:' + pal.muted + ';font-size:11px;font-style:italic">' + esc(sourceTag(r)) + '</text>';
+      /* The data-source line has its own row under the title, so a long file name cannot run into the x-axis title. */
+      s += '<text x="' + M.l + '" y="43" style="fill:' + pal.muted + ';font-size:11px;font-style:italic">' + esc(sourceTag(r)) + '</text>';
       if (!o.exp) s += '<g id="cur" clip-path="url(#plot-clip)" style="pointer-events:none"><line id="cur-t" style="display:none;stroke:' + pal.text + ';stroke-width:1.5"/><line id="cur-l" y1="' + M.t + '" y2="' + (H - M.b) + '" style="stroke:' + pal.text + ';stroke-width:1;stroke-dasharray:4 3"/><circle id="cur-c" r="6" style="fill:' + series + ';stroke:' + pal.text + ';stroke-width:2"/></g>';
       s += '</svg>';
       if (!o.exp) geom = { px: px, sx: sx, sy: sy, xLo: xLo, xTop: xTop, yLo: yLo, yTop: yTop, base: base, log: log };
