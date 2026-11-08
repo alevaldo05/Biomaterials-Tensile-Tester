@@ -12,6 +12,14 @@
   var page = location.pathname.split('/').pop() || 'index.html';
   var main = document.querySelector('main');
 
+  /* Skip link: moves focus to <main> without changing the URL hash (several pages keep their state in the hash). */
+  var skip = document.querySelector('a.skip-link');
+  if (skip && main) skip.addEventListener('click', function (e) {
+    e.preventDefault();
+    main.focus({ preventScroll: true });
+    main.scrollIntoView();
+  });
+
   function el(tag, attrs, html) {
     var e = document.createElement(tag);
     Object.keys(attrs || {}).forEach(function (k) { e.setAttribute(k, attrs[k]); });
@@ -83,6 +91,7 @@
     while (document.body.firstChild) col.appendChild(document.body.firstChild);
     document.body.appendChild(aside);
     document.body.appendChild(col);
+    if (skip) document.body.insertBefore(skip, aside); /* keep the skip link the first thing Tab reaches */
     if (long) {
       var chips = el('nav', { 'class': 'onpage', 'aria-label': 'On this page' }, '<span>On this page</span>');
       sections().forEach(function (s) { var h = heading(s); if (h && h.id && !s.hidden) chips.appendChild(el('a', { href: '#' + h.id }, label(s))); });

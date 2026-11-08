@@ -53,6 +53,7 @@ It looks at:
 7. **Publishing workflow:** every Action in `.github/workflows/` is pinned to a full commit ID, not a tag.
 8. **Security policy and inline code:** every page has the Content Security Policy tag (script sources limited to the site's own files, tag placed before the first script) and the no-referrer tag, and no page has an inline `<script>`, an `onclick=`-style handler, or a `javascript:` link. Page scripts must not build any either.
 9. **Public-site basics:** every page has a description (200 characters or fewer) and an icon link, no link starts with a bare `/`, and `404.html` and the icon files exist.
+10. **Skip link:** every page except `404.html` starts with the "Skip to main content" link and has `id="main-content"` on `<main>`.
 
 To read a failure: open the **Actions** tab, open the run, then **checks**, then **Check the site**. Each line starting with `FAIL` names the file and what to fix. Fix it on a branch and merge again.
 
