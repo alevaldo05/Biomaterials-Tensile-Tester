@@ -45,6 +45,7 @@ Every page except `404.html` starts with a "Skip to main content" link (`.skip-l
 | `compare.js` | `load-test.html` | Compare several files: overlay graph, key results with mean and standard deviation, summary CSV. Uses `graph.js` for the numbers. |
 | `calibration.js` | `calibration.html` | The calibration table, least-squares fit, chart, CSV record, and the one-page print report (built with `report.js`). |
 | `materials.js` | `materials.html` | The Material tab, the sortable properties tables with a two-material comparison, and the chart with its filters and list. |
+| `material-find.js` | `materials.html`, both protocol pages | The "Find a material" box next to the Material dropdown: typing narrows the list; the selected material stays. Loaded just before `materials.js` or `protocol-page.js`. |
 | `protocol-page.js` | both protocol pages | Material choice, the four tabs, the Steps tab with its jump list and per-step links, and the example graph. |
 | `further-reading.js` | `about.html` | Builds the Further reading list. |
 

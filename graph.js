@@ -949,18 +949,18 @@
     function readoutRows(i) {
       var r = rec(), X = r.x, Y = r.y, raw = r.raw, rows;
       var F = raw && raw.F ? ['Force, F', dsig(raw.F[i], 4) + ' N'] : null;
-      var D = raw && raw.d ? ['Crosshead displacement', dsig(raw.d[i], 4) + ' mm'] : null;
+      var D = raw && raw.d ? ['Displacement', dsig(raw.d[i], 4) + ' mm'] : null;
       if (isRelax) {
         var pk = peakIndex(Y), s0 = Y[pk], e0 = r.params.hold_strain, ratio = Y[i] / s0, hold = i >= pk;
         rows = [['Time, t', dsig(X[i]) + ' s'], ['Stress, σ(t)', fmtStress(Y[i])], F, D,
           ['Ratio, σ(t)/σ<sub>0</sub>', hold ? dsig(ratio, 4) : 'loading'], ['Relaxed', hold ? dsig(100 * (1 - ratio)) + ' %' : '—'],
-          ['Apparent stress/strain ratio, σ(t)/ε<sub>0</sub>', hold ? fmtStress(Y[i] / e0) : '—']];
+          ['σ(t)/ε<sub>0</sub> (apparent)', hold ? fmtStress(Y[i] / e0) : '—']];
       } else {
         var T = raw && raw.t ? ['Time, t', dsig(raw.t[i], 4) + ' s'] : null;
         var a = i > 0 ? i - 1 : 0, b = i > 0 ? i : 1, dx = X[b] - X[a]; /* slope of the segment ending at this point */
         rows = [T, ['Strain, ε', fmtStrain(X[i], 4)], ['Stress, σ', fmtStress(Y[i])], F, D,
-          ['Local slope estimate, dσ/dε', dx && X.length > 1 ? fmtStress((Y[b] - Y[a]) / dx) : '—'],
-          ['Estimated true strain, ε<sub>t</sub>', fmtStrain(Math.log(1 + X[i]), 4)], ['Estimated true stress, σ<sub>t</sub> — uniform, constant-volume assumption', fmtStress(Y[i] * (1 + X[i]))]];
+          ['Slope, dσ/dε (local)', dx && X.length > 1 ? fmtStress((Y[b] - Y[a]) / dx) : '—'],
+          ['True strain, ε<sub>t</sub> (est.)', fmtStrain(Math.log(1 + X[i]), 4)], ['True stress, σ<sub>t</sub> (est.)<span class="sr-only">: uniform, constant-volume assumption</span>', fmtStress(Y[i] * (1 + X[i]))]];
       }
       return rows.filter(Boolean);
     }

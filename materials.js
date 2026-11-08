@@ -436,6 +436,7 @@
     if (!BY[id]) return;
     sel = id;
     if (keepFocus) focusId = id;
+    if (window.MaterialFind) window.MaterialFind.clear(document.getElementById('mat-select'));
     document.getElementById('mat-select').value = id;
     detail(); renderTables(); drawChart(); renderList();
     if (goTab) selectTab(goTab);
@@ -450,5 +451,6 @@
   });
 
   document.getElementById('mat-select').value = sel;
+  if (window.MaterialFind) window.MaterialFind.attach(document.getElementById('mat-select'));
   detail(); renderTables(); drawChart(); renderList(); selectTab(tab);
 })();
