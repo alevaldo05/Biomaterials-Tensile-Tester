@@ -395,6 +395,7 @@ sub, sup { line-height: 0; font-size: 0.75em; }
 .results .def { display: block; font-weight: 400; font-size: 0.8125rem; color: var(--muted); }
 /* New Test and Load Test: Key results shows each name and value; the definitions open with the "Show definitions" switch. */
 .graph-side.compact:not(.show-defs) .results .def { display: none; }
+.copy-msg { min-width: 4.5rem; font-size: 0.8125rem; color: var(--muted); }
 .defs-toggle { margin-left: auto; display: inline-flex; align-items: center; gap: 0.4rem; }
 .defs-toggle input { width: 1rem; height: 1rem; accent-color: var(--accent); }
 .tips { margin: 0.5rem 0; }

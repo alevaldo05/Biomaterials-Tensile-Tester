@@ -902,7 +902,7 @@
         '<aside class="graph-side' + (mode === 'example' ? '' : ' compact') + '" aria-labelledby="gs-readout-title gs-results-title">' +
           '<div class="gs-a"><h2 id="gs-readout-title">Readout</h2><dl class="readout" id="readout"></dl></div>' +
           '<div class="gs-b"><h2 id="gs-results-title">Key results</h2>' +
-          '<div class="res-tools"><span>Show on graph:</span><button type="button" class="btn-secondary btn-small" id="show-all">Show all</button><button type="button" class="btn-secondary btn-small" id="hide-all">Hide all</button>' + (mode === 'example' ? '' : '<label class="check defs-toggle"><input type="checkbox" id="show-defs"> Show definitions</label>') + '</div>' +
+          '<div class="res-tools"><span>Show on graph:</span><button type="button" class="btn-secondary btn-small" id="show-all">Show all</button><button type="button" class="btn-secondary btn-small" id="hide-all">Hide all</button>' + (mode === 'example' ? '' : '<button type="button" class="btn-secondary btn-small" id="copy-res">Copy results</button><span class="copy-msg" id="copy-msg" role="status"></span>') + (mode === 'example' ? '' : '<label class="check defs-toggle"><input type="checkbox" id="show-defs"> Show definitions</label>') + '</div>' +
           '<table class="results"><tbody id="results"></tbody></table>' +
           (mode === 'example' ? '<p class="def" id="res-note">Select a result’s name to highlight it on the graph.</p>' : '') + '</div>' +
         '</aside>' +
@@ -1027,6 +1027,18 @@
     }
 
     function plain(t) { return String(t).replace(/<[^>]+>/g, ''); }
+    /* Copy text to the clipboard; older pages without the clipboard API use a hidden text box. */
+    function copyText(text, done) {
+      function fallback() {
+        var ta = document.createElement('textarea'), ok = false;
+        ta.value = text; ta.setAttribute('readonly', ''); ta.style.cssText = 'position:fixed;left:-9999px;top:0';
+        document.body.appendChild(ta); ta.select();
+        try { ok = document.execCommand('copy'); } catch (err) { ok = false; }
+        document.body.removeChild(ta); done(ok);
+      }
+      if (navigator.clipboard && window.isSecureContext) navigator.clipboard.writeText(text).then(function () { done(true); }, fallback);
+      else fallback();
+    }
     function renderResults(r) {
       var dq = root.querySelector('#dq'), dc = follow ? null : dataChecks(r, isRelax);
       if (dq) { dq.textContent = dc ? dc.text : ''; dq.hidden = !(dc && dc.text); dq.className = 'data-checks' + (dc && dc.items.length ? ' warn' : ''); }
@@ -1260,6 +1272,19 @@
     bind(root.querySelector('#t-regions'), 'change', function (e) { regionsOn = e.target.checked; regionsTouched = true; draw(); });
     bind(root.querySelector('#t-tangent'), 'change', function (e) { tangentOn = e.target.checked; setCursor(idx); });
     bind(root.querySelector('#show-all'), 'click', function () { KEYS.forEach(function (q) { shown[q] = true; }); syncRows(); draw(); });
+    /* Key results as tab-separated text (pastes into Excel or Word as a table), led by the data-source line so a pasted table is never mistaken for measured data. */
+    bind(root.querySelector('#copy-res'), 'click', function () {
+      var rows = [].slice.call(root.querySelectorAll('#results tr')).map(function (tr) {
+        var name = tr.querySelector('.res-btn'), val = tr.querySelector('td');
+        return (name ? name.textContent : '').replace(/\s+/g, ' ').trim() + '\t' + (val ? val.textContent : '').replace(/\s+/g, ' ').trim();
+      });
+      var text = [sourceTag(rec()) || '', 'Result\tValue'].concat(rows).join('\n') + '\n';
+      copyText(text, function (ok) {
+        var m = root.querySelector('#copy-msg'); if (!m) return;
+        m.textContent = ok ? 'Copied' : 'Could not copy';
+        setTimeout(function () { m.textContent = ''; }, 2500);
+      });
+    });
     bind(root.querySelector('#show-defs'), 'change', function (e) { root.querySelector('.graph-side').classList.toggle('show-defs', e.target.checked); });
     bind(root.querySelector('#hide-all'), 'click', function () { shown = {}; hl = null; syncRows(); draw(); });
     bind(root.querySelector('#results'), 'click', function (e) {
