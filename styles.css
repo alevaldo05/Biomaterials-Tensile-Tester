@@ -848,6 +848,16 @@ dialog.pretest h3 { margin: 1rem 0 0.35rem; font-size: 1rem; }
   .rp-line { height: 15pt; border-bottom: 1px solid #000; }
   .rp-blank .rp-foot { margin-top: 10pt; }
   .rp-table tr, .rp-foot, .rp-method, .rp-warn { break-inside: avoid; }
+  /* A heading never ends a page on its own. */
+  .report h2, .report h3 { break-after: avoid; }
+  /* Comparison report: tighter spacing so a few specimens fit on one page. */
+  .rp-compare { font-size: 8.5pt; line-height: 1.22; }
+  .rp-compare h2 { margin: 0.3rem 0 0.15rem; }
+  .rp-compare .rp-table { font-size: 8.2pt; }
+  .rp-compare .rp-table th, .rp-compare .rp-table td { padding: 1.5pt 4pt; }
+  .rp-compare .rp-graph svg { max-height: 5cm; }
+  .rp-compare .rp-foot { margin-top: 0.3rem; }
+  .rp-compare .rp-sign { margin-top: 8pt; }
   .rp-compare .rp-graph svg { max-height: 6.2cm; }
 }
 
