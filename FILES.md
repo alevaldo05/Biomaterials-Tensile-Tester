@@ -32,7 +32,7 @@ Every page except `404.html` starts with a "Skip to main content" link (`.skip-l
 | File | Used by | What it does |
 |---|---|---|
 | `styles.css` | every page | Shared styles, the four color themes, and the three font stacks. |
-| `styles-looks.css` | every page | The five optional styles (Lab instrument, Clinical clean, Engineering drawing, Bold modern, Academic report). |
+| `styles-looks.css` | every page | The four optional styles (Lab instrument, Clinical clean, Engineering drawing, Academic report). |
 | `layouts.css` | every page | Styles for the five layouts and the Settings choices. |
 | `display-settings.js` | every page | Applies the saved color theme, font, style, layout, text size, spacing, motion, and graph choices before the page appears; colors the browser-tab icon to match the selected theme; runs the Settings choices. |
 | `layouts.js` | every page except `check-text.html` | Rearranges the page for the chosen layout (Start screen, Sidebar, Cards, Tabs, Reading) and makes the "Skip to main content" link move focus without changing the address hash. |
