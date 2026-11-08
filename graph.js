@@ -863,7 +863,7 @@
           '<p class="range-note" id="range-note" aria-live="polite"></p>' +
           '<p class="data-checks" id="dq" role="status" hidden></p>' +
           '<p class="data-checks" id="dimsrc" hidden></p>' +
-          '<p class="hint">Hover or use ← → (Shift for larger steps), Home, and End to read values. Scroll over the graph or press + / − to zoom, or drag a box around an area. When zoomed, drag to move, press [ and ] to move left and right, and double-click to reset.</p>' +
+          (mode === 'example' ? '<p class="hint">Hover or use ← → (Shift for larger steps), Home, and End to read values. Scroll over the graph or press + / − to zoom, or drag a box around an area. When zoomed, drag to move, press [ and ] to move left and right, and double-click to reset.</p>' : '<details class="tips"><summary>Graph tips</summary><p class="hint">Hover or use ← → (Shift for larger steps), Home, and End to read values. Scroll over the graph or press + / − to zoom, or drag a box around an area. When zoomed, drag to move, press [ and ] to move left and right, and double-click to reset.</p><p class="hint">Select a result’s name to highlight it on the graph.</p></details>') +
           '<div class="graph-toggles">' +
             '<label class="check"><input type="checkbox" id="t-regions"> Show regions</label>' +
             (isRelax ? '' : '<label class="check"><input type="checkbox" id="t-tangent"> Tangent line at cursor</label>') +
@@ -888,12 +888,12 @@
             '<div><button type="button" class="btn-secondary" id="f-reset">Reset to defaults</button></div>' +
           '</div></details>' +
         '</div>' +
-        '<aside class="graph-side" aria-labelledby="gs-readout-title gs-results-title">' +
+        '<aside class="graph-side' + (mode === 'example' ? '' : ' compact') + '" aria-labelledby="gs-readout-title gs-results-title">' +
           '<div class="gs-a"><h2 id="gs-readout-title">Readout</h2><dl class="readout" id="readout"></dl></div>' +
           '<div class="gs-b"><h2 id="gs-results-title">Key results</h2>' +
-          '<div class="res-tools"><span>Show on graph:</span><button type="button" class="btn-secondary btn-small" id="show-all">Show all</button><button type="button" class="btn-secondary btn-small" id="hide-all">Hide all</button></div>' +
+          '<div class="res-tools"><span>Show on graph:</span><button type="button" class="btn-secondary btn-small" id="show-all">Show all</button><button type="button" class="btn-secondary btn-small" id="hide-all">Hide all</button>' + (mode === 'example' ? '' : '<label class="check defs-toggle"><input type="checkbox" id="show-defs"> Show definitions</label>') + '</div>' +
           '<table class="results"><tbody id="results"></tbody></table>' +
-          '<p class="def" id="res-note">Select a result’s name to highlight it on the graph.</p></div>' +
+          (mode === 'example' ? '<p class="def" id="res-note">Select a result’s name to highlight it on the graph.</p>' : '') + '</div>' +
         '</aside>' +
       '</div>' +
       (mode !== 'live' ?
@@ -1238,6 +1238,7 @@
     bind(root.querySelector('#t-regions'), 'change', function (e) { regionsOn = e.target.checked; regionsTouched = true; draw(); });
     bind(root.querySelector('#t-tangent'), 'change', function (e) { tangentOn = e.target.checked; setCursor(idx); });
     bind(root.querySelector('#show-all'), 'click', function () { KEYS.forEach(function (q) { shown[q] = true; }); syncRows(); draw(); });
+    bind(root.querySelector('#show-defs'), 'change', function (e) { root.querySelector('.graph-side').classList.toggle('show-defs', e.target.checked); });
     bind(root.querySelector('#hide-all'), 'click', function () { shown = {}; hl = null; syncRows(); draw(); });
     bind(root.querySelector('#results'), 'click', function (e) {
       var b = e.target.closest ? e.target.closest('.res-btn') : null;
