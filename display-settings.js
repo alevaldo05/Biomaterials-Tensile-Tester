@@ -6,7 +6,7 @@
     theme: { values: ["light", "dark", "purple", "pink"], fallback: "light" },
     font: { values: ["serif", "sans", "humanist"], fallback: "serif" },
     checklist: { values: ["off", "on"], fallback: "off" },
-    style: { values: ["standard", "lab", "clinical", "drafting", "bold", "academic"], fallback: "standard" },
+    style: { values: ["standard", "lab", "clinical", "drafting", "academic"], fallback: "standard" },
     layout: { values: ["start", "sidebar", "cards", "tabs", "reading"], fallback: "start" },
     textsize: { values: ["100", "125", "150", "200"], fallback: "100" },
     spacing: { values: ["standard", "comfortable", "compact"], fallback: "standard" },

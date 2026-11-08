@@ -637,13 +637,20 @@
           u += '<text x="' + cx.toFixed(1) + '" y="' + (M.t + 23 + t * 13) + '" text-anchor="middle" style="fill:' + pal.text + ';font-size:11px;font-style:italic;paint-order:stroke;stroke:' + pal.ring + ';stroke-width:3px">' + esc(rg[0]) + '</text>';
         });
       }
+      var placed = []; /* label boxes already drawn, so two results marked at the same place do not print on top of each other */
       function pt(p, label, strong, below) {
         if (!p || !inX(p.x)) return;
         var cx = g.sx(p.x), cy = g.sy(p.y);
         if (cy < M.t - 1 || cy > H - M.b + 1) return;
         var right = cx > W - M.r - 90;
         v += '<circle cx="' + cx.toFixed(1) + '" cy="' + cy.toFixed(1) + '" r="' + (strong ? 8 : 5) + '" style="fill:' + pal.ring + ';stroke:' + mark + ';stroke-width:' + (strong ? 3.5 : 2.5) + '"/>';
-        if (label) v += '<text x="' + (cx + (right ? -11 : 11)).toFixed(1) + '" y="' + (cy + (below ? 17 : -9)).toFixed(1) + '" text-anchor="' + (right ? 'end' : 'start') + '" style="fill:' + pal.text + ';font-size:12px;font-weight:' + (strong ? 700 : 600) + ';paint-order:stroke;stroke:' + pal.ring + ';stroke-width:3px">' + esc(label) + '</text>';
+        if (label) {
+          var lx = cx + (right ? -11 : 11), ly = cy + (below ? 17 : -9), lw = label.length * 6.8 + 4, step = below ? 14 : -14, tries = 0;
+          function hit() { var x0 = right ? lx - lw : lx; return placed.some(function (b) { return x0 < b.x1 && x0 + lw > b.x0 && ly - 12 < b.y1 && ly + 3 > b.y0; }); }
+          while (tries < 6 && hit()) { ly += step; tries++; }
+          placed.push({ x0: right ? lx - lw : lx, x1: (right ? lx - lw : lx) + lw, y0: ly - 12, y1: ly + 3 });
+          v += '<text x="' + lx.toFixed(1) + '" y="' + ly.toFixed(1) + '" text-anchor="' + (right ? 'end' : 'start') + '" style="fill:' + pal.text + ';font-size:12px;font-weight:' + (strong ? 700 : 600) + ';paint-order:stroke;stroke:' + pal.ring + ';stroke-width:3px">' + esc(label) + '</text>';
+        }
       }
       function seg(x1, y1, x2, y2, strong, dash) {
         v += '<line x1="' + g.sx(x1).toFixed(1) + '" y1="' + g.sy(y1).toFixed(1) + '" x2="' + g.sx(x2).toFixed(1) + '" y2="' + g.sy(y2).toFixed(1) + '"' + (dash ? ' stroke-dasharray="6 4"' : '') + ' clip-path="url(#plot-clip)" style="stroke:' + mark + ';stroke-width:' + (strong ? 3 : 2) + '"/>';
@@ -828,7 +835,8 @@
       if (!n && opts.emptyText) {
         s += '<text x="' + (M.l + pw / 2) + '" y="' + (M.t + ph / 2) + '" text-anchor="middle" style="fill:' + pal.muted + ';font-size:15px">' + esc(opts.emptyText) + '</text>';
       }
-      s += '<text x="' + (W - M.r) + '" y="' + (H - 16) + '" text-anchor="end" style="fill:' + pal.muted + ';font-size:11px;font-style:italic">' + esc(sourceTag(r)) + '</text>';
+      /* The data-source line has its own row under the title, so a long file name cannot run into the x-axis title. */
+      s += '<text x="' + M.l + '" y="43" style="fill:' + pal.muted + ';font-size:11px;font-style:italic">' + esc(sourceTag(r)) + '</text>';
       if (!o.exp) s += '<g id="cur" clip-path="url(#plot-clip)" style="pointer-events:none"><line id="cur-t" style="display:none;stroke:' + pal.text + ';stroke-width:1.5"/><line id="cur-l" y1="' + M.t + '" y2="' + (H - M.b) + '" style="stroke:' + pal.text + ';stroke-width:1;stroke-dasharray:4 3"/><circle id="cur-c" r="6" style="fill:' + series + ';stroke:' + pal.text + ';stroke-width:2"/></g>';
       s += '</svg>';
       if (!o.exp) geom = { px: px, sx: sx, sy: sy, xLo: xLo, xTop: xTop, yLo: yLo, yTop: yTop, base: base, log: log };
@@ -839,6 +847,13 @@
     var swatches = [['#3f6b52', 'Forest green'], ['#2f6f8f', 'Blue'], ['#b4691f', 'Orange'], ['#7a4f9a', 'Purple'], ['#a63d40', 'Red'], ['#1f2a24', 'Charcoal']]
       .map(function (c) { return '<button type="button" class="swatch" data-color="' + c[0] + '" style="background:' + c[0] + '" aria-label="Line color: ' + c[1] + '"></button>'; }).join('');
 
+    /* Load Test arranges the results in one column under the graph: toolbar, then the test parameters, then the optional panels.
+       New Test can use the same arrangement later by adding 'live' to this test. */
+    var stacked = (mode === 'load');
+    var paramsStacked = '<section class="params-block" aria-labelledby="params-title"><h2 id="params-title">Test parameters</h2>' +
+      '<div class="param-fields" id="params"></div>' +
+      '<div class="graph-actions"><button type="button" class="btn-secondary" id="p-reset">Reset parameters</button></div>' +
+      '<details class="tips"><summary>About these values</summary><p class="param-note" id="param-note"></p><p class="model" id="model"></p></details></section>';
     root.innerHTML =
       (mode === 'example' ? '<fieldset class="segmented"' + (lockMat ? ' hidden' : '') + '><legend>Material</legend><div class="options" id="mats"></div></fieldset>' : '') +
       '<div class="graph-grid">' +
@@ -855,7 +870,8 @@
           '<p class="range-note" id="range-note" aria-live="polite"></p>' +
           '<p class="data-checks" id="dq" role="status" hidden></p>' +
           '<p class="data-checks" id="dimsrc" hidden></p>' +
-          '<p class="hint">Hover or use ← → (Shift for larger steps), Home, and End to read values. Scroll over the graph or press + / − to zoom, or drag a box around an area. When zoomed, drag to move, press [ and ] to move left and right, and double-click to reset.</p>' +
+          (mode === 'example' ? '<p class="hint">Hover or use ← → (Shift for larger steps), Home, and End to read values. Scroll over the graph or press + / − to zoom, or drag a box around an area. When zoomed, drag to move, press [ and ] to move left and right, and double-click to reset.</p>' : '<details class="tips"><summary>Graph tips</summary><p class="hint">Hover or use ← → (Shift for larger steps), Home, and End to read values. Scroll over the graph or press + / − to zoom, or drag a box around an area. When zoomed, drag to move, press [ and ] to move left and right, and double-click to reset.</p><p class="hint">Select a result’s name to highlight it on the graph.</p></details>') +
+          (stacked ? '<div class="graph-toolbar">' : '') +
           '<div class="graph-toggles">' +
             '<label class="check"><input type="checkbox" id="t-regions"> Show regions</label>' +
             (isRelax ? '' : '<label class="check"><input type="checkbox" id="t-tangent"> Tangent line at cursor</label>') +
@@ -866,6 +882,7 @@
             (window.TensileExcel ? '<button type="button" class="btn-secondary" id="dl-xlsx">Download for Excel (.xlsx)</button>' : '') +
             (mode === 'load' && window.TensileReport ? '<button type="button" class="btn-secondary" id="dl-print">Print report</button>' : '') +
           '</div>' +
+          (stacked ? '</div>' + paramsStacked : '') +
           '<details class="schematic" id="schem" hidden><summary>Soft-tissue curve regions (schematic)</summary>' + SCHEMATIC +
             '<p class="def">Illustration, not data. Region names follow common descriptions of skin and similar soft tissues; where one region ends and the next begins varies between specimens.</p></details>' +
           '<details class="customize"><summary>Customize graph</summary><div class="fields">' +
@@ -880,15 +897,15 @@
             '<div><button type="button" class="btn-secondary" id="f-reset">Reset to defaults</button></div>' +
           '</div></details>' +
         '</div>' +
-        '<aside class="graph-side" aria-labelledby="gs-readout-title gs-results-title">' +
+        '<aside class="graph-side' + (mode === 'example' ? '' : ' compact') + '" aria-labelledby="gs-readout-title gs-results-title">' +
           '<div class="gs-a"><h2 id="gs-readout-title">Readout</h2><dl class="readout" id="readout"></dl></div>' +
           '<div class="gs-b"><h2 id="gs-results-title">Key results</h2>' +
-          '<div class="res-tools"><span>Show on graph:</span><button type="button" class="btn-secondary btn-small" id="show-all">Show all</button><button type="button" class="btn-secondary btn-small" id="hide-all">Hide all</button></div>' +
+          '<div class="res-tools"><span>Show on graph:</span><button type="button" class="btn-secondary btn-small" id="show-all">Show all</button><button type="button" class="btn-secondary btn-small" id="hide-all">Hide all</button>' + (mode === 'example' ? '' : '<label class="check defs-toggle"><input type="checkbox" id="show-defs"> Show definitions</label>') + '</div>' +
           '<table class="results"><tbody id="results"></tbody></table>' +
-          '<p class="def" id="res-note">Select a result’s name to highlight it on the graph.</p></div>' +
+          (mode === 'example' ? '<p class="def" id="res-note">Select a result’s name to highlight it on the graph.</p>' : '') + '</div>' +
         '</aside>' +
       '</div>' +
-      (mode !== 'live' ?
+      (mode !== 'live' && !stacked ?
         '<h2>Test parameters</h2><div class="param-fields" id="params"></div>' +
         '<p class="param-note" id="param-note"></p>' +
         '<div class="graph-actions"><button type="button" class="btn-secondary" id="p-reset">Reset parameters</button></div>' +
@@ -1230,6 +1247,7 @@
     bind(root.querySelector('#t-regions'), 'change', function (e) { regionsOn = e.target.checked; regionsTouched = true; draw(); });
     bind(root.querySelector('#t-tangent'), 'change', function (e) { tangentOn = e.target.checked; setCursor(idx); });
     bind(root.querySelector('#show-all'), 'click', function () { KEYS.forEach(function (q) { shown[q] = true; }); syncRows(); draw(); });
+    bind(root.querySelector('#show-defs'), 'change', function (e) { root.querySelector('.graph-side').classList.toggle('show-defs', e.target.checked); });
     bind(root.querySelector('#hide-all'), 'click', function () { shown = {}; hl = null; syncRows(); draw(); });
     bind(root.querySelector('#results'), 'click', function (e) {
       var b = e.target.closest ? e.target.closest('.res-btn') : null;
