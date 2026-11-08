@@ -36,6 +36,7 @@ Every page except `404.html` starts with a "Skip to main content" link (`.skip-l
 | `layouts.css` | every page | Styles for the five layouts and the Settings choices. |
 | `display-settings.js` | every page | Applies the saved color theme, font, style, layout, text size, spacing, motion, and graph choices before the page appears; swaps in each style's logo; runs the Settings choices. |
 | `layouts.js` | every page except `check-text.html` | Rearranges the page for the chosen layout (Start screen, Sidebar, Cards, Tabs, Reading) and makes the "Skip to main content" link move focus without changing the address hash. |
+| `page-nav.js` | `help.html`, `about.html`, `settings.html` | Loaded after `layouts.js`. Adds a short "On this page" list on Help and About (only where the chosen layout has none), "Back to top" links, a "Jump to" list of setting groups on Settings, and the search box at the top of Help. Nothing is saved. |
 | `graph.js` | test, protocol, and Load Test pages | The graph engine (`window.TensileGraph`): plain SVG graph, readout, key results, region guides, key-result points, zoom and pan, Customize graph, PNG/SVG download, editable dimensions, CSV reading. |
 | `report.js` | test pages, Load Test, and the Learn page | The printable one-page report and the blank run sheet (opens the browser's print window; save as PDF there). On the graph pages it is loaded right after `excel-export.js`; on the Learn page it is loaded before `text.js`, which adds the "Print blank run sheet" button only when `report.js` is present. |
 | `excel-export.js` | test, protocol, and Load Test pages | Builds the Excel (.xlsx) file in the browser (hand-written zip and XML, no library). Loaded right after `graph.js`; without it the Excel button is not shown. |
@@ -100,4 +101,4 @@ Every page except `404.html` starts with a "Skip to main content" link (`.skip-l
 
 ## Script order
 
-Pages load scripts in this order, and the order matters: `display-settings.js` (in `<head>`), then `data/*.js` (`materials.js` first, then `samples.js`, then `sample-models.js`), then `graph.js`, then `excel-export.js` (graph pages only), then the page script (`live.js`, `load-test.js`, `protocol-page.js`, or `further-reading.js`), and last `layouts.js`.
+Pages load scripts in this order, and the order matters: `display-settings.js` (in `<head>`), then `data/*.js` (`materials.js` first, then `samples.js`, then `sample-models.js`), then `graph.js`, then `excel-export.js` (graph pages only), then the page script (`live.js`, `load-test.js`, `protocol-page.js`, or `further-reading.js`), then `layouts.js`, and (on Help, About, and Settings only) last `page-nav.js`.

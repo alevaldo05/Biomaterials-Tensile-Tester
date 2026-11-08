@@ -55,7 +55,8 @@ window.SITE_TEXT.help = {
             [ "[ and ]", "Graph, when zoomed", "Move the view left or right." ],
             [ "Page Up and Page Down", "Graph, when zoomed", "Move the view up or down." ],
             [ "← and →, Home and End", "Tab lists on the protocol and Materials pages", "Move between tabs." ],
-            [ "Enter or Space", "Materials chart", "Choose the material under the marker." ]
+            [ "Enter or Space", "Materials chart", "Choose the material under the marker." ],
+            [ "Esc", "Search box on the Help page", "Clears the search and shows every row again." ]
           ]
         } }
       ]
