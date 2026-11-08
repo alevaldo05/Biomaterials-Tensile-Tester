@@ -401,6 +401,7 @@ sub, sup { line-height: 0; font-size: 0.75em; }
 /* Load Test with a file open: toolbar and parameters sit directly under the graph. */
 .graph-toolbar { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 0.5rem 1.25rem; margin: 0.75rem 0; }
 .graph-toolbar .graph-toggles, .graph-toolbar .graph-actions { margin: 0; }
+.graph-toolbar .btn-secondary { padding: 0.35rem 0.8rem; }
 .params-block { margin: 0.75rem 0 1rem; padding: 0.9rem 1.1rem 1rem; border: 1px solid var(--line); border-radius: 8px; background: var(--surface); }
 .params-block h2 { margin: 0 0 0.5rem; font-size: 1.0625rem; }
 .params-block .param-fields { grid-template-columns: repeat(auto-fill, minmax(9.5rem, 1fr)); margin: 0 0 0.75rem; }
@@ -627,15 +628,7 @@ button:disabled { opacity: 0.5; cursor: not-allowed; }
 }
 .panel .pf input[type="number"], .panel .pf input[type="text"], .panel .pf output { background: var(--bg); }
 .pf textarea { resize: vertical; font-weight: 400; }
-.live-main .graph-grid { grid-template-columns: minmax(0, 1fr); gap: 1rem; }
-/* Readout on the left and Key results on the right. Each side is its own block (.gs-a, .gs-b, set in graph.js), and the
-   blocks wrap onto separate lines when there is not enough room (narrow window, sidebar layout, or large text),
-   so nothing can spill into a neighbouring column and overlap. */
 .graph-side .gs-b { margin-top: 1.25rem; }
-.live-main .graph-side { display: flex; flex-wrap: wrap; gap: 1.25rem 2rem; align-items: flex-start; }
-.live-main .graph-side .gs-a { flex: 1 1 15rem; min-width: 0; }
-.live-main .graph-side .gs-b { flex: 1.4 1 20rem; min-width: 0; margin-top: 0; }
-.live-main .readout { align-content: start; }
 /* Connection and run controls share one card; the review of the entries stays directly under the buttons. */
 .control-bar { margin-bottom: 0.75rem; padding: 0.75rem 1rem; border: 1px solid var(--line); border-radius: 8px; background: var(--surface); }
 .control-bar p { margin: 0 0 0.5rem; }
