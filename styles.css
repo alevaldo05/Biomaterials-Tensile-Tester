@@ -456,7 +456,7 @@ sub, sup { line-height: 0; font-size: 0.75em; }
 }
 
 /* ---------- Home ---------- */
-.logo { width: 30px; height: 30px; flex: none; }
+.logo { width: 56px; height: 28px; flex: none; }
 .hero {
   background: var(--surface);
   background: linear-gradient(135deg, color-mix(in srgb, var(--accent) 16%, var(--bg)), var(--bg) 70%);

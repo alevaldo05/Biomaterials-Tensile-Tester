@@ -5,6 +5,7 @@
 /* ---------- Lab instrument ---------- */
 :root[data-style="lab"][data-theme="light"] { --bg:#eceff1; --surface:#ffffff; --ink:#12181d; --muted:#465360; --line:#c9d2d9; --accent:#0e6a5b; --accent-hover:#0a5247; --link:#0c5e51; --focus:#08463c; }
 [data-style="lab"] .topbar, [data-style="lab"] .sidebar { background:#141a1f; border-color:#141a1f; }
+[data-style="lab"] .topbar, [data-style="lab"] .sidebar { --logo-ink:color-mix(in srgb, var(--accent) 40%, #ffffff); }
 [data-style="lab"] .topbar { border-bottom:3px solid #0e6a5b; }
 [data-style="lab"] .topbar .brand, [data-style="lab"] .topbar nav a,
 [data-style="lab"] .sidebar .brand, [data-style="lab"] .sidebar nav a, [data-style="lab"] .sidebar .side-note { color:#e8eef2; }
