@@ -392,6 +392,7 @@
 
   /* ---------- state ---------- */
   var link = null, running = false, hasData = false, downloaded = true;
+  var baseTitle = document.title; /* the browser-tab title, with the run status in front while a test runs or has just stopped */
   var t0 = null, d0 = null, peakF = 0, holdStart = null, skipped = 0, startedAt = null, endReason = '', heartbeat = null;
   /* a link such as test-uniaxial-tension.html#al-6061 (from the Materials page) preselects that material */
   (function () {
@@ -420,6 +421,7 @@
     ['s-mat', 's-speed', 's-hold', 's-holds', 's-example'].forEach(function (id) { if ($(id)) $(id).disabled = running; });
     $('r-why').textContent = on || running ? '' : 'Start is available after you connect: press “Use simulator” or “Connect to tester (USB)”.';
     $('c-dot').className = 'dot' + (running ? ' run' : on ? ' on' : '');
+    document.title = running ? 'Recording · ' + baseTitle : (on && hasData ? 'Stopped · ' + baseTitle : baseTitle);
     $('c-text').textContent = !on ? 'Not connected' : (running ? 'Recording · ' : 'Connected · ') + (link.kind === 'sim' ? 'simulator (not measured)' : 'tester (USB)');
     if (!on) $('c-now').textContent = '';
     renderReview();

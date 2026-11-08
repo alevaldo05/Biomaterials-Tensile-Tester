@@ -158,11 +158,14 @@
         (f.corr ? '<p><strong>Suggested correction (not applied by this site):</strong> corrected force = (reading − ' + sig(f.b, 4) + ') ÷ ' + sig(f.a, 6) + '</p>' : '<p class="cal-warn">The fitted gain is zero, so no correction can be suggested.</p>') +
         '<p class="muted small">Fit: reading = gain × force + offset, by least squares over the rows that have both a mass and a reading. R² near 1 means the points lie close to a straight line; it says nothing about whether the masses were accurate.</p>';
     } else html += '<p class="muted">' + esc(f.msg) + '</p>';
-    html += '<p class="graph-actions"><button type="button" class="btn" id="c-dl"' + (f.n >= 1 ? '' : ' disabled') + '>Download calibration record (CSV)</button></p>';
+    html += '<p class="graph-actions"><button type="button" class="btn" id="c-dl"' + (f.n >= 1 ? '' : ' disabled') + '>Download calibration record (CSV)</button>' +
+      '<button type="button" class="btn-secondary" id="c-print"' + (f.n >= 1 && window.TensileReport ? '' : ' disabled') + '>Print report</button></p>';
     html += chart(pts, f);
     resEl.innerHTML = html;
     var dl = document.getElementById('c-dl');
     if (dl) dl.addEventListener('click', function () { download(s, pts, f); });
+    var pr = document.getElementById('c-print');
+    if (pr) pr.addEventListener('click', function () { printReport(s, pts, f); });
   }
 
   /* ---------- CSV record ---------- */
@@ -207,6 +210,36 @@
     document.body.appendChild(a); a.click(); document.body.removeChild(a);
     setTimeout(function () { URL.revokeObjectURL(a.href); }, 1000);
     dirty = false;
+  }
+
+  /* ---------- printed report (same one-page, Draft-labeled print window as the other pages) ---------- */
+  var PRINT_COLORS = { 'var(--line)': '#d9ddd3', 'var(--muted)': '#4a5a50', 'var(--ink)': '#1f2a24', 'var(--accent)': '#3f6b52', 'var(--surface)': '#ffffff', 'var(--danger)': '#a63d40' };
+  function printReport(s, pts, f) {
+    var P = window.TensileReport;
+    if (!P) return;
+    var E = P.parts.esc, used = pts.filter(function (q) { return q.m !== null || q.r !== null; });
+    var svg = chart(pts, f), end = svg.indexOf('</svg>');
+    svg = end >= 0 ? svg.slice(0, end + 6) : '';
+    Object.keys(PRINT_COLORS).forEach(function (k) { svg = svg.split(k).join(PRINT_COLORS[k]); });
+    var det = [['Load cell', s.cell], ['Notes', s.notes], ['Mass unit', s.unit], ['Gravity, g (m/s²)', s.g], ['Tolerance (± % of reading)', s.tol === null ? '' : s.tol], ['Points', used.length]]
+      .filter(function (d) { return d[1] !== '' && d[1] !== null && d[1] !== undefined; });
+    var rowsHtml = used.map(function (q, i) {
+      return '<tr><th scope="row">' + (i + 1) + '</th><td class="n">' + E(q.m === null ? '—' : sig(q.m, 6)) + '</td><td class="n">' + E(q.F === null ? '—' : sig(q.F, 5)) + '</td><td class="n">' + E(q.r === null ? '—' : sig(q.r, 5)) + '</td><td class="n">' + E(q.err === null ? '—' : sig(q.err, 4)) + '</td><td class="n">' + E(q.pct === null ? '—' : sig(q.pct, 3) + ' %') + '</td>' +
+        (s.tol === null ? '' : '<td>' + (q.out ? 'Outside' : '') + '</td>') + '</tr>';
+    }).join('');
+    var fitHtml = f.ok ?
+      '<table class="rp-table rp-fit"><tbody><tr><th scope="row">Gain (reading per newton of force)</th><td class="n">' + E(sig(f.a, 6)) + '</td></tr><tr><th scope="row">Zero offset (N)</th><td class="n">' + E(sig(f.b, 4)) + '</td></tr><tr><th scope="row">R²</th><td class="n">' + E(f.r2 === null ? '—' : sig(f.r2, 6)) + '</td></tr><tr><th scope="row">Points used</th><td class="n">' + E(f.n) + '</td></tr><tr><th scope="row">Largest error (N)</th><td class="n">' + E(sig(f.big, 4)) + '</td></tr></tbody></table>' +
+      (f.corr ? '<p class="rp-note"><strong>Suggested correction (not applied by this site):</strong> corrected force = (reading − ' + E(sig(f.b, 4)) + ') ÷ ' + E(sig(f.a, 6)) + '</p>' : '') +
+      '<p class="rp-note">Fit: reading = gain × force + offset, by least squares over the rows that have both a mass and a reading.</p>'
+      : '<p class="rp-note">' + E(f.msg) + '</p>';
+    var html = '<article class="report rp-cal">' + P.parts.head('Calibration report', example ? 'Example numbers, not measured' : 'Entered by hand (not measured by this site)') +
+      '<p class="rp-warn"><strong>Tare is not a calibration.</strong> This page does not change any reading on the tester or on this site. Draft: no claim of traceability or of meeting a standard.</p>' +
+      (det.length ? '<dl class="rp-details">' + det.map(function (d) { return '<div><dt>' + E(d[0]) + '</dt><dd>' + E(d[1]) + '</dd></div>'; }).join('') + '</dl>' : '') +
+      '<h2>Points</h2><table class="rp-table"><thead><tr><th>#</th><th>Known mass (' + E(s.unit) + ')</th><th>Force from the mass (N)</th><th>Tester reading (N)</th><th>Error (N)</th><th>Error (% of reading)</th>' + (s.tol === null ? '' : '<th>Tolerance</th>') + '</tr></thead><tbody>' + rowsHtml + '</tbody></table>' +
+      '<h2>Fit</h2>' + fitHtml +
+      (svg ? '<figure class="rp-graph">' + svg + '</figure>' : '') +
+      P.parts.foot() + '</article>';
+    P.printHtml(html);
   }
 
   /* ---------- events ---------- */

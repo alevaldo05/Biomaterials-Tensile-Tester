@@ -421,6 +421,7 @@
     if (!m) return;
     var key = m[1].replace(/"/g, '').trim().toLowerCase();
     var val = m[2].replace(/[,;\t]+$/, '').trim().replace(/^"(.*)"$/, '$1').replace(/""/g, '"').replace(/^'(?=[=+\-@])/, '');
+    (meta.all = meta.all || []).push([m[1].replace(/"/g, '').trim(), val]);
     META_KEYS.forEach(function (k) { if (key.indexOf(k[0]) === 0 && meta[k[1]] === undefined) meta[k[1]] = val; });
   }
   function numMeta(v) { var x = parseFloat(String(v === undefined ? '' : v).replace(',', '.')); return x > 0 ? x : null; }
@@ -489,7 +490,7 @@
     var r = { id: 'loaded', test: test, material: 'loaded', mk: mk, label: 'Your data: ' + name, fileName: name, source: 'loaded', simulated: simulated,
       units: { x: isRelax ? 's' : '-', y: 'MPa' }, params: p, direct: d.mode === 'direct', x: [], y: [],
       dimsFromFile: !!d.dims, baseLabel: d.dims ? 'Dimensions in file' : 'Example dimensions',
-      specimenId: meta.id || '', materialText: meta.material || '', fileDate: meta.date || '' };
+      specimenId: meta.id || '', materialText: meta.material || '', fileDate: meta.date || '', fileMeta: meta.all || [] };
     if (isRelax) {
       var h = d.hold.filter(isFinite);
       p.hold_s = numMeta(meta.hold_s) || Math.round(maxOf(d.a));
@@ -855,6 +856,7 @@
       '<div class="graph-actions"><button type="button" class="btn-secondary" id="p-reset">Reset parameters</button></div>' +
       '<details class="tips"><summary>About these values</summary><p class="param-note" id="param-note"></p><p class="model" id="model"></p></details></section>';
     root.innerHTML =
+      (mode === 'load' ? '<details class="file-details" id="file-details" hidden><summary>File details</summary><dl class="fd-list" id="fd-list"></dl></details>' : '') +
       (mode === 'example' ? '<fieldset class="segmented"' + (lockMat ? ' hidden' : '') + '><legend>Material</legend><div class="options" id="mats"></div></fieldset>' : '') +
       '<div class="graph-grid' + (stacked ? ' stacked' : '') + '">' +
         '<div class="graph-main">' +
@@ -900,7 +902,7 @@
         '<aside class="graph-side' + (mode === 'example' ? '' : ' compact') + '" aria-labelledby="gs-readout-title gs-results-title">' +
           '<div class="gs-a"><h2 id="gs-readout-title">Readout</h2><dl class="readout" id="readout"></dl></div>' +
           '<div class="gs-b"><h2 id="gs-results-title">Key results</h2>' +
-          '<div class="res-tools"><span>Show on graph:</span><button type="button" class="btn-secondary btn-small" id="show-all">Show all</button><button type="button" class="btn-secondary btn-small" id="hide-all">Hide all</button>' + (mode === 'example' ? '' : '<label class="check defs-toggle"><input type="checkbox" id="show-defs"> Show definitions</label>') + '</div>' +
+          '<div class="res-tools"><span>Show on graph:</span><button type="button" class="btn-secondary btn-small" id="show-all">Show all</button><button type="button" class="btn-secondary btn-small" id="hide-all">Hide all</button>' + (mode === 'example' ? '' : '<button type="button" class="btn-secondary btn-small" id="copy-res">Copy results</button><span class="copy-msg" id="copy-msg" role="status"></span>') + (mode === 'example' ? '' : '<label class="check defs-toggle"><input type="checkbox" id="show-defs"> Show definitions</label>') + '</div>' +
           '<table class="results"><tbody id="results"></tbody></table>' +
           (mode === 'example' ? '<p class="def" id="res-note">Select a result’s name to highlight it on the graph.</p>' : '') + '</div>' +
         '</aside>' +
@@ -1025,6 +1027,18 @@
     }
 
     function plain(t) { return String(t).replace(/<[^>]+>/g, ''); }
+    /* Copy text to the clipboard; older pages without the clipboard API use a hidden text box. */
+    function copyText(text, done) {
+      function fallback() {
+        var ta = document.createElement('textarea'), ok = false;
+        ta.value = text; ta.setAttribute('readonly', ''); ta.style.cssText = 'position:fixed;left:-9999px;top:0';
+        document.body.appendChild(ta); ta.select();
+        try { ok = document.execCommand('copy'); } catch (err) { ok = false; }
+        document.body.removeChild(ta); done(ok);
+      }
+      if (navigator.clipboard && window.isSecureContext) navigator.clipboard.writeText(text).then(function () { done(true); }, fallback);
+      else fallback();
+    }
     function renderResults(r) {
       var dq = root.querySelector('#dq'), dc = follow ? null : dataChecks(r, isRelax);
       if (dq) { dq.textContent = dc ? dc.text : ''; dq.hidden = !(dc && dc.text); dq.className = 'data-checks' + (dc && dc.items.length ? ' warn' : ''); }
@@ -1073,8 +1087,19 @@
       return f;
     }
     var fieldDefs = [];
+    function renderFileDetails(r) {
+      var box = root.querySelector('#file-details');
+      if (!box) return;
+      var skip = /^(biomaterials tensile tester|gauge length|width|thickness|area)/i;
+      var rows = (r.fileMeta || []).filter(function (d) { return d[1] !== '' && !skip.test(d[0]); }).slice(0, 40);
+      root.querySelector('#fd-list').innerHTML = rows.map(function (d) {
+        return '<div' + (d[1].length > 60 ? ' class="fd-wide"' : '') + '><dt>' + esc(d[0]) + '</dt><dd>' + esc(d[1]) + '</dd></div>';
+      }).join('');
+      box.hidden = !rows.length;
+    }
     function renderParams(r) {
       if (mode === 'live') return;
+      renderFileDetails(r);
       fieldDefs = paramFields(r);
       root.querySelector('#params').innerHTML = fieldDefs.map(function (d) {
         if (d.out) return '<div class="pf"><span>' + d.label + '</span><output data-o="' + d.k + '">' + d.out() + '</output></div>';
@@ -1247,6 +1272,19 @@
     bind(root.querySelector('#t-regions'), 'change', function (e) { regionsOn = e.target.checked; regionsTouched = true; draw(); });
     bind(root.querySelector('#t-tangent'), 'change', function (e) { tangentOn = e.target.checked; setCursor(idx); });
     bind(root.querySelector('#show-all'), 'click', function () { KEYS.forEach(function (q) { shown[q] = true; }); syncRows(); draw(); });
+    /* Key results as tab-separated text (pastes into Excel or Word as a table), led by the data-source line so a pasted table is never mistaken for measured data. */
+    bind(root.querySelector('#copy-res'), 'click', function () {
+      var rows = [].slice.call(root.querySelectorAll('#results tr')).map(function (tr) {
+        var name = tr.querySelector('.res-btn'), val = tr.querySelector('td');
+        return (name ? name.textContent : '').replace(/\s+/g, ' ').trim() + '\t' + (val ? val.textContent : '').replace(/\s+/g, ' ').trim();
+      });
+      var text = [sourceTag(rec()) || '', 'Result\tValue'].concat(rows).join('\n') + '\n';
+      copyText(text, function (ok) {
+        var m = root.querySelector('#copy-msg'); if (!m) return;
+        m.textContent = ok ? 'Copied' : 'Could not copy';
+        setTimeout(function () { m.textContent = ''; }, 2500);
+      });
+    });
     bind(root.querySelector('#show-defs'), 'change', function (e) { root.querySelector('.graph-side').classList.toggle('show-defs', e.target.checked); });
     bind(root.querySelector('#hide-all'), 'click', function () { shown = {}; hl = null; syncRows(); draw(); });
     bind(root.querySelector('#results'), 'click', function (e) {

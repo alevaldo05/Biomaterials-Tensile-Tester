@@ -395,9 +395,19 @@ sub, sup { line-height: 0; font-size: 0.75em; }
 .results .def { display: block; font-weight: 400; font-size: 0.8125rem; color: var(--muted); }
 /* New Test and Load Test: Key results shows each name and value; the definitions open with the "Show definitions" switch. */
 .graph-side.compact:not(.show-defs) .results .def { display: none; }
+.copy-msg { min-width: 4.5rem; font-size: 0.8125rem; color: var(--muted); }
 .defs-toggle { margin-left: auto; display: inline-flex; align-items: center; gap: 0.4rem; }
 .defs-toggle input { width: 1rem; height: 1rem; accent-color: var(--accent); }
 .tips { margin: 0.5rem 0; }
+/* Load Test: what the opened file says about the test (specimen, material, date, notes, why it ended). Closed until opened. */
+.file-details { margin: 0.5rem 0 0.75rem; padding: 0.5rem 1rem; border: 1px solid var(--line); border-radius: 8px; background: var(--surface); }
+.file-details summary { cursor: pointer; font-size: 0.9375rem; font-weight: 600; }
+.fd-list { display: grid; grid-template-columns: repeat(auto-fill, minmax(14rem, 1fr)); gap: 0.5rem 1.5rem; margin: 0.6rem 0 0.2rem; }
+.fd-list dt { color: var(--muted); font-size: 0.8125rem; }
+.fd-list dd { margin: 0; font-weight: 600; overflow-wrap: anywhere; }
+.fd-list .fd-wide { grid-column: 1 / -1; }
+/* Load Test: the page shows a dashed frame while a file is being dragged over it. */
+main.drop-active { outline: 3px dashed var(--accent); outline-offset: -6px; }
 /* Load Test with a file open: toolbar and parameters sit directly under the graph. */
 .graph-toolbar { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 0.5rem 1.25rem; margin: 0.75rem 0; }
 .graph-toolbar .graph-toggles, .graph-toolbar .graph-actions { margin: 0; }
@@ -477,7 +487,7 @@ sub, sup { line-height: 0; font-size: 0.75em; }
   .eqs tbody th, .eqs .eq { white-space: normal; }
 }
 @media print {
-  .topbar, .back, .customize, .graph-actions, .hint, .tips, .segmented, .zoom-tools, .range-note { display: none; }
+  .topbar, .back, .customize, .graph-actions, .hint, .tips, .file-details, .segmented, .zoom-tools, .range-note { display: none; }
   body { background: #fff; color: #000; }
   .chart-wrap { border: 0; }
   .proto-tabs, .step-nav, .step-links { display: none; }
@@ -803,6 +813,8 @@ dialog.pretest h3 { margin: 1rem 0 0.35rem; font-size: 1rem; }
   .report { font-size: 9pt; line-height: 1.3; color: #000; }
   .report h1 { font-size: 20pt; margin: 0; font-weight: 700; }
   .report h2 { font-size: 10.5pt; margin: 0.5rem 0 0.2rem; border-bottom: 1px solid #000; padding-bottom: 1pt; font-variant: normal; letter-spacing: 0; }
+  /* Section headings print black in every theme and style (the Lab style gives h2 a light grey that vanishes on white paper). */
+  body.printing-report .report h2, body.printing-report .report h3 { color: #000; }
   .rp-head { display: flex; justify-content: space-between; align-items: flex-start; gap: 1rem; }
   .rp-kicker { margin: 0; font-size: 9pt; letter-spacing: 0.04em; text-transform: uppercase; }
   .rp-draft { margin: 0; padding: 1pt 8pt; border: 1px solid #000; border-radius: 999px; font-size: 8.5pt; font-weight: 700; text-transform: uppercase; }
@@ -848,6 +860,8 @@ dialog.pretest h3 { margin: 1rem 0 0.35rem; font-size: 1rem; }
   .rp-line { height: 15pt; border-bottom: 1px solid #000; }
   .rp-blank .rp-foot { margin-top: 10pt; }
   .rp-table tr, .rp-foot, .rp-method, .rp-warn { break-inside: avoid; }
+  .rp-cal .rp-graph svg { max-height: 7cm; }
+  .rp-fit { break-inside: avoid; }
   /* A heading never ends a page on its own. */
   .report h2, .report h3 { break-after: avoid; }
   /* Comparison report: tighter spacing so a few specimens fit on one page. */
