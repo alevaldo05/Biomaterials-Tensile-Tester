@@ -44,7 +44,7 @@ Every page except `404.html` starts with a "Skip to main content" link (`.skip-l
 | `load-test.js` | `load-test.html` | Mode switch, test type, and file picker for Load Test. |
 | `compare.js` | `load-test.html` | Compare several files: overlay graph, key results with mean and standard deviation, summary CSV. Uses `graph.js` for the numbers. |
 | `calibration.js` | `calibration.html` | The calibration table, least-squares fit, chart, and CSV record. |
-| `materials.js` | `materials.html` | The Material tab, the sortable properties tables with a two-material comparison, and the chart. |
+| `materials.js` | `materials.html` | The Material tab, the sortable properties tables with a two-material comparison, and the chart with its filters and list. |
 | `protocol-page.js` | both protocol pages | Material choice, the four tabs, the Steps tab with its jump list and per-step links, and the example graph. |
 | `further-reading.js` | `about.html` | Builds the Further reading list. |
 
