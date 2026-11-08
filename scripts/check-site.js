@@ -249,5 +249,51 @@ begin('6. Private details');
   if (failures === before) ok(FILES.length + ' files contain no email address or key');
 })();
 
+/* 7. Every Action in the workflows is pinned to a full commit ID, so a moved tag cannot change what runs. */
+begin('7. Publishing workflow');
+(function () {
+  var before = failures, count = 0;
+  FILES.filter(function (f) { return /^\.github\/workflows\/[^\/]+\.ya?ml$/.test(f); }).forEach(function (f) {
+    read(f).split(/\r?\n/).forEach(function (line, i) {
+      var m = line.match(/^\s*(?:-\s*)?uses:\s*([^\s#]+)/);
+      if (!m) return;
+      count++;
+      if (m[1].indexOf('./') === 0) return;
+      if (!/^[A-Za-z0-9_.\-]+\/[A-Za-z0-9_.\-\/]+@[0-9a-f]{40}$/.test(m[1])) {
+        fail(f + ' line ' + (i + 1) + ' uses "' + m[1] + '", which is not pinned to a full 40-character commit ID. Look the ID up on GitHub (see docs/DEPLOY.md, "Updating a pinned Action").');
+      }
+    });
+  });
+  if (failures === before) ok(count + ' Action references in the workflows are all pinned to a full commit ID');
+})();
+
+/* 8. Every page carries the Content Security Policy tag, and no page or script uses inline code that the policy blocks. */
+begin('8. Security policy and inline code');
+(function () {
+  var before = failures;
+  PAGES.forEach(function (page) {
+    var html = read(page);
+    var tags = html.match(/<meta[^>]*http-equiv\s*=\s*"Content-Security-Policy"[^>]*>/gi) || [];
+    if (tags.length !== 1) fail(page + ' needs exactly one Content Security Policy <meta> tag in its <head> (it has ' + tags.length + '). Copy the tag from index.html.');
+    else {
+      var scriptSrc = (tags[0].match(/script-src([^;"]*)/i) || [, ''])[1];
+      if (!/'self'/.test(scriptSrc) || /'unsafe-inline'|'unsafe-eval'|\*|https?:/.test(scriptSrc)) fail(page + ': the policy must allow scripts from \'self\' only (no \'unsafe-inline\', \'unsafe-eval\', or other sites).');
+      if (!/default-src\s+'none'/.test(tags[0])) fail(page + ': the policy must start from default-src \'none\'.');
+      var firstScript = html.search(/<script\b/i);
+      if (firstScript >= 0 && html.indexOf(tags[0]) > firstScript) fail(page + ': the policy tag must come before the first <script>, or it does not apply to it.');
+    }
+    if (!/<meta[^>]*name\s*=\s*"referrer"[^>]*content\s*=\s*"no-referrer"/i.test(html)) fail(page + ' needs <meta name="referrer" content="no-referrer"> in its <head>.');
+    if (/<script\b(?![^>]*\ssrc\s*=)[^>]*>/i.test(html)) fail(page + ' has an inline <script> block. The policy blocks it; move the code into a .js file.');
+    if (/<[a-z][^>]*\son[a-z]+\s*=/i.test(html)) fail(page + ' has an inline event handler such as onclick=. The policy blocks it; attach the handler in a .js file.');
+    if (/javascript:/i.test(html)) fail(page + ' has a javascript: link. The policy blocks it.');
+  });
+  FILES.filter(function (f) { return /\.js$/.test(f) && !/^(scripts|\.github)\//.test(f); }).forEach(function (f) {
+    var js = read(f);
+    if (/<[a-z][^>'"]*\son[a-z]+\s*=/i.test(js)) fail(f + ' builds HTML with an inline event handler such as onclick=. The policy blocks it; add the handler with addEventListener.');
+    if (/javascript:/i.test(js)) fail(f + ' contains a javascript: link. The policy blocks it.');
+  });
+  if (failures === before) ok(PAGES.length + ' pages have the policy tag and no inline scripts or handlers; page scripts build none either');
+})();
+
 console.log('\n' + (failures ? failures + ' problem' + (failures === 1 ? '' : 's') + ' found. Fix them before merging; the site is not published while a check fails.' : 'All checks passed.'));
 process.exit(failures ? 1 : 0);

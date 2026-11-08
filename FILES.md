@@ -70,9 +70,11 @@ Every page has a Content Security Policy `<meta>` tag in its `<head>`. It allows
 | `FILES.md` | This guide. |
 | `docs/DEPLOY.md` | How the site is published (GitHub Pages), the one-time setup, and how to tell when a deploy has finished. |
 | `docs/BRANCHES.md` | Backups (tags), `main`, branch rules, and how to go back to a backup. |
+| `docs/REPO-SETTINGS.md` | Checklist of repository settings only the owner can change on GitHub. |
 | `.github/workflows/deploy.yml` | The workflow that publishes the site when `main` changes. Not part of the published site. |
+| `.github/dependabot.yml` | Update checker for the Actions in the workflow, switched off (limit 0). Change the 0 to 2 to receive weekly update pull requests. Not part of the published site. |
 | `scripts/build-site.sh` | Used by the workflow: copies the site, adds `?v=<commit>` to script and style links, writes `version.json`. Does not change the repository files. |
-| `scripts/check-site.js` | Run by the workflow before every publish (and on pull requests): checks links, script syntax, data files, duplicates, the build output, and that no email address or key is in any file. Changes nothing. Run locally with `node scripts/check-site.js`. |
+| `scripts/check-site.js` | Run by the workflow before every publish (and on pull requests): checks links, script syntax, data files, duplicates, the build output, that no email address or key is in any file, that every workflow Action is pinned to a full commit ID, and that every page has the Content Security Policy tag and no inline scripts or handlers. Changes nothing. Run locally with `node scripts/check-site.js`. |
 | `AGENTS.md` | Workflow rules for AI assistants. |
 | `CLAUDE.md` | One line that loads `AGENTS.md` in Claude Code (name required by Claude Code). |
 
