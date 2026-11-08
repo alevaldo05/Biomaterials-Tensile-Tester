@@ -25,7 +25,7 @@ Everything is in the project root except `data/`, which holds the content and se
 
 Each page has its own header, navigation, and text in its HTML. The interactive parts are drawn by the scripts below. The chosen layout rearranges what is already on the page; content is written only once.
 
-Every page has a Content Security Policy `<meta>` tag in its `<head>`. It allows only this site's own files (plus `blob:` images for graph downloads), so pages must not use inline `<script>` blocks or `onclick=` attributes; put code in a `.js` file.
+Every page except `404.html` starts with a "Skip to main content" link (`.skip-link` in `styles.css`) that jumps to `<main id="main-content">`. Every page has a Content Security Policy `<meta>` tag in its `<head>`. It allows only this site's own files (plus `blob:` images for graph downloads), so pages must not use inline `<script>` blocks or `onclick=` attributes; put code in a `.js` file.
 
 ## Scripts and styles
 
@@ -35,7 +35,7 @@ Every page has a Content Security Policy `<meta>` tag in its `<head>`. It allows
 | `styles-looks.css` | every page | The five optional styles (Lab instrument, Clinical clean, Engineering drawing, Bold modern, Academic report). |
 | `layouts.css` | every page | Styles for the five layouts and the Settings choices. |
 | `display-settings.js` | every page | Applies the saved color theme, font, style, layout, text size, spacing, motion, and graph choices before the page appears; swaps in each style's logo; runs the Settings choices. |
-| `layouts.js` | every page | Rearranges the page for the chosen layout (Start screen, Sidebar, Cards, Tabs, Reading). |
+| `layouts.js` | every page except `check-text.html` | Rearranges the page for the chosen layout (Start screen, Sidebar, Cards, Tabs, Reading) and makes the "Skip to main content" link move focus without changing the address hash. |
 | `graph.js` | test, protocol, and Load Test pages | The graph engine (`window.TensileGraph`): plain SVG graph, readout, key results, region guides, key-result points, zoom and pan, Customize graph, PNG/SVG download, editable dimensions, CSV reading. |
 | `report.js` | test pages and Load Test | The printable one-page report (opens the browser's print window; save as PDF there). Loaded right after `excel-export.js`. |
 | `excel-export.js` | test, protocol, and Load Test pages | Builds the Excel (.xlsx) file in the browser (hand-written zip and XML, no library). Loaded right after `graph.js`; without it the Excel button is not shown. |
@@ -77,7 +77,7 @@ Every page has a Content Security Policy `<meta>` tag in its `<head>`. It allows
 | `.github/workflows/deploy.yml` | The workflow that publishes the site when `main` changes. Not part of the published site. |
 | `.github/dependabot.yml` | Update checker for the Actions in the workflow, switched off (limit 0). Change the 0 to 2 to receive weekly update pull requests. Not part of the published site. |
 | `scripts/build-site.sh` | Used by the workflow: copies the site, adds `?v=<commit>` to script and style links, writes `version.json`. Does not change the repository files. |
-| `scripts/check-site.js` | Run by the workflow before every publish (and on pull requests): checks links, script syntax, data files, duplicates, the build output, that no email address or key is in any file, that every workflow Action is pinned to a full commit ID, that every page has the Content Security Policy tag and no inline scripts or handlers, and that every page has a description and an icon. Changes nothing. Run locally with `node scripts/check-site.js`. |
+| `scripts/check-site.js` | Run by the workflow before every publish (and on pull requests): checks links, script syntax, data files, duplicates, the build output, that no email address or key is in any file, that every workflow Action is pinned to a full commit ID, that every page has the Content Security Policy tag and no inline scripts or handlers, that every page has a description and an icon, and that every page except the 404 page starts with the skip link. Changes nothing. Run locally with `node scripts/check-site.js`. |
 | `AGENTS.md` | Workflow rules for AI assistants. |
 | `CLAUDE.md` | One line that loads `AGENTS.md` in Claude Code (name required by Claude Code). |
 

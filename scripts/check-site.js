@@ -320,5 +320,19 @@ begin('9. Public-site basics');
   if (failures === before) ok(PAGES.length + ' pages have a description and an icon; the 404 page and icons exist');
 })();
 
+/* 10. Every page except the 404 page starts with the skip link and has the target it jumps to. */
+begin('10. Skip link');
+(function () {
+  var before = failures, count = 0;
+  PAGES.forEach(function (page) {
+    if (page === '404.html') return;
+    count++;
+    var html = read(page);
+    if (!/<body[^>]*>\s*<a class="skip-link" href="#main-content">Skip to main content<\/a>/.test(html)) fail(page + ' must start with <a class="skip-link" href="#main-content">Skip to main content</a> as the first thing inside <body>.');
+    if (!/<main[^>]*\sid="main-content"[^>]*\stabindex="-1"/.test(html)) fail(page + ': <main> needs id="main-content" and tabindex="-1" (the skip link jumps there).');
+  });
+  if (failures === before) ok(count + ' pages start with the skip link and have the main-content target');
+})();
+
 console.log('\n' + (failures ? failures + ' problem' + (failures === 1 ? '' : 's') + ' found. Fix them before merging; the site is not published while a check fails.' : 'All checks passed.'));
 process.exit(failures ? 1 : 0);
