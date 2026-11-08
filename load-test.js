@@ -32,6 +32,8 @@
     r.addEventListener('change', function () {
       if (!graph.innerHTML) return;
       graph.innerHTML = '';
+      document.getElementById('load-form').classList.remove('loaded');
+      btn.textContent = 'Choose CSV file';
       msg('Test type changed. Choose the file again.');
     });
   });
@@ -45,10 +47,14 @@
       try {
         var r = TG.fromCSV(file.name, String(reader.result), testType());
         TG.mount(graph, { test: testType(), mode: 'load', record: r });
+        document.getElementById('load-form').classList.add('loaded');
+        btn.textContent = 'Open another file';
         msg('Opened ' + file.name + ': ' + r.x.length + ' points' + (r.simulated ? ' (simulated, not measured)' : '') + '. ' +
           (r.direct ? '' : r.dimsFromFile ? 'Dimensions come from the file.' : 'This file does not contain enough information for dimension-based calculations. Example dimensions are not measurements; enter the specimen’s measured dimensions below the graph.'));
       } catch (err) {
         graph.innerHTML = '';
+        document.getElementById('load-form').classList.remove('loaded');
+        btn.textContent = 'Choose CSV file';
         msg(err.message, true);
       }
       input.value = '';
