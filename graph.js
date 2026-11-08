@@ -847,9 +847,9 @@
     var swatches = [['#3f6b52', 'Forest green'], ['#2f6f8f', 'Blue'], ['#b4691f', 'Orange'], ['#7a4f9a', 'Purple'], ['#a63d40', 'Red'], ['#1f2a24', 'Charcoal']]
       .map(function (c) { return '<button type="button" class="swatch" data-color="' + c[0] + '" style="background:' + c[0] + '" aria-label="Line color: ' + c[1] + '"></button>'; }).join('');
 
-    /* Load Test arranges the results in one column under the graph: toolbar, then the test parameters, then the optional panels.
-       New Test can use the same arrangement later by adding 'live' to this test. */
-    var stacked = (mode === 'load');
+    /* Load Test and New Test put the toolbar (regions, tangent, downloads) directly under the graph, with Readout and Key results
+       in a column on the right. Load Test also shows the editable test parameters under the toolbar; New Test has its own setup card. */
+    var stacked = (mode === 'load' || mode === 'live');
     var paramsStacked = '<section class="params-block" aria-labelledby="params-title"><h2 id="params-title">Test parameters</h2>' +
       '<div class="param-fields" id="params"></div>' +
       '<div class="graph-actions"><button type="button" class="btn-secondary" id="p-reset">Reset parameters</button></div>' +
@@ -882,7 +882,7 @@
             (window.TensileExcel ? '<button type="button" class="btn-secondary" id="dl-xlsx">Download for Excel (.xlsx)</button>' : '') +
             (mode === 'load' && window.TensileReport ? '<button type="button" class="btn-secondary" id="dl-print">Print report</button>' : '') +
           '</div>' +
-          (stacked ? '</div>' + paramsStacked : '') +
+          (stacked ? '</div>' + (mode === 'load' ? paramsStacked : '') : '') +
           '<details class="schematic" id="schem" hidden><summary>Soft-tissue curve regions (schematic)</summary>' + SCHEMATIC +
             '<p class="def">Illustration, not data. Region names follow common descriptions of skin and similar soft tissues; where one region ends and the next begins varies between specimens.</p></details>' +
           '<details class="customize"><summary>Customize graph</summary><div class="fields">' +
