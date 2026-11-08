@@ -610,9 +610,16 @@ button:disabled { opacity: 0.5; cursor: not-allowed; }
 
 /* ---------- Live test and Load Test pages ---------- */
 .safety { margin: 0 0 1rem; padding: 0.5rem 0.75rem; border-left: 4px solid var(--danger); background: var(--surface); font-size: 0.9375rem; }
-.live-layout { display: grid; grid-template-columns: min(15.625rem, 40%) minmax(0, 1fr); gap: calc(1.5rem * var(--sp)); align-items: start; }
+/* New Test: the setup card runs across the top with one column per step; the controls and the graph follow below it. */
+.live-layout { display: grid; grid-template-columns: minmax(0, 1fr); gap: calc(1rem * var(--sp)); align-items: start; container-type: inline-size; }
 .panel { display: grid; gap: 0.6rem; padding: 0.9rem 1rem; border: 1px solid var(--line); border-radius: 8px; background: var(--surface); }
 .panel h2 { margin: 0; font-size: 1rem; }
+.live-layout .panel { grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 0.75rem 1.5rem; }
+.live-layout .panel h2, .live-layout .setup-foot { grid-column: 1 / -1; }
+.setup-col { display: grid; gap: 0.6rem; align-content: start; }
+.setup-col .step-h { margin: 0; }
+.setup-foot { display: flex; flex-wrap: wrap; align-items: baseline; gap: 0.25rem 1.25rem; }
+@container (max-width: 46rem) { .live-layout .panel { grid-template-columns: minmax(0, 1fr); } }
 .panel p { margin: 0; }
 .pf select, .pf textarea {
   display: block; width: 100%; padding: 0.35rem 0.5rem; border: 1px solid var(--line); border-radius: 6px;
@@ -641,11 +648,6 @@ button:disabled { opacity: 0.5; cursor: not-allowed; }
 .step-label { margin: 0.25rem 0 0.5rem; }
 .load-form .segmented { margin-top: 0.5rem; }
 
-@media (max-width: 1100px) {
-  .live-layout { grid-template-columns: minmax(0, 1fr); }
-  .panel { grid-template-columns: repeat(auto-fit, minmax(170px, 1fr)); align-items: end; }
-  .panel h2, .panel p { grid-column: 1 / -1; }
-}
 @media (max-width: 720px) {
   .steps, .protocol-grid { grid-template-columns: minmax(0, 1fr); }
   .glossary dl { grid-template-columns: minmax(0, 1fr); gap: 0.1rem; }
