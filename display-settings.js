@@ -35,12 +35,6 @@
 
   Object.keys(SETTINGS).forEach(function (name) { apply(name, saved(name)); });
 
-  /* Bold modern: a larger illustrative curve on the homepage instead of the fiber drawing. */
-  var BOLD_HERO = '<g stroke="#ffffff" stroke-opacity=".18" stroke-width="1"><path d="M40 20v220M140 20v220M240 20v220M340 20v220M440 20v220M40 240h400M40 180h400M40 120h400M40 60h400"/></g>' +
-    '<path d="M40 240C120 236 180 222 230 180S320 70 360 40L372 36" fill="none" stroke="#c6ef6b" stroke-width="7" stroke-linecap="round"/>' +
-    '<path d="M372 36L380 120" fill="none" stroke="#c6ef6b" stroke-width="3" stroke-dasharray="6 6"/>' +
-    '<g fill="#cde6d8" font-family="system-ui, sans-serif" font-size="14"><text x="48" y="226">toe</text><text x="292" y="168">linear</text><text x="330" y="28">failure</text></g>';
-
   /* Browser-tab icon: the same "BTT" mark, in the selected theme's colors. The page's security policy allows
      blob: images, so the colored icon is built as a small SVG blob. If anything fails, the plain green favicon.svg stays. */
   var tabBlob = "";
@@ -59,16 +53,6 @@
       if (tabBlob) URL.revokeObjectURL(tabBlob);
       tabBlob = next;
     } catch (e) { /* keep the static icon */ }
-  }
-
-  function decorate() {
-    var style = saved("style");
-    var hero = document.querySelector("svg.hero-art");
-    if (hero && style === "bold") {
-      hero.setAttribute("viewBox", "0 0 460 280");
-      hero.setAttribute("aria-label", "Illustrative stress-strain curve: toe, linear, failure");
-      hero.innerHTML = BOLD_HERO;
-    }
   }
 
   /* These apply at once on the Settings page (CSS only, or read by the graph the next time it is drawn). */
@@ -108,5 +92,5 @@
     });
   }
 
-  document.addEventListener("DOMContentLoaded", function () { decorate(); tabIcon(); settingsPage(); });
+  document.addEventListener("DOMContentLoaded", function () { tabIcon(); settingsPage(); });
 })();
