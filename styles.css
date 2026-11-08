@@ -405,6 +405,8 @@ sub, sup { line-height: 0; font-size: 0.75em; }
 .fd-list dt { color: var(--muted); font-size: 0.8125rem; }
 .fd-list dd { margin: 0; font-weight: 600; overflow-wrap: anywhere; }
 .fd-list .fd-wide { grid-column: 1 / -1; }
+/* Load Test: the page shows a dashed frame while a file is being dragged over it. */
+main.drop-active { outline: 3px dashed var(--accent); outline-offset: -6px; }
 /* Load Test with a file open: toolbar and parameters sit directly under the graph. */
 .graph-toolbar { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 0.5rem 1.25rem; margin: 0.75rem 0; }
 .graph-toolbar .graph-toggles, .graph-toolbar .graph-actions { margin: 0; }
