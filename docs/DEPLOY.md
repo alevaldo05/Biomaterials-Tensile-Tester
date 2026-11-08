@@ -48,12 +48,33 @@ It looks at:
 4. **Duplicate files:** no two files have the same content, which catches a file put in the wrong folder.
 5. **Build output:** the publish step stamps every link, writes `version.json`, and leaves out documents and scripts.
 6. **Private details:** no email address (except a GitHub no-reply one) and no key or token in any file.
+7. **Publishing workflow:** every Action in `.github/workflows/` is pinned to a full commit ID, not a tag.
+8. **Security policy and inline code:** every page has the Content Security Policy tag (script sources limited to the site's own files, tag placed before the first script) and the no-referrer tag, and no page has an inline `<script>`, an `onclick=`-style handler, or a `javascript:` link. Page scripts must not build any either.
 
 To read a failure: open the **Actions** tab, open the run, then **checks**, then **Check the site**. Each line starting with `FAIL` names the file and what to fix. Fix it on a branch and merge again.
 
 To run the checks on your own computer (needs Node.js): `node scripts/check-site.js`
 
 The checks do not test calculations, how pages look, other browsers, or the tester hardware.
+
+## Updating a pinned Action
+
+The workflow names each Action by its full commit ID (with the version in a comment), so GitHub runs exactly
+that code even if the Action's tag is moved. Check 7 fails if a tag creeps back in. Nothing updates by itself:
+`.github/dependabot.yml` is switched off (its limit is 0). To turn on weekly update pull requests, change the 0
+to 2 in a pull request you merge; the updates then arrive as pull requests that you read and merge like any
+other change.
+
+To update one by hand, get the new ID from GitHub, never from memory:
+
+`git ls-remote --tags https://github.com/actions/deploy-pages`
+
+Use the ID next to the version tag you want, and update the version in the comment. Wait for the green
+**checks** run before merging. That job does not run the publish steps, so after merging an update to a
+publish Action, watch the next **Deploy site** run; if it fails, use **Revert** on the pull request.
+
+Settings only the repository owner can change (protecting `main`, two-factor sign-in, secret scanning) are
+listed in [REPO-SETTINGS.md](REPO-SETTINGS.md).
 
 ## If something goes wrong
 
