@@ -69,12 +69,14 @@
       '</form>' +
       '<div class="live-main">' +
         '<div class="control-bar">' +
+          '<div class="conn-row">' +
           '<h3 class="step-h">4. Connection</h3>' +
           '<p class="conn"><span class="dot" id="c-dot" aria-hidden="true"></span><strong id="c-text">Not connected</strong> <span class="muted" id="c-now"></span></p>' +
           '<div class="graph-actions">' +
             '<button type="button" class="btn-secondary" id="c-usb">Connect to tester (USB)</button>' +
             '<button type="button" class="btn-secondary" id="c-sim">Use simulator</button>' +
             '<button type="button" class="btn-secondary" id="c-off" hidden>Disconnect</button>' +
+          '</div>' +
           '</div>' +
           (hasSerial ? '' : '<p class="small muted">USB serial requires a supporting desktop browser, a secure context, permission for the selected port, and compatible controller software. In this project, USB works in Chrome only; this browser does not offer it here. The simulator works here.</p>') +
           '<div class="run-bar">' +
