@@ -2,7 +2,8 @@
    choose "Save as PDF" in the print window), and removes it afterwards. Everything is made in this browser
    from the data in this tab; nothing is uploaded or saved.
    window.TensileReport.printRecord(info)  one test (info from the graph's reportInfo())
-   window.TensileReport.printHtml(html)    any report body (used by the comparison summary) */
+   window.TensileReport.printHtml(html)    any report body (used by the comparison summary)
+   window.TensileReport.printBlank()       a blank one-page run sheet to fill in by hand (Learn page button) */
 (function () {
   'use strict';
 
@@ -69,9 +70,41 @@
     window.print();
   }
 
+  /* ---------- blank run sheet (a form to fill in by hand; no data, nothing stored) ---------- */
+  function blankHtml() {
+    var C = window.PRETEST_CHECKLIST;
+    function field(label, wide) { return '<div class="rp-field' + (wide ? ' rp-wide' : '') + '"><span>' + esc(label) + '</span><i></i></div>'; }
+    function box(label) { return '<span class="rp-check"><span class="rp-box"></span>' + esc(label) + '</span>'; }
+    function choices(label, list, other) {
+      return '<div class="rp-field rp-wide"><span>' + esc(label) + '</span><b>' + list.map(box).join('') + (other ? '<span class="rp-check"><span class="rp-box"></span>Other</span><i></i>' : '') + '</b></div>';
+    }
+    var lists = C && C.groups ? '<div class="rp-cols">' + C.groups.map(function (g) {
+      return '<div><h3>' + esc(g.name) + '</h3><ul class="rp-checklist">' + g.items.map(function (it) {
+        return '<li><span class="rp-box"></span><span>' + esc(it.text) + (it.tissue ? ' <em>(biological specimens)</em>' : '') + '</span></li>';
+      }).join('') + '</ul></div>';
+    }).join('') + '</div>' + (C.note ? '<p class="rp-note">' + esc(C.note) + '</p>' : '')
+      : '<p class="rp-warn">The checklist file did not load, so the checklist is missing from this sheet.</p>';
+    return '<article class="report rp-blank">' + head('Run sheet', 'Blank form to fill in by hand. Not a record of any test; nothing is saved.') +
+      '<h2>Test</h2><div class="rp-form">' + choices('Test type', ['Uniaxial tension', 'Stress relaxation']) + field('Date') + field('Operator') + '</div>' +
+      '<h2>Specimen</h2><div class="rp-form">' + field('Specimen ID') + field('Material') + field('Orientation / location (tissue)', true) +
+        field('Gauge length L0 (mm)') + field('Width (mm)') + field('Thickness (mm)') + '</div>' +
+      '<h2>Test settings</h2><div class="rp-form">' + field('Crosshead speed (mm/min)') + field('Temperature (°C)') +
+        field('Hold displacement (mm), stress relaxation') + field('Hold time (s), stress relaxation') + field('Environment (humidity, hydration)', true) + '</div>' +
+      '<h2>Pre-test checklist <span class="rp-tag">draft</span></h2>' + lists +
+      '<h2>After the test</h2><div class="rp-form">' + choices('How it ended', ['Finished on its own', 'Stopped by user', 'Specimen failed'], true) + field('Data file name', true) + '</div>' +
+      '<div class="rp-notes"><span>Notes</span><div class="rp-line"></div><div class="rp-line"></div><div class="rp-line"></div><div class="rp-line"></div><div class="rp-line"></div></div>' +
+      '<footer class="rp-foot"><p>Printed ' + esc(stamp()) + '. Blank form made in this browser; nothing was uploaded or saved. The checklist wording is a draft for advisor review and is a reminder, not a safety certification. The on-screen STOP is not an emergency stop; the machine needs its own physical emergency stop. The tester hardware connection is draft and has not been tested with the real machine.</p>' + sign() + '</footer></article>';
+  }
+  function printBlank() { printHtml(blankHtml()); }
+  document.addEventListener('click', function (e) {
+    var t = e.target && e.target.closest ? e.target.closest('[data-runsheet]') : null;
+    if (t) printBlank();
+  });
+
   window.TensileReport = {
     printRecord: function (info) { printHtml(recordHtml(info)); },
     printHtml: printHtml,
+    printBlank: printBlank,
     parts: { esc: esc, fit: fit, head: head, foot: foot, method: METHOD }
   };
 })();

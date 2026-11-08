@@ -44,6 +44,7 @@ Type symbols directly: σ ε Δ × ² – ’ →. Do not type HTML tags: anythi
 - **Add a table row (About page):** copy a whole row `[ "Topic", "Text A", "Text B" ],` and edit it. Every row must have the same number of cells as the heading row.
 - **Change a section heading or its tab name:** edit `heading:` or `tab:` for that section. (The HTML page keeps a copy of each heading only as a fallback.)
 - **Change the "Before you test" list:** edit `data/checklist.js`, not the Learn file.
+- **Change the label of the "Print blank run sheet" button (Learn page):** edit `printButton:` in `data/text/learn.js`. Delete that line to remove the button.
 
 ## What not to change
 

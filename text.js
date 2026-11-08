@@ -124,12 +124,16 @@
         }).join('') + '</ul>';
       }).join('');
     },
-    pretest: function () {
+    pretest: function (b) {
       var C = window.PRETEST_CHECKLIST;
       need(C && isArr(C.groups), 'The checklist file data/checklist.js did not load.');
+      need(b.printButton === undefined || isStr(b.printButton), 'printButton should be text in quotation marks.');
+      /* The "print blank run sheet" button appears only if the page loaded report.js (the Learn page does). */
+      var btn = isStr(b.printButton) && b.printButton && window.TensileReport && window.TensileReport.printBlank
+        ? '<div class="graph-actions"><button type="button" class="btn-secondary" data-runsheet>' + esc(b.printButton) + '</button></div>' : '';
       return '<div class="two-col">' + C.groups.map(function (g) {
         return '<div><h3>' + esc(g.name) + '</h3><ul class="checklist">' + g.items.map(function (it) { return '<li>' + esc(it.text) + '</li>'; }).join('') + '</ul></div>';
-      }).join('') + '</div>';
+      }).join('') + '</div>' + btn;
     }
   };
   var ORDER = ['references', 'pretest', 'columns', 'glossary', 'terms', 'table', 'steps', 'linklist', 'articles', 'list', 'h3', 'note', 'p'];
