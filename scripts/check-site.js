@@ -34,10 +34,14 @@ var PAGES = FILES.filter(function (f) { return /^[^\/]+\.html$/.test(f); });
 function read(rel) { return fs.readFileSync(path.join(ROOT, rel), 'utf8'); }
 function exists(rel) { return FILES.indexOf(rel) >= 0; }
 
-/* The relative file a link points to, or null for web addresses, anchors, and mail links. */
+var SITE_PATH = '/Biomaterials-Tensile-Tester/';  /* the folder name GitHub Pages serves the site under */
+
+/* The relative file a link points to, or null for web addresses, anchors, and mail links.
+   A link that starts with SITE_PATH (used only by 404.html) is read from the project root. */
 function localPath(from, ref) {
   ref = ref.split('#')[0].split('?')[0];
   if (!ref || /^[a-z][a-z0-9+.\-]*:/i.test(ref) || ref.indexOf('//') === 0) return null;
+  if (ref.indexOf(SITE_PATH) === 0) return ref.slice(SITE_PATH.length) || 'index.html';
   return path.posix.normalize(path.posix.join(path.posix.dirname(from), ref));
 }
 function scriptsOf(html) {
@@ -53,6 +57,10 @@ begin('1. Page links');
   PAGES.forEach(function (page) {
     var re = /\b(?:src|href)\s*=\s*"([^"]*)"/gi, m, html = read(page);
     while ((m = re.exec(html))) {
+      if (m[1].charAt(0) === '/' && m[1].indexOf('//') !== 0 && m[1].indexOf(SITE_PATH) !== 0) {
+        fail(page + ' links to "' + m[1] + '", which starts with / and would break on the published site. Use a link without the leading / (or start it with ' + SITE_PATH + ').');
+        continue;
+      }
       var target = localPath(page, m[1]);
       if (target === null) continue;
       count++;
@@ -293,6 +301,23 @@ begin('8. Security policy and inline code');
     if (/javascript:/i.test(js)) fail(f + ' contains a javascript: link. The policy blocks it.');
   });
   if (failures === before) ok(PAGES.length + ' pages have the policy tag and no inline scripts or handlers; page scripts build none either');
+})();
+
+/* 9. Public-site basics: every page has a description and an icon link; the 404 page and icons exist. */
+begin('9. Public-site basics');
+(function () {
+  var before = failures;
+  ['404.html', 'favicon.svg', 'favicon.png'].forEach(function (f) {
+    if (!exists(f)) fail(f + ' is missing from the project.');
+  });
+  PAGES.forEach(function (page) {
+    var html = read(page);
+    var d = html.match(/<meta[^>]*name\s*=\s*"description"[^>]*content\s*=\s*"([^"]*)"/i);
+    if (!d || !d[1].trim()) fail(page + ' needs <meta name="description" content="..."> in its <head> (one plain sentence).');
+    else if (d[1].length > 200) fail(page + ': the description is ' + d[1].length + ' characters. Keep it to 200 or fewer so search results do not cut it off.');
+    if (!/<link[^>]*rel\s*=\s*"icon"[^>]*>/i.test(html)) fail(page + ' needs a <link rel="icon" ...> in its <head>.');
+  });
+  if (failures === before) ok(PAGES.length + ' pages have a description and an icon; the 404 page and icons exist');
 })();
 
 console.log('\n' + (failures ? failures + ' problem' + (failures === 1 ? '' : 's') + ' found. Fix them before merging; the site is not published while a check fails.' : 'All checks passed.'));

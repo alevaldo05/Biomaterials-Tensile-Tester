@@ -19,6 +19,9 @@ Everything is in the project root except `data/`, which holds the content and se
 | `protocol-uniaxial-tension.html` | Uniaxial Tension protocol (draft), in four tabs: Steps, Specimen and equipment, Report and notes, Example graph and equations. Links: `#skin` (material), `#skin/step-3` (a step), `#skin/graph` (a tab). |
 | `protocol-stress-relaxation.html` | Stress Relaxation protocol (draft). |
 | `settings.html` | Settings: color theme, font, layout, style, text size, spacing, motion, and graph line thickness, curve style, and grid. |
+| `404.html` | Shown by GitHub Pages for a wrong address at any depth. Its links start with `/Biomaterials-Tensile-Tester/`; change that in this one file if the site is renamed or moved to its own domain. |
+| `favicon.svg` | The browser-tab icon (the header logo in the default green). |
+| `favicon.png` | The same icon as a 64 px picture, for browsers that ignore SVG icons. |
 
 Each page has its own header, navigation, and text in its HTML. The interactive parts are drawn by the scripts below. The chosen layout rearranges what is already on the page; content is written only once.
 
@@ -74,7 +77,7 @@ Every page has a Content Security Policy `<meta>` tag in its `<head>`. It allows
 | `.github/workflows/deploy.yml` | The workflow that publishes the site when `main` changes. Not part of the published site. |
 | `.github/dependabot.yml` | Update checker for the Actions in the workflow, switched off (limit 0). Change the 0 to 2 to receive weekly update pull requests. Not part of the published site. |
 | `scripts/build-site.sh` | Used by the workflow: copies the site, adds `?v=<commit>` to script and style links, writes `version.json`. Does not change the repository files. |
-| `scripts/check-site.js` | Run by the workflow before every publish (and on pull requests): checks links, script syntax, data files, duplicates, the build output, that no email address or key is in any file, that every workflow Action is pinned to a full commit ID, and that every page has the Content Security Policy tag and no inline scripts or handlers. Changes nothing. Run locally with `node scripts/check-site.js`. |
+| `scripts/check-site.js` | Run by the workflow before every publish (and on pull requests): checks links, script syntax, data files, duplicates, the build output, that no email address or key is in any file, that every workflow Action is pinned to a full commit ID, that every page has the Content Security Policy tag and no inline scripts or handlers, and that every page has a description and an icon. Changes nothing. Run locally with `node scripts/check-site.js`. |
 | `AGENTS.md` | Workflow rules for AI assistants. |
 | `CLAUDE.md` | One line that loads `AGENTS.md` in Claude Code (name required by Claude Code). |
 
@@ -85,6 +88,7 @@ Every page has a Content Security Policy `<meta>` tag in its `<head>`. It allows
 | Messages to and from the tester, baud rate, auto-stop, point limit | `data/device.js` |
 | Protocol steps, specimen sizes, equipment lists | `data/protocols.js` |
 | Further reading links | `data/articles.js` |
+| The description shown in search results | the `<meta name="description">` line in that page's HTML |
 | Homepage text (About the tester, How it works, Protocols) | `index.html` |
 | Before you test, Background, Glossary | `learn.html` |
 | About page text, Project status, references | `about.html` |
