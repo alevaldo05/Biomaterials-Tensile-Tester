@@ -289,6 +289,14 @@ main.wide { max-width: 70rem; }
 .skip-link { position: absolute; left: 0.5rem; top: -4rem; z-index: 1000; padding: 0.6rem 1rem; background: var(--accent); color: var(--accent-ink); font-weight: 600; text-decoration: underline; border-radius: 0.375rem; }
 .skip-link:focus { top: 0.5rem; outline: 3px solid var(--accent-ink); outline-offset: -6px; }
 main:focus { outline: none; }
+/* Page navigation (page-nav.js): Help search, "Back to top" links, and hidden rows while searching. */
+.help-search { max-width: 40rem; margin: 0.75rem 0 1rem; }
+.help-search label { display: block; margin: 0 0 0.25rem; font-size: 0.9375rem; font-weight: 700; }
+.help-search-row { display: flex; gap: 0.5rem; }
+.help-search input[type="search"] { flex: 1; min-width: 0; padding: 0.45rem 0.6rem; border: 1px solid var(--line); border-radius: 6px; background: var(--surface); color: var(--ink); font: inherit; }
+.help-search p { margin: 0.35rem 0 0; }
+.filtered-out { display: none !important; }
+.to-top { margin: 0.75rem 0 0; font-size: 0.875rem; }
 .status { margin: 0 0 0.5rem; }
 .status .badge { margin: 0 0.5rem 0 0; }
 .small { font-size: 0.875rem; }
