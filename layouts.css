@@ -18,6 +18,10 @@
 [data-layout="sidebar"] body { display:grid; grid-template-columns:minmax(0, min(13.75rem, 26vw)) minmax(0, 1fr); min-height:100vh; }
 .sidebar { position:sticky; top:0; align-self:start; height:100vh; display:flex; flex-direction:column; gap:1.75rem; padding:1.25rem 0.9rem; border-right:1px solid var(--line); background:var(--surface); overflow-y:auto; }
 .sidebar .brand { align-items:flex-start; font-size:0.95rem; line-height:1.25; }
+.sidebar { container-type:inline-size; }
+.sidebar .brand span { min-width:0; overflow-wrap:anywhere; }
+/* When text is large and the sidebar is narrow, the logo goes above the name so the name is not cut off. */
+@container (max-width: 9rem) { .sidebar .brand { flex-direction:column; align-items:flex-start; gap:0.25rem; } }
 .sidebar nav { display:flex; flex-direction:column; gap:0.2rem; }
 .sidebar nav a { padding:0.5rem 0.75rem; border-radius:6px; color:var(--ink); text-decoration:none; }
 .sidebar nav a:hover { background:var(--bg); }
