@@ -402,6 +402,10 @@ sub, sup { line-height: 0; font-size: 0.75em; }
 .graph-toolbar { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 0.5rem 1.25rem; margin: 0.75rem 0; }
 .graph-toolbar .graph-toggles, .graph-toolbar .graph-actions { margin: 0; }
 .graph-toolbar .btn-secondary { padding: 0.35rem 0.8rem; }
+/* Load Test and New Test: when the area is too narrow for the graph and the Readout column side by side at the chosen text size
+   (a narrow window, a sidebar, or large text), Readout and Key results go under the graph. */
+#graph-app { container-type: inline-size; }
+@container (max-width: 50rem) { #graph-app .graph-grid.stacked { grid-template-columns: minmax(0, 1fr); } }
 .params-block { margin: 0.75rem 0 1rem; padding: 0.9rem 1.1rem 1rem; border: 1px solid var(--line); border-radius: 8px; background: var(--surface); }
 .params-block h2 { margin: 0 0 0.5rem; font-size: 1.0625rem; }
 .params-block .param-fields { grid-template-columns: repeat(auto-fill, minmax(9.5rem, 1fr)); margin: 0 0 0.75rem; }

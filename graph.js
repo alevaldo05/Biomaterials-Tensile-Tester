@@ -856,7 +856,7 @@
       '<details class="tips"><summary>About these values</summary><p class="param-note" id="param-note"></p><p class="model" id="model"></p></details></section>';
     root.innerHTML =
       (mode === 'example' ? '<fieldset class="segmented"' + (lockMat ? ' hidden' : '') + '><legend>Material</legend><div class="options" id="mats"></div></fieldset>' : '') +
-      '<div class="graph-grid">' +
+      '<div class="graph-grid' + (stacked ? ' stacked' : '') + '">' +
         '<div class="graph-main">' +
           '<div class="chart-frame">' +
             '<div class="chart-wrap" tabindex="0" role="group" aria-label="Interactive graph. Use the left and right arrow keys to move the readout; Home and End jump to the ends; plus and minus zoom; square brackets move the view left and right when zoomed."></div>' +
