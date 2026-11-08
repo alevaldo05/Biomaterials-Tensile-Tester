@@ -65,7 +65,6 @@ main.reading { max-width:70rem; }
 .choice-grid .pic { grid-column:1 / -1; display:block; width:100%; height:auto; color:var(--muted); }
 .choice-grid .opt-name { font-weight:600; }
 .choice-grid .opt-text { grid-column:2; color:var(--muted); font-size:0.875rem; }
-.choice-grid .style-logo { width:36px; height:36px; }
 .choice-grid .font-sample { grid-column:2; color:var(--ink); font-size:1.0625rem; line-height:1.35; }
 .choice-grid .font-sample.fs-serif { font-family:var(--font-serif); }
 .choice-grid .font-sample.fs-sans { font-family:var(--font-sans); }
