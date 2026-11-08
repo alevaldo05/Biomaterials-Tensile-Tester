@@ -69,6 +69,7 @@
 [data-style="bold"] .hero .btn-outline { background:transparent; color:#fff; box-shadow:inset 0 0 0 2px #fff; }
 [data-style="bold"] .hero :focus-visible { outline-color:#c6ef6b; }
 [data-style="bold"] .hero .inner { grid-template-columns:minmax(0, 1fr) minmax(16.25rem, 28.75rem); padding-top:3rem; padding-bottom:3rem; }
+@container (max-width: 48rem) { [data-style="bold"] .hero .inner { grid-template-columns:minmax(0, 1fr); } [data-style="bold"] .hero-art { max-width:14rem; } }
 [data-style="bold"] h1 { font-weight:800; letter-spacing:-0.02em; }
 [data-style="bold"] h2 { font-size:1.5rem; font-weight:800; letter-spacing:-0.01em; }
 [data-style="bold"] .panel h2, [data-style="bold"] .graph-side h2 { font-size:1.125rem; }
