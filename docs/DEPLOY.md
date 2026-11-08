@@ -2,7 +2,7 @@
 
 The site is published with GitHub Pages. When a pull request is merged into `main`, a GitHub workflow (`.github/workflows/deploy.yml`) publishes it. You do not download anything or run any commands.
 
-Expected address: <https://alevaldo05.github.io/Senior-Design-Tensile-Tester/> (confirm it on the first deploy; see below).
+Expected address: <https://alevaldo05.github.io/Biomaterials-Tensile-Tester/> (confirm it on the first deploy; see below).
 
 ## One-time setup (repository owner)
 
@@ -23,7 +23,7 @@ Expected address: <https://alevaldo05.github.io/Senior-Design-Tensile-Tester/> (
    - Green check: the new version is live.
    - Red cross: it failed. Open the run, then the step with the red cross, to read why. The site keeps showing the previous version.
 2. The run page shows the live address under the **Deploy to GitHub Pages** step. **Settings**, **Pages** also shows "Your site is live at ...".
-3. Open `/version.json` on the site (for example `https://alevaldo05.github.io/Senior-Design-Tensile-Tester/version.json`). Its `short` value must equal the first seven characters of the newest commit on `main`.
+3. Open `/version.json` on the site (for example `https://alevaldo05.github.io/Biomaterials-Tensile-Tester/version.json`). Its `short` value must equal the first seven characters of the newest commit on `main`.
 4. Refresh the page. A normal refresh is enough. If a browser still shows the old page, press Ctrl+Shift+R (Windows) or Cmd+Shift+R (Mac).
 
 To publish again without a new commit: **Actions**, **Deploy site**, **Run workflow**.
