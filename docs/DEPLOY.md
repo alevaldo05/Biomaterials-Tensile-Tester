@@ -32,6 +32,8 @@ To publish again without a new commit: **Actions**, **Deploy site**, **Run workf
 
 GitHub Pages lets browsers keep a file for up to 10 minutes and the setting cannot be changed. To avoid old files, the workflow adds the commit number to every script and stylesheet address in the published copy (for example `graph.js?v=17b7cfc`). A new commit means new addresses, so the browser fetches the new files straight away. The HTML pages themselves are checked with the server on each visit. The files in the repository are never changed by this; only the published copy is.
 
+The icon files are not stamped with the commit number, and browsers keep a site's icon for a long time. If an old icon still shows, open the site in a new tab or press Ctrl+Shift+R (Windows) or Cmd+Shift+R (Mac).
+
 ## What is published
 
 Everything except the Git files, the workflow, `scripts/`, `docs/`, and the `.md` documents. The copy is made by `scripts/build-site.sh`.
@@ -50,6 +52,7 @@ It looks at:
 6. **Private details:** no email address (except a GitHub no-reply one) and no key or token in any file.
 7. **Publishing workflow:** every Action in `.github/workflows/` is pinned to a full commit ID, not a tag.
 8. **Security policy and inline code:** every page has the Content Security Policy tag (script sources limited to the site's own files, tag placed before the first script) and the no-referrer tag, and no page has an inline `<script>`, an `onclick=`-style handler, or a `javascript:` link. Page scripts must not build any either.
+9. **Public-site basics:** every page has a description (200 characters or fewer) and an icon link, no link starts with a bare `/`, and `404.html` and the icon files exist.
 
 To read a failure: open the **Actions** tab, open the run, then **checks**, then **Check the site**. Each line starting with `FAIL` names the file and what to fix. Fix it on a branch and merge again.
 
