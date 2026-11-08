@@ -401,6 +401,11 @@ sub, sup { line-height: 0; font-size: 0.75em; }
 /* Load Test with a file open: toolbar and parameters sit directly under the graph. */
 .graph-toolbar { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 0.5rem 1.25rem; margin: 0.75rem 0; }
 .graph-toolbar .graph-toggles, .graph-toolbar .graph-actions { margin: 0; }
+.graph-toolbar .btn-secondary { padding: 0.35rem 0.8rem; }
+/* Load Test and New Test: when the area is too narrow for the graph and the Readout column side by side at the chosen text size
+   (a narrow window, a sidebar, or large text), Readout and Key results go under the graph. */
+#graph-app { container-type: inline-size; }
+@container (max-width: 50rem) { #graph-app .graph-grid.stacked { grid-template-columns: minmax(0, 1fr); } }
 .params-block { margin: 0.75rem 0 1rem; padding: 0.9rem 1.1rem 1rem; border: 1px solid var(--line); border-radius: 8px; background: var(--surface); }
 .params-block h2 { margin: 0 0 0.5rem; font-size: 1.0625rem; }
 .params-block .param-fields { grid-template-columns: repeat(auto-fill, minmax(9.5rem, 1fr)); margin: 0 0 0.75rem; }
@@ -610,9 +615,16 @@ button:disabled { opacity: 0.5; cursor: not-allowed; }
 
 /* ---------- Live test and Load Test pages ---------- */
 .safety { margin: 0 0 1rem; padding: 0.5rem 0.75rem; border-left: 4px solid var(--danger); background: var(--surface); font-size: 0.9375rem; }
-.live-layout { display: grid; grid-template-columns: min(15.625rem, 40%) minmax(0, 1fr); gap: calc(1.5rem * var(--sp)); align-items: start; }
+/* New Test: the setup card runs across the top with one column per step; the controls and the graph follow below it. */
+.live-layout { display: grid; grid-template-columns: minmax(0, 1fr); gap: calc(1rem * var(--sp)); align-items: start; container-type: inline-size; }
 .panel { display: grid; gap: 0.6rem; padding: 0.9rem 1rem; border: 1px solid var(--line); border-radius: 8px; background: var(--surface); }
 .panel h2 { margin: 0; font-size: 1rem; }
+.live-layout .panel { grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 0.75rem 1.5rem; }
+.live-layout .panel h2, .live-layout .setup-foot { grid-column: 1 / -1; }
+.setup-col { display: grid; gap: 0.6rem; align-content: start; }
+.setup-col .step-h { margin: 0; }
+.setup-foot { display: flex; flex-wrap: wrap; align-items: baseline; gap: 0.25rem 1.25rem; }
+@container (max-width: 46rem) { .live-layout .panel { grid-template-columns: minmax(0, 1fr); } }
 .panel p { margin: 0; }
 .pf select, .pf textarea {
   display: block; width: 100%; padding: 0.35rem 0.5rem; border: 1px solid var(--line); border-radius: 6px;
@@ -620,17 +632,14 @@ button:disabled { opacity: 0.5; cursor: not-allowed; }
 }
 .panel .pf input[type="number"], .panel .pf input[type="text"], .panel .pf output { background: var(--bg); }
 .pf textarea { resize: vertical; font-weight: 400; }
-.live-main .graph-grid { grid-template-columns: minmax(0, 1fr); gap: 1rem; }
-/* Readout on the left and Key results on the right. Each side is its own block (.gs-a, .gs-b, set in graph.js), and the
-   blocks wrap onto separate lines when there is not enough room (narrow window, sidebar layout, or large text),
-   so nothing can spill into a neighbouring column and overlap. */
 .graph-side .gs-b { margin-top: 1.25rem; }
-.live-main .graph-side { display: flex; flex-wrap: wrap; gap: 1.25rem 2rem; align-items: flex-start; }
-.live-main .graph-side .gs-a { flex: 1 1 15rem; min-width: 0; }
-.live-main .graph-side .gs-b { flex: 1.4 1 20rem; min-width: 0; margin-top: 0; }
-.live-main .readout { align-content: start; }
-.control-bar { margin-bottom: 0.75rem; }
+/* Connection and run controls share one card; the review of the entries stays directly under the buttons. */
+.control-bar { margin-bottom: 0.75rem; padding: 0.75rem 1rem; border: 1px solid var(--line); border-radius: 8px; background: var(--surface); }
 .control-bar p { margin: 0 0 0.5rem; }
+.conn-row { display: flex; flex-wrap: wrap; align-items: center; gap: 0.4rem 1.25rem; margin: 0 0 0.6rem; }
+.conn-row .step-h, .conn-row p.conn, .conn-row .graph-actions { margin: 0; }
+.control-bar .run-bar { margin: 0 0 0.5rem; }
+.control-bar .review, .control-bar .rv-det { background: var(--bg); }
 .conn { display: flex; flex-wrap: wrap; align-items: center; gap: 0.25rem 0.5rem; }
 .dot { display: inline-block; width: 0.7rem; height: 0.7rem; border-radius: 50%; border: 2px solid var(--muted); }
 .dot.on { background: var(--accent); border-color: var(--accent); }
@@ -641,11 +650,6 @@ button:disabled { opacity: 0.5; cursor: not-allowed; }
 .step-label { margin: 0.25rem 0 0.5rem; }
 .load-form .segmented { margin-top: 0.5rem; }
 
-@media (max-width: 1100px) {
-  .live-layout { grid-template-columns: minmax(0, 1fr); }
-  .panel { grid-template-columns: repeat(auto-fit, minmax(170px, 1fr)); align-items: end; }
-  .panel h2, .panel p { grid-column: 1 / -1; }
-}
 @media (max-width: 720px) {
   .steps, .protocol-grid { grid-template-columns: minmax(0, 1fr); }
   .glossary dl { grid-template-columns: minmax(0, 1fr); gap: 0.1rem; }
