@@ -20,7 +20,7 @@ Expected address: <https://alevaldo05.github.io/Biomaterials-Tensile-Tester/> (c
 
 1. Open the repository's **Actions** tab and find the newest run named **Deploy site**.
    - Yellow dot or spinner: still running (usually under two minutes).
-   - Green check: the new version is live.
+   - Green check: the checks passed and the new version is live. The run has two parts, **checks** and **deploy**.
    - Red cross: it failed. Open the run, then the step with the red cross, to read why. The site keeps showing the previous version.
 2. The run page shows the live address under the **Deploy to GitHub Pages** step. **Settings**, **Pages** also shows "Your site is live at ...".
 3. Open `/version.json` on the site (for example `https://alevaldo05.github.io/Biomaterials-Tensile-Tester/version.json`). Its `short` value must equal the first seven characters of the newest commit on `main`.
@@ -36,11 +36,31 @@ GitHub Pages lets browsers keep a file for up to 10 minutes and the setting cann
 
 Everything except the Git files, the workflow, `scripts/`, `docs/`, and the `.md` documents. The copy is made by `scripts/build-site.sh`.
 
+## Checks before publishing
+
+Before anything is published, `scripts/check-site.js` runs on GitHub. If any check fails, the deploy stops and the live site keeps its previous version. Pull requests run the same checks, so a red check shows before you merge.
+
+It looks at:
+
+1. **Page links:** every script, style sheet, and page that a page links to exists.
+2. **Script syntax:** every `.js` file is valid JavaScript (a missing quote, comma, or bracket is caught).
+3. **Data files:** the files in `data/` load in the order each page lists them and contain what the pages need (materials, example curves, protocols, references numbered 1, 2, 3 ... with none missing, page text, device settings).
+4. **Duplicate files:** no two files have the same content, which catches a file put in the wrong folder.
+5. **Build output:** the publish step stamps every link, writes `version.json`, and leaves out documents and scripts.
+6. **Private details:** no email address (except a GitHub no-reply one) and no key or token in any file.
+
+To read a failure: open the **Actions** tab, open the run, then **checks**, then **Check the site**. Each line starting with `FAIL` names the file and what to fix. Fix it on a branch and merge again.
+
+To run the checks on your own computer (needs Node.js): `node scripts/check-site.js`
+
+The checks do not test calculations, how pages look, other browsers, or the tester hardware.
+
 ## If something goes wrong
 
 - **Undo a change:** on the merged pull request choose **Revert**, then merge the revert pull request. The site redeploys the previous version.
 - **Go back to a saved copy:** see [BRANCHES.md](BRANCHES.md).
 - **Workflow shows a red cross before it starts:** check that Pages **Source** is set to **GitHub Actions**.
+- **A check fails:** see "Checks before publishing" above. The live site is unchanged until the problem is fixed and merged.
 
 ## Notes
 
