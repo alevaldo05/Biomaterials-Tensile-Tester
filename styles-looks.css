@@ -1,0 +1,91 @@
+/* Styles (Settings → Style). Each style changes shapes and type; with the Green light color theme it
+   also uses its own colors. With Green dark, Purple, or Pink, the theme's colors are kept. Standard is
+   the plain look from styles.css and has no rules here. */
+
+/* ---------- Lab instrument ---------- */
+:root[data-style="lab"][data-theme="light"] { --bg:#eceff1; --surface:#ffffff; --ink:#12181d; --muted:#465360; --line:#c9d2d9; --accent:#0e6a5b; --accent-hover:#0a5247; --link:#0c5e51; --focus:#08463c; }
+[data-style="lab"] .topbar, [data-style="lab"] .sidebar { background:#141a1f; border-color:#141a1f; }
+[data-style="lab"] .topbar { border-bottom:3px solid #0e6a5b; }
+[data-style="lab"] .topbar .brand, [data-style="lab"] .topbar nav a,
+[data-style="lab"] .sidebar .brand, [data-style="lab"] .sidebar nav a, [data-style="lab"] .sidebar .side-note { color:#e8eef2; }
+[data-style="lab"] .topbar nav a:hover, [data-style="lab"] .topbar nav a[aria-current="page"],
+[data-style="lab"] .sidebar nav a:hover, [data-style="lab"] .sidebar nav a[aria-current="page"] { background:#222b32; color:#fff; box-shadow:inset 0 -2px 0 #5cc2ad; }
+[data-style="lab"] .sidebar nav a[aria-current="page"] { box-shadow:inset 3px 0 0 #5cc2ad; }
+[data-style="lab"] .topbar :focus-visible, [data-style="lab"] .sidebar :focus-visible, [data-style="lab"] .hero :focus-visible { outline-color:#8fe0cf; }
+[data-style="lab"] .hero { --ink:#e8eef2; --muted:#b8c4cd; --link:#93dccb; background:#1b232a; color:#e8eef2; border-bottom:0; }
+[data-style="lab"] .hero .btn { background:#0e6a5b; color:#fff; }
+[data-style="lab"] .hero .btn-outline { background:transparent; color:#e8eef2; box-shadow:inset 0 0 0 2px #5cc2ad; }
+[data-style="lab"] h2 { font-size:0.8125rem; text-transform:uppercase; letter-spacing:0.08em; color:var(--muted); }
+[data-style="lab"] .panel h2, [data-style="lab"] .graph-side h2, [data-style="lab"] .action-card h2 { color:var(--ink); }
+[data-style="lab"] .choice h2 { font-size:1.125rem; text-transform:none; letter-spacing:0; color:var(--link); }
+[data-style="lab"] .btn, [data-style="lab"] .btn-secondary, [data-style="lab"] .btn-stop { border-radius:3px; text-transform:uppercase; letter-spacing:0.06em; font-size:0.8125rem; }
+[data-style="lab"] .panel, [data-style="lab"] .chart-wrap, [data-style="lab"] .choice, [data-style="lab"] .card, [data-style="lab"] .action-card, [data-style="lab"] .mini-card { border-radius:3px; }
+[data-style="lab"] .section { border-top-style:dashed; }
+[data-style="lab"] .readout dd, [data-style="lab"] .results td, [data-style="lab"] output, [data-style="lab"] .pf input, [data-style="lab"] #c-now { font-family:ui-monospace, "Cascadia Mono", Consolas, "SFMono-Regular", Menlo, monospace; }
+[data-style="lab"] .steps li::before { border-radius:3px; }
+
+/* ---------- Clinical clean ---------- */
+:root[data-style="clinical"][data-theme="light"] { --bg:#f5f8f7; --surface:#ffffff; --ink:#16302a; --muted:#4a645c; --line:#dce6e2; --accent:#2f7a62; --accent-hover:#25634f; --link:#246b55; --focus:#164b3b; }
+[data-style="clinical"] .topbar { background:var(--surface); border-bottom:0; box-shadow:0 1px 10px rgba(0, 0, 0, 0.08); }
+[data-style="clinical"] .topbar nav a { border-radius:999px; padding:0.3rem 0.9rem; }
+[data-style="clinical"] .topbar nav a[aria-current="page"] { background:color-mix(in srgb, var(--accent) 14%, var(--surface)); box-shadow:none; color:var(--link); }
+[data-style="clinical"] .hero { background:linear-gradient(180deg, color-mix(in srgb, var(--accent) 10%, var(--bg)), var(--bg)); border-bottom:0; }
+[data-style="clinical"] .hero h1 { font-weight:650; }
+[data-style="clinical"] .btn { border-radius:999px; padding:0.7rem 1.8rem; box-shadow:0 6px 16px color-mix(in srgb, var(--accent) 28%, transparent); }
+[data-style="clinical"] .btn-outline { box-shadow:inset 0 0 0 2px var(--accent); }
+[data-style="clinical"] .btn-secondary, [data-style="clinical"] .btn-stop { border-radius:999px; }
+[data-style="clinical"] main .section { border-top:0; background:var(--surface); border-radius:16px; padding:calc(1.25rem * var(--sp)) 1.5rem; margin:calc(1rem * var(--sp)) 0; box-shadow:0 2px 14px rgba(0, 0, 0, 0.06); }
+[data-style="clinical"] .panel, [data-style="clinical"] .chart-wrap, [data-style="clinical"] .choice, [data-style="clinical"] .card, [data-style="clinical"] .action-card, [data-style="clinical"] .mini-card { border-radius:16px; box-shadow:0 2px 14px rgba(0, 0, 0, 0.06); }
+[data-style="clinical"] .badge { background:color-mix(in srgb, var(--accent) 10%, var(--surface)); }
+[data-style="clinical"] .steps li::before { box-shadow:0 0 0 4px color-mix(in srgb, var(--accent) 18%, var(--surface)); }
+
+/* ---------- Engineering drawing ---------- */
+:root[data-style="drafting"][data-theme="light"] { --bg:#f3f5f1; --surface:#fbfcf9; --ink:#1b2833; --muted:#435262; --line:#a9b8c4; --accent:#2c6a5a; --accent-hover:#225446; --link:#235a4c; --focus:#163d34; }
+[data-style="drafting"] body { background-image:linear-gradient(color-mix(in srgb, var(--ink) 7%, transparent) 1px, transparent 1px), linear-gradient(90deg, color-mix(in srgb, var(--ink) 7%, transparent) 1px, transparent 1px); background-size:20px 20px; }
+[data-style="drafting"] h1, [data-style="drafting"] h2, [data-style="drafting"] h3, [data-style="drafting"] .brand, [data-style="drafting"] .topbar nav a, [data-style="drafting"] .sidebar nav a,
+[data-style="drafting"] .btn, [data-style="drafting"] .btn-secondary, [data-style="drafting"] .badge { font-family:"Arial Narrow", "Roboto Condensed", "Helvetica Neue", Arial, sans-serif; }
+[data-style="drafting"] h1 { text-transform:uppercase; letter-spacing:0.06em; font-weight:700; }
+[data-style="drafting"] h2 { text-transform:uppercase; letter-spacing:0.08em; font-size:0.9375rem; }
+[data-style="drafting"] .topbar { background:var(--surface); border-bottom:2px solid var(--ink); }
+[data-style="drafting"] .topbar nav a { border-radius:0; text-transform:uppercase; letter-spacing:0.06em; font-size:0.875rem; }
+[data-style="drafting"] .topbar nav a[aria-current="page"] { box-shadow:inset 0 -3px 0 var(--accent); background:transparent; }
+[data-style="drafting"] .hero { background:transparent; border-bottom:2px solid var(--ink); }
+[data-style="drafting"] .section { border-top-color:var(--ink); }
+[data-style="drafting"] .btn, [data-style="drafting"] .btn-secondary, [data-style="drafting"] .btn-stop, [data-style="drafting"] .badge { border-radius:0; }
+[data-style="drafting"] .btn { border:2px solid var(--ink); }
+[data-style="drafting"] .panel, [data-style="drafting"] .chart-wrap, [data-style="drafting"] .choice, [data-style="drafting"] .card, [data-style="drafting"] .action-card, [data-style="drafting"] .mini-card { border-radius:0; border:1px solid var(--ink); box-shadow:4px 4px 0 color-mix(in srgb, var(--ink) 12%, transparent); }
+[data-style="drafting"] .steps li::before { border-radius:0; background:transparent; color:var(--ink); border:1.5px solid var(--ink); }
+
+/* ---------- Bold modern ---------- */
+:root[data-style="bold"][data-theme="light"] { --bg:#ffffff; --surface:#f3f5f3; --ink:#101411; --muted:#4a524c; --line:#e1e5e2; --accent:#1d6b45; --accent-hover:#155436; --link:#185e3c; --focus:#0f3f27; }
+[data-style="bold"] .brand { font-weight:800; letter-spacing:-0.01em; }
+[data-style="bold"] .hero { --ink:#ffffff; --muted:#cde6d8; --link:#e4f7c0; background:#0f3a28; color:#fff; border-bottom:0; }
+[data-style="bold"] .hero h1 { font-size:3.25rem; font-weight:800; letter-spacing:-0.03em; line-height:1.05; }
+[data-style="bold"] .hero .sub { font-size:1.25rem; }
+[data-style="bold"] .hero .btn { background:#c6ef6b; color:#0f3a28; }
+[data-style="bold"] .hero .btn:hover { background:#d6f68f; }
+[data-style="bold"] .hero .btn-outline { background:transparent; color:#fff; box-shadow:inset 0 0 0 2px #fff; }
+[data-style="bold"] .hero :focus-visible { outline-color:#c6ef6b; }
+[data-style="bold"] .hero .inner { grid-template-columns:minmax(0, 1fr) minmax(16.25rem, 28.75rem); padding-top:3rem; padding-bottom:3rem; }
+[data-style="bold"] h1 { font-weight:800; letter-spacing:-0.02em; }
+[data-style="bold"] h2 { font-size:1.5rem; font-weight:800; letter-spacing:-0.01em; }
+[data-style="bold"] .panel h2, [data-style="bold"] .graph-side h2 { font-size:1.125rem; }
+[data-style="bold"] .section { border-top:4px solid var(--ink); padding-top:calc(1.5rem * var(--sp)); }
+[data-style="bold"] .btn, [data-style="bold"] .btn-secondary, [data-style="bold"] .btn-stop { border-radius:10px; }
+[data-style="bold"] .btn { font-weight:700; }
+[data-style="bold"] .panel, [data-style="bold"] .chart-wrap, [data-style="bold"] .choice, [data-style="bold"] .card, [data-style="bold"] .mini-card { border-color:transparent; background:var(--surface); border-radius:14px; }
+[data-style="bold"] .steps li::before { width:2rem; height:2rem; font-size:1rem; }
+
+/* ---------- Academic report ---------- */
+:root[data-style="academic"][data-theme="light"] { --bg:#fbfaf6; --surface:#ffffff; --ink:#1d1d1b; --muted:#4e4d48; --line:#d8d4c8; --accent:#2d5a3d; --accent-hover:#234731; --link:#264d34; --focus:#183522; }
+[data-style="academic"] h1 { font-weight:400; font-size:2.1rem; letter-spacing:-0.005em; }
+[data-style="academic"] .hero h1 { font-size:2.6rem; }
+[data-style="academic"] h2 { font-variant:small-caps; letter-spacing:0.05em; font-weight:600; font-size:1.2rem; border-bottom:1px solid var(--ink); padding-bottom:0.2rem; }
+[data-style="academic"] .panel h2, [data-style="academic"] .graph-side h2, [data-style="academic"] .choice h2, [data-style="academic"] .action-card h2 { border-bottom:0; }
+[data-style="academic"] .topbar { border-bottom:3px double var(--ink); }
+[data-style="academic"] .brand span { font-style:italic; }
+[data-style="academic"] .hero { background:transparent; border-bottom:3px double var(--ink); }
+[data-style="academic"] .section { border-top:0; }
+[data-style="academic"] .btn, [data-style="academic"] .btn-secondary, [data-style="academic"] .btn-stop, [data-style="academic"] .badge { border-radius:2px; }
+[data-style="academic"] .panel, [data-style="academic"] .chart-wrap, [data-style="academic"] .choice { border-radius:0; border:0; border-top:2px solid var(--ink); background:transparent; }
+[data-style="academic"] .steps li::before { background:transparent; color:var(--ink); border:1px solid var(--ink); font-family:Georgia, serif; font-style:italic; }

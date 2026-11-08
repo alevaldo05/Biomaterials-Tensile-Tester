@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' blob:; font-src 'self'; connect-src 'none'; form-action 'none'; base-uri 'none'; object-src 'none'">
+  <meta name="referrer" content="no-referrer">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="What tensile testing is, how engineering materials differ from biomaterials, the project's status, further reading, and references.">
+  <link rel="icon" href="favicon.svg" type="image/svg+xml">
+  <link rel="icon" href="favicon.png" type="image/png" sizes="64x64">
+  <title>About – Biomaterials Tensile Tester</title>
+  <link rel="stylesheet" href="styles.css">
+  <link rel="stylesheet" href="styles-looks.css">
+  <link rel="stylesheet" href="layouts.css">
+  <script src="display-settings.js"></script>
+</head>
+<body data-text-page="about">
+  <header class="topbar">
+    <div class="inner">
+      <a class="brand" href="index.html"><svg class="logo" viewBox="0 0 48 48" aria-hidden="true" focusable="false"><rect width="48" height="48" rx="11" style="fill:var(--accent)"/><g fill="none" stroke-linecap="round" stroke-width="3" style="stroke:var(--accent-ink)"><path d="M8 15q4-5 8 0t8 0H40"/><path d="M8 24q4 5 8 0t8 0H40" opacity=".85"/><path d="M8 33q4-5 8 0t8 0H40"/></g></svg><span>Biomaterials Tensile Tester</span></a>
+      <nav aria-label="Main">
+        <a href="index.html">Home</a>
+        <a href="learn.html">Learn</a>
+        <a href="protocol-uniaxial-tension.html">Protocols</a>
+        <a href="materials.html">Materials</a>
+        <a href="calibration.html">Calibration</a>
+        <a href="about.html" aria-current="page">About</a>
+        <a href="help.html">Help</a>
+        <a href="settings.html">Settings</a>
+      </nav>
+    </div>
+  </header>
+
+  <main>
+    <a class="back" href="index.html">&larr; Back to Home</a>
+    <p class="status"><span class="badge">Prototype</span> <span class="muted"></span></p>
+    <h1>About tensile testing</h1>
+
+    <section class="section" aria-labelledby="measures-title" data-tab="What it measures">
+      <h2 id="measures-title">What a tensile test measures</h2>
+    </section>
+
+    <section class="section" aria-labelledby="why-title" data-tab="Why it matters">
+      <h2 id="why-title">Why tensile testing matters</h2>
+    </section>
+
+    <section class="section" aria-labelledby="compare-title" data-tab="Materials vs. skin">
+      <h2 id="compare-title">Engineering materials and biomaterials</h2>
+    </section>
+
+    <section class="section" aria-labelledby="skin-title" data-tab="Skin">
+      <h2 id="skin-title">Skin: why one number is not enough</h2>
+    </section>
+
+    <section class="section" aria-labelledby="time-title" data-tab="Relaxation and creep">
+      <h2 id="time-title">Stress relaxation and creep</h2>
+    </section>
+
+    <section class="section" aria-labelledby="skin-why-title" data-tab="Uses for skin">
+      <h2 id="skin-why-title">Why it matters for skin</h2>
+    </section>
+
+    <section class="section" aria-labelledby="limits-title" data-tab="Limits">
+      <h2 id="limits-title">Limits of this tester today</h2>
+    </section>
+
+    <section class="section" aria-labelledby="status-title" data-tab="Project status">
+      <h2 id="status-title">Project status</h2>
+    </section>
+
+    <section class="section" aria-labelledby="reading-title" data-tab="Further reading">
+      <h2 id="reading-title">Further reading</h2>
+      <ul class="articles" id="articles"></ul>
+      <p class="muted" id="articles-empty">Articles will be listed here.</p>
+    </section>
+
+    <section class="section" aria-labelledby="refs-title" data-tab="References">
+      <h2 id="refs-title">References</h2>
+    </section>
+  </main>
+  <script src="data/text/about.js"></script>
+  <script src="text.js"></script>
+  <script src="data/articles.js"></script>
+  <script src="further-reading.js"></script>
+  <script src="layouts.js"></script>
+</body>
+</html>
