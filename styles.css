@@ -636,8 +636,13 @@ button:disabled { opacity: 0.5; cursor: not-allowed; }
 .live-main .graph-side .gs-a { flex: 1 1 15rem; min-width: 0; }
 .live-main .graph-side .gs-b { flex: 1.4 1 20rem; min-width: 0; margin-top: 0; }
 .live-main .readout { align-content: start; }
-.control-bar { margin-bottom: 0.75rem; }
+/* Connection and run controls share one card; the review of the entries stays directly under the buttons. */
+.control-bar { margin-bottom: 0.75rem; padding: 0.75rem 1rem; border: 1px solid var(--line); border-radius: 8px; background: var(--surface); }
 .control-bar p { margin: 0 0 0.5rem; }
+.conn-row { display: flex; flex-wrap: wrap; align-items: center; gap: 0.4rem 1.25rem; margin: 0 0 0.6rem; }
+.conn-row .step-h, .conn-row p.conn, .conn-row .graph-actions { margin: 0; }
+.control-bar .run-bar { margin: 0 0 0.5rem; }
+.control-bar .review, .control-bar .rv-det { background: var(--bg); }
 .conn { display: flex; flex-wrap: wrap; align-items: center; gap: 0.25rem 0.5rem; }
 .dot { display: inline-block; width: 0.7rem; height: 0.7rem; border-radius: 50%; border: 2px solid var(--muted); }
 .dot.on { background: var(--accent); border-color: var(--accent); }
