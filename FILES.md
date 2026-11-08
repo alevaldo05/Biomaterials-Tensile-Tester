@@ -69,6 +69,7 @@ Each page has its own header, navigation, and text in its HTML. The interactive 
 | `docs/BRANCHES.md` | Backups (tags), `main`, branch rules, and how to go back to a backup. |
 | `.github/workflows/deploy.yml` | The workflow that publishes the site when `main` changes. Not part of the published site. |
 | `scripts/build-site.sh` | Used by the workflow: copies the site, adds `?v=<commit>` to script and style links, writes `version.json`. Does not change the repository files. |
+| `scripts/check-site.js` | Run by the workflow before every publish (and on pull requests): checks links, script syntax, data files, duplicates, the build output, and that no email address or key is in any file. Changes nothing. Run locally with `node scripts/check-site.js`. |
 | `AGENTS.md` | Workflow rules for AI assistants. |
 | `CLAUDE.md` | One line that loads `AGENTS.md` in Claude Code (name required by Claude Code). |
 
