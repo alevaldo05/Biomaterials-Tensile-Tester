@@ -20,8 +20,8 @@ Everything is in the project root except `data/`, which holds the content and se
 | `protocol-stress-relaxation.html` | Stress Relaxation protocol (draft). |
 | `settings.html` | Settings: color theme, font, layout, style, text size, spacing, motion, and graph line thickness, curve style, and grid. |
 | `404.html` | Shown by GitHub Pages for a wrong address at any depth. Its links start with `/Biomaterials-Tensile-Tester/`; change that in this one file if the site is renamed or moved to its own domain. |
-| `favicon.svg` | The browser-tab icon (the header logo in the default green). |
-| `favicon.png` | The same icon as a 64 px picture, for browsers that ignore SVG icons. |
+| `favicon.svg` | The browser-tab icon: the "BTT" letters on a rounded square in the default green. `display-settings.js` swaps in the selected theme's colors while a page is open (the 404 page keeps this green icon). |
+| `favicon.png` | The same icon as a 64 px picture, for browsers that ignore SVG icons. It stays green; the script removes this link when it swaps in the colored icon. |
 
 Each page has its own header, navigation, and text in its HTML. The interactive parts are drawn by the scripts below. The chosen layout rearranges what is already on the page; content is written only once.
 
@@ -34,7 +34,7 @@ Every page except `404.html` starts with a "Skip to main content" link (`.skip-l
 | `styles.css` | every page | Shared styles, the four color themes, and the three font stacks. |
 | `styles-looks.css` | every page | The five optional styles (Lab instrument, Clinical clean, Engineering drawing, Bold modern, Academic report). |
 | `layouts.css` | every page | Styles for the five layouts and the Settings choices. |
-| `display-settings.js` | every page | Applies the saved color theme, font, style, layout, text size, spacing, motion, and graph choices before the page appears; swaps in each style's logo; runs the Settings choices. |
+| `display-settings.js` | every page | Applies the saved color theme, font, style, layout, text size, spacing, motion, and graph choices before the page appears; colors the browser-tab icon to match the selected theme; runs the Settings choices. |
 | `layouts.js` | every page except `check-text.html` | Rearranges the page for the chosen layout (Start screen, Sidebar, Cards, Tabs, Reading) and makes the "Skip to main content" link move focus without changing the address hash. |
 | `page-nav.js` | `help.html`, `about.html`, `settings.html` | Loaded after `layouts.js`. Adds a short "On this page" list on Help and About (only where the chosen layout has none), "Back to top" links, a "Jump to" list of setting groups on Settings, and the search box at the top of Help. Nothing is saved. |
 | `graph.js` | test, protocol, and Load Test pages | The graph engine (`window.TensileGraph`): plain SVG graph, readout, key results, region guides, key-result points, zoom and pan, Customize graph, PNG/SVG download, editable dimensions, CSV reading. |
@@ -94,7 +94,8 @@ Every page except `404.html` starts with a "Skip to main content" link (`.skip-l
 | Before you test, Background, Glossary | `learn.html` |
 | About page text, Project status, references | `about.html` |
 | Colors, spacing, themes, fonts | `styles.css` |
-| Styles (looks) and their logos | `styles-looks.css`, `display-settings.js` |
+| Styles (looks) | `styles-looks.css`, `display-settings.js` |
+| The header logo (the "BTT" letters; its color follows the selected theme through `--accent`, and `--logo-ink` on the Lab style's dark header) | the same `<svg class="logo">` in each page's header, `.logo` in `styles.css` |
 | Layouts | `layouts.css`, `layouts.js` |
 | Graph drawing, key results (modulus, yield, UTS…), CSV reading | `graph.js` |
 | Test page behavior, CSV download | `live.js` |
