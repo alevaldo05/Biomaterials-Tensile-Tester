@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Materials – Biomaterials Tensile Tester</title>
+  <link rel="stylesheet" href="styles.css">
+  <link rel="stylesheet" href="styles-looks.css">
+  <link rel="stylesheet" href="layouts.css">
+  <script src="display-settings.js"></script>
+</head>
+<body>
+  <header class="topbar">
+    <div class="inner">
+      <a class="brand" href="index.html"><svg class="logo" viewBox="0 0 48 48" aria-hidden="true" focusable="false"><rect width="48" height="48" rx="11" style="fill:var(--accent)"/><g fill="none" stroke-linecap="round" stroke-width="3" style="stroke:var(--accent-ink)"><path d="M8 15q4-5 8 0t8 0H40"/><path d="M8 24q4 5 8 0t8 0H40" opacity=".85"/><path d="M8 33q4-5 8 0t8 0H40"/></g></svg><span>Biomaterials Tensile Tester</span></a>
+      <nav aria-label="Main">
+        <a href="index.html">Home</a>
+        <a href="learn.html">Learn</a>
+        <a href="protocol-uniaxial-tension.html">Protocols</a>
+        <a href="materials.html" aria-current="page">Materials</a>
+        <a href="calibration.html">Calibration</a>
+        <a href="about.html">About</a>
+        <a href="help.html">Help</a>
+        <a href="settings.html">Settings</a>
+      </nav>
+    </div>
+  </header>
+
+  <main class="wide">
+    <a class="back" href="index.html">&larr; Back to Home</a>
+    <p class="status"><span class="badge">Draft</span> <span class="muted">Typical, approximate values &ndash; unreviewed</span></p>
+    <h1>Materials</h1>
+    <p class="sub">Typical properties, a stiffness-against-density chart, and an example graph for each material in the list. The same list is used on the protocol and test pages.</p>
+
+    <div id="materials-app"><p class="muted">Enable JavaScript to view the materials.</p></div>
+
+    <section class="section" id="source-section" aria-labelledby="source-title">
+      <h2 id="source-title">Where these values come from</h2>
+      <p>The numbers on this page are <strong>typical, approximate ranges</strong> of the kind found in materials textbooks and handbooks. They are <strong>not</strong> measured on this tester, they are not copied from one named table, and no one on the project team has checked them yet. Every row is marked &ldquo;Typical, unreviewed&rdquo;, and rows with an especially wide spread are marked &ldquo;Very approximate&rdquo;.</p>
+      <ul>
+        <li><strong>Metals, plastics, rubbers, wood, composites, concrete:</strong> the real value depends on the exact grade or formulation, heat treatment or cure, direction (along or across the grain or fibres), moisture, temperature, and how fast the specimen is pulled. Use your own supplier&rsquo;s data sheet for a real specimen.</li>
+        <li><strong>Biomaterials:</strong> values vary even more, with species, body site, age, hydration, storage, and loading rate. For skin, the modulus shown is the stiffer, linear-region value; the toe region at small strain is much softer. Different studies report very different numbers, so compare studies cautiously.</li>
+        <li><strong>Example graphs:</strong> for skin, mild steel, and concrete the curves are the project&rsquo;s earlier sample curves. For every other material the curve shape is <strong>built in the browser from the typical mid-range values</strong> (modulus, yield, tensile strength, elongation). The curve shape is schematic: its parameters may come from separate illustrative ranges and may not represent one consistent experimental dataset, and region names are educational annotations, not detected material transitions. It is not data and not a measurement, and it is labeled &ldquo;Sample data, not measured&rdquo;.</li>
+        <li><strong>Source and review fields:</strong> each material has a place for the source of its values, the type of value (supplier typical value, specification minimum, measured study result, or illustrative), the conditions the values apply to, the density basis (for example apparent or tissue density), and the review (status, reviewer, date, and scope). Until someone fills them in, each shows &ldquo;Not recorded yet&rdquo;. &ldquo;Not established here&rdquo; means no supported value is recorded. A review covers only what its scope says, and values from different conditions are not combined into one representative specimen.</li>
+        <li><strong>Before relying on a number,</strong> check it against your own source and have your advisor review it. Standards are cited by number only elsewhere on this site, and nothing here claims to meet one.</li>
+      </ul>
+    </section>
+  </main>
+  <script src="data/materials.js"></script>
+  <script src="data/samples.js"></script>
+  <script src="data/sample-models.js"></script>
+  <script src="graph.js"></script>
+  <script src="excel-export.js"></script>
+  <script src="materials.js"></script>
+  <script src="layouts.js"></script>
+</body>
+</html>

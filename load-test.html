@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Load Test – Biomaterials Tensile Tester</title>
+  <link rel="stylesheet" href="styles.css">
+  <link rel="stylesheet" href="styles-looks.css">
+  <link rel="stylesheet" href="layouts.css">
+  <script src="display-settings.js"></script>
+</head>
+<body>
+  <header class="topbar">
+    <div class="inner">
+      <a class="brand" href="index.html"><svg class="logo" viewBox="0 0 48 48" aria-hidden="true" focusable="false"><rect width="48" height="48" rx="11" style="fill:var(--accent)"/><g fill="none" stroke-linecap="round" stroke-width="3" style="stroke:var(--accent-ink)"><path d="M8 15q4-5 8 0t8 0H40"/><path d="M8 24q4 5 8 0t8 0H40" opacity=".85"/><path d="M8 33q4-5 8 0t8 0H40"/></g></svg><span>Biomaterials Tensile Tester</span></a>
+      <nav aria-label="Main">
+        <a href="index.html">Home</a>
+        <a href="learn.html">Learn</a>
+        <a href="protocol-uniaxial-tension.html">Protocols</a>
+        <a href="materials.html">Materials</a>
+        <a href="calibration.html">Calibration</a>
+        <a href="about.html">About</a>
+        <a href="help.html">Help</a>
+        <a href="settings.html">Settings</a>
+      </nav>
+    </div>
+  </header>
+
+  <main class="wide">
+    <a class="back" href="index.html">&larr; Back to Home</a>
+    <h1>Load Test</h1>
+    <p class="sub">Open a CSV file from an earlier test to view its graph and key results, or compare several files. Files stay in this browser tab; nothing is uploaded or saved.</p>
+
+    <form class="load-form" id="load-form" novalidate>
+      <fieldset class="segmented">
+        <legend>Mode</legend>
+        <div class="options">
+          <label><input type="radio" name="load-mode" value="one" checked> Open one file</label>
+          <label><input type="radio" name="load-mode" value="compare"> Compare several files</label>
+        </div>
+      </fieldset>
+      <fieldset class="segmented">
+        <legend>1. Test type</legend>
+        <div class="options">
+          <label><input type="radio" name="load-test" value="uniaxial" checked> Uniaxial Tension</label>
+          <label><input type="radio" name="load-test" value="relaxation"> Stress Relaxation</label>
+        </div>
+      </fieldset>
+      <div id="mode-one">
+      <p class="step-label"><strong>2. File</strong></p>
+      <div class="graph-actions">
+        <button type="button" class="btn" id="load-btn">Choose CSV file</button>
+        <input type="file" id="load-file" accept=".csv,.txt,text/csv,text/plain" hidden>
+      </div>
+      <p class="csv-msg" id="load-msg" role="status"></p>
+      </div>
+      <div id="mode-compare" hidden>
+        <p class="step-label"><strong>2. Files</strong> <span class="muted small">Up to 12 files of the same test type.</span></p>
+        <div class="graph-actions">
+          <button type="button" class="btn" id="cmp-btn">Choose CSV files</button>
+          <input type="file" id="cmp-file" accept=".csv,.txt,text/csv,text/plain" multiple hidden>
+        </div>
+        <p class="csv-msg" id="cmp-msg" role="status"></p>
+      </div>
+      <details class="csv-help">
+        <summary>CSV format</summary>
+        <p>Files downloaded from a New Test page open directly, with their dimensions and test details. Other files work too: the first row is a header, and columns are matched by keyword (any case). Put units in the name, for example <code>force_N</code>, <code>displacement_mm</code>, <code>stress_MPa</code>, <code>time_s</code>, <code>strain_%</code>.</p>
+        <p><strong>Uniaxial tension:</strong> <code>displacement</code> plus <code>force</code>, or <code>strain</code> plus <code>stress</code>.</p>
+        <p><strong>Stress relaxation:</strong> <code>time</code> plus <code>force</code> or <code>stress</code> (optionally a <code>displacement</code> or <code>strain</code> column for the hold). Time is shifted to start at 0.</p>
+        <p>Comma, semicolon, or tab separated; at least 10 rows; up to 20 MB. Lines starting with <code>#</code> are notes. Without saved dimensions, force and displacement are converted with example dimensions that you can edit below the graph.</p>
+        <pre>displacement_mm,force_N
+0,0
+0.1,0.9
+0.2,2.1
+...</pre>
+      </details>
+    </form>
+
+    <div id="graph-app"></div>
+    <div id="compare-app" hidden></div>
+  </main>
+
+  <script src="data/samples.js"></script>
+  <script src="graph.js"></script>
+  <script src="excel-export.js"></script>
+  <script src="report.js"></script>
+  <script src="load-test.js"></script>
+  <script src="compare.js"></script>
+  <script src="layouts.js"></script>
+</body>
+</html>
