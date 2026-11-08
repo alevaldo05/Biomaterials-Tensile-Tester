@@ -22,6 +22,7 @@ window.SITE_TEXT.help = {
           labels: [ "What to do" ],
           rows: [
             [ "The USB button is unavailable", "This browser or context does not offer the required serial capability. In this project, USB works in Chrome on a computer only. In Safari, use the simulator. This does not diagnose the device." ],
+            [ "A message beside a field says \"That is not a number\" or \"Enter the ...\"", "Type digits only, with a point or a comma, in the unit shown (mm, mm/min, or s). Dimensions, speed, and hold values must be greater than 0. The Review panel above Start lists every entry that still needs attention, with a button that moves to the field. Start stays unavailable until you connect or choose the simulator." ],
             [ "Permission denied", "No port was opened. Review the browser’s site permission and select the intended port when ready." ],
             [ "Port unavailable", "Close other applications using the port. Confirm the device and operating-system connection." ],
             [ "Connected but no readings", "Connection does not confirm compatible controller firmware. Check the agreed message format and device state." ],

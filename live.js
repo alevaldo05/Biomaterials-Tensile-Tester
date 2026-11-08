@@ -31,8 +31,9 @@
   function esc(s) {
     return String(s).replace(/[&<>"']/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]; });
   }
-  function field(id, label, attrs) {
-    return '<label class="pf"><span>' + label + '</span><input id="' + id + '" ' + (attrs || 'type="number" min="0" step="any" inputmode="decimal"') + '></label>';
+  function field(id, label, attrs, withMsg) {
+    var one = '<label class="pf"><span>' + label + '</span><input id="' + id + '" ' + (attrs || 'type="number" min="0" step="any" inputmode="decimal"') + (withMsg ? ' aria-describedby="m-' + id + '"' : '') + '></label>';
+    return withMsg ? '<div class="pf-wrap">' + one + '<span class="pf-msg" id="m-' + id + '" hidden></span></div>' : one;
   }
 
   /* ---------- page layout ---------- */
@@ -40,18 +41,22 @@
     '<div class="live-layout">' +
       '<form class="panel" id="spec" novalidate aria-labelledby="spec-title">' +
         '<h2 id="spec-title">Specimen and settings</h2>' +
+        '<h3 class="step-h">1. Specimen</h3>' +
         '<label class="pf"><span>Material</span><select id="s-mat">' + matOptions() + '</select></label>' +
         field('s-id', 'Specimen ID', 'type="text" autocomplete="off"') +
-        field('s-L0', 'Gauge length, L<sub>0</sub> (mm)') +
-        field('s-W', 'Width (mm)') +
-        field('s-T', 'Thickness (mm)') +
+        '<h3 class="step-h">2. Dimensions (mm)</h3>' +
+        field('s-L0', 'Gauge length, L<sub>0</sub> (mm)', undefined, true) +
+        field('s-W', 'Width (mm)', undefined, true) +
+        field('s-T', 'Thickness (mm)', undefined, true) +
         '<div class="pf"><span>Area, A<sub>0</sub> (mm²)</span><output id="s-A">—</output></div>' +
-        field('s-speed', 'Crosshead speed (mm/min)') +
+        '<p class="pf-note" id="dim-note" hidden></p>' +
+        '<h3 class="step-h">3. Test settings</h3>' +
+        field('s-speed', 'Crosshead speed (mm/min)', undefined, true) +
         (isRelax ?
-          field('s-hold', 'Hold displacement, ΔL (mm)') +
+          field('s-hold', 'Hold displacement, ΔL (mm)', undefined, true) +
           '<div class="pf"><span>Hold strain, ε<sub>0</sub> = ΔL/L<sub>0</sub></span><output id="s-e0">—</output></div>' +
-          field('s-holds', 'Hold duration (s)') : '') +
-        field('s-temp', 'Temperature (°C)', 'type="text" inputmode="decimal" autocomplete="off"') +
+          field('s-holds', 'Hold duration (s)', undefined, true) : '') +
+        field('s-temp', 'Temperature (°C)', 'type="text" inputmode="decimal" autocomplete="off"', true) +
         field('s-env', 'Environment', 'type="text" autocomplete="off"') +
         '<label class="pf"><span>Notes</span><textarea id="s-notes" rows="2"></textarea></label>' +
         '<p class="small"><button type="button" class="btn-link" id="s-example">Fill example values</button></p>' +
@@ -59,6 +64,7 @@
       '</form>' +
       '<div class="live-main">' +
         '<div class="control-bar">' +
+          '<h3 class="step-h">4. Connection</h3>' +
           '<p class="conn"><span class="dot" id="c-dot" aria-hidden="true"></span><strong id="c-text">Not connected</strong> <span class="muted" id="c-now"></span></p>' +
           '<div class="graph-actions">' +
             '<button type="button" class="btn-secondary" id="c-usb">Connect to tester (USB)</button>' +
@@ -72,8 +78,11 @@
             '<button type="button" class="btn-stop" id="r-stop">STOP — sends a stop command</button>' +
             '<label class="check"><input type="checkbox" id="r-auto" checked> ' + (isRelax ? 'Auto-stop at end of hold' : 'Send STOP after detected force drop') + '</label>' +
           '</div>' +
+          '<p class="small muted" id="r-why"></p>' +
+          '<section class="review" aria-labelledby="rv-title"><h3 class="step-h" id="rv-title">5. Review before starting</h3><p class="rv-sum" id="rv-sum"></p></section>' +
           '<p class="small muted">Esc also sends STOP while connected. <a href="help.html">Help and keyboard keys</a></p>' +
           '<p class="csv-msg" id="r-msg" role="status"></p>' +
+          '<details class="rv-det" id="rv-det"><summary>Show every value to review</summary><p class="small muted" id="c-explain">Simulator readings are labeled “Simulated data, not measured”. A USB tester is draft and unvalidated.</p><div id="rv-body"></div></details>' +
           '<p class="small muted" id="r-info"></p>' +
         '</div>' +
         '<div id="graph-app"></div>' +
@@ -88,7 +97,18 @@
   }
 
   /* ---------- specimen form ---------- */
-  function num(id) { var e = $(id); if (!e) return null; var v = parseFloat(String(e.value).replace(',', '.')); return v > 0 ? v : null; }
+  /* A number is digits with an optional point or comma and an optional exponent, nothing else ("12abc" is not a number). */
+  var NUM = /^[+-]?(\d+([.,]\d*)?|[.,]\d+)([eE][+-]?\d+)?$/;
+  function read(id) {   /* { state: 'empty' | 'text' | 'ok', value } */
+    var e = $(id);
+    if (!e) return { state: 'empty', value: null };
+    var t = String(e.value).trim();
+    if (t === '') return { state: e.validity && e.validity.badInput ? 'text' : 'empty', value: null };
+    if (!NUM.test(t)) return { state: 'text', value: null };
+    var v = parseFloat(t.replace(',', '.'));
+    return isFinite(v) ? { state: 'ok', value: v } : { state: 'text', value: null };
+  }
+  function num(id) { var r = read(id); return r.state === 'ok' && r.value > 0 ? r.value : null; }
   function spec() {
     var m = $('s-mat').value;
     return {
@@ -122,17 +142,97 @@
     var s = spec();
     $('s-A').textContent = s.W && s.T ? sig(s.W * s.T, 4) : '—';
     if (isRelax) $('s-e0').textContent = s.hold_mm && s.L0 ? sig(s.hold_mm / s.L0, 4) : '—';
+    var ex = dimSourceNow() === 'example', dn = $('dim-note');
+    dn.hidden = !ex;
+    dn.textContent = ex ? 'These dimensions are example values from the labeled sample data, not measurements of your specimen.' : '';
   }
-  var REQUIRED = [['s-L0', 'gauge length'], ['s-W', 'width'], ['s-T', 'thickness'], ['s-speed', 'crosshead speed']]
-    .concat(isRelax ? [['s-hold', 'hold displacement'], ['s-holds', 'hold duration']] : []);
-  function validate() {
-    var missing = [];
-    REQUIRED.forEach(function (q) {
-      var ok = num(q[0]) !== null;
-      if (ok) $(q[0]).removeAttribute('aria-invalid'); else { $(q[0]).setAttribute('aria-invalid', 'true'); missing.push(q); }
-    });
-    return missing;
+  /* The entries Start needs, with the unit to name in messages. */
+  var FIELDS = [['s-L0', 'gauge length', 'mm'], ['s-W', 'width', 'mm'], ['s-T', 'thickness', 'mm'], ['s-speed', 'crosshead speed', 'mm/min']]
+    .concat(isRelax ? [['s-hold', 'hold displacement', 'mm'], ['s-holds', 'hold duration', 's']] : []);
+  var FIELD_IDS = FIELDS.map(function (q) { return q[0]; }).concat(['s-temp']), touched = {};
+  function fieldInfo(id) { return FIELDS.filter(function (q) { return q[0] === id; })[0]; }
+  /* What is wrong with one required entry, in plain words ('' when it is fine). */
+  function problemText(id) {
+    var q = fieldInfo(id), r = read(id);
+    if (!q) return '';
+    if (r.state === 'empty') return 'Enter the ' + q[1] + ' in ' + q[2] + '.';
+    if (r.state === 'text') return 'That is not a number. Enter digits only, for example 12.5 (' + q[2] + ').';
+    if (r.value <= 0) return 'Enter a number greater than 0 (' + q[2] + ').';
+    return '';
   }
+  /* A note that does not stop Start. */
+  function warnText(id) {
+    if (id === 's-hold') {
+      var h = num('s-hold'), l = num('s-L0');
+      if (h && l && h >= l) return 'The hold displacement is not smaller than the gauge length, so the hold strain would be 100% or more. Check that both are in mm.';
+    }
+    if (id === 's-temp' && $('s-temp').value.trim() && read('s-temp').state !== 'ok') return 'The temperature is not a number, so it is saved as typed. Enter a number in °C if you can.';
+    return '';
+  }
+  function showMsg(id, text, isWarn) {
+    var m = $('m-' + id), e = $(id);
+    if (!m || !e) return;
+    m.textContent = text; m.hidden = !text; m.className = 'pf-msg' + (text && isWarn ? ' warn' : '');
+    if (text && !isWarn) e.setAttribute('aria-invalid', 'true'); else e.removeAttribute('aria-invalid');
+  }
+  function checkField(id) { var p = problemText(id); showMsg(id, p || warnText(id), !p); }
+  function clearMessages() { touched = {}; FIELD_IDS.forEach(function (id) { showMsg(id, ''); }); }
+  function problemList() { return FIELDS.filter(function (q) { return problemText(q[0]); }).map(function (q) { return { id: q[0], name: q[1], text: problemText(q[0]) }; }); }
+  /* Checks every required entry (showing the messages) and returns what needs attention: [{ id, name, text }]. */
+  function validate() { FIELDS.forEach(function (q) { touched[q[0]] = true; checkField(q[0]); }); return problemList(); }
+
+  /* ---------- review before starting (read-only; it never starts anything) ---------- */
+  function modeRow() {
+    if (!link) return ['Not connected. Choose “Use simulator” or “Connect to tester (USB)”.', true];
+    return link.kind === 'sim' ? ['Simulator. Its readings are simulated and labeled “Simulated data, not measured”.', false]
+      : ['USB tester. The hardware connection is draft and has not been validated.', false];
+  }
+  var lastReview = '';
+  function renderReview() {
+    var box = $('rv-body');
+    if (!box) return;
+    var s = spec(), rows = [];
+    function row(k, v, bad) { rows.push('<dt>' + k + '</dt><dd' + (bad ? ' class="rv-bad"' : '') + '>' + esc(v) + '</dd>'); }
+    function val(id, label, unit) {
+      var q = read(id);
+      if (q.state === 'ok' && q.value > 0) row(label, sig(q.value, 6) + ' ' + unit);
+      else row(label, q.state === 'empty' ? 'missing' : q.state === 'text' ? 'not a number' : 'must be greater than 0', true);
+    }
+    row('Test', isRelax ? 'Stress relaxation' : 'Uniaxial tension');
+    row('Material', s.matLabel);
+    row('Specimen ID', s.id || 'not entered (optional)');
+    val('s-L0', 'Gauge length L₀', 'mm'); val('s-W', 'Width', 'mm'); val('s-T', 'Thickness', 'mm');
+    row('Area A₀', s.W && s.T ? sig(s.W * s.T, 4) + ' mm²' : '—');
+    row('Dimension source', dimSourceNow() === 'example' ? 'Example values (not measured)' : 'Typed by you');
+    val('s-speed', 'Crosshead speed', 'mm/min');
+    if (isRelax) {
+      val('s-hold', 'Hold displacement', 'mm');
+      row('Hold strain ε₀', s.hold_mm && s.L0 ? sig(s.hold_mm / s.L0, 4) : '—');
+      val('s-holds', 'Hold duration', 's');
+    }
+    row('Temperature', s.temp || 'not entered (optional)');
+    row('Environment', s.env || 'not entered (optional)');
+    var md = modeRow();
+    row('Connection', md[0], md[1]);
+    row('Pre-test checklist', checklistOn() ? 'On: a checklist pop-up opens when you press Start' : 'Off (it can be turned on in Settings)');
+    var probs = problemList(), warns = ['s-hold', 's-temp'].map(function (id) { return { id: id, text: warnText(id) }; }).filter(function (w) { return w.text; });
+    var short = !link ? 'Not connected.' : link.kind === 'sim' ? 'Simulator (readings are simulated).' : 'USB tester (unvalidated).';
+    $('rv-sum').textContent = (probs.length ? (probs.length === 1 ? '1 entry needs attention. ' : probs.length + ' entries need attention. ') : 'Every required entry is filled in. ') +
+      (warns.length ? (warns.length === 1 ? '1 to check. ' : warns.length + ' to check. ') : '') + (dimSourceNow() === 'example' ? 'Example dimensions (not measured). ' : '') + short;
+    function items(list) {
+      return '<ul class="rv-list">' + list.map(function (p) { return '<li>' + esc(p.text) + ' <button type="button" class="btn-link" data-fix="' + p.id + '">Go to this field</button></li>'; }).join('') + '</ul>';
+    }
+    var html = '<dl class="rv-dl">' + rows.join('') + '</dl>' +
+      (probs.length ? '<p class="rv-h">To fix before starting:</p>' + items(probs) : '<p class="rv-ok">Every required entry is filled in. Check the values against your specimen.</p>') +
+      (warns.length ? '<p class="rv-h">Check:</p>' + items(warns) : '');
+    /* Only redraw when something changed, so a button is never replaced while it is being pressed. */
+    if (html !== lastReview) { lastReview = html; box.innerHTML = html; }
+  }
+  $('rv-body').addEventListener('click', function (e) {
+    var b = e.target.closest ? e.target.closest('button[data-fix]') : null;
+    if (b && $(b.getAttribute('data-fix'))) $(b.getAttribute('data-fix')).focus();
+  });
+
   /* The three numbers "Fill example values" wrote, so a test started with exactly those is labeled as example values. */
   var exampleDims = null;
   function dimSourceNow() {
@@ -145,13 +245,19 @@
     exampleDims = { L0: num('s-L0'), W: num('s-W'), T: num('s-T') };
     $('s-speed').value = sig(u.rate_per_s * u.specimen.L0_mm * 60, 3);
     if (isRelax) { $('s-hold').value = sig(p.hold_mm, 4); $('s-holds').value = p.hold_s; }
-    REQUIRED.forEach(function (q) { $(q[0]).removeAttribute('aria-invalid'); });
-    updateOutputs(); applySpec(rec); api.refresh(running);
+    clearMessages();
+    updateOutputs(); applySpec(rec); api.refresh(running); renderReview();
     msg('Example values filled in (from the sample data). Replace them with your specimen’s measured dimensions.');
   });
+  /* A message appears after you leave an entry (or press Start) and updates as you fix it. */
+  $('spec').addEventListener('focusout', function (e) {
+    if (FIELD_IDS.indexOf(e.target.id) >= 0) { touched[e.target.id] = true; checkField(e.target.id); }
+  });
   $('spec').addEventListener('input', function (e) {
-    if (e.target.getAttribute('aria-invalid') && num(e.target.id) !== null) e.target.removeAttribute('aria-invalid');
-    updateOutputs(); applySpec(rec); api.refresh(running);
+    var id = e.target.id;
+    if (touched[id]) checkField(id);
+    if (isRelax && (id === 's-L0' || id === 's-hold') && touched['s-hold']) checkField('s-hold');
+    updateOutputs(); applySpec(rec); api.refresh(running); renderReview();
   });
 
   /* ---------- connections ---------- */
@@ -305,9 +411,11 @@
     $('dl-csv').disabled = running || !hasData;
     if ($('r-print')) $('r-print').disabled = running || !hasData;
     ['s-mat', 's-speed', 's-hold', 's-holds', 's-example'].forEach(function (id) { if ($(id)) $(id).disabled = running; });
+    $('r-why').textContent = on || running ? '' : 'Start is available after you connect: press “Use simulator” or “Connect to tester (USB)”.';
     $('c-dot').className = 'dot' + (running ? ' run' : on ? ' on' : '');
     $('c-text').textContent = !on ? 'Not connected' : (running ? 'Recording · ' : 'Connected · ') + (link.kind === 'sim' ? 'simulator (not measured)' : 'tester (USB)');
     if (!on) $('c-now').textContent = '';
+    renderReview();
   }
 
   /* ---------- readings from the tester ---------- */
@@ -368,10 +476,12 @@
     link.send(cmd).catch(function (e) { msg('Could not send ' + cmd + ' to the tester: ' + (e && e.message ? e.message : e), true); });
   }
   function startTest() {
-    var missing = validate();
-    if (missing.length) {
-      msg('Enter the ' + missing.map(function (q) { return q[1]; }).join(', ') + ' before starting.', true);
-      $(missing[0][0]).focus();
+    var probs = validate();
+    if (probs.length) {
+      msg((probs.length === 1 ? '1 entry needs attention: ' : probs.length + ' entries need attention: ') + probs.map(function (q) { return q.name; }).join(', ') + '. The message beside each entry says what to fix.', true);
+      renderReview();
+      $('rv-det').open = true;
+      $(probs[0].id).focus();
       return;
     }
     if (hasData && !downloaded && !window.confirm('Start a new test? The current data has not been downloaded and will be cleared.')) return;
@@ -501,7 +611,7 @@
   document.addEventListener('keydown', function (e) {
     if (e.key === 'Escape' && link) { stopTest('Stopped with Esc. STOP sent.'); }
   });
-  $('s-mat').addEventListener('change', function () { applySpec(rec); api.refresh(running); });
+  $('s-mat').addEventListener('change', function () { applySpec(rec); api.refresh(running); renderReview(); });
 
   /* ---------- CSV download (opens in Excel) ---------- */
   function pad(n) { return (n < 10 ? '0' : '') + n; }
