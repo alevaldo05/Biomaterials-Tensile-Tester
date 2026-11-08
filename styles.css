@@ -393,6 +393,13 @@ sub, sup { line-height: 0; font-size: 0.75em; }
 .schematic summary { cursor: pointer; font-weight: 600; }
 .schem-svg { display: block; width: 100%; max-width: 32rem; height: auto; margin-top: 0.5rem; }
 .results .def { display: block; font-weight: 400; font-size: 0.8125rem; color: var(--muted); }
+/* New Test and Load Test: Key results shows each name and value; the definitions open with the "Show definitions" switch. */
+.graph-side.compact:not(.show-defs) .results .def { display: none; }
+.defs-toggle { margin-left: auto; display: inline-flex; align-items: center; gap: 0.4rem; }
+.defs-toggle input { width: 1rem; height: 1rem; accent-color: var(--accent); }
+.tips { margin: 0.5rem 0; }
+.tips summary { cursor: pointer; font-size: 0.875rem; font-weight: 600; }
+.tips .hint { margin: 0.4rem 0 0; }
 
 .param-fields { display: grid; grid-template-columns: repeat(auto-fit, minmax(11.875rem, 1fr)); gap: 0.75rem 1.25rem; margin: 0.5rem 0; }
 .pf { display: grid; gap: 0.25rem; align-content: start; }
@@ -450,7 +457,7 @@ sub, sup { line-height: 0; font-size: 0.75em; }
   .eqs tbody th, .eqs .eq { white-space: normal; }
 }
 @media print {
-  .topbar, .back, .customize, .graph-actions, .hint, .segmented, .zoom-tools, .range-note { display: none; }
+  .topbar, .back, .customize, .graph-actions, .hint, .tips, .segmented, .zoom-tools, .range-note { display: none; }
   body { background: #fff; color: #000; }
   .chart-wrap { border: 0; }
   .proto-tabs, .step-nav, .step-links { display: none; }
