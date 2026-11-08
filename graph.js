@@ -1177,8 +1177,12 @@
       if (follow) return;
       var i = nearest(e.clientX); if (i >= 0) setCursor(i);
     });
+    /* Dragging or double-clicking on the graph must not highlight the text around it. */
+    wrap.addEventListener('selectstart', function (e) { e.preventDefault(); });
+    function clearSelection() { try { var sel = window.getSelection(); if (sel && sel.rangeCount) sel.removeAllRanges(); } catch (err) { /* ignore */ } }
     wrap.addEventListener('pointerdown', function (e) {
       if (follow) return;
+      clearSelection();
       var i = nearest(e.clientX); if (i >= 0) setCursor(i);
       if (e.button !== 0 || !geom || geom.log || rec().x.length < 2) return;
       press = { x: e.clientX, y: e.clientY, mode: view && !e.shiftKey ? 'pan' : 'box', moved: false, v: view ? JSON.parse(JSON.stringify(view)) : null };

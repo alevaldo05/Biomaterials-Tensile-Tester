@@ -320,6 +320,8 @@ sub, sup { line-height: 0; font-size: 0.75em; }
 
 .graph-grid { display: grid; grid-template-columns: minmax(0, 1fr) min(18.75rem, 46%); gap: calc(1.5rem * var(--sp)); align-items: start; }
 .chart-wrap { border: 1px solid var(--line); border-radius: 8px; background: var(--surface); padding: 0.5rem; touch-action: pan-y; }
+/* Dragging on a graph draws a zoom box or pans, so the text on the graph must not be highlighted. */
+.chart-wrap, .chart-wrap * { -webkit-user-select: none; user-select: none; }
 .chart-wrap svg { display: block; width: 100%; height: auto; cursor: crosshair; }
 .hint { margin: 0.5rem 0; font-size: 0.875rem; color: var(--muted); }
 .graph-actions { display: flex; gap: 0.5rem; flex-wrap: wrap; margin-bottom: 0.75rem; }
