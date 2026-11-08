@@ -858,6 +858,8 @@ dialog.pretest h3 { margin: 1rem 0 0.35rem; font-size: 1rem; }
   .rp-line { height: 15pt; border-bottom: 1px solid #000; }
   .rp-blank .rp-foot { margin-top: 10pt; }
   .rp-table tr, .rp-foot, .rp-method, .rp-warn { break-inside: avoid; }
+  .rp-cal .rp-graph svg { max-height: 7cm; }
+  .rp-fit { break-inside: avoid; }
   /* A heading never ends a page on its own. */
   .report h2, .report h3 { break-after: avoid; }
   /* Comparison report: tighter spacing so a few specimens fit on one page. */
