@@ -880,9 +880,9 @@
             '<div><button type="button" class="btn-secondary" id="f-reset">Reset to defaults</button></div>' +
           '</div></details>' +
         '</div>' +
-        '<aside class="graph-side">' +
-          '<div class="gs-a"><h2>Readout</h2><dl class="readout" id="readout"></dl></div>' +
-          '<div class="gs-b"><h2>Key results</h2>' +
+        '<aside class="graph-side" aria-labelledby="gs-readout-title gs-results-title">' +
+          '<div class="gs-a"><h2 id="gs-readout-title">Readout</h2><dl class="readout" id="readout"></dl></div>' +
+          '<div class="gs-b"><h2 id="gs-results-title">Key results</h2>' +
           '<div class="res-tools"><span>Show on graph:</span><button type="button" class="btn-secondary btn-small" id="show-all">Show all</button><button type="button" class="btn-secondary btn-small" id="hide-all">Hide all</button></div>' +
           '<table class="results"><tbody id="results"></tbody></table>' +
           '<p class="def" id="res-note">Select a result’s name to highlight it on the graph.</p></div>' +

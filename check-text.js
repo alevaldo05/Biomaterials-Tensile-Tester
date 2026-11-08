@@ -23,7 +23,7 @@
     res.problems.forEach(function (p) { html += '<p class="text-error" role="alert"><strong>Problem in "' + esc(p.section) + '":</strong> ' + esc(p.message) + '</p>'; });
     if (res.ok) {
       html += '<details><summary>Preview the readable sections</summary>';
-      Object.keys(res.html).forEach(function (id) { html += '<div class="check-preview"><p class="muted small"><code>' + esc(id) + '</code></p>' + res.html[id] + '</div>'; });
+      Object.keys(res.html).forEach(function (id) { html += '<div class="check-preview"><p class="muted small"><code>' + esc(id) + '</code></p>' + res.html[id].replace(/href="#/g, 'href="' + PAGE_URL[key] + '#') + '</div>'; });
       html += '</details>';
     }
     html += '</section>';
