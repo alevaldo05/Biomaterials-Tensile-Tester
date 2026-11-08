@@ -41,15 +41,18 @@
     '<div class="live-layout">' +
       '<form class="panel" id="spec" novalidate aria-labelledby="spec-title">' +
         '<h2 id="spec-title">Specimen and settings</h2>' +
+        '<div class="setup-col">' +
         '<h3 class="step-h">1. Specimen</h3>' +
         '<label class="pf"><span>Material</span><select id="s-mat">' + matOptions() + '</select></label>' +
         field('s-id', 'Specimen ID', 'type="text" autocomplete="off"') +
+        '</div><div class="setup-col">' +
         '<h3 class="step-h">2. Dimensions (mm)</h3>' +
         field('s-L0', 'Gauge length, L<sub>0</sub> (mm)', undefined, true) +
         field('s-W', 'Width (mm)', undefined, true) +
         field('s-T', 'Thickness (mm)', undefined, true) +
         '<div class="pf"><span>Area, A<sub>0</sub> (mm²)</span><output id="s-A">—</output></div>' +
         '<p class="pf-note" id="dim-note" hidden></p>' +
+        '</div><div class="setup-col">' +
         '<h3 class="step-h">3. Test settings</h3>' +
         field('s-speed', 'Crosshead speed (mm/min)', undefined, true) +
         (isRelax ?
@@ -59,17 +62,21 @@
         field('s-temp', 'Temperature (°C)', 'type="text" inputmode="decimal" autocomplete="off"', true) +
         field('s-env', 'Environment', 'type="text" autocomplete="off"') +
         '<label class="pf"><span>Notes</span><textarea id="s-notes" rows="2"></textarea></label>' +
+        '</div><div class="setup-foot">' +
         '<p class="small"><button type="button" class="btn-link" id="s-example">Fill example values</button></p>' +
         '<p class="small muted">Example values come from the labeled sample data. Replace them with your specimen’s measured dimensions.</p>' +
+        '</div>' +
       '</form>' +
       '<div class="live-main">' +
         '<div class="control-bar">' +
+          '<div class="conn-row">' +
           '<h3 class="step-h">4. Connection</h3>' +
           '<p class="conn"><span class="dot" id="c-dot" aria-hidden="true"></span><strong id="c-text">Not connected</strong> <span class="muted" id="c-now"></span></p>' +
           '<div class="graph-actions">' +
             '<button type="button" class="btn-secondary" id="c-usb">Connect to tester (USB)</button>' +
             '<button type="button" class="btn-secondary" id="c-sim">Use simulator</button>' +
             '<button type="button" class="btn-secondary" id="c-off" hidden>Disconnect</button>' +
+          '</div>' +
           '</div>' +
           (hasSerial ? '' : '<p class="small muted">USB serial requires a supporting desktop browser, a secure context, permission for the selected port, and compatible controller software. In this project, USB works in Chrome only; this browser does not offer it here. The simulator works here.</p>') +
           '<div class="run-bar">' +
