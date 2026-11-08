@@ -407,6 +407,24 @@ sub, sup { line-height: 0; font-size: 0.75em; }
 .param-note { margin: 0.25rem 0 0.5rem; font-size: 0.875rem; color: var(--muted); }
 .csv-msg { margin: 0 0 0.5rem; min-height: 1.25rem; font-size: 0.875rem; color: var(--muted); }
 .csv-msg.error { color: var(--danger); font-weight: 600; }
+/* Test setup in steps, messages beside entries, and the review before starting (live.js) */
+.step-h { margin: 0.5rem 0 0; font-size: 0.9375rem; }
+.pf-wrap { display: grid; gap: 0.2rem; }
+.pf-msg { font-size: 0.8125rem; font-weight: 600; color: var(--danger); }
+.pf-msg.warn { padding-left: 0.4rem; border-left: 3px solid var(--mark); font-weight: 400; color: var(--ink); }
+.pf-note { margin: 0; padding-left: 0.4rem; border-left: 3px solid var(--mark); font-size: 0.8125rem; }
+.review { margin: 0.4rem 0; padding: 0.4rem 0.9rem 0.5rem; border: 1px solid var(--line); border-radius: 8px; background: var(--bg); }
+.review .step-h { margin: 0; }
+.rv-sum { margin: 0.2rem 0 0; font-size: 0.875rem; }
+.rv-det { margin: 0.5rem 0 0.75rem; padding: 0.5rem 0.9rem; border: 1px solid var(--line); border-radius: 8px; background: var(--bg); }
+.rv-det summary { cursor: pointer; font-size: 0.9375rem; font-weight: 600; }
+.rv-dl { display: grid; grid-template-columns: max-content minmax(0, 1fr); gap: 0.2rem 0.9rem; margin: 0.5rem 0; font-size: 0.875rem; }
+.rv-dl dt { color: var(--muted); }
+.rv-dl dd { margin: 0; font-weight: 600; font-variant-numeric: tabular-nums; overflow-wrap: anywhere; }
+.rv-dl dd.rv-bad { color: var(--danger); }
+.rv-h { margin: 0.5rem 0 0; font-size: 0.875rem; font-weight: 700; }
+.rv-ok { margin: 0.5rem 0 0; font-size: 0.875rem; }
+.rv-list { margin: 0.25rem 0 0; padding-left: 1.1rem; font-size: 0.875rem; }
 .csv-help { margin-bottom: 0.75rem; font-size: 0.875rem; }
 .csv-help p { margin: 0.5rem 0 0; color: var(--muted); }
 .csv-help pre { margin: 0.5rem 0 0; padding: 0.5rem 0.75rem; border: 1px solid var(--line); border-radius: 6px; background: var(--surface); overflow-x: auto; }
