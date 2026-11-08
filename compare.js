@@ -101,7 +101,12 @@
     var n = vals.length;
     if (!n) return { n: 0, mean: null, sd: null };
     var mean = vals.reduce(function (a, b) { return a + b; }, 0) / n, sd = null;
-    if (n > 1) sd = Math.sqrt(vals.reduce(function (a, b) { return a + (b - mean) * (b - mean); }, 0) / (n - 1));
+    if (n > 1) {
+      sd = Math.sqrt(vals.reduce(function (a, b) { return a + (b - mean) * (b - mean); }, 0) / (n - 1));
+      /* Identical values can leave rounding noise (for example 8.9e-14) instead of exactly 0; treat spread below one trillionth of the data's size as 0. */
+      var size = Math.max.apply(null, vals.map(Math.abs));
+      if (sd <= 1e-12 * size) sd = 0;
+    }
     return { n: n, mean: mean, sd: sd };
   }
   /* stress columns are shown in GPa when the values are large (as on the single-file results) */
