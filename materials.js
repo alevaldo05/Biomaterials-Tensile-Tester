@@ -1,7 +1,8 @@
 /* Materials page: a grouped Material dropdown and three tabs.
      Material             values for the chosen material, an example graph, and links to its protocol and test
      All properties       one table per family (sortable), and a side-by-side comparison of two materials
-     Stiffness vs density Young's modulus against density on log axes, grouped by family
+     Stiffness vs density Young's modulus against density on log axes, grouped by family, with filters (family,
+                          very approximate materials, a name search, names, family outlines) and a list of the materials shown
    The data (typical, unreviewed ranges) is in data/materials.js. Nothing is saved; the link keeps the choice
    (materials.html#al-6061 or #al-6061/chart). */
 (function () {
@@ -12,6 +13,10 @@
 
   var TABS = [['material', 'Material'], ['properties', 'All properties'], ['chart', 'Stiffness vs density']];
   var sel = 'steel', tab = 'material', compare = [], sorts = {};
+  /* Chart filters: which materials the chart draws. The data itself is never changed, and the filters are not saved or put in the link. */
+  var filt = { fams: {}, hideLow: false, q: '', names: false, outlines: true }, focusId = null;
+  FAMS.forEach(function (f) { filt.fams[f.id] = true; });
+  var LOW_COUNT = MATS.filter(function (m) { return m.low; }).length, MAX_NAMES = 24;
 
   function esc(s) {
     return String(s === null || s === undefined ? '' : s).replace(/[&<>"']/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]; });
@@ -79,8 +84,11 @@
     '</div>' +
     '<div class="mat-panel" role="tabpanel" id="mpanel-chart" aria-labelledby="mtab-chart" tabindex="-1" hidden>' +
       '<div class="mat-card"><h2>Young’s modulus vs density</h2>' +
-      '<p class="muted small">This chart compares approximate reported or illustrative property ranges. Values for different materials may come from different conditions and sources; they are not one consistent dataset. The boxes are not probability distributions or confidence intervals, and they do not establish machine capacity or predict a particular specimen. Each box is the typical range for one material, and the marker shows its middle. Color and marker shape both show the family. Select a marker to choose that material; the same values are in the All properties tab.</p>' +
-      '<div class="mat-chart-grid"><div class="mat-chart" id="mat-chart"></div><aside id="mat-side" aria-live="polite"></aside></div></div>' +
+      '<p class="muted small">This chart compares approximate reported or illustrative property ranges. Values for different materials may come from different conditions and sources; they are not one consistent dataset. The boxes are not probability distributions or confidence intervals, and they do not establish machine capacity or predict a particular specimen. Each box is the typical range for one material, and the marker shows its middle. Color and marker shape both show the family. Select a marker to choose that material; the same values are in the All properties tab. Use the filters to show fewer materials; the list under the chart holds the same values.</p>' +
+      toolsHtml() +
+      '<p class="small muted chart-keys">Keyboard: Tab to the chart, then use the arrow keys to move between materials (left and right by density, up and down by Young’s modulus), and Enter to choose one.</p>' +
+      '<div class="mat-chart-grid"><div class="mat-chart" id="mat-chart"></div><aside id="mat-side" aria-live="polite"></aside></div>' +
+      listHtml() + '</div>' +
     '</div>';
 
   var apiGraph = window.TensileGraph ? window.TensileGraph.mount(document.getElementById('mat-graph'), { test: 'uniaxial', mode: 'example' }) : null;
@@ -207,22 +215,85 @@
     if (again) again.focus();
   });
 
+  /* ---------- Chart filters (controls) ---------- */
+  function toolsHtml() {
+    return '<div class="chart-tools" role="group" aria-label="Chart filters">' +
+      '<div class="chart-fams" role="group" aria-label="Show these families">' + FAMS.map(function (f) {
+        var n = MATS.filter(function (m) { return m.family === f.id; }).length;
+        return '<button type="button" class="fam-btn" data-fam="' + f.id + '" aria-pressed="true"><span class="fam-state" aria-hidden="true">✓</span>' + swatch(f) + esc(f.name) + ' <span class="muted">(' + n + ')</span></button>';
+      }).join('') + '</div>' +
+      '<div class="chart-opts">' +
+        '<label><input type="checkbox" id="ct-low"> Hide very approximate materials (' + LOW_COUNT + ')</label>' +
+        '<label><input type="checkbox" id="ct-names"> Show names</label>' +
+        '<label><input type="checkbox" id="ct-outline" checked> Show family outlines</label>' +
+      '</div>' +
+      '<div class="chart-find"><label for="ct-q">Find a material</label><input type="search" id="ct-q" autocomplete="off" spellcheck="false" placeholder="for example: steel, skin"> <button type="button" class="btn-secondary" id="ct-reset">Reset filters</button></div>' +
+      '<p class="small muted" id="ct-status" role="status"></p>' +
+    '</div>';
+  }
+  function listHtml() {
+    return '<details class="chart-list" id="ct-list"><summary>List of the materials shown (<span id="ct-count"></span>)</summary>' +
+      '<div class="table-scroll" tabindex="0" role="region" aria-label="Materials shown in the chart"><table class="mt"><caption class="sr-only">Materials shown in the chart, with Young’s modulus and density</caption>' +
+      '<thead><tr><th scope="col">Material</th><th scope="col">Family</th><th scope="col">Young’s modulus (GPa)</th><th scope="col">Density (kg/m³)</th></tr></thead><tbody id="ct-rows"></tbody></table></div></details>';
+  }
+  function visible(m) {
+    if (!filt.fams[m.family]) return false;
+    if (filt.hideLow && m.low) return false;
+    if (filt.q) { var hay = (m.name + ' ' + (m.detail || '')).toLowerCase(); return filt.q.split(' ').every(function (w) { return hay.indexOf(w) >= 0; }); }
+    return true;
+  }
+  function shown() { return MATS.filter(visible); }
+  function byDensity(a, b) { return midv(a.rho) - midv(b.rho) || midv(a.E) - midv(b.E); }
+  function byModulus(a, b) { return midv(a.E) - midv(b.E) || midv(a.rho) - midv(b.rho); }
+  function shortName(n) { return n.length > 26 ? n.slice(0, 25) + '…' : n; }
+
   /* ---------- Chart tab ---------- */
   var CW = 760, CH = 520, CM = { l: 70, r: 20, t: 24, b: 56 };
   var X0 = Math.log10(50), X1 = Math.log10(20000), Y0 = Math.log10(0.0002), Y1 = Math.log10(3000);
   var LABEL_SIDE = { metals: 'above', composites: 'left', ceramics: 'below', plastics: 'right', wood: 'above', rubbers: 'right', bio: 'left' };
   function cx(v) { return CM.l + (Math.log10(v) - X0) / (X1 - X0) * (CW - CM.l - CM.r); }
   function cy(v) { return CH - CM.b - (Math.log10(v) - Y0) / (Y1 - Y0) * (CH - CM.t - CM.b); }
+  var lastNames = { skipped: 0, tooMany: false };
+
+  /* Names next to the markers: each goes in the first free spot (right, left, above, below); a name with no free spot is left out and counted. */
+  function nameLabels(vis, pos, taken) {
+    var placed = taken.slice(), skipped = 0, out = '';
+    var pts = vis.map(function (m) { return { x: pos[m.id].mx, y: pos[m.id].my }; });
+    function free(r) {
+      if (r.x0 < CM.l || r.x1 > CW - CM.r || r.y0 < CM.t || r.y1 > CH - CM.b) return false;
+      var i;
+      for (i = 0; i < placed.length; i++) { var q = placed[i]; if (r.x0 < q.x1 && r.x1 > q.x0 && r.y0 < q.y1 && r.y1 > q.y0) return false; }
+      for (i = 0; i < pts.length; i++) { var t = pts[i]; if (t.x > r.x0 - 4 && t.x < r.x1 + 4 && t.y > r.y0 - 4 && t.y < r.y1 + 4) return false; }
+      return true;
+    }
+    vis.slice().sort(function (a, b) { return (b.id === sel) - (a.id === sel); }).forEach(function (m) {
+      var p = pos[m.id], txt = shortName(m.name), wd = txt.length * 6.2;
+      var cand = [
+        { x: p.mx + p.w / 2 + 5, y: p.my + 4, a: 'start', x0: p.mx + p.w / 2 + 5, x1: p.mx + p.w / 2 + 5 + wd },
+        { x: p.mx - p.w / 2 - 5, y: p.my + 4, a: 'end', x0: p.mx - p.w / 2 - 5 - wd, x1: p.mx - p.w / 2 - 5 },
+        { x: p.mx, y: p.my - p.h / 2 - 5, a: 'middle', x0: p.mx - wd / 2, x1: p.mx + wd / 2 },
+        { x: p.mx, y: p.my + p.h / 2 + 14, a: 'middle', x0: p.mx - wd / 2, x1: p.mx + wd / 2 }
+      ], k, c = null;
+      for (k = 0; k < cand.length; k++) { cand[k].y0 = cand[k].y - 10; cand[k].y1 = cand[k].y + 3; if (!c && free(cand[k])) c = cand[k]; }
+      if (!c) { skipped++; return; }
+      placed.push(c);
+      out += '<text class="mat-name" x="' + c.x.toFixed(1) + '" y="' + c.y.toFixed(1) + '" text-anchor="' + c.a + '" font-size="11" font-weight="' + (m.id === sel ? 700 : 400) + '" fill="var(--ink)" style="paint-order:stroke;stroke:var(--surface);stroke-width:3px">' + esc(txt) + '</text>';
+    });
+    return { svg: out, skipped: skipped };
+  }
+
   function drawChart() {
-    var s = '<svg viewBox="0 0 ' + CW + ' ' + CH + '" role="group" aria-label="Young’s modulus against density for the materials in the list, grouped by family">';
+    var vis = shown(), pos = {}, taken = [];
+    var s = '<svg viewBox="0 0 ' + CW + ' ' + CH + '" role="group" aria-label="Young’s modulus against density for ' + vis.length + ' of ' + MATS.length + ' materials in the list, grouped by family">';
     s += '<rect x="' + CM.l + '" y="' + CM.t + '" width="' + (CW - CM.l - CM.r) + '" height="' + (CH - CM.t - CM.b) + '" fill="none" stroke="var(--line)"/>';
     [100, 1000, 10000].forEach(function (v) { s += '<line x1="' + cx(v) + '" x2="' + cx(v) + '" y1="' + CM.t + '" y2="' + (CH - CM.b) + '" stroke="var(--line)"/><text x="' + cx(v) + '" y="' + (CH - CM.b + 18) + '" text-anchor="middle" font-size="12" fill="var(--muted)">' + v + '</text>'; });
     [0.001, 0.01, 0.1, 1, 10, 100, 1000].forEach(function (v) { s += '<line x1="' + CM.l + '" x2="' + (CW - CM.r) + '" y1="' + cy(v) + '" y2="' + cy(v) + '" stroke="var(--line)"/><text x="' + (CM.l - 8) + '" y="' + (cy(v) + 4) + '" text-anchor="end" font-size="12" fill="var(--muted)">' + v + '</text>'; });
     s += '<text x="' + (CM.l + (CW - CM.l - CM.r) / 2) + '" y="' + (CH - 14) + '" text-anchor="middle" font-size="13" fill="var(--ink)">Density (kg/m³), log scale</text>' +
       '<text transform="translate(18 ' + (CM.t + (CH - CM.t - CM.b) / 2) + ') rotate(-90)" text-anchor="middle" font-size="13" fill="var(--ink)">Young’s modulus (GPa), log scale</text>';
     var ell = '', lab = '';
-    FAMS.forEach(function (f) {
-      var ms = MATS.filter(function (m) { return m.family === f.id; }), xa = 1e9, xb = -1e9, ya = 1e9, yb = -1e9;
+    if (filt.outlines) FAMS.forEach(function (f) {
+      var ms = vis.filter(function (m) { return m.family === f.id; }), xa = 1e9, xb = -1e9, ya = 1e9, yb = -1e9;
+      if (ms.length < 2) return;
       ms.forEach(function (m) { var mx = (cx(m.rho[0]) + cx(m.rho[1])) / 2, my = (cy(m.E[0]) + cy(m.E[1])) / 2; xa = Math.min(xa, mx); xb = Math.max(xb, mx); ya = Math.min(ya, my); yb = Math.max(yb, my); });
       var ex = (xa + xb) / 2, ey = (ya + yb) / 2, k = f.id === 'bio' ? 0.8 : 1.0, rx = Math.max((xb - xa) / 2 * k + 28, 36), ry = Math.max((yb - ya) / 2 * k + 20, 24);
       ell += '<ellipse cx="' + ex.toFixed(1) + '" cy="' + ey.toFixed(1) + '" rx="' + rx.toFixed(1) + '" ry="' + ry.toFixed(1) + '" fill="' + f.color + '" fill-opacity=".07" stroke="' + f.color + '" stroke-dasharray="5 4" stroke-width="1.5"/>';
@@ -230,29 +301,97 @@
       if (side === 'below') ly = ey + ry + 14;
       else if (side === 'right') { lx = ex + rx + 6; ly = ey + 4; anc = 'start'; }
       else if (side === 'left') { lx = ex - rx - 6; ly = ey + 4; anc = 'end'; }
+      var fw = f.name.length * 7.6;
+      taken.push({ x0: anc === 'start' ? lx : anc === 'end' ? lx - fw : lx - fw / 2, x1: anc === 'start' ? lx + fw : anc === 'end' ? lx : lx + fw / 2, y0: ly - 13, y1: ly + 4 });
       lab += '<text x="' + lx.toFixed(1) + '" y="' + ly.toFixed(1) + '" text-anchor="' + anc + '" font-size="13" font-weight="700" fill="var(--ink)" style="paint-order:stroke;stroke:var(--surface);stroke-width:3px">' + esc(f.name) + '</text>';
     });
     s += ell;
+    var fid = focusId && vis.some(function (m) { return m.id === focusId; }) ? focusId : (vis.some(function (m) { return m.id === sel; }) ? sel : (vis.length ? vis.slice().sort(byDensity)[0].id : null));
     var items = '';
-    MATS.forEach(function (m) {
+    vis.forEach(function (m) {
       var f = fam(m.family), xa = cx(m.rho[0]), xb = cx(m.rho[1]), ya = cy(m.E[1]), yb = cy(m.E[0]);
       var w = Math.max(xb - xa, 8), h = Math.max(yb - ya, 8), mx = (xa + xb) / 2, my = (ya + yb) / 2, on = m.id === sel;
-      items += '<g class="mat-pt' + (on ? ' on' : '') + '" data-id="' + m.id + '" tabindex="0" role="button" aria-label="' + esc(m.name + ', Young’s modulus ' + rng(m.E) + ' GPa, density ' + rng(m.rho) + ' kg per cubic metre' + (on ? ', selected' : '')) + '">' +
+      pos[m.id] = { mx: mx, my: my, w: w, h: h };
+      items += '<g class="mat-pt' + (on ? ' on' : '') + '" data-id="' + m.id + '" tabindex="' + (m.id === fid ? 0 : -1) + '" role="button" aria-label="' + esc(m.name + ', Young’s modulus ' + rng(m.E) + ' GPa, density ' + rng(m.rho) + ' kg per cubic metre' + (on ? ', selected' : '')) + '">' +
         '<rect x="' + (mx - w / 2).toFixed(1) + '" y="' + (my - h / 2).toFixed(1) + '" width="' + w.toFixed(1) + '" height="' + h.toFixed(1) + '" rx="6" fill="' + f.color + '" fill-opacity="' + (on ? 0.35 : 0.14) + '" stroke="' + f.color + '" stroke-width="' + (on ? 2.5 : 1) + '"/>' +
         shape(f, Math.round(mx * 10) / 10, Math.round(my * 10) / 10, on ? 6.5 : 4.2, 'stroke="var(--surface)" stroke-width="1"') + '</g>';
     });
     s += items + lab;
-    var m0 = BY[sel], mx0 = (cx(m0.rho[0]) + cx(m0.rho[1])) / 2, my0 = (cy(m0.E[0]) + cy(m0.E[1])) / 2, right = mx0 > CW * 0.6;
-    s += '<text x="' + (mx0 + (right ? -12 : 12)).toFixed(1) + '" y="' + (my0 + 26).toFixed(1) + '" text-anchor="' + (right ? 'end' : 'start') + '" font-size="12.5" font-weight="700" fill="var(--ink)" style="paint-order:stroke;stroke:var(--surface);stroke-width:3px">' + esc(m0.name) + '</text>';
+    lastNames = { skipped: 0, tooMany: false };
+    var named = false;
+    if (filt.names) {
+      if (vis.length > MAX_NAMES) lastNames.tooMany = true;
+      else { var nl = nameLabels(vis, pos, taken); s += nl.svg; lastNames.skipped = nl.skipped; named = true; }
+    }
+    var m0 = BY[sel];
+    if (!named && pos[sel]) {
+      var mx0 = pos[sel].mx, my0 = pos[sel].my, right = mx0 > CW * 0.6;
+      s += '<text x="' + (mx0 + (right ? -12 : 12)).toFixed(1) + '" y="' + (my0 + 26).toFixed(1) + '" text-anchor="' + (right ? 'end' : 'start') + '" font-size="12.5" font-weight="700" fill="var(--ink)" style="paint-order:stroke;stroke:var(--surface);stroke-width:3px">' + esc(m0.name) + '</text>';
+    }
+    if (!vis.length) s += '<text x="' + (CM.l + (CW - CM.l - CM.r) / 2) + '" y="' + (CM.t + (CH - CM.t - CM.b) / 2) + '" text-anchor="middle" font-size="14" fill="var(--muted)">No materials match the filters.</text>';
     s += '</svg><div class="mat-tip" id="mat-tip" hidden></div>';
     document.getElementById('mat-chart').innerHTML = s;
     var m = BY[sel], f = fam(m.family);
     document.getElementById('mat-side').innerHTML =
       '<h3>' + swatch(f) + esc(m.name) + '</h3><dl class="readout"><dt>Young’s modulus</dt><dd>' + rng(m.E) + ' GPa</dd><dt>Density</dt><dd>' + rng(m.rho) + ' kg/m³</dd><dt>Yield</dt><dd>' + (m.ys ? rng(m.ys) + ' MPa' : 'n/a') + '</dd><dt>Tensile strength</dt><dd>' + rng(m.uts) + ' MPa</dd></dl>' +
       '<p><span class="tag">' + esc(status(m)) + '</span></p>' +
+      (visible(m) ? '' : '<p class="muted small">This material is hidden by the current filters.</p>') +
       '<div class="legend">' + FAMS.map(function (g) { return '<span>' + swatch(g) + esc(g.name) + '</span>'; }).join('') + '</div>' +
       '<p class="muted small">These are typical ranges, not measurements. See “Where these values come from” below.</p>';
+    renderStatus(vis);
   }
+  function renderStatus(vis) {
+    var el = document.getElementById('ct-status'), t = 'Showing ' + vis.length + ' of ' + MATS.length + ' materials.';
+    if (!visible(BY[sel])) t += ' The selected material, ' + BY[sel].name + ', is hidden by the filters.';
+    if (filt.names && lastNames.tooMany) t += ' Names are shown when ' + MAX_NAMES + ' materials or fewer are showing; filter further or use the list.';
+    else if (filt.names && lastNames.skipped) t += ' ' + lastNames.skipped + (lastNames.skipped === 1 ? ' name is' : ' names are') + ' left out because they would overlap; they are in the list.';
+    if (el.textContent !== t) el.textContent = t;
+  }
+  function renderList() {
+    var vis = shown(), rows = '';
+    document.getElementById('ct-count').textContent = vis.length;
+    FAMS.forEach(function (f) {
+      vis.filter(function (m) { return m.family === f.id; }).sort(function (a, b) { return a.name < b.name ? -1 : 1; }).forEach(function (m) {
+        rows += '<tr' + (m.id === sel ? ' class="sel"' : '') + '><td><button type="button" class="linkbtn strong" data-chart-pick="' + m.id + '"' + (m.id === sel ? ' aria-current="true"' : '') + '>' + esc(m.name) + '</button></td><td>' + esc(f.name) + '</td><td class="n">' + esc(rng(m.E)) + '</td><td class="n">' + esc(rng(m.rho)) + '</td></tr>';
+      });
+    });
+    document.getElementById('ct-rows').innerHTML = rows || '<tr><td colspan="4" class="muted">No materials match the filters.</td></tr>';
+  }
+  function applyFilters() { drawChart(); renderList(); }
+
+  /* filter controls */
+  var famBtns = [].slice.call(box.querySelectorAll('.fam-btn'));
+  function syncFilterControls() {
+    famBtns.forEach(function (b) { var on = filt.fams[b.getAttribute('data-fam')]; b.setAttribute('aria-pressed', on ? 'true' : 'false'); b.querySelector('.fam-state').textContent = on ? '✓' : '–'; });
+    document.getElementById('ct-low').checked = filt.hideLow;
+    document.getElementById('ct-names').checked = filt.names;
+    document.getElementById('ct-outline').checked = filt.outlines;
+    document.getElementById('ct-q').value = filt.q;
+  }
+  famBtns.forEach(function (b) {
+    b.addEventListener('click', function () { var id = b.getAttribute('data-fam'); filt.fams[id] = !filt.fams[id]; syncFilterControls(); applyFilters(); });
+  });
+  document.getElementById('ct-low').addEventListener('change', function (e) { filt.hideLow = e.target.checked; applyFilters(); });
+  document.getElementById('ct-names').addEventListener('change', function (e) { filt.names = e.target.checked; applyFilters(); });
+  document.getElementById('ct-outline').addEventListener('change', function (e) { filt.outlines = e.target.checked; applyFilters(); });
+  var qTimer = null, qBox = document.getElementById('ct-q');
+  qBox.addEventListener('input', function () { clearTimeout(qTimer); qTimer = setTimeout(function () { filt.q = qBox.value.trim().toLowerCase().replace(/\s+/g, ' '); applyFilters(); }, 150); });
+  qBox.addEventListener('keydown', function (e) { if (e.key === 'Escape' && qBox.value) { e.preventDefault(); qBox.value = ''; filt.q = ''; applyFilters(); } });
+  document.getElementById('ct-reset').addEventListener('click', function () {
+    FAMS.forEach(function (f) { filt.fams[f.id] = true; });
+    filt.hideLow = false; filt.names = false; filt.outlines = true; filt.q = '';
+    syncFilterControls(); applyFilters();
+  });
+  document.getElementById('ct-list').addEventListener('click', function (e) {
+    var b = e.target.closest ? e.target.closest('button[data-chart-pick]') : null;
+    if (!b) return;
+    var id = b.getAttribute('data-chart-pick');
+    choose(id, 'chart');
+    var again = document.querySelector('#ct-rows button[data-chart-pick="' + id + '"]');
+    if (again) again.focus();
+  });
+
+  /* chart pointer and keyboard */
   var chartEl = document.getElementById('mat-chart');
   function tip(g, e) {
     var t = document.getElementById('mat-tip'), m = BY[g.getAttribute('data-id')], b = chartEl.getBoundingClientRect(), r = g.getBoundingClientRect();
@@ -261,22 +400,44 @@
     var x = (e && e.clientX ? e.clientX : r.left + r.width / 2) - b.left + 12, y = (e && e.clientY ? e.clientY : r.top) - b.top - 8;
     t.style.left = Math.min(x, b.width - 200) + 'px'; t.style.top = Math.max(y, 0) + 'px';
   }
+  function moveFocus(id) {
+    var cur = chartEl.querySelector('.mat-pt[tabindex="0"]'), g = chartEl.querySelector('.mat-pt[data-id="' + id + '"]');
+    if (!g) return;
+    if (cur) cur.tabIndex = -1;
+    g.tabIndex = 0; g.focus();
+  }
   chartEl.addEventListener('mousemove', function (e) { var g = e.target.closest ? e.target.closest('.mat-pt') : null; if (g) tip(g, e); else document.getElementById('mat-tip').hidden = true; });
   chartEl.addEventListener('mouseleave', function () { document.getElementById('mat-tip').hidden = true; });
-  chartEl.addEventListener('focusin', function (e) { var g = e.target.closest ? e.target.closest('.mat-pt') : null; if (g) tip(g); });
+  chartEl.addEventListener('focusin', function (e) { var g = e.target.closest ? e.target.closest('.mat-pt') : null; if (g) { focusId = g.getAttribute('data-id'); tip(g); } });
   chartEl.addEventListener('focusout', function () { document.getElementById('mat-tip').hidden = true; });
   chartEl.addEventListener('click', function (e) { var g = e.target.closest ? e.target.closest('.mat-pt') : null; if (g) choose(g.getAttribute('data-id'), 'chart', true); });
+  /* The chart is one Tab stop. Arrow keys move between the materials showing (left and right by density, up and down by modulus), Home and End jump to the ends, Enter or Space chooses. */
   chartEl.addEventListener('keydown', function (e) {
     var g = e.target.closest ? e.target.closest('.mat-pt') : null;
-    if (g && (e.key === 'Enter' || e.key === ' ')) { e.preventDefault(); choose(g.getAttribute('data-id'), 'chart', true); }
+    if (!g) return;
+    var id = g.getAttribute('data-id');
+    if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); choose(id, 'chart', true); return; }
+    var list, i, next = null, vis = shown();
+    if (e.key === 'ArrowRight' || e.key === 'ArrowLeft' || e.key === 'Home' || e.key === 'End') {
+      list = vis.slice().sort(byDensity);
+      i = list.map(function (m) { return m.id; }).indexOf(id);
+      next = e.key === 'Home' ? list[0] : e.key === 'End' ? list[list.length - 1] : list[i + (e.key === 'ArrowRight' ? 1 : -1)];
+    } else if (e.key === 'ArrowUp' || e.key === 'ArrowDown') {
+      list = vis.slice().sort(byModulus);
+      i = list.map(function (m) { return m.id; }).indexOf(id);
+      next = list[i + (e.key === 'ArrowUp' ? 1 : -1)];
+    } else return;
+    e.preventDefault();
+    if (next) moveFocus(next.id);
   });
 
   /* ---------- choosing a material ---------- */
   function choose(id, goTab, keepFocus) {
     if (!BY[id]) return;
     sel = id;
+    if (keepFocus) focusId = id;
     document.getElementById('mat-select').value = id;
-    detail(); renderTables(); drawChart();
+    detail(); renderTables(); drawChart(); renderList();
     if (goTab) selectTab(goTab);
     setHash();
     if (keepFocus) { var g = chartEl.querySelector('.mat-pt[data-id="' + id + '"]'); if (g) g.focus(); }
@@ -289,5 +450,5 @@
   });
 
   document.getElementById('mat-select').value = sel;
-  detail(); renderTables(); drawChart(); selectTab(tab);
+  detail(); renderTables(); drawChart(); renderList(); selectTab(tab);
 })();
