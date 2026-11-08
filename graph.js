@@ -421,6 +421,7 @@
     if (!m) return;
     var key = m[1].replace(/"/g, '').trim().toLowerCase();
     var val = m[2].replace(/[,;\t]+$/, '').trim().replace(/^"(.*)"$/, '$1').replace(/""/g, '"').replace(/^'(?=[=+\-@])/, '');
+    (meta.all = meta.all || []).push([m[1].replace(/"/g, '').trim(), val]);
     META_KEYS.forEach(function (k) { if (key.indexOf(k[0]) === 0 && meta[k[1]] === undefined) meta[k[1]] = val; });
   }
   function numMeta(v) { var x = parseFloat(String(v === undefined ? '' : v).replace(',', '.')); return x > 0 ? x : null; }
@@ -489,7 +490,7 @@
     var r = { id: 'loaded', test: test, material: 'loaded', mk: mk, label: 'Your data: ' + name, fileName: name, source: 'loaded', simulated: simulated,
       units: { x: isRelax ? 's' : '-', y: 'MPa' }, params: p, direct: d.mode === 'direct', x: [], y: [],
       dimsFromFile: !!d.dims, baseLabel: d.dims ? 'Dimensions in file' : 'Example dimensions',
-      specimenId: meta.id || '', materialText: meta.material || '', fileDate: meta.date || '' };
+      specimenId: meta.id || '', materialText: meta.material || '', fileDate: meta.date || '', fileMeta: meta.all || [] };
     if (isRelax) {
       var h = d.hold.filter(isFinite);
       p.hold_s = numMeta(meta.hold_s) || Math.round(maxOf(d.a));
@@ -855,6 +856,7 @@
       '<div class="graph-actions"><button type="button" class="btn-secondary" id="p-reset">Reset parameters</button></div>' +
       '<details class="tips"><summary>About these values</summary><p class="param-note" id="param-note"></p><p class="model" id="model"></p></details></section>';
     root.innerHTML =
+      (mode === 'load' ? '<details class="file-details" id="file-details" hidden><summary>File details</summary><dl class="fd-list" id="fd-list"></dl></details>' : '') +
       (mode === 'example' ? '<fieldset class="segmented"' + (lockMat ? ' hidden' : '') + '><legend>Material</legend><div class="options" id="mats"></div></fieldset>' : '') +
       '<div class="graph-grid' + (stacked ? ' stacked' : '') + '">' +
         '<div class="graph-main">' +
@@ -1073,8 +1075,19 @@
       return f;
     }
     var fieldDefs = [];
+    function renderFileDetails(r) {
+      var box = root.querySelector('#file-details');
+      if (!box) return;
+      var skip = /^(biomaterials tensile tester|gauge length|width|thickness|area)/i;
+      var rows = (r.fileMeta || []).filter(function (d) { return d[1] !== '' && !skip.test(d[0]); }).slice(0, 40);
+      root.querySelector('#fd-list').innerHTML = rows.map(function (d) {
+        return '<div' + (d[1].length > 60 ? ' class="fd-wide"' : '') + '><dt>' + esc(d[0]) + '</dt><dd>' + esc(d[1]) + '</dd></div>';
+      }).join('');
+      box.hidden = !rows.length;
+    }
     function renderParams(r) {
       if (mode === 'live') return;
+      renderFileDetails(r);
       fieldDefs = paramFields(r);
       root.querySelector('#params').innerHTML = fieldDefs.map(function (d) {
         if (d.out) return '<div class="pf"><span>' + d.label + '</span><output data-o="' + d.k + '">' + d.out() + '</output></div>';

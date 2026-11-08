@@ -398,6 +398,13 @@ sub, sup { line-height: 0; font-size: 0.75em; }
 .defs-toggle { margin-left: auto; display: inline-flex; align-items: center; gap: 0.4rem; }
 .defs-toggle input { width: 1rem; height: 1rem; accent-color: var(--accent); }
 .tips { margin: 0.5rem 0; }
+/* Load Test: what the opened file says about the test (specimen, material, date, notes, why it ended). Closed until opened. */
+.file-details { margin: 0.5rem 0 0.75rem; padding: 0.5rem 1rem; border: 1px solid var(--line); border-radius: 8px; background: var(--surface); }
+.file-details summary { cursor: pointer; font-size: 0.9375rem; font-weight: 600; }
+.fd-list { display: grid; grid-template-columns: repeat(auto-fill, minmax(14rem, 1fr)); gap: 0.5rem 1.5rem; margin: 0.6rem 0 0.2rem; }
+.fd-list dt { color: var(--muted); font-size: 0.8125rem; }
+.fd-list dd { margin: 0; font-weight: 600; overflow-wrap: anywhere; }
+.fd-list .fd-wide { grid-column: 1 / -1; }
 /* Load Test with a file open: toolbar and parameters sit directly under the graph. */
 .graph-toolbar { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 0.5rem 1.25rem; margin: 0.75rem 0; }
 .graph-toolbar .graph-toggles, .graph-toolbar .graph-actions { margin: 0; }
@@ -477,7 +484,7 @@ sub, sup { line-height: 0; font-size: 0.75em; }
   .eqs tbody th, .eqs .eq { white-space: normal; }
 }
 @media print {
-  .topbar, .back, .customize, .graph-actions, .hint, .tips, .segmented, .zoom-tools, .range-note { display: none; }
+  .topbar, .back, .customize, .graph-actions, .hint, .tips, .file-details, .segmented, .zoom-tools, .range-note { display: none; }
   body { background: #fff; color: #000; }
   .chart-wrap { border: 0; }
   .proto-tabs, .step-nav, .step-links { display: none; }
