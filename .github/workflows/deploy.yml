@@ -1,0 +1,58 @@
+name: Deploy site
+
+# Checks the site, then publishes it to GitHub Pages every time something is merged into main.
+# Pull requests run the checks only. "Run workflow" on the Actions tab checks and publishes again without a new commit.
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  checks:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
+
+      # Stops the publish if a file is missing, a script has a mistake, a data file is wrong,
+      # or an email address or key slipped in. See scripts/check-site.js and docs/DEPLOY.md.
+      - name: Check the site
+        run: node scripts/check-site.js
+
+  deploy:
+    needs: checks
+    if: github.event_name != 'pull_request'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      pages: write
+      id-token: write
+    # If two deploys overlap, the newest one wins. Only deploys use this group,
+    # so a pull request check can never cancel a deploy.
+    concurrency:
+      group: pages
+      cancel-in-progress: true
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
+
+      # Copies the site into _site/, adds ?v=<commit> to CSS/JS links, and writes version.json.
+      # The files in the repository are never changed. See scripts/build-site.sh.
+      - name: Build site folder
+        run: bash scripts/build-site.sh _site "${{ github.sha }}" "${{ github.run_id }}"
+
+      - uses: actions/configure-pages@983d7736d9b0ae728b81ab479565c72886d7745b # v5.0.0
+
+      - uses: actions/upload-pages-artifact@56afc609e74202658d3ffba0e8f6dda462b719fa # v3.0.1
+        with:
+          path: _site
+
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@d6db90164ac5ed86f2b6aed7e0febac5b3c0c03e # v4.0.5

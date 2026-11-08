@@ -1,0 +1,9 @@
+# Switched off: the limit of 0 stops pull requests. To turn on weekly update pull requests,
+# change the 0 to 2 in a pull request that you merge.
+version: 2
+updates:
+  - package-ecosystem: "github-actions"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+    open-pull-requests-limit: 0

@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' blob:; font-src 'self'; connect-src 'none'; form-action 'none'; base-uri 'none'; object-src 'none'">
+  <meta name="referrer" content="no-referrer">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Stress Relaxation protocol – Biomaterials Tensile Tester</title>
+  <link rel="stylesheet" href="styles.css">
+  <link rel="stylesheet" href="styles-looks.css">
+  <link rel="stylesheet" href="layouts.css">
+  <script src="display-settings.js"></script>
+</head>
+<body>
+  <header class="topbar">
+    <div class="inner">
+      <a class="brand" href="index.html"><svg class="logo" viewBox="0 0 48 48" aria-hidden="true" focusable="false"><rect width="48" height="48" rx="11" style="fill:var(--accent)"/><g fill="none" stroke-linecap="round" stroke-width="3" style="stroke:var(--accent-ink)"><path d="M8 15q4-5 8 0t8 0H40"/><path d="M8 24q4 5 8 0t8 0H40" opacity=".85"/><path d="M8 33q4-5 8 0t8 0H40"/></g></svg><span>Biomaterials Tensile Tester</span></a>
+      <nav aria-label="Main">
+        <a href="index.html">Home</a>
+        <a href="learn.html">Learn</a>
+        <a href="protocol-uniaxial-tension.html" aria-current="page">Protocols</a>
+        <a href="materials.html">Materials</a>
+        <a href="calibration.html">Calibration</a>
+        <a href="about.html">About</a>
+        <a href="help.html">Help</a>
+        <a href="settings.html">Settings</a>
+      </nav>
+    </div>
+  </header>
+
+  <main class="wide">
+    <a class="back" href="index.html">&larr; Back to Home</a>
+    <p class="status"><span class="badge">Draft</span> <span class="muted">Draft for advisor review &ndash; no operating parameter is approved</span></p>
+    <h1>Stress Relaxation protocol</h1>
+    <nav class="pill-links" aria-label="Protocols">
+      <a href="protocol-uniaxial-tension.html">Uniaxial Tension</a>
+      <a href="protocol-stress-relaxation.html" aria-current="page">Stress Relaxation</a>
+    </nav>
+
+    <div id="protocol-app" data-test="relaxation"><p class="muted">Enable JavaScript to view the protocols.</p></div>
+
+    <section class="section" id="graph-section" aria-labelledby="eg-title">
+      <h2 id="eg-title">What it looks like</h2>
+      <p class="muted small" id="example-note">Example graphs from labeled sample data, not measured.</p>
+      <div id="graph-app" data-test="relaxation"></div>
+    </section>
+
+    <section class="section" id="equations-section">
+      <details class="eq-details">
+      <summary>Governing equations</summary>
+      <div class="table-scroll">
+        <table class="eqs">
+          <thead><tr><th scope="col">Quantity</th><th scope="col">Equation</th><th scope="col">Definition</th></tr></thead>
+          <tbody>
+            <tr><th scope="row">Applied strain</th><td class="eq"><math><msub><mi>ε</mi><mn>0</mn></msub><mo>=</mo><mfrac><mrow><mrow><mi mathvariant="normal">Δ</mi><mi>L</mi></mrow></mrow><mrow><msub><mi>L</mi><mn>0</mn></msub></mrow></mfrac></math></td><td>Strain imposed during loading and then held constant for <var>t</var> &gt; 0.</td></tr>
+            <tr><th scope="row">Stress</th><td class="eq"><math><mi>σ</mi><mo>(</mo><mi>t</mi><mo>)</mo><mo>=</mo><mfrac><mrow><mi>F</mi><mo>(</mo><mi>t</mi><mo>)</mo></mrow><mrow><msub><mi>A</mi><mn>0</mn></msub></mrow></mfrac></math></td><td>Engineering stress from the force recorded during the hold (MPa).</td></tr>
+            <tr><th scope="row">Relaxation function</th><td class="eq"><math><mi>G</mi><mo>(</mo><mi>t</mi><mo>)</mo><mo>=</mo><mfrac><mrow><mi>σ</mi><mo>(</mo><mi>t</mi><mo>)</mo></mrow><mrow><msub><mi>σ</mi><mn>0</mn></msub></mrow></mfrac></math></td><td>Stress remaining relative to the initial stress <var>&sigma;</var><sub>0</sub> = <var>&sigma;</var>(0). Dimensionless, 1 at <var>t</var> = 0 (not the shear modulus).</td></tr>
+            <tr><th scope="row">Percent relaxed</th><td class="eq"><math><mn>100</mn><mo>[</mo><mn>1</mn><mo>−</mo><mfrac><mrow><mi>σ</mi><mo>(</mo><mi>t</mi><mo>)</mo></mrow><mrow><msub><mi>σ</mi><mn>0</mn></msub></mrow></mfrac><mo>]</mo></math></td><td>Fraction of the initial stress lost by time <var>t</var>.</td></tr>
+            <tr><th scope="row">Apparent stress/strain ratio after ramp</th><td class="eq"><math><mi>E</mi><mo>(</mo><mi>t</mi><mo>)</mo><mo>=</mo><mfrac><mrow><mi>σ</mi><mo>(</mo><mi>t</mi><mo>)</mo></mrow><mrow><msub><mi>ε</mi><mn>0</mn></msub></mrow></mfrac></math></td><td>Time-dependent modulus at constant strain (MPa or GPa).</td></tr>
+            <tr><th scope="row">Prony series</th><td class="eq"><math><mi>σ</mi><mo>(</mo><mi>t</mi><mo>)</mo><mo>=</mo><msub><mi>σ</mi><mi mathvariant="normal">∞</mi></msub><mo>+</mo><munder><mo>∑</mo><mi>i</mi></munder><msub><mi>σ</mi><mi>i</mi></msub><msup><mi mathvariant="normal">e</mi><mrow><mo>−</mo><mfrac><mrow><mi>t</mi></mrow><mrow><msub><mi>τ</mi><mi>i</mi></msub></mrow></mfrac></mrow></msup></math></td><td><var>&sigma;</var><sub>&infin;</sub>: equilibrium stress. <var>&sigma;</var><sub><var>i</var></sub>, <var>&tau;</var><sub><var>i</var></sub>: amplitude and time constant of relaxation mode <var>i</var>.</td></tr>
+            <tr><th scope="row">Endpoint-referenced 1/e decay time</th><td class="eq"><math><mi>σ</mi><mo>(</mo><mi>τ</mi><mo>)</mo><mo>=</mo><msub><mi>σ</mi><mi mathvariant="normal">end</mi></msub><mo>+</mo><mfrac><mrow><mrow><msub><mi>σ</mi><mn>0</mn></msub><mo>−</mo><msub><mi>σ</mi><mi mathvariant="normal">end</mi></msub></mrow></mrow><mrow><mi mathvariant="normal">e</mi></mrow></mfrac></math></td><td>Time for the decaying part of the stress to fall to 1/e (about 37%). Reported here as a single characteristic value, with <var>&sigma;</var><sub>end</sub> the stress at the end of the hold.</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <p class="muted small">Strain is held constant, so stress decay reflects time-dependent (viscoelastic) behavior. Reference method: ASTM E328 for stress relaxation of materials; protocols for biological tissue vary.</p>
+      </details>
+    </section>
+
+    <p class="actions"><a class="btn" href="test-stress-relaxation.html">Start a Stress Relaxation test</a></p>
+  </main>
+
+  <script src="data/materials.js"></script>
+  <script src="data/samples.js"></script>
+  <script src="data/sample-models.js"></script>
+  <script src="data/protocols.js"></script>
+  <script src="graph.js"></script>
+  <script src="excel-export.js"></script>
+  <script src="protocol-page.js"></script>
+  <script src="layouts.js"></script>
+</body>
+</html>

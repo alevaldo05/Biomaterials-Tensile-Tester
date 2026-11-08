@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' blob:; font-src 'self'; connect-src 'none'; form-action 'none'; base-uri 'none'; object-src 'none'">
+  <meta name="referrer" content="no-referrer">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Calibration – Biomaterials Tensile Tester</title>
+  <link rel="stylesheet" href="styles.css">
+  <link rel="stylesheet" href="styles-looks.css">
+  <link rel="stylesheet" href="layouts.css">
+  <script src="display-settings.js"></script>
+</head>
+<body>
+  <header class="topbar">
+    <div class="inner">
+      <a class="brand" href="index.html"><svg class="logo" viewBox="0 0 48 48" aria-hidden="true" focusable="false"><rect width="48" height="48" rx="11" style="fill:var(--accent)"/><g fill="none" stroke-linecap="round" stroke-width="3" style="stroke:var(--accent-ink)"><path d="M8 15q4-5 8 0t8 0H40"/><path d="M8 24q4 5 8 0t8 0H40" opacity=".85"/><path d="M8 33q4-5 8 0t8 0H40"/></g></svg><span>Biomaterials Tensile Tester</span></a>
+      <nav aria-label="Main">
+        <a href="index.html">Home</a>
+        <a href="learn.html">Learn</a>
+        <a href="protocol-uniaxial-tension.html">Protocols</a>
+        <a href="materials.html">Materials</a>
+        <a href="calibration.html" aria-current="page">Calibration</a>
+        <a href="about.html">About</a>
+        <a href="help.html">Help</a>
+        <a href="settings.html">Settings</a>
+      </nav>
+    </div>
+  </header>
+
+  <main class="wide">
+    <a class="back" href="index.html">&larr; Back to Home</a>
+    <p class="status"><span class="badge">Draft</span> <span class="muted">Confirm the method with your advisor</span></p>
+    <h1>Calibration</h1>
+    <p class="sub">Compare the tester&rsquo;s force readings with known forces, and record the result.</p>
+
+    <p class="safety"><strong>Tare is not a calibration.</strong> Tare only sets the current reading to zero. A calibration compares the readings with known forces. This page does not change any reading on the tester or on this site; it only helps you work out and record a correction.</p>
+
+    <section class="section" id="enter-section" aria-labelledby="enter-title">
+      <h2 id="enter-title">Enter points</h2>
+      <p class="muted small">For each known mass, type the force the tester reported (in newtons) once the reading has settled. The force from the mass is calculated as <var>F</var> = <var>m</var>&middot;<var>g</var>, where <var>m</var> is a <em>mass</em> (grams or kilograms), not a force.</p>
+      <div id="cal-app"><p class="muted">Enable JavaScript to use the calibration page.</p></div>
+    </section>
+
+    <section class="section" id="results-section" aria-labelledby="results-title">
+      <h2 id="results-title">Results</h2>
+      <div id="cal-results"></div>
+    </section>
+
+    <section class="section" id="how-section" aria-labelledby="how-title">
+      <h2 id="how-title">How to calibrate (draft)</h2>
+      <p class="muted small">Draft placeholders. Values in [brackets] are undecided; replace them with your lab&rsquo;s method.</p>
+      <ol class="how-list">
+        <li>Let the load cell and amplifier warm up for [set by your lab] before you start.</li>
+        <li>With nothing hanging from the load cell, press Tare and note the reading.</li>
+        <li>Hang known masses one at a time, going up in steps and then back down, and let each reading settle for [set by your lab] seconds before you note it.</li>
+        <li>Never exceed the load cell&rsquo;s rated capacity, and keep hands and feet clear of hanging masses.</li>
+        <li>Type each mass and its reading into the table above, and download the record.</li>
+        <li>Repeat after any change to the setup: [set by your lab].</li>
+      </ol>
+    </section>
+
+    <section class="section" id="limits-section" aria-labelledby="limits-title">
+      <h2 id="limits-title">What this page does and does not do</h2>
+      <ul>
+        <li>It fits a straight line, <em>reading</em> = <em>gain</em> &times; <em>force</em> + <em>offset</em>, to the points you type. It does not measure anything.</li>
+        <li>The correction it suggests is <em>not applied</em> anywhere: not on this site, not on the tester. Any correction would have to go into the controller code, which does not exist yet.</li>
+        <li>It makes <strong>no claim of traceability</strong> or of meeting a standard. A calibration is only as good as the masses used; their accuracy is not known to this page.</li>
+        <li>The standard value of <em>g</em> (9.80665&nbsp;m/s&sup2;) is a convention. The local value differs slightly.</li>
+        <li>Nothing you enter is saved or uploaded. It stays in this browser tab until you download the record.</li>
+      </ul>
+    </section>
+  </main>
+  <script src="calibration.js"></script>
+  <script src="layouts.js"></script>
+</body>
+</html>
