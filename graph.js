@@ -847,6 +847,13 @@
     var swatches = [['#3f6b52', 'Forest green'], ['#2f6f8f', 'Blue'], ['#b4691f', 'Orange'], ['#7a4f9a', 'Purple'], ['#a63d40', 'Red'], ['#1f2a24', 'Charcoal']]
       .map(function (c) { return '<button type="button" class="swatch" data-color="' + c[0] + '" style="background:' + c[0] + '" aria-label="Line color: ' + c[1] + '"></button>'; }).join('');
 
+    /* Load Test arranges the results in one column under the graph: toolbar, then the test parameters, then the optional panels.
+       New Test can use the same arrangement later by adding 'live' to this test. */
+    var stacked = (mode === 'load');
+    var paramsStacked = '<section class="params-block" aria-labelledby="params-title"><h2 id="params-title">Test parameters</h2>' +
+      '<div class="param-fields" id="params"></div>' +
+      '<div class="graph-actions"><button type="button" class="btn-secondary" id="p-reset">Reset parameters</button></div>' +
+      '<details class="tips"><summary>About these values</summary><p class="param-note" id="param-note"></p><p class="model" id="model"></p></details></section>';
     root.innerHTML =
       (mode === 'example' ? '<fieldset class="segmented"' + (lockMat ? ' hidden' : '') + '><legend>Material</legend><div class="options" id="mats"></div></fieldset>' : '') +
       '<div class="graph-grid">' +
@@ -864,6 +871,7 @@
           '<p class="data-checks" id="dq" role="status" hidden></p>' +
           '<p class="data-checks" id="dimsrc" hidden></p>' +
           (mode === 'example' ? '<p class="hint">Hover or use ← → (Shift for larger steps), Home, and End to read values. Scroll over the graph or press + / − to zoom, or drag a box around an area. When zoomed, drag to move, press [ and ] to move left and right, and double-click to reset.</p>' : '<details class="tips"><summary>Graph tips</summary><p class="hint">Hover or use ← → (Shift for larger steps), Home, and End to read values. Scroll over the graph or press + / − to zoom, or drag a box around an area. When zoomed, drag to move, press [ and ] to move left and right, and double-click to reset.</p><p class="hint">Select a result’s name to highlight it on the graph.</p></details>') +
+          (stacked ? '<div class="graph-toolbar">' : '') +
           '<div class="graph-toggles">' +
             '<label class="check"><input type="checkbox" id="t-regions"> Show regions</label>' +
             (isRelax ? '' : '<label class="check"><input type="checkbox" id="t-tangent"> Tangent line at cursor</label>') +
@@ -874,6 +882,7 @@
             (window.TensileExcel ? '<button type="button" class="btn-secondary" id="dl-xlsx">Download for Excel (.xlsx)</button>' : '') +
             (mode === 'load' && window.TensileReport ? '<button type="button" class="btn-secondary" id="dl-print">Print report</button>' : '') +
           '</div>' +
+          (stacked ? '</div>' + paramsStacked : '') +
           '<details class="schematic" id="schem" hidden><summary>Soft-tissue curve regions (schematic)</summary>' + SCHEMATIC +
             '<p class="def">Illustration, not data. Region names follow common descriptions of skin and similar soft tissues; where one region ends and the next begins varies between specimens.</p></details>' +
           '<details class="customize"><summary>Customize graph</summary><div class="fields">' +
@@ -896,7 +905,7 @@
           (mode === 'example' ? '<p class="def" id="res-note">Select a result’s name to highlight it on the graph.</p>' : '') + '</div>' +
         '</aside>' +
       '</div>' +
-      (mode !== 'live' ?
+      (mode !== 'live' && !stacked ?
         '<h2>Test parameters</h2><div class="param-fields" id="params"></div>' +
         '<p class="param-note" id="param-note"></p>' +
         '<div class="graph-actions"><button type="button" class="btn-secondary" id="p-reset">Reset parameters</button></div>' +

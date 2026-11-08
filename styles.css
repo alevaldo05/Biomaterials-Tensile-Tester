@@ -398,6 +398,21 @@ sub, sup { line-height: 0; font-size: 0.75em; }
 .defs-toggle { margin-left: auto; display: inline-flex; align-items: center; gap: 0.4rem; }
 .defs-toggle input { width: 1rem; height: 1rem; accent-color: var(--accent); }
 .tips { margin: 0.5rem 0; }
+/* Load Test with a file open: toolbar and parameters sit directly under the graph. */
+.graph-toolbar { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 0.5rem 1.25rem; margin: 0.75rem 0; }
+.graph-toolbar .graph-toggles, .graph-toolbar .graph-actions { margin: 0; }
+.params-block { margin: 0.75rem 0 1rem; padding: 0.9rem 1.1rem 1rem; border: 1px solid var(--line); border-radius: 8px; background: var(--surface); }
+.params-block h2 { margin: 0 0 0.5rem; font-size: 1.0625rem; }
+.params-block .param-fields { grid-template-columns: repeat(auto-fill, minmax(9.5rem, 1fr)); margin: 0 0 0.75rem; }
+.params-block .graph-actions { margin-bottom: 0.25rem; }
+.params-block .tips { margin: 0.25rem 0 0; }
+/* The setup controls shrink to one row once a file is open. */
+.load-form.loaded { display: flex; flex-wrap: wrap; align-items: flex-end; gap: 0.25rem 1.5rem; }
+.load-form.loaded .segmented { margin: 0 0 0.5rem; }
+.load-form.loaded #mode-one { display: flex; flex-wrap: wrap; align-items: center; gap: 0.25rem 1rem; margin: 0 0 0.5rem; }
+.load-form.loaded #mode-one .step-label { display: none; }
+.load-form.loaded #mode-one .graph-actions, .load-form.loaded #mode-one .csv-msg { margin: 0; }
+.load-form.loaded .csv-help { flex-basis: 100%; }
 .tips summary { cursor: pointer; font-size: 0.875rem; font-weight: 600; }
 .tips .hint { margin: 0.4rem 0 0; }
 
