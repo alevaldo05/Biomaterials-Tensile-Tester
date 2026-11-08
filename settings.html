@@ -36,7 +36,7 @@
     <a class="back" href="index.html">&larr; Back to Home</a>
     <h1>Settings</h1>
 
-    <fieldset>
+    <fieldset id="set-theme" data-group="appearance">
       <legend>Color theme</legend>
       <div class="options themes">
         <label><input type="radio" name="theme" value="light" checked> <span class="chip" style="--c1:#f6f2e9;--c2:#3f6b52" aria-hidden="true"></span> Green, light</label>
@@ -47,7 +47,7 @@
     </fieldset>
     <p class="muted">Saved in this browser only.</p>
 
-    <fieldset class="settings-group">
+    <fieldset class="settings-group" id="set-layout" data-group="appearance">
       <legend>Layout</legend>
       <p>How pages are arranged.</p>
       <div class="choice-grid">
@@ -59,7 +59,7 @@
       </div>
     </fieldset>
 
-    <fieldset class="settings-group">
+    <fieldset class="settings-group" id="set-font" data-group="appearance">
       <legend>Font</legend>
       <p>The typeface for the whole site. These use fonts already on your computer (nothing is downloaded), so they look a little different on Windows, Mac, and other systems.</p>
       <div class="choice-grid">
@@ -69,7 +69,7 @@
       </div>
     </fieldset>
 
-    <fieldset class="settings-group">
+    <fieldset class="settings-group" id="set-style" data-group="appearance">
       <legend>Style</legend>
       <p>Shapes, type, and logo. With the Green light color theme, each style also uses its own colors; other color themes keep their own colors.</p>
       <div class="choice-grid">
@@ -82,7 +82,7 @@
       </div>
     </fieldset>
 
-    <fieldset class="settings-group">
+    <fieldset class="settings-group" id="set-textsize" data-group="appearance">
       <legend>Text size</legend>
       <p>Scales the page text. It builds on your browser&rsquo;s own text size and zoom, so it never reduces them. STOP, warnings, and labels stay visible at every size.</p>
       <div class="choice-grid">
@@ -94,7 +94,7 @@
       <p class="text-sample" aria-hidden="true">Sample: &sigma; = <var>F</var>/<var>A</var><sub>0</sub> &middot; 195 GPa &middot; Draft values, not measured.</p>
     </fieldset>
 
-    <fieldset class="settings-group">
+    <fieldset class="settings-group" id="set-spacing" data-group="appearance">
       <legend>Spacing</legend>
       <p>The space between blocks, table rows, and list items. Buttons, inputs, and focus outlines keep their size.</p>
       <div class="choice-grid">
@@ -104,7 +104,7 @@
       </div>
     </fieldset>
 
-    <fieldset class="settings-group">
+    <fieldset class="settings-group" id="set-motion" data-group="appearance">
       <legend>Motion</legend>
       <p>The only motion on this site is the fade on buttons and the brief highlight when you jump to a step. Recording and the live graph are not affected.</p>
       <div class="choice-grid">
@@ -114,7 +114,7 @@
       </div>
     </fieldset>
 
-    <fieldset class="settings-group">
+    <fieldset class="settings-group" id="set-linewidth" data-group="graphs">
       <legend>Graph line thickness</legend>
       <p>The starting thickness of the curve on the main graph (test pages, Load Test, protocol pages, and Materials). You can still change one graph with its own slider; that is not saved. Downloaded PNG and SVG images use the thickness shown.</p>
       <div class="choice-grid">
@@ -125,7 +125,7 @@
       </div>
     </fieldset>
 
-    <fieldset class="settings-group">
+    <fieldset class="settings-group" id="set-curve" data-group="graphs">
       <legend>Curve style</legend>
       <p>Whether the curve starts as a plain line or a line with a marker on each plotted point. The labels and key results do not depend on color alone.</p>
       <div class="choice-grid">
@@ -134,7 +134,7 @@
       </div>
     </fieldset>
 
-    <fieldset class="settings-group">
+    <fieldset class="settings-group" id="set-grid" data-group="graphs">
       <legend>Graph grid</legend>
       <p>The grid behind the curve. Turning it off never removes the axes, tick numbers, or units. Downloaded images show what is visible.</p>
       <div class="choice-grid">
@@ -144,7 +144,7 @@
       </div>
     </fieldset>
 
-    <fieldset class="settings-group">
+    <fieldset class="settings-group" id="set-stressunit" data-group="units">
       <legend>Stress unit</legend>
       <p>How stress and modulus are written on the main graph pages (test pages, Load Test, protocol pages): readouts, Key results, axis numbers and titles. Modulus is always stress per 1 of strain (a ratio), never per percent. Downloaded CSV files and the numbers in the Excel data sheet always stay in MPa.</p>
       <div class="choice-grid">
@@ -153,7 +153,7 @@
       </div>
     </fieldset>
 
-    <fieldset class="settings-group">
+    <fieldset class="settings-group" id="set-strainunit" data-group="units">
       <legend>Strain unit</legend>
       <p>Strain as a ratio (mm/mm) or as a percentage, for the readout, the strain axis, the strength and failure strain, and the fitted interval text. Energy density stays in MJ/m³. Downloaded files always keep strain as a ratio.</p>
       <div class="choice-grid">
@@ -162,7 +162,7 @@
       </div>
     </fieldset>
 
-    <fieldset class="settings-group">
+    <fieldset class="settings-group" id="set-digits" data-group="units">
       <legend>Displayed digits</legend>
       <p>How many significant digits are shown on the main graph pages. More displayed digits do not improve measurement accuracy. Downloaded files keep their own precision.</p>
       <div class="choice-grid">
@@ -172,7 +172,7 @@
       </div>
     </fieldset>
 
-    <fieldset class="settings-group">
+    <fieldset class="settings-group" id="set-checklist" data-group="checklist">
       <legend>Pre-test checklist</legend>
       <p>A reminder that appears each time you press Start on a test page, for classes or training. When it is On, Start stays disabled until every item shown is ticked. Items that only apply to tissue are shown for biological materials only. It is a reminder, not a safety certification. It is Off by default and saved in this browser only, so turn it on in each browser that needs it.</p>
       <div class="choice-grid">
@@ -185,5 +185,6 @@
     <p class="muted">The theme, font, layout, style, text size, spacing, motion, graph, unit, and digit choices change appearance only (the unit and digit choices change only how numbers are written on screen and in the printed report and images). The pre-test checklist only adds a reminder before a test starts. These settings are saved in this browser only. None of them change test data, results, or what is sent to the tester, and test data is never saved by the site.</p>
   </main>
   <script src="layouts.js"></script>
+  <script src="page-nav.js"></script>
 </body>
 </html>
