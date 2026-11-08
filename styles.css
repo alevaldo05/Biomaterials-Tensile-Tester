@@ -813,6 +813,8 @@ dialog.pretest h3 { margin: 1rem 0 0.35rem; font-size: 1rem; }
   .report { font-size: 9pt; line-height: 1.3; color: #000; }
   .report h1 { font-size: 20pt; margin: 0; font-weight: 700; }
   .report h2 { font-size: 10.5pt; margin: 0.5rem 0 0.2rem; border-bottom: 1px solid #000; padding-bottom: 1pt; font-variant: normal; letter-spacing: 0; }
+  /* Section headings print black in every theme and style (the Lab style gives h2 a light grey that vanishes on white paper). */
+  body.printing-report .report h2, body.printing-report .report h3 { color: #000; }
   .rp-head { display: flex; justify-content: space-between; align-items: flex-start; gap: 1rem; }
   .rp-kicker { margin: 0; font-size: 9pt; letter-spacing: 0.04em; text-transform: uppercase; }
   .rp-draft { margin: 0; padding: 1pt 8pt; border: 1px solid #000; border-radius: 999px; font-size: 8.5pt; font-weight: 700; text-transform: uppercase; }
