@@ -851,6 +851,14 @@
     /* Load Test and New Test put the toolbar (regions, tangent, downloads) directly under the graph, with Readout and Key results
        in a column on the right. Load Test also shows the editable test parameters under the toolbar; New Test has its own setup card. */
     var stacked = (mode === 'load' || mode === 'live');
+    /* The Materials page can pass paramsHost: an element elsewhere on the page where the Test parameters block is built, instead of at the
+       bottom of the graph. All the lookups of that block go through pRoot. */
+    var paramsHost = mode === 'example' && opts.paramsHost ? opts.paramsHost : null;
+    var pRoot = paramsHost || root;
+    var paramsExample = '<h2>Test parameters</h2><div class="param-fields" id="params"></div>' +
+      '<p class="param-note" id="param-note"></p>' +
+      '<div class="graph-actions"><button type="button" class="btn-secondary" id="p-reset">Reset parameters</button></div>' +
+      '<p class="model" id="model"></p>';
     var paramsStacked = '<section class="params-block" aria-labelledby="params-title"><h2 id="params-title">Test parameters</h2>' +
       '<div class="param-fields" id="params"></div>' +
       '<div class="graph-actions"><button type="button" class="btn-secondary" id="p-reset">Reset parameters</button></div>' +
@@ -907,12 +915,9 @@
           (mode === 'example' ? '<p class="def" id="res-note">Select a result’s name to highlight it on the graph.</p>' : '') + '</div>' +
         '</aside>' +
       '</div>' +
-      (mode !== 'live' && !stacked ?
-        '<h2>Test parameters</h2><div class="param-fields" id="params"></div>' +
-        '<p class="param-note" id="param-note"></p>' +
-        '<div class="graph-actions"><button type="button" class="btn-secondary" id="p-reset">Reset parameters</button></div>' +
-        '<p class="model" id="model"></p>' : '') +
+      (mode !== 'live' && !stacked && !paramsHost ? paramsExample : '') +
       '<div class="sr-only" id="live" aria-live="polite"></div>';
+    if (paramsHost) paramsHost.innerHTML = paramsExample;
 
     var wrap = root.querySelector('.chart-wrap');
     var readout = root.querySelector('#readout');
@@ -1101,7 +1106,7 @@
       if (mode === 'live') return;
       renderFileDetails(r);
       fieldDefs = paramFields(r);
-      root.querySelector('#params').innerHTML = fieldDefs.map(function (d) {
+      pRoot.querySelector('#params').innerHTML = fieldDefs.map(function (d) {
         if (d.out) return '<div class="pf"><span>' + d.label + '</span><output data-o="' + d.k + '">' + d.out() + '</output></div>';
         if (d.check) return '<label class="pf pf-check"><input type="checkbox" data-k="' + d.k + '"' + (d.get() ? ' checked' : '') + '><span>' + d.label + '</span></label>';
         return '<label class="pf"><span>' + d.label + '</span><input data-k="' + d.k + '" ' + (d.num ? 'type="number" min="0" step="any"' : 'type="text"') + (d.off ? ' disabled' : '') + ' value="' + esc(d.get()) + '"></label>';
@@ -1112,15 +1117,15 @@
           'Stress and strain are calculated from the force and displacement in the file using the dimensions saved in it. Editing them demonstrates how entered geometry affects calculated stress and strain; it does not predict how a real specimen would behave at a different size. A dashed line shows the file’s dimensions.' + tail :
           'Stress and strain are calculated from the loaded force and displacement using these dimensions, which start at example values. Example dimensions are not measurements; enter the specimen’s measured dimensions.' + tail) :
         'These controls demonstrate how entered geometry affects calculated stress and strain. They do not predict how a real specimen’s behavior changes when its size changes. The graph remains illustrative; a dashed line shows the example dimensions for comparison.' + tail;
-      root.querySelector('#param-note').textContent = note;
-      root.querySelector('#model').textContent = (r.source === 'sample' ? 'Sample data, not measured. Generated from: ' : 'Source: ') + r.params.model + '.';
+      pRoot.querySelector('#param-note').textContent = note;
+      pRoot.querySelector('#model').textContent = (r.source === 'sample' ? 'Sample data, not measured. Generated from: ' : 'Source: ') + r.params.model + '.';
     }
     function refreshDerived() {
       fieldDefs.forEach(function (d) {
-        if (d.out) { var o = root.querySelector('[data-o="' + d.k + '"]'); if (o) o.textContent = d.out(); }
+        if (d.out) { var o = pRoot.querySelector('[data-o="' + d.k + '"]'); if (o) o.textContent = d.out(); }
       });
     }
-    bind(root.querySelector('#params'), 'input', function (e) {
+    bind(pRoot.querySelector('#params'), 'input', function (e) {
       var t = e.target, d = fieldDefs.filter(function (q) { return q.k === t.getAttribute('data-k'); })[0];
       if (!d) return;
       var r = rec();
@@ -1137,7 +1142,7 @@
       renderResults(r);
       draw();
     });
-    bind(root.querySelector('#p-reset'), 'click', function () {
+    bind(pRoot.querySelector('#p-reset'), 'click', function () {
       var r = rec();
       r.params = clone(r.base);
       if (r.dimSourceBase) r.dimSource = r.dimSourceBase;
