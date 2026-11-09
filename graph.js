@@ -899,10 +899,10 @@
             '<div><button type="button" class="btn-secondary" id="f-reset">Reset to defaults</button></div>' +
           '</div></details>' +
         '</div>' +
-        '<aside class="graph-side' + (mode === 'example' ? '' : ' compact' + (pref('defs', 'off') === 'on' ? ' show-defs' : '')) + '" aria-labelledby="gs-readout-title gs-results-title">' +
+        '<aside class="graph-side' + (mode === 'example' ? '' : ' compact') + '" aria-labelledby="gs-readout-title gs-results-title">' +
           '<div class="gs-a"><h2 id="gs-readout-title">Readout</h2><dl class="readout" id="readout"></dl></div>' +
           '<div class="gs-b"><h2 id="gs-results-title">Key results</h2>' +
-          '<div class="res-tools"><span>Show on graph:</span><button type="button" class="btn-secondary btn-small" id="show-all">Show all</button><button type="button" class="btn-secondary btn-small" id="hide-all">Hide all</button>' + (mode === 'example' ? '' : '<button type="button" class="btn-secondary btn-small" id="copy-res">Copy results</button><span class="copy-msg" id="copy-msg" role="status"></span>') + (mode === 'example' ? '' : '<label class="check defs-toggle"><input type="checkbox" id="show-defs"' + (pref('defs', 'off') === 'on' ? ' checked' : '') + '> Show definitions</label>') + '</div>' +
+          '<div class="res-tools"><span>Show on graph:</span><button type="button" class="btn-secondary btn-small" id="show-all">Show all</button><button type="button" class="btn-secondary btn-small" id="hide-all">Hide all</button>' + (mode === 'example' ? '' : '<button type="button" class="btn-secondary btn-small" id="copy-res">Copy results</button><span class="copy-msg" id="copy-msg" role="status"></span>') + (mode === 'example' ? '' : '<label class="check defs-toggle"><input type="checkbox" id="show-defs"> Show definitions</label>') + '</div>' +
           '<table class="results"><tbody id="results"></tbody></table>' +
           (mode === 'example' ? '<p class="def" id="res-note">Select a result’s name to highlight it on the graph.</p>' : '') + '</div>' +
         '</aside>' +
