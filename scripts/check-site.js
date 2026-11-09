@@ -144,6 +144,18 @@ begin('3. Data files');
       for (var k = 0; k < nums.length; k++) if (nums[k] !== k + 1) return 'reference numbers should run 1, 2, 3 ... with none missing or repeated (problem near ' + nums[k] + ')';
       return '';
     },
+    'data/search-index.js': function (g) {
+      if (!isArr(g.SEARCH_INDEX)) return 'SEARCH_INDEX should be a list of places to search';
+      /* Parts that the page builds itself (the New Test form, the address #general/graph, the numbered references) cannot be found in the HTML. */
+      var built = { 'materials.html': /^(properties|chart|material)$/, 'protocol-uniaxial-tension.html': /^general\/(setup|report|graph)$/, 'protocol-stress-relaxation.html': /^general\/(setup|report|graph)$/, 'help.html': /^ref-([1-9]|[12][0-9]|3[0-7])$/, 'test-uniaxial-tension.html': /^(spec-title|rv-title)$/, 'test-stress-relaxation.html': /^(spec-title|rv-title)$/ };
+      for (var i = 0; i < g.SEARCH_INDEX.length; i++) {
+        var e = g.SEARCH_INDEX[i], at = 'SEARCH_INDEX entry ' + (i + 1) + ' (' + (e && e.t) + ')';
+        if (!isStr(e.t) || !isStr(e.p) || typeof e.a !== 'string' || typeof e.w !== 'string' || typeof e.k !== 'string') return at + ' needs t, p, a, w, and k as text (a may be blank)';
+        if (!exists(e.p)) return at + ' points to ' + e.p + ', which is not in the project';
+        if (e.a && !(built[e.p] && built[e.p].test(e.a)) && read(e.p).indexOf('id="' + e.a + '"') < 0) return at + ' points to #' + e.a + ', but ' + e.p + ' has no part with that id';
+      }
+      return '';
+    },
     'data/articles.js': function (g) { return Array.isArray(g.ARTICLES) ? '' : 'ARTICLES should be a list (it may be empty)'; }
   };
   ['home', 'learn', 'about', 'help'].forEach(function (k) {
