@@ -18,7 +18,7 @@ Everything is in the project root except `data/`, which holds the content and se
 | `materials.html` | Materials: a grouped material dropdown, typical properties, a stiffness-vs-density chart, and an example graph per material. Links: `#al-6061` (material), `#al-6061/properties`, `#al-6061/chart`. |
 | `protocol-uniaxial-tension.html` | Uniaxial Tension protocol (draft), in four tabs: Steps, Specimen and equipment, Report and notes, Example graph and equations. Links: `#skin` (material), `#skin/step-3` (a step), `#skin/graph` (a tab). |
 | `protocol-stress-relaxation.html` | Stress Relaxation protocol (draft). |
-| `settings.html` | Settings: color theme, font, layout, style, text size, spacing, motion, and graph line thickness, curve style, grid, and key-result definitions. |
+| `settings.html` | Settings: color theme, font, layout, style, text size, spacing, motion, and graph line thickness, curve style, and grid. |
 | `404.html` | Shown by GitHub Pages for a wrong address at any depth. Its links start with `/Biomaterials-Tensile-Tester/`; change that in this one file if the site is renamed or moved to its own domain. |
 | `favicon.svg` | The browser-tab icon: the "BTT" letters on a rounded square in the default green. `display-settings.js` swaps in the selected theme's colors while a page is open (the 404 page keeps this green icon). |
 | `favicon.png` | The same icon as a 64 px picture, for browsers that ignore SVG icons. It stays green; the script removes this link when it swaps in the colored icon. |
