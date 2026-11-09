@@ -740,15 +740,15 @@ table.mt-compare caption .linkbtn { font-size: 0.875rem; font-weight: 400; }
 @container (max-width: 56em) {
   .mat-overview, .mat-chart-grid { grid-template-columns: minmax(0, 1fr); }
 }
-/* Materials, Material tab, wide window: the example graph on the left (about 3 parts) and the material details on the right
-   (about 2 parts). The graph card is its own container, so its Readout and Key results go under the graph in the narrower column. */
+/* Materials, Material tab, wide window: the material details on the left (about 2 parts) and the example graph on the right
+   (about 3 parts). The graph card is its own container, so its Readout and Key results go under the graph in the narrower column. */
 .mat-graphcard { container-type: inline-size; }
 @container (max-width: 50rem) { .mat-graphcard .graph-grid { grid-template-columns: minmax(0, 1fr); } }
 @container (min-width: 56em) {
-  .mat-overview { grid-template-columns: minmax(0, 3fr) minmax(0, 2fr); gap: 1rem; }
-  .mat-overview .mat-graphcard { grid-column: 1; grid-row: 1 / span 2; }
-  .mat-overview #mat-detail { grid-column: 2; grid-row: 1; }
-  .mat-overview .mat-params { grid-column: 2; grid-row: 2; }
+  .mat-overview { grid-template-columns: minmax(0, 2fr) minmax(0, 3fr); gap: 1rem; }
+  .mat-overview .mat-graphcard { grid-column: 2; grid-row: 1 / span 2; }
+  .mat-overview #mat-detail { grid-column: 1; grid-row: 1; }
+  .mat-overview .mat-params { grid-column: 1; grid-row: 2; }
   #mat-detail .mat-dl { gap: 0.3rem 0.9rem; font-size: 0.9rem; }
 }
 .mat-params[hidden] { display: none; }
