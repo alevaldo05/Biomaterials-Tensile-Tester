@@ -436,8 +436,8 @@
     if (!BY[id]) return;
     sel = id;
     if (keepFocus) focusId = id;
-    if (window.MaterialFind) window.MaterialFind.clear(document.getElementById('mat-select'));
-    document.getElementById('mat-select').value = id;
+    if (window.MaterialCombobox) window.MaterialCombobox.set(document.getElementById('mat-select'), id);
+    else document.getElementById('mat-select').value = id;
     detail(); renderTables(); drawChart(); renderList();
     if (goTab) selectTab(goTab);
     setHash();
@@ -451,6 +451,6 @@
   });
 
   document.getElementById('mat-select').value = sel;
-  if (window.MaterialFind) window.MaterialFind.attach(document.getElementById('mat-select'));
+  if (window.MaterialCombobox) window.MaterialCombobox.attach(document.getElementById('mat-select'));
   detail(); renderTables(); drawChart(); renderList(); selectTab(tab);
 })();
