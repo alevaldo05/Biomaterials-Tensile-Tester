@@ -746,6 +746,16 @@ table.mt-compare caption .linkbtn { font-size: 0.875rem; font-weight: 400; }
 @container (max-width: 56em) {
   .mat-overview, .mat-chart-grid { grid-template-columns: minmax(0, 1fr); }
 }
+/* Materials, Material tab, wide window: the example graph on the left (about 3 parts) and the material details on the right
+   (about 2 parts). The graph card is its own container, so its Readout and Key results go under the graph in the narrower column. */
+.mat-graphcard { container-type: inline-size; }
+@container (max-width: 50rem) { .mat-graphcard .graph-grid { grid-template-columns: minmax(0, 1fr); } }
+@container (min-width: 56em) {
+  .mat-overview { grid-template-columns: minmax(0, 3fr) minmax(0, 2fr); gap: 1rem; }
+  .mat-overview .mat-graphcard { order: 1; }
+  .mat-overview #mat-detail { order: 2; }
+  #mat-detail .mat-dl { gap: 0.3rem 0.9rem; font-size: 0.9rem; }
+}
 /* Materials chart filters and list (materials.js) */
 .chart-tools { display: grid; gap: 0.65rem; margin: 0.75rem 0 0.5rem; padding: 0.75rem 0.9rem; border: 1px solid var(--line); border-radius: 8px; background: var(--bg); }
 .chart-tools p, .chart-keys { margin: 0; }
