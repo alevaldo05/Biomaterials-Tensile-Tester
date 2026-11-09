@@ -961,3 +961,6 @@ dialog.pretest h3 { margin: 1rem 0 0.35rem; font-size: 1rem; }
 .sidebar .ss-input { width: 100%; }
 .sidebar .ss-list { left: 0; right: 0; width: auto; }
 @media print { .site-search { display: none; } }
+
+/* Back to top link at the end of Learn and Materials */
+.back-top { margin: 1.5rem 0 0; }
