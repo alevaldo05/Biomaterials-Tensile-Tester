@@ -18,7 +18,7 @@ Everything is in the project root except `data/`, which holds the content and se
 | `materials.html` | Materials: a grouped material dropdown, typical properties, a stiffness-vs-density chart, and an example graph per material. Links: `#al-6061` (material), `#al-6061/properties`, `#al-6061/chart`. |
 | `protocol-uniaxial-tension.html` | Uniaxial Tension protocol (draft), in four tabs: Steps, Specimen and equipment, Report and notes, Example graph and equations. Links: `#skin` (material), `#skin/step-3` (a step), `#skin/graph` (a tab). |
 | `protocol-stress-relaxation.html` | Stress Relaxation protocol (draft). |
-| `settings.html` | Settings: color theme, font, layout, style, text size, spacing, motion, and graph line thickness, curve style, grid, and key-result definitions. |
+| `settings.html` | Settings: color theme, font, layout, style, text size, spacing, motion, and graph line thickness, curve style, and grid. |
 | `404.html` | Shown by GitHub Pages for a wrong address at any depth. Its links start with `/Biomaterials-Tensile-Tester/`; change that in this one file if the site is renamed or moved to its own domain. |
 | `favicon.svg` | The browser-tab icon: the "BTT" letters on a rounded square in the default green. `display-settings.js` swaps in the selected theme's colors while a page is open (the 404 page keeps this green icon). |
 | `favicon.png` | The same icon as a 64 px picture, for browsers that ignore SVG icons. It stays green; the script removes this link when it swaps in the colored icon. |
@@ -45,8 +45,8 @@ Every page except `404.html` starts with a "Skip to main content" link (`.skip-l
 | `compare.js` | `load-test.html` | Compare several files: overlay graph, key results with mean and standard deviation, summary CSV, Copy summary. Uses `graph.js` for the numbers. |
 | `calibration.js` | `calibration.html` | The calibration table, least-squares fit, chart, CSV record, Copy results, and the one-page print report (built with `report.js`). |
 | `materials.js` | `materials.html` | The Material tab, the sortable properties tables with a two-material comparison, and the chart with its filters and list. |
-| `material-combobox.js` | `materials.html`, both protocol pages | Makes the Material dropdown a box you can type into: the list narrows to matching names; Up, Down, Enter, and Esc work. The real dropdown stays hidden in the page, so `materials.js` and `protocol-page.js` still read its value. Loaded just before `materials.js` or `protocol-page.js`. |
-| `protocol-page.js` | both protocol pages | Material choice, the four tabs, the Steps tab with its jump list and per-step links, and the example graph. |
+| `material-combobox.js` | `materials.html` | Makes the Material dropdown a box you can type into: the list narrows to matching names; Up, Down, Enter, and Esc work. The real dropdown stays hidden in the page, so `materials.js` still reads its value. Loaded just before `materials.js` or `protocol-page.js`. |
+| `protocol-page.js` | both protocol pages | Material choice (General, or "To be added at a later date"), the four tabs, the Steps tab with its jump list and per-step links, and the example graph. |
 | `further-reading.js` | `about.html` | Builds the Further reading list. |
 
 ## `data/` (content and settings)
@@ -55,7 +55,7 @@ Every page except `404.html` starts with a "Skip to main content" link (`.skip-l
 |---|---|
 | `data/checklist.js` | The items in the optional pre-test checklist pop-up (same wording as "Before you test" on the Learn page). **Draft** wording for the advisor to review. |
 | `data/device.js` | Tester message format and connection settings. **Draft**: a guess until the controller code exists. |
-| `data/protocols.js` | Protocol text for each test and material: status, steps, reasons to stop, specimen, equipment, settings, required results, metadata, limitations, and references. **Draft for advisor review**, not approved procedures. |
+| `data/protocols.js` | Protocol text for each test (General only for now): status, steps, reasons to stop, specimen, equipment, settings, required results, metadata, limitations, and references. **Draft for advisor review**, not approved procedures. |
 | `data/materials.js` | The materials list (46 materials in 7 families) with **typical, approximate, unreviewed** property ranges. Used by the Materials page, the protocol pages, and the test pages. Edit values here. |
 | `data/sample-models.js` | Builds an example curve in the browser for each material that has no hand-made curve, from its typical mid-range values. **Shapes, not data**; labeled "Sample data, not measured". |
 | `data/samples.js` | Sample curves for skin, mild steel, and concrete (both tests), labeled "Sample data, not measured". Used by the protocol pages, "Fill example values", and the simulator. **Uncertain:** the script that generated this file is not in the repository. |
