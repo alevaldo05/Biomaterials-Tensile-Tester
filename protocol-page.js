@@ -161,7 +161,7 @@
     var p = data[OWN_TEXT[key] ? key : 'general'];
     matKey = key;
     var sel = document.getElementById('protocol-material');
-    if (sel.value !== key) { if (window.MaterialFind) window.MaterialFind.clear(sel); sel.value = key; }
+    if (sel.value !== key) { if (window.MaterialCombobox) window.MaterialCombobox.set(sel, key); else sel.value = key; }
     var mnote = document.getElementById('protocol-mat-note');
     mnote.hidden = !(key !== 'general' && !OWN_TEXT[key]);
     if (!mnote.hidden) mnote.textContent = 'There is no draft procedure for ' + (window.MATERIAL_BY_ID[key] || { name: key }).name + ' yet, so the General procedure is shown. The example graph and the properties are for this material.';
@@ -229,7 +229,7 @@
     setHash();
   });
   render(matKey);
-  if (window.MaterialFind) window.MaterialFind.attach(document.getElementById('protocol-material'));
+  if (window.MaterialCombobox) window.MaterialCombobox.attach(document.getElementById('protocol-material'));
   selectTab(tabKey);
   if (cur.step) goStep(cur.step, true);
 
