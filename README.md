@@ -17,7 +17,7 @@ It is plain HTML, CSS, and JavaScript: no framework, no dependencies, no install
 
 ## Safety
 
-The on-screen STOP button (and the Esc key) is **not** an emergency stop. The machine needs its own physical emergency-stop button that cuts motor power even if the computer, browser, or cable fails. The controller should also stop the motor if it stops receiving the `PING` heartbeat during a test.
+While a test is recording, the same STOP button is also pinned to the bottom of the window with the words "Not an emergency stop." The on-screen STOP button (and the Esc key) is **not** an emergency stop. The machine needs its own physical emergency-stop button that cuts motor power even if the computer, browser, or cable fails. The controller should also stop the motor if it stops receiving the `PING` heartbeat during a test.
 
 ## Requirements
 

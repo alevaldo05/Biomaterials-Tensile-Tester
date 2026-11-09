@@ -416,6 +416,8 @@
     $('r-tare').disabled = !on || running;
     $('r-start').disabled = !on || running;
     $('r-stop').disabled = !on;
+    /* While recording, the same STOP button is pinned to the bottom of the window so it stays in reach when the page is scrolled. */
+    var dock = $('stop-dock'); if (dock) { dock.hidden = !running; document.body.classList.toggle('has-stop-dock', running); }
     $('dl-csv').disabled = running || !hasData;
     if ($('r-print')) $('r-print').disabled = running || !hasData;
     ['s-mat', 's-speed', 's-hold', 's-holds', 's-example'].forEach(function (id) { if ($(id)) $(id).disabled = running; });
@@ -617,6 +619,14 @@
   $('r-tare').addEventListener('click', function () { sendCmd(DEV.commands.tare); msg('TARE sent: force zeroed.'); });
   $('r-start').addEventListener('click', startTest);
   $('r-stop').addEventListener('click', function () { stopTest('Stopped by you. STOP sent.'); });
+  (function () {
+    var dock = document.createElement('div');
+    dock.className = 'stop-dock'; dock.id = 'stop-dock'; dock.hidden = true;
+    dock.setAttribute('role', 'region'); dock.setAttribute('aria-label', 'STOP while recording');
+    dock.innerHTML = '<span class="small">Not an emergency stop.</span><button type="button" class="btn-stop" id="r-stop-dock">STOP — sends a stop command</button>';
+    document.body.appendChild(dock);
+    $('r-stop-dock').addEventListener('click', function () { stopTest('Stopped by you. STOP sent.'); });
+  })();
   document.addEventListener('keydown', function (e) {
     if (e.key === 'Escape' && link) { stopTest('Stopped with Esc. STOP sent.'); }
   });
