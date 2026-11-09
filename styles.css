@@ -688,8 +688,17 @@ button:disabled { opacity: 0.5; cursor: not-allowed; }
 .mat-pick { display: flex; align-items: center; flex-wrap: wrap; gap: 0.5rem 0.9rem; margin: 0 0 1rem; }
 .mat-pick label { font-weight: 600; }
 .mat-pick select { font: inherit; padding: 0.45rem 0.6rem; border: 1px solid var(--muted); border-radius: 6px; background: var(--surface); color: var(--ink); min-width: min(24rem, 100%); max-width: 100%; }
-.mat-pick .mat-find { font: inherit; padding: 0.45rem 0.6rem; border: 1px solid var(--muted); border-radius: 6px; background: var(--surface); color: var(--ink); width: 11rem; max-width: 100%; }
-.mat-pick .mat-find:focus-visible { outline: 3px solid var(--focus); outline-offset: 2px; }
+.mat-pick .mc-wrap { position: relative; display: inline-block; width: min(32rem, 100%); }
+.mat-pick .mc-input { box-sizing: border-box; width: 100%; font: inherit; padding: 0.45rem 2rem 0.45rem 0.6rem; border: 1px solid var(--muted); border-radius: 6px; background: var(--surface); color: var(--ink); text-overflow: ellipsis; }
+.mat-pick .mc-input:focus-visible { outline: 3px solid var(--focus); outline-offset: 2px; }
+.mc-arrow { position: absolute; right: 0.75rem; top: 50%; width: 0.5rem; height: 0.5rem; margin-top: -0.35rem; border-right: 2px solid var(--muted); border-bottom: 2px solid var(--muted); transform: rotate(45deg); pointer-events: none; }
+.mc-list { position: absolute; z-index: 30; left: 0; right: 0; top: 100%; margin-top: 0.2rem; padding: 0.25rem 0; max-height: min(22rem, 60vh); overflow-y: auto; background: var(--surface); color: var(--ink); border: 1px solid var(--muted); border-radius: 6px; box-shadow: 0 6px 18px rgba(0, 0, 0, 0.18); }
+.mc-list[hidden] { display: none; }
+.mc-gh { padding: 0.4rem 0.7rem 0.15rem; font-size: 0.8125rem; font-weight: 700; color: var(--muted); }
+.mc-opt { padding: 0.35rem 0.7rem 0.35rem 1.1rem; cursor: pointer; }
+.mc-opt.current { font-weight: 700; }
+.mc-opt.active { background: var(--accent); color: var(--accent-ink); outline: 2px solid transparent; }
+.mc-none { padding: 0.5rem 0.7rem; color: var(--muted); }
 .mat-pick select:focus-visible { outline: 3px solid var(--focus); outline-offset: 2px; }
 .mat-link { font-size: 0.9375rem; }
 .tag { display: inline-block; font-size: 0.75rem; line-height: 1.5; border: 1px solid var(--muted); border-radius: 999px; padding: 0 0.55rem; color: var(--muted); white-space: nowrap; }
@@ -752,7 +761,7 @@ table.mt-compare caption .linkbtn { font-size: 0.875rem; font-weight: 400; }
 .chart-list { margin: 1rem 0 0; }
 .chart-list summary { cursor: pointer; font-weight: 600; }
 .chart-list table { margin-top: 0.5rem; }
-@media print { .mat-pick .mat-find, .mat-pick label[for$="-find"], .mat-find-none { display: none; } .mat-pick select + .tag { display: none; } .mat-panel[hidden] { display: block; } .chart-tools, .chart-keys { display: none; } }
+@media print { .mc-arrow, .mc-list { display: none; } .mat-pick select + .tag { display: none; } .mat-panel[hidden] { display: block; } .chart-tools, .chart-keys { display: none; } }
 
 /* ---------- Pre-test checklist pop-up (test pages, only when turned on in Settings) ---------- */
 dialog.pretest { width: min(36rem, calc(100% - 2rem)); max-height: calc(100vh - 2rem); overflow: auto; padding: 1.25rem 1.5rem; border: 1px solid var(--muted); border-radius: 10px; background: var(--surface); color: var(--ink); }
