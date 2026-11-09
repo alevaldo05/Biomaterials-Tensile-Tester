@@ -58,9 +58,9 @@ window.SITE_TEXT.help = {
             [ "← and →, Home and End", "Tab lists on the protocol and Materials pages", "Move between tabs." ],
             [ "← → ↑ ↓, Home and End", "Materials chart", "Move between the materials showing: left and right by density, up and down by Young’s modulus; Home and End go to the first and last. The chart is one Tab stop." ],
             [ "Enter or Space", "Materials chart", "Choose the material that has focus." ],
-            [ "↑ and ↓", "Material box on the Materials and protocol pages", "Move through the materials that match what you typed." ],
-            [ "Enter", "Material box on the Materials and protocol pages", "Choose the highlighted material." ],
-            [ "Esc", "Material box on the Materials and protocol pages", "Close the list and keep the current material." ],
+            [ "↑ and ↓", "Material box on the Materials page", "Move through the materials that match what you typed." ],
+            [ "Enter", "Material box on the Materials page", "Choose the highlighted material." ],
+            [ "Esc", "Material box on the Materials page", "Close the list and keep the current material." ],
             [ "Esc", "Search box on the Help page", "Clears the search and shows every row again." ]
           ]
         } }

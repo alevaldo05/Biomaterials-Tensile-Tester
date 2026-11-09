@@ -121,7 +121,7 @@ begin('3. Data files');
     },
     'data/checklist.js': function (g) { return g.PRETEST_CHECKLIST && isArr(g.PRETEST_CHECKLIST.groups) ? '' : 'PRETEST_CHECKLIST.groups should be a non-empty list'; },
     'data/protocols.js': function (g) {
-      var P = g.PROTOCOLS, tests = ['uniaxial', 'relaxation'], mats = ['general', 'skin', 'steel', 'concrete'];
+      var P = g.PROTOCOLS, tests = ['uniaxial', 'relaxation'], mats = ['general'];
       if (!P) return 'PROTOCOLS is missing';
       for (var a = 0; a < tests.length; a++) for (var b = 0; b < mats.length; b++) {
         var p = P[tests[a]] && P[tests[a]][mats[b]];
