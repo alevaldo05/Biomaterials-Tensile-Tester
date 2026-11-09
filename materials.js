@@ -76,6 +76,7 @@
     '</div>' +
     '<div class="mat-panel" role="tabpanel" id="mpanel-material" aria-labelledby="mtab-material" tabindex="-1" hidden>' +
       '<div class="mat-overview"><section class="mat-card" id="mat-detail" aria-live="polite"></section>' +
+      '<section class="mat-card mat-params" id="mat-params" aria-label="Test parameters"></section>' +
       '<section class="mat-card mat-graphcard"><h2>Example graph</h2><p class="muted small" id="mat-graph-note"></p><div id="mat-graph" data-test="uniaxial"></div></section></div>' +
     '</div>' +
     '<div class="mat-panel" role="tabpanel" id="mpanel-properties" aria-labelledby="mtab-properties" tabindex="-1" hidden>' +
@@ -91,7 +92,7 @@
       listHtml() + '</div>' +
     '</div>';
 
-  var apiGraph = window.TensileGraph ? window.TensileGraph.mount(document.getElementById('mat-graph'), { test: 'uniaxial', mode: 'example' }) : null;
+  var apiGraph = window.TensileGraph ? window.TensileGraph.mount(document.getElementById('mat-graph'), { test: 'uniaxial', mode: 'example', paramsHost: document.getElementById('mat-params') }) : null;
 
   /* ---------- tabs ---------- */
   function selectTab(key, focusTab) {
@@ -153,6 +154,7 @@
     if (apiGraph) {
       var key = m.sample, has = apiGraph.hasMaterial(key);
       document.getElementById('mat-graph').hidden = !has;
+      document.getElementById('mat-params').hidden = !has;
       if (has) apiGraph.setMaterial(key, true);
       document.getElementById('mat-graph-note').textContent = has ?
         (key === m.id ? 'Sample data, not measured. Schematic curve generated from illustrative inputs; not experimental data or a validated material model. Its parameters may come from separate illustrative ranges and may not represent one consistent experimental dataset. Region names are educational annotations, not detected material transitions.' :
