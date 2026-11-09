@@ -10,22 +10,8 @@
   if (!app || !TG || !DEV) return;
   var test = app.getAttribute('data-test'), isRelax = test === 'relaxation', CFG = TG.configs[test];
   var sig = TG.sig;
-  /* Materials come from data/materials.js. A material is offered when this test has a sample curve for it
-     (the simulator needs one); stress relaxation therefore offers skin, mild steel, and concrete only. */
-  var MATS = {}, MAT_GROUPS = [];
-  (window.MATERIAL_FAMILIES || []).forEach(function (f) {
-    var list = (window.MATERIALS || []).filter(function (m) {
-      return m.family === f.id && (window.SAMPLE_DATA || []).some(function (r) { return r.test === test && r.material === m.sample; });
-    });
-    list.forEach(function (m) { MATS[m.id] = [m.name, m.sample]; });
-    if (list.length) MAT_GROUPS.push({ name: f.name, items: list });
-  });
-  MATS.other = ['Other', 'biomaterial'];
-  function matOptions() {
-    return MAT_GROUPS.map(function (g) {
-      return '<optgroup label="' + esc(g.name) + '">' + g.items.map(function (m) { return '<option value="' + m.id + '">' + esc(m.name) + '</option>'; }).join('') + '</optgroup>';
-    }).join('') + '<option value="other">Other</option>';
-  }
+  /* The material is a name the user types (optional). Simulated readings always use one default sample curve, and say so. */
+  var SIM_CURVE = 'biomaterial';
   var hasSerial = 'serial' in navigator;
 
   function esc(s) {
@@ -43,7 +29,8 @@
         '<h2 id="spec-title">Specimen and settings</h2>' +
         '<div class="setup-col">' +
         '<h3 class="step-h">1. Specimen</h3>' +
-        '<label class="pf"><span>Material</span><select id="s-mat">' + matOptions() + '</select></label>' +
+        field('s-mat', 'Material', 'type="text" autocomplete="off" maxlength="100" aria-describedby="s-mat-hint"') +
+        '<p class="small muted" id="s-mat-hint">Type the material name.</p>' +
         field('s-id', 'Specimen ID', 'type="text" autocomplete="off"') +
         '</div><div class="setup-col">' +
         '<h3 class="step-h">2. Dimensions (mm)</h3>' +
@@ -59,8 +46,8 @@
           field('s-hold', 'Hold displacement, ΔL (mm)', undefined, true) +
           '<div class="pf"><span>Hold strain, ε<sub>0</sub> = ΔL/L<sub>0</sub></span><output id="s-e0">—</output></div>' +
           field('s-holds', 'Hold duration (s)', undefined, true) : '') +
-        field('s-temp', 'Temperature (°C)', 'type="text" inputmode="decimal" autocomplete="off"', true) +
-        field('s-env', 'Environment', 'type="text" autocomplete="off"') +
+        field('s-temp', 'Temperature (°C), optional', 'type="text" inputmode="decimal" autocomplete="off"', true) +
+        field('s-env', 'Environment, optional', 'type="text" autocomplete="off"') +
         '<label class="pf"><span>Notes</span><textarea id="s-notes" rows="2"></textarea></label>' +
         '</div><div class="setup-foot">' +
         '<p class="small"><button type="button" class="btn-link" id="s-example">Fill example values</button></p>' +
@@ -117,9 +104,9 @@
   }
   function num(id) { var r = read(id); return r.state === 'ok' && r.value > 0 ? r.value : null; }
   function spec() {
-    var m = $('s-mat').value;
+    var m = $('s-mat').value.trim();
     return {
-      mat: m, matLabel: MATS[m][0], matKey: MATS[m][1], id: $('s-id').value.trim(),
+      mat: m, matLabel: m, matKey: SIM_CURVE, id: $('s-id').value.trim(),
       L0: num('s-L0'), W: num('s-W'), T: num('s-T'), speed: num('s-speed'),
       hold_mm: isRelax ? num('s-hold') : null, hold_s: isRelax ? num('s-holds') : null,
       temp: $('s-temp').value.trim(), env: $('s-env').value.trim(), notes: $('s-notes').value.trim()
@@ -143,7 +130,7 @@
     p.yield = !isRelax && !!(TG.sampleParams(test, s.matKey) || {}).yield;
     r.mk = TG.sampleRegion(test, s.matKey);
     p.speed_mm_min = s.speed; p.temperature_C = s.temp; p.environment = s.env;
-    if (!running) r.label = s.matLabel + (s.id ? ' · ' + s.id : '');
+    if (!running) r.label = [s.matLabel, s.id].filter(Boolean).join(' · ') || 'New test';
   }
   function updateOutputs() {
     var s = spec();
@@ -206,7 +193,7 @@
       else row(label, q.state === 'empty' ? 'missing' : q.state === 'text' ? 'not a number' : 'must be greater than 0', true);
     }
     row('Test', isRelax ? 'Stress relaxation' : 'Uniaxial tension');
-    row('Material', s.matLabel);
+    row('Material', s.matLabel || 'not entered (optional)');
     row('Specimen ID', s.id || 'not entered (optional)');
     val('s-L0', 'Gauge length L₀', 'mm'); val('s-W', 'Width', 'mm'); val('s-T', 'Thickness', 'mm');
     row('Area A₀', s.W && s.T ? sig(s.W * s.T, 4) + ' mm²' : '—');
@@ -394,10 +381,11 @@
   var link = null, running = false, hasData = false, downloaded = true;
   var baseTitle = document.title; /* the browser-tab title, with the run status in front while a test runs or has just stopped */
   var t0 = null, d0 = null, peakF = 0, holdStart = null, skipped = 0, startedAt = null, endReason = '', heartbeat = null;
-  /* a link such as test-uniaxial-tension.html#al-6061 (from the Materials page) preselects that material */
+  /* a link such as test-uniaxial-tension.html#al-6061 (from the Materials page) fills in that material's name */
   (function () {
     var h = (location.hash || '').replace('#', ''), sel = document.getElementById('s-mat');
-    if (sel && Object.prototype.hasOwnProperty.call(MATS, h)) sel.value = h;
+    var m = window.MATERIAL_BY_ID && Object.prototype.hasOwnProperty.call(window.MATERIAL_BY_ID, h) ? window.MATERIAL_BY_ID[h] : null;
+    if (sel && m) sel.value = m.name;
   })();
   var rec = newRecord('none');
   var graphRoot = $('graph-app');
@@ -502,14 +490,10 @@
 
   /* ---------- pre-test checklist (only when Settings > Pre-test checklist is On; data/checklist.js) ---------- */
   function checklistOn() { return document.documentElement.getAttribute('data-checklist') === 'on' && !!window.PRETEST_CHECKLIST; }
-  /* Tissue items are shown for biological materials (and "Other"); steel, plastics, and so on skip them. */
-  function isTissueMaterial() {
-    var m = window.MATERIAL_BY_ID && window.MATERIAL_BY_ID[$('s-mat').value];
-    return !m || m.family === 'bio';
-  }
+  /* The material is free text, so no material family is guessed from it: every checklist item is shown, tissue items included. */
   var checklistDlg = null;
   function showChecklist(onConfirm) {
-    var C = window.PRETEST_CHECKLIST, tissue = isTissueMaterial();
+    var C = window.PRETEST_CHECKLIST, tissue = true;
     var groups = C.groups.map(function (g) { return { name: g.name, items: g.items.filter(function (it) { return !it.tissue || tissue; }) }; });
     var total = groups.reduce(function (n, g) { return n + g.items.length; }, 0);
     if (typeof HTMLDialogElement === 'undefined' || !HTMLDialogElement.prototype.showModal) {
@@ -630,7 +614,7 @@
   document.addEventListener('keydown', function (e) {
     if (e.key === 'Escape' && link) { stopTest('Stopped with Esc. STOP sent.'); }
   });
-  $('s-mat').addEventListener('change', function () { applySpec(rec); api.refresh(running); renderReview(); });
+  $('s-mat').addEventListener('input', function () { applySpec(rec); api.refresh(running); renderReview(); });
 
   /* ---------- CSV download (opens in Excel) ---------- */
   function pad(n) { return (n < 10 ? '0' : '') + n; }
