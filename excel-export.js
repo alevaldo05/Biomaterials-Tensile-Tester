@@ -146,5 +146,32 @@
     return zip(Object.keys(files).map(function (n) { return { name: n, data: enc.encode(files[n]) }; }));
   }
 
-  window.TensileExcel = { build: build };
+  /* Comparison workbook: one Summary sheet (details, then a table with a row per specimen, then mean, standard deviation, n).
+     info = { details: [[label, value]], header: [..], rows: [[..]] }  (strings and numbers; blank for no value) */
+  function buildCompare(info) {
+    var R = 'http://schemas.openxmlformats.org/officeDocument/2006/relationships';
+    var PK = 'http://schemas.openxmlformats.org/package/2006/relationships';
+    var rows = [], r = 1;
+    function add(cells) { rows.push('<row r="' + r + '">' + cells.join('') + '</row>'); r++; }
+    add([str('A' + r, 'Biomaterials Tensile Tester: comparison summary', 1)]);
+    info.details.forEach(function (d) { add([str('A' + r, d[0], 1), cell('B' + r, d[1])]); });
+    r++;
+    add(info.header.map(function (h, j) { return str(col(j) + r, h, 1); }));
+    info.rows.forEach(function (row) { var rr = r; add(row.map(function (v, j) { return cell(col(j) + rr, v); })); });
+    var sheet = HEAD + '<worksheet ' + NS + '><cols><col min="1" max="1" width="30" customWidth="1"/><col min="2" max="' + info.header.length + '" width="22" customWidth="1"/></cols><sheetData>' + rows.join('') + '</sheetData></worksheet>';
+    var files = {
+      '[Content_Types].xml': HEAD + '<Types xmlns="http://schemas.openxmlformats.org/package/2006/content-types"><Default Extension="rels" ContentType="application/vnd.openxmlformats-package.relationships+xml"/><Default Extension="xml" ContentType="application/xml"/>' +
+        '<Override PartName="/xl/workbook.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet.main+xml"/>' +
+        '<Override PartName="/xl/worksheets/sheet1.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.worksheet+xml"/>' +
+        '<Override PartName="/xl/styles.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.styles+xml"/></Types>',
+      '_rels/.rels': HEAD + '<Relationships xmlns="' + PK + '"><Relationship Id="rId1" Type="' + R + '/officeDocument" Target="xl/workbook.xml"/></Relationships>',
+      'xl/workbook.xml': HEAD + '<workbook ' + NS + ' xmlns:r="' + R + '"><sheets><sheet name="Summary" sheetId="1" r:id="rId1"/></sheets></workbook>',
+      'xl/_rels/workbook.xml.rels': HEAD + '<Relationships xmlns="' + PK + '"><Relationship Id="rId1" Type="' + R + '/worksheet" Target="worksheets/sheet1.xml"/><Relationship Id="rId2" Type="' + R + '/styles" Target="styles.xml"/></Relationships>',
+      'xl/styles.xml': HEAD + '<styleSheet ' + NS + '><fonts count="2"><font><sz val="11"/><name val="Calibri"/></font><font><b/><sz val="11"/><name val="Calibri"/></font></fonts><fills count="2"><fill><patternFill patternType="none"/></fill><fill><patternFill patternType="gray125"/></fill></fills><borders count="1"><border><left/><right/><top/><bottom/><diagonal/></border></borders><cellStyleXfs count="1"><xf numFmtId="0" fontId="0" fillId="0" borderId="0"/></cellStyleXfs><cellXfs count="2"><xf numFmtId="0" fontId="0" fillId="0" borderId="0" xfId="0"/><xf numFmtId="0" fontId="1" fillId="0" borderId="0" xfId="0" applyFont="1"/></cellXfs><cellStyles count="1"><cellStyle name="Normal" xfId="0" builtinId="0"/></cellStyles></styleSheet>',
+      'xl/worksheets/sheet1.xml': sheet
+    };
+    return zip(Object.keys(files).map(function (n) { return { name: n, data: enc.encode(files[n]) }; }));
+  }
+
+  window.TensileExcel = { build: build, buildCompare: buildCompare };
 })();

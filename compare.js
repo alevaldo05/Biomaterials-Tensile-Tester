@@ -211,7 +211,8 @@
         }).join('') + '</tr>';
       }).join('') + '</tfoot></table></div>' +
       '<p class="muted small">Same calculations as the single-file graph. The standard deviation is the sample standard deviation (n − 1) and needs at least 2 values. A blank (—) means that result is not reported for that specimen, for example the 0.2% offset yield for soft tissue, or the failure strain when no force drop below 50% of the peak was found in that record.</p>' +
-      '<p class="graph-actions"><button type="button" class="btn" id="cmp-csv">Download summary (CSV)</button><button type="button" class="btn-secondary" id="cmp-copy">Copy summary</button><span class="copy-msg" id="cmp-copy-msg" role="status"></span>' +
+      '<p class="graph-actions"><button type="button" class="btn" id="cmp-csv">Download summary (CSV)</button><button type="button" class="btn-secondary" id="cmp-copy">Copy summary</button>' +
+      (window.TensileExcel && window.TensileExcel.buildCompare ? '<button type="button" class="btn-secondary" id="cmp-xlsx">Download comparison (.xlsx)</button>' : '') + '<span class="copy-msg" id="cmp-copy-msg" role="status"></span>' +
       (window.TensileReport ? '<button type="button" class="btn-secondary" id="cmp-print">Print summary report</button>' : '') + '</p></section>';
     app.innerHTML = html;
   }
@@ -238,6 +239,7 @@
     else if (b.id === 'cmp-svg') save(new Blob([buildSvg(true)], { type: 'image/svg+xml;charset=utf-8' }), 'comparison.svg');
     else if (b.id === 'cmp-png') png();
     else if (b.id === 'cmp-csv') csv();
+    else if (b.id === 'cmp-xlsx') xlsx();
     else if (b.id === 'cmp-copy') copySummary();
     else if (b.id === 'cmp-print') printReport();
   });
@@ -345,6 +347,24 @@
       out.push([kind === 'mean' ? 'Mean' : kind === 'sd' ? 'Standard deviation' : 'n', '', '', ''].concat(cols.map(function (c) { var st = stats(column(c)); return n7(st[kind]); })).join(','));
     });
     save(new Blob(['﻿' + out.join('\r\n') + '\r\n'], { type: 'text/csv;charset=utf-8' }), 'comparison_' + testType() + '_' + d.getFullYear() + pad(d.getMonth() + 1) + pad(d.getDate()) + '.csv');
+  }
+
+  function xlsx() {
+    var cols = COLS[testType()], inc = included(), d = new Date();
+    var stamp = d.getFullYear() + '-' + pad(d.getMonth() + 1) + '-' + pad(d.getDate()) + ' ' + pad(d.getHours()) + ':' + pad(d.getMinutes());
+    function nv(v) { return v === null || v === undefined || !isFinite(v) ? '' : parseFloat(Number(v).toPrecision(7)); }
+    var rows = inc.map(function (sp) {
+      return [sp.name, sp.file, sp.rec.simulated ? 'simulated (not measured)' : 'loaded', sp.rec.materialText || ''].concat(cols.map(function (c) { return nv(sp.nums[c.k]); }));
+    });
+    ['mean', 'sd', 'n'].forEach(function (kind) {
+      rows.push([kind === 'mean' ? 'Mean' : kind === 'sd' ? 'Standard deviation' : 'n', '', '', ''].concat(cols.map(function (c) { return nv(stats(column(c))[kind]); })));
+    });
+    save(window.TensileExcel.buildCompare({
+      details: [['Test', TG.configs[testType()].name], ['Source', sourceNote() || 'Loaded files (data origin not verified)'], ['Date', stamp], ['Specimens', inc.length],
+        ['Standard deviation', 'sample standard deviation (n - 1)'], ['Values', 'base units (see column names)'], ['Note', 'computed in this browser from the files you opened; nothing was uploaded']],
+      header: ['specimen', 'file', 'source', 'material'].concat(cols.map(function (c) { return c.csv; })),
+      rows: rows
+    }), 'comparison_' + testType() + '_' + d.getFullYear() + pad(d.getMonth() + 1) + pad(d.getDate()) + '.xlsx');
   }
 
   window.addEventListener('beforeunload', function () { /* nothing is kept; files are only in this tab */ });
