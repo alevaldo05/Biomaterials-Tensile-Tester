@@ -45,7 +45,7 @@ Every page except `404.html` starts with a "Skip to main content" link (`.skip-l
 | `load-test.js` | `load-test.html` | Mode switch, test type, and file picker for Load Test, and opening files dropped onto the page (a dashed frame shows while dragging). |
 | `compare.js` | `load-test.html` | Compare several files: overlay graph, key results with mean and standard deviation, summary CSV, Copy summary. Uses `graph.js` for the numbers. |
 | `calibration.js` | `calibration.html` | The calibration table, least-squares fit, chart, CSV record, Copy results, and the one-page print report (built with `report.js`). |
-| `materials.js` | `materials.html` | The Material tab, the sortable properties tables with a two-material comparison, and the chart with its filters and list. |
+| `materials.js` | `materials.html` | The Material tab (details, the Test parameters card beside them, and the example graph), the sortable properties tables with a two-material comparison, and the chart with its filters and list. It passes `paramsHost` to `graph.js` so the Test parameters are built in their own card. |
 | `material-combobox.js` | `materials.html` | Makes the Material dropdown a box you can type into: the list narrows to matching names; Up, Down, Enter, and Esc work. The real dropdown stays hidden in the page, so `materials.js` still reads its value. Loaded just before `materials.js` or `protocol-page.js`. |
 | `protocol-page.js` | both protocol pages | Material choice (General, or "To be added at a later date"), the four tabs, the Steps tab with its jump list and per-step links, and the example graph. |
 | `further-reading.js` | `about.html` | Builds the Further reading list. |
