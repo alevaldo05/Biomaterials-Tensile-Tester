@@ -86,17 +86,48 @@
     o.classList.add('active'); o.setAttribute('aria-selected', 'true'); input.setAttribute('aria-activedescendant', o.id);
     o.scrollIntoView({ block: 'nearest' });
   }
+  /* Where the box goes, so that opening it never wraps the header or moves the logo or the title:
+     1. If the window has room to the right of the button, the box hangs there like an extension (narrower if the room is tight,
+        never under about 8rem) and takes no room in the header, so nothing else moves.
+     2. If not, the box stays in the header row, which is kept from wrapping, so only the menu slides left (the box is made a
+        little narrower if that helps); if the row is still too short, the title beside the BTT logo is hidden until the search closes.
+     3. If even that does not fit (for example a header that already wraps at very large text), the box simply stays in the row. */
+  function layoutBox() {
+    wrap.classList.remove('ss-overlay'); input.style.width = '';
+    if (topbar) topbar.classList.remove('search-flow', 'search-compact');
+    if (!topbar || !open) return;
+    var nav = wrap.parentNode, brand = topbar.querySelector('.brand'), inner = topbar.querySelector('.inner');
+    if (!brand || !inner) return;
+    /* measure with the box hanging free, so the button is where it is when the search is closed */
+    wrap.classList.add('ss-overlay');
+    var wrapped = nav.getBoundingClientRect().top > brand.getBoundingClientRect().bottom - 4;
+    var brandH = brand.getBoundingClientRect().height;
+    var natural = input.getBoundingClientRect().width, room = window.innerWidth - btn.getBoundingClientRect().right - 16;
+    if (room >= Math.min(natural, 128)) { input.style.width = Math.min(natural, room) + 'px'; return; }
+    wrap.classList.remove('ss-overlay');
+    if (wrapped) return;
+    /* it fits only if nothing overflows, the menu is still on the logo's row, and the title has not been squeezed onto two lines */
+    function fits() { return inner.scrollWidth <= inner.clientWidth + 1 && nav.getBoundingClientRect().top <= brand.getBoundingClientRect().bottom - 4 && brand.getBoundingClientRect().height <= brandH + 2; }
+    topbar.classList.add('search-flow');
+    if (fits()) return;
+    input.style.width = '7.5rem';
+    if (fits()) return;
+    input.style.width = '';
+    topbar.classList.add('search-compact');
+    if (fits()) return;
+    topbar.classList.remove('search-flow', 'search-compact');
+  }
   function openBox() {
     if (open) return;
     open = true; box.hidden = false; btn.setAttribute('aria-expanded', 'true');
-    if (topbar) topbar.classList.add('search-open');
+    layoutBox();
     input.focus(); render();
   }
   function closeBox(toButton) {
     if (!open) return;
     open = false; box.hidden = true; list.hidden = true; btn.setAttribute('aria-expanded', 'false');
     input.value = ''; shown = []; active = -1; status.textContent = ''; input.setAttribute('aria-expanded', 'false'); input.removeAttribute('aria-activedescendant');
-    if (topbar) topbar.classList.remove('search-open');
+    layoutBox();
     if (toButton) btn.focus();
   }
   function go(it) {
@@ -105,7 +136,7 @@
     if (same && it.a) { location.hash = '#' + it.a; } else { location.href = target; }
   }
 
-  window.addEventListener('resize', place);
+  window.addEventListener('resize', function () { layoutBox(); place(); });
   btn.addEventListener('click', function () { if (open) closeBox(false); else openBox(); });
   input.addEventListener('input', render);
   input.addEventListener('keydown', function (e) {
