@@ -48,7 +48,7 @@ window.SITE_TEXT.home = {
     "proto-title": {
       heading: "Protocols and procedures",
       blocks: [
-        { note: "Step-by-step procedures for each test, in general and for skin, steel, and concrete, with an example graph of what to expect. These are placeholders until the team’s protocols are final." },
+        { note: "Step-by-step procedures for each test, in general, with an example graph of what to expect. Procedures for specific materials will be added later. These are placeholders until the team’s protocols are final." },
         { linklist: [
           { link: "[Uniaxial Tension protocol](protocol-uniaxial-tension.html)", note: "– extension to failure at constant speed" },
           { link: "[Stress Relaxation protocol](protocol-stress-relaxation.html)", note: "– hold at fixed displacement while force decays" }

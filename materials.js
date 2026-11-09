@@ -143,7 +143,7 @@
       '<dl class="mat-dl">' + rows.map(function (r) { return '<dt>' + r[0] + '</dt><dd>' + esc(r[1]) + '</dd>'; }).join('') + '</dl>' +
       '<h3 class="mat-src-h">Source and review</h3><dl class="mat-dl mat-src">' + srcRows.map(function (r) { return '<dt>' + r[0] + '</dt><dd>' + esc(r[1]) + '</dd>'; }).join('') + '</dl>' +
       '<p class="mat-links"><a class="btn" href="test-uniaxial-tension.html#' + m.id + '">Start a test with this material</a>' +
-      '<a href="protocol-uniaxial-tension.html#' + m.id + '">Open its protocol</a>' +
+      '<a href="protocol-uniaxial-tension.html">Open its protocol</a>' +
       '<button type="button" class="linkbtn" id="mat-compare-btn">Compare with another material</button></p>' +
       '<p class="muted small">Starting a test uses the labeled simulator, or your tester if one is connected. The hardware connection is untested.</p>';
     document.getElementById('mat-compare-btn').addEventListener('click', function () {
