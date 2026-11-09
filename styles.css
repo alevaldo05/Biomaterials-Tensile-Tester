@@ -552,6 +552,9 @@ button:disabled { opacity: 0.5; cursor: not-allowed; }
   font: inherit; font-weight: 800; letter-spacing: 0.06em; cursor: pointer;
 }
 .btn-stop:hover:not(:disabled) { filter: brightness(1.1); }
+.stop-dock { position: fixed; left: 0; right: 0; bottom: 0; z-index: 40; display: flex; flex-wrap: wrap; align-items: center; justify-content: flex-end; gap: 0.5rem 1rem; padding: 0.6rem 1.25rem; background: var(--surface); color: var(--ink); border-top: 3px solid var(--danger); }
+.stop-dock[hidden] { display: none; }
+body.has-stop-dock { padding-bottom: 5rem; }
 
 /* ---------- Home additions ---------- */
 .steps { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 1rem 2rem; margin: 0; padding: 0; list-style: none; counter-reset: step; }
@@ -761,7 +764,7 @@ table.mt-compare caption .linkbtn { font-size: 0.875rem; font-weight: 400; }
 .chart-list { margin: 1rem 0 0; }
 .chart-list summary { cursor: pointer; font-weight: 600; }
 .chart-list table { margin-top: 0.5rem; }
-@media print { .mc-arrow, .mc-list { display: none; } .mat-pick select + .tag { display: none; } .mat-panel[hidden] { display: block; } .chart-tools, .chart-keys { display: none; } }
+@media print { .stop-dock { display: none; } body.has-stop-dock { padding-bottom: 0; } .mc-arrow, .mc-list { display: none; } .mat-pick select + .tag { display: none; } .mat-panel[hidden] { display: block; } .chart-tools, .chart-keys { display: none; } }
 
 /* ---------- Pre-test checklist pop-up (test pages, only when turned on in Settings) ---------- */
 dialog.pretest { width: min(36rem, calc(100% - 2rem)); max-height: calc(100vh - 2rem); overflow: auto; padding: 1.25rem 1.5rem; border: 1px solid var(--muted); border-radius: 10px; background: var(--surface); color: var(--ink); }

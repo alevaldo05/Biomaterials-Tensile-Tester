@@ -159,13 +159,42 @@
         '<p class="muted small">Fit: reading = gain × force + offset, by least squares over the rows that have both a mass and a reading. R² near 1 means the points lie close to a straight line; it says nothing about whether the masses were accurate.</p>';
     } else html += '<p class="muted">' + esc(f.msg) + '</p>';
     html += '<p class="graph-actions"><button type="button" class="btn" id="c-dl"' + (f.n >= 1 ? '' : ' disabled') + '>Download calibration record (CSV)</button>' +
-      '<button type="button" class="btn-secondary" id="c-print"' + (f.n >= 1 && window.TensileReport ? '' : ' disabled') + '>Print report</button></p>';
+      '<button type="button" class="btn-secondary" id="c-print"' + (f.n >= 1 && window.TensileReport ? '' : ' disabled') + '>Print report</button>' +
+      '<button type="button" class="btn-secondary" id="c-copy"' + (f.n >= 1 ? '' : ' disabled') + '>Copy results</button><span class="copy-msg" id="c-copy-msg" role="status"></span></p>';
     html += chart(pts, f);
     resEl.innerHTML = html;
     var dl = document.getElementById('c-dl');
     if (dl) dl.addEventListener('click', function () { download(s, pts, f); });
     var pr = document.getElementById('c-print');
     if (pr) pr.addEventListener('click', function () { printReport(s, pts, f); });
+    var cp = document.getElementById('c-copy');
+    if (cp) cp.addEventListener('click', function () { copyResults(s, pts, f, document.getElementById('c-copy-msg')); });
+  }
+
+  function copyText(text, done) {
+    function fallback() {
+      var ta = document.createElement('textarea'), ok = false;
+      ta.value = text; ta.setAttribute('readonly', ''); ta.style.cssText = 'position:fixed;left:-9999px;top:0';
+      document.body.appendChild(ta); ta.select();
+      try { ok = document.execCommand('copy'); } catch (err) { ok = false; }
+      document.body.removeChild(ta); done(ok);
+    }
+    if (navigator.clipboard && window.isSecureContext) navigator.clipboard.writeText(text).then(function () { done(true); }, fallback);
+    else fallback();
+  }
+  /* Copy results: the fit and the table as tab-separated text, in the same numbers the page shows. */
+  function copyResults(s, pts, f, msgEl) {
+    var used = pts.filter(function (q) { return q.m !== null || q.r !== null; });
+    var lines = [example ? 'Calibration comparison (example numbers, not measured; Draft)' : 'Calibration comparison (hand-typed values; Draft)'];
+    if (f.ok) lines.push('Gain (reading per newton of force)\t' + sig(f.a, 6), 'Zero offset (N)\t' + sig(f.b, 4), 'R²\t' + (f.r2 === null ? '—' : sig(f.r2, 6)), 'Points used\t' + f.n, 'Largest error (N)\t' + sig(f.big, 4));
+    else lines.push(f.msg);
+    lines.push('', ['Known mass (' + s.unit + ')', 'Force (N)', 'Reading (N)', 'Error (N)', 'Error (% of reading)', 'Outside tolerance'].join('\t'));
+    used.forEach(function (q) { lines.push([sig(q.m, 5), sig(q.F, 5), sig(q.r, 5), sig(q.err, 4), q.pct === null ? '—' : sig(q.pct, 3) + ' %', s.tol === null ? '' : (q.out ? 'yes' : 'no')].join('\t')); });
+    copyText(lines.join('\n') + '\n', function (ok) {
+      if (!msgEl) return;
+      msgEl.textContent = ok ? 'Copied' : 'Could not copy';
+      setTimeout(function () { msgEl.textContent = ''; }, 2500);
+    });
   }
 
   /* ---------- CSV record ---------- */

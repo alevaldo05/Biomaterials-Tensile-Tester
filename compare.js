@@ -211,7 +211,7 @@
         }).join('') + '</tr>';
       }).join('') + '</tfoot></table></div>' +
       '<p class="muted small">Same calculations as the single-file graph. The standard deviation is the sample standard deviation (n − 1) and needs at least 2 values. A blank (—) means that result is not reported for that specimen, for example the 0.2% offset yield for soft tissue, or the failure strain when no force drop below 50% of the peak was found in that record.</p>' +
-      '<p class="graph-actions"><button type="button" class="btn" id="cmp-csv">Download summary (CSV)</button>' +
+      '<p class="graph-actions"><button type="button" class="btn" id="cmp-csv">Download summary (CSV)</button><button type="button" class="btn-secondary" id="cmp-copy">Copy summary</button><span class="copy-msg" id="cmp-copy-msg" role="status"></span>' +
       (window.TensileReport ? '<button type="button" class="btn-secondary" id="cmp-print">Print summary report</button>' : '') + '</p></section>';
     app.innerHTML = html;
   }
@@ -238,6 +238,7 @@
     else if (b.id === 'cmp-svg') save(new Blob([buildSvg(true)], { type: 'image/svg+xml;charset=utf-8' }), 'comparison.svg');
     else if (b.id === 'cmp-png') png();
     else if (b.id === 'cmp-csv') csv();
+    else if (b.id === 'cmp-copy') copySummary();
     else if (b.id === 'cmp-print') printReport();
   });
   function save(blob, name) {
@@ -298,6 +299,32 @@
   }
   function n7(v) { return v === null || v === undefined || !isFinite(v) ? '' : String(parseFloat(Number(v).toPrecision(7))); }
   function pad(n) { return (n < 10 ? '0' : '') + n; }
+  function copyText(text, done) {
+    function fallback() {
+      var ta = document.createElement('textarea'), ok = false;
+      ta.value = text; ta.setAttribute('readonly', ''); ta.style.cssText = 'position:fixed;left:-9999px;top:0';
+      document.body.appendChild(ta); ta.select();
+      try { ok = document.execCommand('copy'); } catch (err) { ok = false; }
+      document.body.removeChild(ta); done(ok);
+    }
+    if (navigator.clipboard && window.isSecureContext) navigator.clipboard.writeText(text).then(function () { done(true); }, fallback);
+    else fallback();
+  }
+  /* Copy summary: the key-results table as shown on the page (display units), tab-separated, with the data source and any warnings first. */
+  function copySummary() {
+    var t = app.querySelector('.cmp-table'); if (!t) return;
+    function row(tr) { return [].slice.call(tr.children).map(function (c) { return c.textContent.replace(/\s+/g, ' ').trim(); }).join('\t'); }
+    var lines = [sourceNote() || 'Loaded files (data origin not verified)'];
+    [].slice.call(app.querySelectorAll('#cmp-warn p')).forEach(function (p) { lines.push(p.textContent.replace(/\s+/g, ' ').trim()); });
+    lines.push('', 'Specimen\t' + row(t.tHead.rows[0]).split('\t').slice(1).join('\t'));
+    [].slice.call(t.tBodies[0].rows).concat([].slice.call(t.tFoot.rows)).forEach(function (tr) { lines.push(row(tr)); });
+    copyText(lines.join('\n') + '\n', function (ok) {
+      var m = document.getElementById('cmp-copy-msg'); if (!m) return;
+      m.textContent = ok ? 'Copied' : 'Could not copy';
+      setTimeout(function () { m.textContent = ''; }, 2500);
+    });
+  }
+
   function csv() {
     var cols = COLS[testType()], inc = included(), d = new Date();
     var stamp = d.getFullYear() + '-' + pad(d.getMonth() + 1) + '-' + pad(d.getDate()) + ' ' + pad(d.getHours()) + ':' + pad(d.getMinutes());
