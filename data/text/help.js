@@ -61,7 +61,9 @@ window.SITE_TEXT.help = {
             [ "↑ and ↓", "Material box on the Materials page", "Move through the materials that match what you typed." ],
             [ "Enter", "Material box on the Materials page", "Choose the highlighted material." ],
             [ "Esc", "Material box on the Materials page", "Close the list and keep the current material." ],
-            [ "Esc", "Search box on the Help page", "Clears the search and shows every row again." ]
+            [ "↑ and ↓", "Search box in the header", "Move through the results." ],
+            [ "Enter", "Search box in the header", "Open the highlighted result." ],
+            [ "Esc", "Search box in the header", "Close the search and return to the search button. On a test page it closes the search only and does not send STOP." ]
           ]
         } }
       ]
