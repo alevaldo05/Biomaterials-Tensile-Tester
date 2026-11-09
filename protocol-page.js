@@ -1,7 +1,7 @@
-/* Protocol pages: a material choice (General, Skin, Steel, Concrete) and four tabs: Steps, Specimen and
+/* Protocol pages: a material choice (General, or "To be added at a later date") and four tabs: Steps, Specimen and
    equipment, Report and notes, and the example graph with the governing equations. The draft procedure
    comes from data/protocols.js; the example graph (labeled sample data) is drawn by graph.js.
-   Links: #skin (material), #skin/step-3 (a step), #skin/graph (a tab). Nothing is saved. */
+   Links: #general/step-3 (a step), #general/graph (a tab). Nothing is saved. */
 (function () {
   'use strict';
   var box = document.getElementById('protocol-app');
@@ -10,12 +10,9 @@
   var test = box.getAttribute('data-test');
   var data = window.PROTOCOLS[test] || {};
   var TEST_PAGE = test === 'relaxation' ? 'test-stress-relaxation.html' : 'test-uniaxial-tension.html';
-  /* Materials come from data/materials.js. "general" is the generic procedure. Only skin, steel (mild), and
-     concrete have their own draft text in data/protocols.js; every other material shows the General text
-     together with its own example graph. */
-  var MATS = window.MATERIALS || [], FAMS = window.MATERIAL_FAMILIES || [];
-  var TABS = [['general', 'General (no specific material)', null]].concat(MATS.map(function (m) { return [m.id, m.name, m.sample]; }));
-  var OWN_TEXT = { skin: 1, steel: 1, concrete: 1 };
+  /* Only the General procedure is written (data/protocols.js). The second choice is a placeholder for material-specific
+     procedures that will be added later; until then it shows the General text with a note. */
+  var TABS = [['general', 'General (no specific material)', null], ['later', 'To be added at a later date', null]];
   var PANELS = [['steps', 'Steps'], ['setup', 'Specimen and equipment'], ['report', 'Report and notes'], ['graph', 'Example graph and equations']];
 
   function esc(s) {
@@ -42,12 +39,7 @@
   /* ---------- page skeleton ---------- */
   box.innerHTML =
     '<div class="mat-pick"><label for="protocol-material">Material</label><select id="protocol-material">' +
-      '<option value="general">' + TABS[0][1] + '</option>' +
-      FAMS.map(function (f) {
-        return '<optgroup label="' + esc(f.name) + '">' + MATS.filter(function (m) { return m.family === f.id; }).map(function (m) {
-          return '<option value="' + m.id + '">' + esc(m.name) + (m.detail && f.id === 'metals' ? ' (' + esc(m.detail) + ')' : '') + '</option>';
-        }).join('') + '</optgroup>';
-      }).join('') +
+      TABS.map(function (t) { return '<option value="' + t[0] + '">' + esc(t[1]) + '</option>'; }).join('') +
     '</select><a class="mat-link" id="protocol-mat-link" href="materials.html">Properties on the Materials page</a></div>' +
     '<p class="muted small" id="protocol-mat-note" hidden></p>' +
     '<p class="lead" id="protocol-lead"></p>' +
@@ -158,14 +150,13 @@
   }
 
   function render(key) {
-    var p = data[OWN_TEXT[key] ? key : 'general'];
+    var p = data.general;
     matKey = key;
     var sel = document.getElementById('protocol-material');
-    if (sel.value !== key) { if (window.MaterialCombobox) window.MaterialCombobox.set(sel, key); else sel.value = key; }
+    if (sel.value !== key) sel.value = key;
     var mnote = document.getElementById('protocol-mat-note');
-    mnote.hidden = !(key !== 'general' && !OWN_TEXT[key]);
-    if (!mnote.hidden) mnote.textContent = 'There is no draft procedure for ' + (window.MATERIAL_BY_ID[key] || { name: key }).name + ' yet, so the General procedure is shown. The example graph and the properties are for this material.';
-    document.getElementById('protocol-mat-link').setAttribute('href', 'materials.html' + (key === 'general' ? '' : '#' + key));
+    mnote.hidden = key === 'general';
+    if (!mnote.hidden) mnote.textContent = 'No material-specific protocol has been added yet. The General procedure is shown.';
     var lead = document.getElementById('protocol-lead');
     var steps = document.getElementById('panel-steps'), setup = document.getElementById('panel-setup'), report = document.getElementById('panel-report');
     if (!p) {
@@ -229,7 +220,6 @@
     setHash();
   });
   render(matKey);
-  if (window.MaterialCombobox) window.MaterialCombobox.attach(document.getElementById('protocol-material'));
   selectTab(tabKey);
   if (cur.step) goStep(cur.step, true);
 
