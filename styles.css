@@ -67,12 +67,12 @@
 /* Text size and spacing (Settings): --ts multiplies the browser's own text size (100% = unchanged) and
    --sp scales the gaps and padding between blocks. Controls, focus rings, and warnings keep their size.
    --sp is the Spacing choice (--sp-user) times --wide, which gives a little more room on wide windows. */
-:root { --ts: 1; --sp-user: 1; --wide: 1; --sp: calc(var(--sp-user) * var(--wide)); --font-scale: 1; font-size: calc(var(--ts) * var(--font-scale) * 100%); }
+:root { --ts: 1; --sp-user: 0.8; --wide: 1; --sp: calc(var(--sp-user) * var(--wide)); --font-scale: 1; font-size: calc(var(--ts) * var(--font-scale) * 100%); }
 :root[data-textsize="125"] { --ts: 1.25; }
 :root[data-textsize="150"] { --ts: 1.5; }
 :root[data-textsize="200"] { --ts: 2; }
-:root[data-spacing="comfortable"] { --sp-user: 1.25; }
-:root[data-spacing="compact"] { --sp-user: 0.75; }
+:root[data-spacing="comfortable"] { --sp-user: 1; }
+:root[data-spacing="compact"] { --sp-user: 0.6; }
 /* Wide windows: up to 1439 px nothing changes; then a little more room, never more than 1.3 times. */
 @media (min-width: 1440px) { :root { --wide: 1.1; } }
 @media (min-width: 1600px) { :root { --wide: 1.2; } }
@@ -102,7 +102,7 @@ body {
   color: var(--ink);
   font-family: var(--font-body);
   font-size: 1rem;
-  line-height: calc(1.5 + (var(--sp) - 1) * 0.4);
+  line-height: max(1.4, calc(1.5 + (var(--sp) / 0.8 - 1) * 0.4)); /* Standard spacing keeps the 1.5 line height */
 }
 button, input, select, textarea { font-family: inherit; }
 a { color: var(--link); }
@@ -508,7 +508,7 @@ main.drop-active { outline: 3px dashed var(--accent); outline-offset: -6px; }
   align-items: center;
   max-width: 70rem;
   margin: 0 auto;
-  padding: 2.5rem 1.5rem;
+  padding: 1.75rem 1.5rem;
 }
 .hero h1 { font-size: 2.25rem; letter-spacing: -0.01em; }
 .hero .sub { font-size: 1.125rem; margin-bottom: 1.5rem; }
