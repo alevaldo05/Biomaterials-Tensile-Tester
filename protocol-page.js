@@ -190,11 +190,11 @@
     if (api) {
       var has = !tab[2] || api.hasMaterial(tab[2]);
       graph.hidden = !has;
-      if (!tab[2]) { api.setChoices(['biomaterial', 'steel', 'concrete']); api.setMaterial('biomaterial', false); }
+      if (!tab[2]) { api.setChoices(['biomaterial']); api.setMaterial('biomaterial', true); }
       else if (has) api.setMaterial(tab[2], true);
       if (note) note.textContent = !has ? 'There is no example graph for ' + tab[1] + ' in this test yet. Stress relaxation examples exist for skin, mild steel, and concrete only.' :
         tab[2] ? 'Example for ' + tab[1] + ', from labeled sample data (not measured). For materials other than skin, mild steel, and concrete, the curve is a schematic generated from illustrative inputs, not experimental data or a validated material model.' :
-        'Examples for skin, steel, and concrete, from labeled sample data (not measured). Switch between them above the graph.';
+        'Example from labeled sample data (not measured). The curve is a soft-tissue sample and does not represent every material.';
     }
     spy();
   }
