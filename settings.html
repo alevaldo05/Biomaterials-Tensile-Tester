@@ -143,6 +143,15 @@
       </div>
     </fieldset>
 
+    <fieldset class="settings-group" id="set-defs" data-group="graphs">
+      <legend>Key-result definitions</legend>
+      <p>Whether the short definition under each key result on Load Test and New Test starts shown or hidden. The Show definitions switch on the page still works either way.</p>
+      <div class="choice-grid">
+        <label><input type="radio" name="defs" value="off"> <span class="opt-name">Hidden</span><span class="opt-text">Definitions appear when you tick Show definitions. Default.</span></label>
+        <label><input type="radio" name="defs" value="on"> <span class="opt-name">Shown</span><span class="opt-text">Definitions are shown under each key result when a graph opens.</span></label>
+      </div>
+    </fieldset>
+
     <fieldset class="settings-group" id="set-stressunit" data-group="units">
       <legend>Stress unit</legend>
       <p>How stress and modulus are written on the main graph pages (test pages, Load Test, protocol pages): readouts, Key results, axis numbers and titles. Modulus is always stress per 1 of strain (a ratio), never per percent. Downloaded CSV files and the numbers in the Excel data sheet always stay in MPa.</p>

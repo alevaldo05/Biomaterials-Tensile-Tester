@@ -16,7 +16,8 @@
     grid: { values: ["major", "off", "minor"], fallback: "major" },
     stressunit: { values: ["mpa", "kpa"], fallback: "mpa" },
     strainunit: { values: ["ratio", "percent"], fallback: "ratio" },
-    digits: { values: ["standard", "4", "5"], fallback: "standard" }
+    digits: { values: ["standard", "4", "5"], fallback: "standard" },
+    defs: { values: ["off", "on"], fallback: "off" }
   };
 
   function saved(name) {
@@ -56,7 +57,7 @@
   }
 
   /* These apply at once on the Settings page (CSS only, or read by the graph the next time it is drawn). */
-  var NO_RELOAD = ["theme", "font", "checklist", "textsize", "spacing", "motion", "linewidth", "curve", "grid", "stressunit", "strainunit", "digits"];
+  var NO_RELOAD = ["theme", "font", "checklist", "textsize", "spacing", "motion", "linewidth", "curve", "grid", "stressunit", "strainunit", "digits", "defs"];
 
   /* Settings page: radio groups named theme, font, style, layout, and a reset button. */
   function settingsPage() {
