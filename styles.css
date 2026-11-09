@@ -290,12 +290,6 @@ main.wide { max-width: 70rem; }
 .skip-link:focus { top: 0.5rem; outline: 3px solid var(--accent-ink); outline-offset: -6px; }
 main:focus { outline: none; }
 /* Page navigation (page-nav.js): Help search, "Back to top" links, and hidden rows while searching. */
-.help-search { max-width: 40rem; margin: 0.75rem 0 1rem; }
-.help-search label { display: block; margin: 0 0 0.25rem; font-size: 0.9375rem; font-weight: 700; }
-.help-search-row { display: flex; gap: 0.5rem; }
-.help-search input[type="search"] { flex: 1; min-width: 0; padding: 0.45rem 0.6rem; border: 1px solid var(--line); border-radius: 6px; background: var(--surface); color: var(--ink); font: inherit; }
-.help-search p { margin: 0.35rem 0 0; }
-.filtered-out { display: none !important; }
 .to-top { margin: 0.75rem 0 0; font-size: 0.875rem; }
 .status { margin: 0 0 0.5rem; }
 .status .badge { margin: 0 0.5rem 0 0; }
@@ -939,3 +933,24 @@ dialog.pretest h3 { margin: 1rem 0 0.35rem; font-size: 1rem; }
 /* Data checks line under the graph (warnings only) */
 .data-checks { margin: 0.25rem 0 0.5rem; font-size: 0.9375rem; color: var(--muted); }
 .data-checks.warn { padding: 0.5rem 0.75rem; border-left: 4px solid var(--danger); background: var(--surface); color: var(--ink); max-width: none; }
+
+/* Site search (site-search.js): the magnifying-glass button to the right of Settings, its box, and the results list. */
+.site-search { position: relative; display: inline-flex; align-items: center; gap: 0.25rem; margin-left: 0.25rem; }
+.ss-btn { display: inline-flex; align-items: center; justify-content: center; width: 2.25rem; height: 2.25rem; padding: 0; border: 0; border-radius: 6px; background: transparent; color: var(--ink); cursor: pointer; }
+.ss-btn:hover, .ss-btn[aria-expanded="true"] { background: var(--surface); }
+.ss-btn svg { width: 1.15rem; height: 1.15rem; }
+.ss-btn:focus-visible, .ss-input:focus-visible { outline: 3px solid var(--focus); outline-offset: 2px; }
+.ss-box[hidden], .ss-list[hidden] { display: none; }
+.ss-input { box-sizing: border-box; width: 11rem; font: inherit; padding: 0.35rem 0.6rem; border: 1px solid var(--muted); border-radius: 6px; background: var(--surface); color: var(--ink); }
+.ss-list { position: absolute; z-index: 40; right: 0; top: calc(100% + 0.3rem); width: min(26rem, calc(100vw - 2rem)); max-height: min(24rem, 70vh); overflow-y: auto; padding: 0.25rem 0; background: var(--surface); color: var(--ink); border: 1px solid var(--muted); border-radius: 8px; box-shadow: 0 8px 22px rgba(0, 0, 0, 0.2); }
+.ss-opt { display: flex; justify-content: space-between; align-items: baseline; gap: 0.75rem; padding: 0.4rem 0.75rem; cursor: pointer; }
+.ss-opt.active { background: var(--accent); color: var(--accent-ink); }
+.ss-where { flex: none; font-size: 0.8125rem; color: var(--muted); text-align: right; }
+.ss-opt.active .ss-where { color: inherit; }
+.ss-none { padding: 0.5rem 0.75rem; color: var(--muted); }
+.topbar.search-open .inner { max-width: 72rem; }
+.sidebar .site-search { margin-left: 0; }
+.sidebar .ss-box { flex: 1; min-width: 0; }
+.sidebar .ss-input { width: 100%; }
+.sidebar .ss-list { left: 0; right: 0; width: auto; }
+@media print { .site-search { display: none; } }
