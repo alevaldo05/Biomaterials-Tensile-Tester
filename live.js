@@ -17,8 +17,11 @@
   function esc(s) {
     return String(s).replace(/[&<>"']/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]; });
   }
+  /* setup field -> entry in data/terms.js (hover or Tab shows the definition) */
+  var FIELD_TERMS = { 's-L0': 'L0', 's-speed': 'speed', 's-hold': 'holdmm' };
   function field(id, label, attrs, withMsg) {
-    var one = '<label class="pf"><span>' + label + '</span><input id="' + id + '" ' + (attrs || 'type="number" min="0" step="any" inputmode="decimal"') + (withMsg ? ' aria-describedby="m-' + id + '"' : '') + '></label>';
+    var tk = FIELD_TERMS[id], tip = tk ? ' data-term="' + tk + '" tabindex="0"' : '';
+    var one = '<label class="pf"><span' + tip + '>' + label + '</span><input id="' + id + '" ' + (attrs || 'type="number" min="0" step="any" inputmode="decimal"') + (withMsg ? ' aria-describedby="m-' + id + '"' : '') + '></label>';
     return withMsg ? '<div class="pf-wrap">' + one + '<span class="pf-msg" id="m-' + id + '" hidden></span></div>' : one;
   }
 
@@ -37,14 +40,14 @@
         field('s-L0', 'Gauge length, L<sub>0</sub> (mm)', undefined, true) +
         field('s-W', 'Width (mm)', undefined, true) +
         field('s-T', 'Thickness (mm)', undefined, true) +
-        '<div class="pf"><span>Area, A<sub>0</sub> (mm²)</span><output id="s-A">—</output></div>' +
+        '<div class="pf"><span data-term="A0" tabindex="0">Area, A<sub>0</sub> (mm²)</span><output id="s-A">—</output></div>' +
         '<p class="pf-note" id="dim-note" hidden></p>' +
         '</div><div class="setup-col">' +
         '<h3 class="step-h">3. Test settings</h3>' +
         field('s-speed', 'Crosshead speed (mm/min)', undefined, true) +
         (isRelax ?
           field('s-hold', 'Hold displacement, ΔL (mm)', undefined, true) +
-          '<div class="pf"><span>Hold strain, ε<sub>0</sub> = ΔL/L<sub>0</sub></span><output id="s-e0">—</output></div>' +
+          '<div class="pf"><span data-term="holdstrain" tabindex="0">Hold strain, ε<sub>0</sub> = ΔL/L<sub>0</sub></span><output id="s-e0">—</output></div>' +
           field('s-holds', 'Hold duration (s)', undefined, true) : '') +
         field('s-temp', 'Temperature (°C), optional', 'type="text" inputmode="decimal" autocomplete="off"', true) +
         field('s-env', 'Environment, optional', 'type="text" autocomplete="off"') +

@@ -17,6 +17,7 @@ Feature card. Update it in the same change as the feature.
 - Copy results (`copy-res`), File details (`file-details`)
 
 ## Behavior to keep
+- Key results names and Readout labels show a definition tip on hover or Tab (see [hover-definitions](hover-definitions.md))
 - Graph tools change the display only, never calculated results
 - Modulus is a fitted interval estimate; yield is the 0.2% offset; UTS is the maximum stress
 - Display units (kPa, %, digits) change appearance only

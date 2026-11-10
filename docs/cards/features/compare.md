@@ -14,6 +14,7 @@ Overlay several CSV files of one test type on Load Test.
 - Overlay graph, table per specimen with mean and sample standard deviation, summary CSV, Copy summary, PNG, SVG, Excel, Print
 
 ## Behavior to keep
+- Result column headings and Standard deviation show a definition tip (see [hover-definitions](hover-definitions.md))
 - Up to 12 files of one test type
 - Warnings for mixed simulated/measured data, mixed materials, or missing dimensions
 

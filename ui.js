@@ -5,6 +5,10 @@
                                  Opens on hover and on keyboard focus; closes on mouse-out, blur, or Esc.
                                  Esc closes the tip but is NOT stopped, so Esc still sends STOP on a test page.
                                  Returns { open(), close(), destroy() }.
+   Terms (no call needed): any element with data-term="key" shows that entry of window.TERMS (data/terms.js): name,
+                                 one-line definition, equation, unit. An element with data-tip-id="id" shows the text of the element with that id
+                                 (only <sub> and <sup> are kept). Both open on hover and on Tab focus, so give the element tabindex="0" unless it is
+                                 already a button or link. The same rules as Tip: Esc closes it and is not stopped.
    SiteUI.dialog(opts)           opts: { className, labelledBy, html }. A <dialog> in the site's look, added to the page.
                                  Esc closes it and does not reach the page (so Esc does not send STOP).
                                  Returns { el, show(), close() }, or null where <dialog> is not supported.
@@ -45,21 +49,64 @@
     t.style.left = Math.round(left) + 'px';
     t.style.top = Math.round(top) + 'px';
   }
+  var watcher = null;
   function hideTip() {
     if (!tipEl || tipEl.hidden) return;
     tipEl.hidden = true;
     if (tipTarget) tipTarget.removeAttribute('aria-describedby');
     tipTarget = null; tipFor = null;
+    if (watcher) { watcher.disconnect(); watcher = null; }
+  }
+  /* Copy text from a node, keeping only <sub> and <sup>; anything else becomes plain text. */
+  function copyAllowed(src, dest) {
+    for (var n = src.firstChild; n; n = n.nextSibling) {
+      if (n.nodeType === 3) dest.appendChild(document.createTextNode(n.nodeValue));
+      else if (n.nodeType === 1) {
+        var tag = n.nodeName.toLowerCase();
+        if (tag === 'sub' || tag === 'sup') { var c = document.createElement(tag); copyAllowed(n, c); dest.appendChild(c); }
+        else copyAllowed(n, dest);
+      }
+    }
+  }
+  function line(cls, label, text) {
+    var d = document.createElement('div'); d.className = cls;
+    if (label) { var b = document.createElement('strong'); b.textContent = label; d.appendChild(b); d.appendChild(document.createTextNode(' ')); }
+    d.appendChild(document.createTextNode(text)); return d;
+  }
+  function fillTerm(t, key) {
+    var e = window.TERMS && window.TERMS[key];
+    if (!e) return false;
+    t.textContent = '';
+    var h = document.createElement('div'); h.className = 'siteui-tip-name'; h.textContent = e.name; t.appendChild(h);
+    t.appendChild(line('siteui-tip-def', '', e.def));
+    if (e.eq) t.appendChild(line('siteui-tip-eq', 'Equation:', e.eq));
+    if (e.unit) t.appendChild(line('siteui-tip-unit', 'Unit:', e.unit));
+    return true;
+  }
+  function fillFrom(t, id) {
+    var src = document.getElementById(id);
+    if (!src) return false;
+    t.textContent = '';
+    var d = document.createElement('div'); d.className = 'siteui-tip-def'; copyAllowed(src, d); t.appendChild(d);
+    return !!d.textContent;
   }
   function showTip(target, content) {
-    var t = ensureTip(), text = typeof content === 'function' ? content() : content;
+    var t = ensureTip(), text = typeof content === 'function' ? content() : content, ok;
     if (!text) return;
     hideTip();
-    t.textContent = text;
+    if (text && typeof text === 'object' && text.term) ok = fillTerm(t, text.term);
+    else if (text && typeof text === 'object' && text.from) ok = fillFrom(t, text.from);
+    else { t.textContent = text; ok = true; }
+    if (!ok) return;
     t.hidden = false;
     tipTarget = target; tipFor = target;
     target.setAttribute('aria-describedby', t.id);
     place();
+    /* the page may redraw the element the tip belongs to (live results): close the tip when it goes away */
+    if (window.MutationObserver) {
+      watcher = new MutationObserver(function () { if (tipTarget && !document.body.contains(tipTarget)) hideTip(); });
+      watcher.observe(document.body, { childList: true, subtree: true });
+    }
   }
   function tip(target, content) {
     function open() { showTip(target, content); }
@@ -77,9 +124,29 @@
       }
     };
   }
+  /* Terms: elements marked data-term="key" or data-tip-id="id" get a tip without any call (works for redrawn content too). */
+  var TERM_SEL = '[data-term],[data-tip-id]';
+  function termContent(el) {
+    var k = el.getAttribute('data-term');
+    return k ? { term: k } : { from: el.getAttribute('data-tip-id') };
+  }
+  function termTarget(e) { return e.target && e.target.closest ? e.target.closest(TERM_SEL) : null; }
+  document.addEventListener('mouseover', function (e) { var el = termTarget(e); if (el && el !== tipFor) showTip(el, termContent(el)); });
+  document.addEventListener('mouseout', function (e) {
+    var el = termTarget(e);
+    if (el && el === tipFor && !(e.relatedTarget && el.contains(e.relatedTarget))) hideTip();
+  });
+  document.addEventListener('focusin', function (e) { var el = termTarget(e); if (el && el !== tipFor) showTip(el, termContent(el)); });
+  document.addEventListener('focusout', function (e) { var el = termTarget(e); if (el && el === tipFor) hideTip(); });
+
   /* Esc closes an open tip only. The event is left alone so a test page still sends STOP. */
   document.addEventListener('keydown', function (e) { if (e.key === 'Escape') hideTip(); });
-  window.addEventListener('scroll', hideTip, true);
+  /* Scrolling keeps the tip with its word; it closes only when the word has scrolled out of the window. (Tab can scroll a word into view, so closing on every scroll would hide the tip it just opened.) */
+  window.addEventListener('scroll', function () {
+    if (!tipTarget) return;
+    var r = tipTarget.getBoundingClientRect();
+    if (r.bottom < 0 || r.top > document.documentElement.clientHeight || r.right < 0 || r.left > document.documentElement.clientWidth) hideTip(); else place();
+  }, true);
   window.addEventListener('resize', hideTip);
 
   /* ---------- Site pop-up ---------- */
