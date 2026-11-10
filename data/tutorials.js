@@ -16,13 +16,13 @@ window.TUTORIALS = {
   label: 'Illustration of the screen, not a recording of a real test.',
   list: [
     { id: 'run-simulated', title: 'Run a simulated test',
-      captions: ['Fill in the specimen and settings, or press Fill example values.', 'On Connection, choose Use simulator.', 'On Review and start, press Start test.', 'Press STOP when you want the test to end.'],
+      captions: ['Fill in the dimensions and settings step by step, typing your own or using the Fill example links.', 'On Connection, choose Use simulator.', 'On Review and start, press Start test.', 'Press STOP when you want the test to end.'],
       boxes: [
         { id: 't1', kind: 'tab', x: 12, y: 32, w: 70, h: 22, text: 'Specimen', cur: [0] }, { id: 't2', kind: 'tab', x: 86, y: 32, w: 70, h: 22, text: 'Dimensions', cur: [0] },
         { id: 't3', kind: 'tab', x: 160, y: 32, w: 70, h: 22, text: 'Settings', cur: [0] }, { id: 't4', kind: 'tab', x: 234, y: 32, w: 70, h: 22, text: 'Connection', cur: [1] },
         { id: 't5', kind: 'tab', x: 308, y: 32, w: 80, h: 22, text: 'Review & start', cur: [2, 3] },
         { id: 'p', kind: 'panel', x: 12, y: 62, w: 376, h: 130 },
-        { id: 'fill', kind: 'link', x: 24, y: 84, w: 110, h: 16, text: 'Fill example values', in: [0] },
+        { id: 'fill', kind: 'link', x: 24, y: 84, w: 110, h: 16, text: 'Fill example dimensions', in: [0] },
         { id: 'f1', kind: 'field', x: 24, y: 112, w: 100, h: 24, text: '10', in: [0] }, { id: 'f2', kind: 'field', x: 134, y: 112, w: 100, h: 24, text: '5', in: [0] }, { id: 'f3', kind: 'field', x: 244, y: 112, w: 100, h: 24, text: '1.5', in: [0] },
         { id: 'sim', kind: 'btn', x: 24, y: 90, w: 120, h: 26, text: 'Use simulator', in: [1] }, { id: 'usb', kind: 'btn', x: 154, y: 90, w: 150, h: 26, text: 'Connect to tester (USB)', in: [1] },
         { id: 'st', kind: 'label', x: 24, y: 140, w: 200, h: 16, text: 'Connected · simulator (not measured)', in: [2, 3] },
