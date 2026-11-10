@@ -346,5 +346,31 @@ begin('10. Skip link');
   if (failures === before) ok(count + ' pages start with the skip link and have the main-content target');
 })();
 
+/* 11. Cards: every page has a page card, and every file or link a card names exists. */
+begin('11. Project cards');
+(function () {
+  var before = failures, cards = FILES.filter(function (f) { return /^docs\/cards\/(pages|features)\/[^\/]+\.md$/.test(f); });
+  PAGES.forEach(function (page) {
+    var card = 'docs/cards/pages/' + page.replace(/\.html$/, '') + '.md';
+    if (!exists(card)) fail(page + ' has no page card. Add ' + card + ' (see PROJECT-SUMMARY.md for the card shape).');
+  });
+  if (!exists('PROJECT-SUMMARY.md')) fail('PROJECT-SUMMARY.md is missing.');
+  cards.concat(exists('PROJECT-SUMMARY.md') ? ['PROJECT-SUMMARY.md'] : []).forEach(function (card) {
+    var text = read(card), m;
+    var files = text.split(/\n## Files\n/)[1];
+    if (files !== undefined) {
+      files = files.split(/\n## /)[0];
+      var re = /`([\w.\/-]+\.(?:html|js|css|md|sh|yml))`/g;
+      while ((m = re.exec(files))) if (!exists(m[1])) fail(card + ' names ' + m[1] + ', which does not exist. Fix the card or restore the file.');
+    }
+    var lre = /\]\(([^)#\s]+)\)/g;
+    while ((m = lre.exec(text))) {
+      var target = localPath(card, m[1]);
+      if (target && !exists(target)) fail(card + ' links to ' + m[1] + ', which does not exist.');
+    }
+  });
+  if (failures === before) ok(PAGES.length + ' pages have a card; ' + cards.length + ' cards name only files and links that exist');
+})();
+
 console.log('\n' + (failures ? failures + ' problem' + (failures === 1 ? '' : 's') + ' found. Fix them before merging; the site is not published while a check fails.' : 'All checks passed.'));
 process.exit(failures ? 1 : 0);
