@@ -43,6 +43,7 @@
         field('s-T', 'Thickness (mm)', undefined, true) +
         '<div class="pf"><span data-term="A0" tabindex="0">Area, A<sub>0</sub> (mm²)</span><output id="s-A">—</output></div>' +
         '<p class="pf-note" id="dim-note" hidden></p>' +
+        '<p class="small gs-fill"><button type="button" class="btn-link" id="s-example-dims">Fill example dimensions</button></p>' +
         '</div><div class="setup-col">' +
         '<h3 class="step-h">3. Test settings</h3>' +
         field('s-speed', 'Crosshead speed (mm/min)', undefined, true) +
@@ -50,11 +51,10 @@
           field('s-hold', 'Hold displacement, ΔL (mm)', undefined, true) +
           '<div class="pf"><span data-term="holdstrain" tabindex="0">Hold strain, ε<sub>0</sub> = ΔL/L<sub>0</sub></span><output id="s-e0">—</output></div>' +
           field('s-holds', 'Hold duration (s)', undefined, true) : '') +
+        '<p class="small gs-fill"><button type="button" class="btn-link" id="s-example-settings">Fill example settings</button></p>' +
         field('s-temp', 'Temperature (°C), optional', 'type="text" inputmode="decimal" autocomplete="off"', true) +
         field('s-env', 'Environment, optional', 'type="text" autocomplete="off"') +
         '<label class="pf"><span>Notes</span><textarea id="s-notes" rows="2"></textarea></label>' +
-        '</div><div class="setup-foot">' +
-        '<p class="small"><button type="button" class="btn-link" id="s-example">Fill example values</button></p>' +
         '</div>' +
       '</form>' +
       '<div class="live-main">' +
@@ -367,21 +367,32 @@
 
 
 
-  /* The three numbers "Fill example values" wrote, so a test started with exactly those is labeled as example values. */
+  /* The three numbers "Fill example dimensions" wrote, so a test started with exactly those is labeled as example values. */
   var exampleDims = null;
   function dimSourceNow() {
     return exampleDims && num('s-L0') === exampleDims.L0 && num('s-W') === exampleDims.W && num('s-T') === exampleDims.T ? 'example' : 'typed';
   }
-  $('s-example').addEventListener('click', function () {
-    var s = spec(), p = TG.sampleParams(test, s.matKey), u = TG.sampleParams('uniaxial', s.matKey);
+  /* Each of the Dimensions and Test settings steps has its own example link, and each fills only that step, so you choose
+     step by step whether to use the example or type your own. Nothing is filled until you press one. */
+  function clearFor(ids) { ids.forEach(function (id) { touched[id] = false; showMsg(id, ''); }); }
+  function afterFill(ids, text) {
+    clearFor(ids);
+    updateOutputs(); applySpec(rec); api.refresh(running); renderReview();
+    msg(text);
+  }
+  $('s-example-dims').addEventListener('click', function () {
+    var p = TG.sampleParams(test, spec().matKey);
     if (!p) return;
     $('s-L0').value = p.specimen.L0_mm; $('s-W').value = p.specimen.width_mm; $('s-T').value = p.specimen.thickness_mm;
     exampleDims = { L0: num('s-L0'), W: num('s-W'), T: num('s-T') };
+    afterFill(['s-L0', 's-W', 's-T'], 'Example dimensions filled in (from the sample data, not measurements). Replace them with your specimen’s measured dimensions.');
+  });
+  $('s-example-settings').addEventListener('click', function () {
+    var s = spec(), p = TG.sampleParams(test, s.matKey), u = TG.sampleParams('uniaxial', s.matKey);
+    if (!p) return;
     $('s-speed').value = sig(u.rate_per_s * u.specimen.L0_mm * 60, 3);
     if (isRelax) { $('s-hold').value = sig(p.hold_mm, 4); $('s-holds').value = p.hold_s; }
-    clearMessages();
-    updateOutputs(); applySpec(rec); api.refresh(running); renderReview();
-    msg('Example values filled in (from the sample data). Replace them with your specimen’s measured dimensions.');
+    afterFill(isRelax ? ['s-speed', 's-hold', 's-holds'] : ['s-speed'], 'Example settings filled in (from the sample data). Change them to your own values if you prefer.');
   });
   /* A message appears after you leave an entry (or press Start) and updates as you fix it. */
   $('spec').addEventListener('focusout', function (e) {
@@ -435,7 +446,7 @@
     var dock = $('stop-dock'); if (dock) { dock.hidden = !running; document.body.classList.toggle('has-stop-dock', running); }
     $('dl-csv').disabled = running || !hasData;
     if ($('r-print')) $('r-print').disabled = running || !hasData;
-    ['s-mat', 's-speed', 's-hold', 's-holds', 's-example'].forEach(function (id) { if ($(id)) $(id).disabled = running; });
+    ['s-mat', 's-speed', 's-hold', 's-holds', 's-example-dims', 's-example-settings'].forEach(function (id) { if ($(id)) $(id).disabled = running; });
     $('r-why').textContent = on || running ? '' : 'Start is available after you connect: press “Use simulator” or “Connect to tester (USB)”.';
     $('c-dot').className = 'dot' + (running ? ' run' : on ? ' on' : '');
     document.title = running ? 'Recording · ' + baseTitle : (on && hasData ? 'Stopped · ' + baseTitle : baseTitle);
@@ -581,7 +592,7 @@
     var l = new SimLink(spec);
     l.open().then(function () {
       attach(l);
-      msg('Simulator connected. Its readings are simulated, not measured. Enter the specimen values (or Fill example values), then press Start.');
+      msg('Simulator connected. Its readings are simulated, not measured. Enter the specimen values (or use the Fill example links in the Dimensions and Test settings steps), then press Start.');
     });
   });
   $('c-off').addEventListener('click', function () {
