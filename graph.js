@@ -900,7 +900,7 @@
             '<label>X-axis label<input type="text" id="f-x"></label>' +
             '<label>Y-axis label<input type="text" id="f-y"></label>' +
             '<label>Style<select id="f-style"><option value="line">Line</option><option value="markers">Line + markers</option></select></label>' +
-            '<label>Line width <output id="f-w-out"></output><input type="range" id="f-w" min="1" max="6" step="0.5"></label>' +
+            '<label>Line width <output id="f-w-out"></output><input type="range" id="f-w" min="1" max="6" step="0.5" aria-label="Line width"></label>' +
             '<div class="field-color"><span>Line color</span><div class="color-row"><input type="color" id="f-color" aria-label="Custom line color">' + swatches + '</div></div>' +
             '<label class="check"><input type="checkbox" id="f-grid"> Show grid</label>' +
             (isRelax ? '<label class="check"><input type="checkbox" id="f-log"> Logarithmic time axis</label>' : '') +
