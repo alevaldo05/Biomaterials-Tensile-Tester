@@ -16,6 +16,7 @@ Saved display choices and the four color themes (green light, green dark, purple
 ## Behavior to keep
 - Stored names `light`, `dark`, `purple`, `pink` stay
 - Saved in this browser only; appearance only
+- Help prompts (key `helpprompts`: `on` default, `off`) turn the automatic hints off; see [help-coach](help-coach.md)
 - Also saved by the test pages (not on the Settings page): key `steps` (`guided`, `all`), see [guided-steps](guided-steps.md); Reset clears it
 - Reset clears them
 

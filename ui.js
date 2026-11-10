@@ -18,7 +18,7 @@
                                  and a STOP button (stop() is called; the pop-up then shows the new state). Closing the tab, reloading, and Back
                                  cannot be caught here; pages keep their beforeunload handler and skip it while SiteUI.leaving is true.
    SiteUI.navigate(url)          Go to url, through the guard.
-   SiteUI.note(opts)             opts: { text, title, host, onClose }. A small card with an X button; not modal, never takes focus.
+   SiteUI.note(opts)             opts: { text, title, link: { href, label }, host, onClose }. A small card with an X button; not modal, never takes focus.
                                  Returns { el, close() }. */
 (function () {
   'use strict';
@@ -184,6 +184,7 @@
     body.className = 'siteui-note-body';
     if (opts.title) { var h = document.createElement('strong'); h.id = id; h.textContent = opts.title; body.appendChild(h); }
     var p = document.createElement('p'); p.textContent = opts.text || ''; body.appendChild(p);
+    if (opts.link) { var a = document.createElement('a'); a.href = opts.link.href; a.textContent = opts.link.label; a.className = 'siteui-note-link'; var lp = document.createElement('p'); lp.appendChild(a); body.appendChild(lp); }
     var x = document.createElement('button');
     x.type = 'button'; x.className = 'siteui-note-x'; x.setAttribute('aria-label', 'Close this note'); x.textContent = '×';
     el.appendChild(body); el.appendChild(x);

@@ -156,6 +156,18 @@ begin('3. Data files');
       }
       return '';
     },
+    'data/help-tips.js': function (g) {
+      var T = g.HELP_TIPS;
+      if (!T || typeof T.stuckMs !== 'number' || typeof T.noReadingsMs !== 'number' || typeof T.fieldErrorMs !== 'number' || !T.problems) return 'HELP_TIPS needs stuckMs, noReadingsMs, fieldErrorMs, troubleshooting, and problems';
+      var rows = [], h = g.SITE_TEXT && g.SITE_TEXT.help && g.SITE_TEXT.help.sections && g.SITE_TEXT.help.sections['trouble-title'];
+      ((h && h.blocks) || []).forEach(function (b) { if (b && b.table && b.table.rows) rows = rows.concat(b.table.rows); });
+      for (var k in T.problems) {
+        var m = T.problems[k] && T.problems[k].match;
+        if (!isStr(m)) return 'problem "' + k + '" needs a match';
+        if (!rows.some(function (r) { return String(r[0]).indexOf(m) === 0; })) return 'problem "' + k + '" matches no row of the Troubleshooting table in data/text/help.js (the page must list data/text/help.js before data/help-tips.js)';
+      }
+      return '';
+    },
     'data/terms.js': function (g) {
       if (!g.TERMS || typeof g.TERMS !== 'object') return 'TERMS should be an object with one entry per term';
       for (var k in g.TERMS) { var e = g.TERMS[k]; if (!e || !isStr(e.name) || !isStr(e.def) || typeof e.eq !== 'string' || typeof e.unit !== 'string') return 'term "' + k + '" needs name, def, eq, and unit (eq and unit may be empty text)'; }
