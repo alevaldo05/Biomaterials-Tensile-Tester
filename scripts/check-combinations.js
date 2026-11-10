@@ -12,7 +12,7 @@
    For every page load it checks: no console error, failed request, or "Refused to" policy message; no sideways scroll; the title is
    shown and not clipped; the header logo, title, and menu do not overlap; and the contrast of the text actually drawn on the page
    (4.5 to 1, or 3 to 1 for large text). It also runs each page's main feature (a simulated test with STOP and the CSV download on both
-   test pages, Load Test with one file and with several, Calibration, Materials, both protocol pages, Settings, Help with a tutorial,
+   test pages, Load Test with one file and with several, Calibration, Materials, both protocol pages, Settings, the inline tutorials (Watch how) and the Help list of tutorial links,
    the header search, and the text checker). On the test pages it also tabs through the controls and checks a focus ring is drawn.
    Findings are "FAIL" (a bug) or "WARN" (contrast of text; review it). Exit code 1 if any FAIL, or any WARN with --strict. */
 'use strict';
@@ -139,11 +139,18 @@ async function visible(page, sel) { var e = await page.$(sel); return e ? page.i
 
 async function runTest(page, issues) {
   var guided = await page.evaluate(function () { return document.documentElement.getAttribute('data-steps') !== 'all'; });
+  /* inline tutorial at the top of the page: opens, fits, hides */
+  await page.click('#tut-run-simulated .tut-toggle', { timeout: 4000 }).catch(function () { issues.push({ k: 'tutorial', m: 'the Watch how button at the top of the test page could not be clicked' }); });
+  if (await visible(page, '#tut-panel-run-simulated')) {
+    var tp = await page.evaluate(inPage); tp.issues.forEach(function (x) { x.m = '(tutorial open) ' + x.m; issues.push(x); });
+    await page.click('#tut-panel-run-simulated .tut-hide');
+  } else issues.push({ k: 'tutorial', m: 'the inline tutorial panel did not open on the test page' });
   if (guided) {
-    await page.click('#s-example');
-    for (var i = 0; i < 3; i++) await page.click('.is-current [data-next]');
+    await page.click('.is-current [data-next]');
+    await page.click('#s-example-dims'); await page.click('.is-current [data-next]');
+    await page.click('#s-example-settings'); await page.click('.is-current [data-next]');
     await page.click('#c-sim'); await page.click('.gs-nav[data-step="4"] [data-next]');
-  } else { await page.click('#c-sim'); await page.click('#s-example'); }
+  } else { await page.click('#c-sim'); await page.click('#s-example-dims'); await page.click('#s-example-settings'); }
   await page.click('#r-start');
   if (await visible(page, 'dialog.pretest[open]')) {
     var boxes = await page.$$('dialog.pretest input'); for (var b = 0; b < boxes.length; b++) await boxes[b].check();
@@ -187,6 +194,8 @@ async function feature(page, name, port, issues) {
     await page.waitForSelector('#results tr', { timeout: 6000 }).catch(function () { issues.push({ k: 'load', m: 'Load Test did not show key results for a sample file' }); });
     if (!(await visible(page, '#graph-app svg'))) issues.push({ k: 'graph', m: 'Load Test graph is not shown' });
     var r1 = await page.evaluate(inPage); r1.issues.forEach(function (x) { x.m = '(file open) ' + x.m; issues.push(x); });
+    await page.click('#tut-load-compare .tut-toggle').catch(function () { issues.push({ k: 'tutorial', m: 'Load Test: the Watch how button could not be clicked' }); });
+    if (!(await visible(page, '#tut-panel-load-compare'))) issues.push({ k: 'tutorial', m: 'Load Test: the inline tutorial did not open' }); else { var rt = await page.evaluate(inPage); rt.issues.forEach(function (x) { x.m = '(tutorial open) ' + x.m; issues.push(x); }); }
     await page.goto(base + 'load-test.html'); await page.check('input[name="load-mode"][value="compare"]');
     await page.setInputFiles('#cmp-file', [{ name: 'a.csv', mimeType: 'text/csv', buffer: csv }, { name: 'b.csv', mimeType: 'text/csv', buffer: csv }]);
     await page.waitForSelector('.cmp-table', { timeout: 6000 }).catch(function () { issues.push({ k: 'compare', m: 'Compare did not show its table for two files' }); });
@@ -198,6 +207,8 @@ async function feature(page, name, port, issues) {
     var t = await page.evaluate(function () { var e = document.querySelector('#cal-results'); return e ? e.innerText : ''; });
     if (!/Gain/.test(t)) issues.push({ k: 'calibration', m: 'Calibration showed no fit after "Fill example values"' });
     var r3 = await page.evaluate(inPage); r3.issues.forEach(function (x) { x.m = '(results) ' + x.m; issues.push(x); });
+    await page.click('#tut-calibration .tut-toggle').catch(function () { issues.push({ k: 'tutorial', m: 'Calibration: the Watch how button could not be clicked' }); });
+    if (!(await visible(page, '#tut-panel-calibration'))) issues.push({ k: 'tutorial', m: 'Calibration: the inline tutorial did not open' }); else { var rc = await page.evaluate(inPage); rc.issues.forEach(function (x) { x.m = '(tutorial open) ' + x.m; issues.push(x); }); }
     return;
   }
   if (name === 'materials') {
@@ -215,15 +226,13 @@ async function feature(page, name, port, issues) {
     return;
   }
   if (name === 'help') {
-    if (!(await visible(page, '#tutorials-list button[data-tutorial="run-simulated"]'))) {   /* the Tabs layout shows one section at a time */
+    if (!(await visible(page, '#tutorials-list a'))) {   /* the Tabs layout shows one section at a time */
       var tab = await page.$('[role="tab"]:has-text("Tutorials")'); if (tab) await tab.click();
     }
-    await page.click('#tutorials-list button[data-tutorial="run-simulated"]', { timeout: 5000 }).catch(function () { issues.push({ k: 'tutorial', m: 'the Tutorials list could not be reached or its button clicked' }); });
-    if (!(await visible(page, 'dialog.tutorial-dialog[open]'))) { if (!issues.some(function (x) { return x.k === 'tutorial'; })) issues.push({ k: 'tutorial', m: 'the tutorial pop-up did not open' }); return; }
-    var fit = await page.evaluate(function () { var d = document.querySelector('dialog.tutorial-dialog').getBoundingClientRect(); return d.left >= 0 && d.right <= innerWidth && d.top >= 0 && d.bottom <= innerHeight + 1; });
-    if (!fit) issues.push({ k: 'tutorial', m: 'the tutorial pop-up does not fit the window' });
-    await page.keyboard.press('Escape'); await page.waitForTimeout(150);
-    if (await page.$('dialog.tutorial-dialog')) issues.push({ k: 'tutorial', m: 'Esc did not close the tutorial' });
+    var hrefs = await page.$$eval('#tutorials-list a', function (e) { return e.map(function (a) { return a.getAttribute('href'); }); });
+    if (hrefs.length !== 7 || hrefs.some(function (h) { return !/#tut-/.test(h); })) issues.push({ k: 'tutorial', m: 'the Help Tutorials list should hold 7 links to page#tut-ID (found ' + hrefs.length + ')' });
+    await page.click('#tutorials-list a:has-text("Enter a calibration")', { timeout: 5000 }).catch(function () { issues.push({ k: 'tutorial', m: 'the Tutorials list link could not be clicked' }); });
+    await page.waitForSelector('#tut-panel-calibration:not([hidden])', { timeout: 4000 }).catch(function () { issues.push({ k: 'tutorial', m: 'a Help Tutorials link did not open its tutorial on the page' }); });
     return;
   }
   if (name === 'index') {
