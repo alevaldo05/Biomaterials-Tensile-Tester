@@ -6,7 +6,8 @@ Feature card. Update it in the same change as the feature.
 `window.TensileGraph`: plain SVG graph, Readout, Key results, graph tools, CSV reading, downloads.
 
 ## Files
-- `graph.js` (1,482 lines)
+- `graph-core.js` (`window.TensileGraphCore`: the calculations, key results, data checks, and CSV reading; no drawing; loads before `graph.js`)
+- `graph.js` (the interactive graph: `TensileGraph.mount`, the readout, tools, customization, and PNG/SVG download)
 - `excel-export.js` (loaded right after)
 - CSS: `css/graph.css` (Graph pages, graph tools, Key results)
 - Used by the test, protocol, Load Test, and Materials pages
