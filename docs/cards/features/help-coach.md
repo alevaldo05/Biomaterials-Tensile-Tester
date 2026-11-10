@@ -17,6 +17,7 @@ A "Need help?" button on the test pages, Load Test, and Calibration, plus small 
 ## What the user sees
 - **Need help?** at the bottom right, above the pinned STOP bar; it opens a small card with the current step's existing help wording and a link to Help > Troubleshooting; X closes it
 - Hints: one at a time at the bottom left, each with an X; they never take keyboard focus. Triggers: USB permission denied, port unavailable, connected but no readings (5 s after Start), unreadable lines skipped, a CSV that cannot be read, a field error still showing after 8 s, and a minute (60 s) without activity on the same step or page
+- **Watch how** (when the context has a tutorial and no test is recording) opens the tutorial for that step (see [tutorials](tutorials.md))
 - Settings > **Help prompts** Off stops the automatic hints; the button stays
 
 ## Behavior to keep
