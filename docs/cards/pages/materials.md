@@ -7,7 +7,7 @@ Typical property tables, a two-material comparison, a Young's modulus vs density
 
 ## Files
 - HTML: `materials.html` (ids `materials-app`, `source-section`)
-- Scripts in order: `display-settings.js`, `ui.js` (head), `data/materials.js`, `data/samples.js`, `data/sample-models.js`, `graph.js`, `excel-export.js`, `material-combobox.js`, `materials.js`, `layouts.js`, `data/search-index.js`, `site-search.js`, `build-number.js`
+- Scripts in order: `display-settings.js`, `ui.js` (head), `data/materials.js`, `data/samples.js`, `data/sample-models.js`, `data/terms.js`, `graph.js`, `excel-export.js`, `material-combobox.js`, `materials.js`, `layouts.js`, `data/search-index.js`, `site-search.js`, `build-number.js`
 - CSS: `styles.css` Materials sections
 
 ## What the user sees

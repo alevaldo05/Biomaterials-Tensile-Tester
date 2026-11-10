@@ -14,6 +14,8 @@
   /* Okabe-Ito colors (colorblind-safe) plus a different line style per specimen, so color is not the only cue. */
   var COLORS = ['#0072B2', '#D55E00', '#009E73', '#CC79A7', '#E69F00', '#56B4E9', '#7f7f7f', '#000000'];
   var DASH = ['', '9 4', '2 3', '11 3 2 3'];
+  /* result column -> entry in data/terms.js (hover or Tab shows the definition) */
+  var TERM_OF = { E: 'modulus', yield: 'yield', uts: 'uts', failStrain: 'failstrain', tough: 'energy', s0: 's0', hs: 'holdstart', send: 'sfinal', relaxed: 'relaxed', E0: 'apparent', tau: 'tau' };
   var COLS = {
     uniaxial: [
       { k: 'E', name: 'Automatic modulus estimate, E', kind: 'stress', csv: 'E_MPa' },
@@ -202,10 +204,10 @@
     var sc = {};
     cols.forEach(function (c) { sc[c.k] = scaleFor(c); });
     html += '<section class="cmp-card"><h2>Key results</h2><div class="table-scroll" tabindex="0" role="region" aria-label="Key results by specimen"><table class="mt cmp-table"><caption class="sr-only">Key results for each specimen, with mean and standard deviation</caption><thead><tr><th scope="col">Specimen</th>' +
-      cols.map(function (c) { return '<th scope="col">' + esc(c.name) + ' <span class="unit">(' + sc[c.k].unit + ')</span></th>'; }).join('') + '</tr></thead><tbody>' +
+      cols.map(function (c) { return '<th scope="col"><span' + (TERM_OF[c.k] ? ' data-term="' + TERM_OF[c.k] + '" tabindex="0"' : '') + '>' + esc(c.name) + '</span> <span class="unit">(' + sc[c.k].unit + ')</span></th>'; }).join('') + '</tr></thead><tbody>' +
       inc.map(function (sp) { return '<tr><th scope="row">' + esc(sp.name) + '</th>' + cols.map(function (c) { return '<td class="n">' + cellText(sp.nums[c.k], sc[c.k]) + '</td>'; }).join('') + '</tr>'; }).join('') +
       '</tbody><tfoot>' + ['mean', 'sd', 'n'].map(function (kind) {
-        return '<tr><th scope="row">' + (kind === 'mean' ? 'Mean' : kind === 'sd' ? 'Standard deviation' : 'n (values used)') + '</th>' + cols.map(function (c) {
+        return '<tr><th scope="row">' + (kind === 'mean' ? 'Mean' : kind === 'sd' ? '<span data-term="sd" tabindex="0">Standard deviation</span>' : 'n (values used)') + '</th>' + cols.map(function (c) {
           var st = stats(column(c));
           return '<td class="n">' + (kind === 'n' ? st.n : cellText(st[kind], sc[c.k])) + '</td>';
         }).join('') + '</tr>';
