@@ -7,7 +7,7 @@ Homepage: title, the New Test and Load Test actions, the About the tester paragr
 
 ## Files
 - HTML: `index.html` (headings, layout, ids `hero-title`, `about-title`, `how-title`, `proto-title`)
-- Scripts in order: `display-settings.js` (head), `data/text/home.js`, `text.js`, `layouts.js`, `data/search-index.js`, `site-search.js`, `build-number.js`
+- Scripts in order: `display-settings.js`, `ui.js` (head), `data/text/home.js`, `text.js`, `layouts.js`, `data/search-index.js`, `site-search.js`, `build-number.js`
 - Words: `data/text/home.js` (see `EDITING-TEXT.md`)
 - CSS: `styles.css` sections Top bar, Home, Home additions; `layouts.css` Start screen
 

@@ -496,19 +496,15 @@
     var C = window.PRETEST_CHECKLIST, tissue = true;
     var groups = C.groups.map(function (g) { return { name: g.name, items: g.items.filter(function (it) { return !it.tissue || tissue; }) }; });
     var total = groups.reduce(function (n, g) { return n + g.items.length; }, 0);
-    if (typeof HTMLDialogElement === 'undefined' || !HTMLDialogElement.prototype.showModal) {
+    if (!window.SiteUI || typeof HTMLDialogElement === 'undefined' || !HTMLDialogElement.prototype.showModal) {
       /* very old browser without <dialog>: a plain confirmation that lists the same items */
       var lines = groups.map(function (g) { return g.name + ':\n' + g.items.map(function (it) { return ' - ' + it.text; }).join('\n'); }).join('\n\n');
       if (window.confirm(C.title + '\n\n' + lines + '\n\nHave you done all of these?')) onConfirm();
       return;
     }
     if (!checklistDlg) {
-      checklistDlg = document.createElement('dialog');
-      checklistDlg.className = 'pretest';
-      checklistDlg.setAttribute('aria-labelledby', 'pt-title');
-      /* Esc only closes this pop-up; it must not also reach the page's Esc-sends-STOP shortcut */
-      checklistDlg.addEventListener('keydown', function (e) { if (e.key === 'Escape') e.stopPropagation(); });
-      document.body.appendChild(checklistDlg);
+      /* the shared site pop-up (ui.js): it keeps Esc from reaching the page's Esc-sends-STOP shortcut */
+      checklistDlg = window.SiteUI.dialog({ className: 'pretest', labelledBy: 'pt-title' }).el;
     }
     var dlg = checklistDlg;
     dlg.innerHTML =

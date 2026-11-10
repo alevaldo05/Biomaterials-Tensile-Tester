@@ -7,7 +7,7 @@ Draft procedure in four tabs. See [protocols](../features/protocols.md).
 
 ## Files
 - HTML: `protocol-uniaxial-tension.html` (ids `protocol-app`, `graph-section`, `graph-app`, `equations-section`)
-- Scripts in order: `display-settings.js` (head), `data/materials.js`, `data/samples.js`, `data/sample-models.js`, `data/protocols.js`, `graph.js`, `excel-export.js`, `protocol-page.js`, `layouts.js`, `data/search-index.js`, `site-search.js`, `build-number.js`
+- Scripts in order: `display-settings.js`, `ui.js` (head), `data/materials.js`, `data/samples.js`, `data/sample-models.js`, `data/protocols.js`, `graph.js`, `excel-export.js`, `protocol-page.js`, `layouts.js`, `data/search-index.js`, `site-search.js`, `build-number.js`
 
 ## What the user sees
 - Tabs: Steps (with Jump to step), Specimen and equipment, Report and notes, Example graph and equations

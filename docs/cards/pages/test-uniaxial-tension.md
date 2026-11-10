@@ -7,7 +7,7 @@ Live Uniaxial Tension test with the simulator or a USB tester. Shared behavior: 
 
 ## Files
 - HTML: `test-uniaxial-tension.html` (`live-app` with `data-test="uniaxial"`, safety line, Governing equations table)
-- Scripts in order: `display-settings.js` (head), `data/materials.js`, `data/samples.js`, `data/sample-models.js`, `data/device.js`, `data/checklist.js`, `graph.js`, `excel-export.js`, `report.js`, `live.js`, `layouts.js`, `data/search-index.js`, `site-search.js`, `build-number.js`
+- Scripts in order: `display-settings.js`, `ui.js` (head), `data/materials.js`, `data/samples.js`, `data/sample-models.js`, `data/device.js`, `data/checklist.js`, `graph.js`, `excel-export.js`, `report.js`, `live.js`, `layouts.js`, `data/search-index.js`, `site-search.js`, `build-number.js`
 - Page-specific: only the HTML text and the test type
 
 ## What the user sees

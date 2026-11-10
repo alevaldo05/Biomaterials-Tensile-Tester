@@ -26,7 +26,7 @@ Read this file, then only the cards for the page or feature being changed. Updat
 
 ## Features (one card each, in `docs/cards/features/`)
 
-[graph-engine](docs/cards/features/graph-engine.md), [live-test](docs/cards/features/live-test.md), [simulator](docs/cards/features/simulator.md), [usb-link](docs/cards/features/usb-link.md), [downloads](docs/cards/features/downloads.md) (CSV and Excel), [print-report](docs/cards/features/print-report.md), [compare](docs/cards/features/compare.md), [calibration](docs/cards/features/calibration.md), [materials](docs/cards/features/materials.md), [protocols](docs/cards/features/protocols.md), [display-settings](docs/cards/features/display-settings.md) (and themes), [layouts](docs/cards/features/layouts.md), [styles](docs/cards/features/styles.md), [site-search](docs/cards/features/site-search.md), [page-text](docs/cards/features/page-text.md), [deploy-checks](docs/cards/features/deploy-checks.md).
+[graph-engine](docs/cards/features/graph-engine.md), [live-test](docs/cards/features/live-test.md), [simulator](docs/cards/features/simulator.md), [usb-link](docs/cards/features/usb-link.md), [downloads](docs/cards/features/downloads.md) (CSV and Excel), [print-report](docs/cards/features/print-report.md), [compare](docs/cards/features/compare.md), [calibration](docs/cards/features/calibration.md), [materials](docs/cards/features/materials.md), [protocols](docs/cards/features/protocols.md), [display-settings](docs/cards/features/display-settings.md) (and themes), [layouts](docs/cards/features/layouts.md), [styles](docs/cards/features/styles.md), [site-search](docs/cards/features/site-search.md), [shared-popups](docs/cards/features/shared-popups.md), [page-text](docs/cards/features/page-text.md), [deploy-checks](docs/cards/features/deploy-checks.md).
 
 ## Fixed rules (short form; full rules in `AGENTS.md`)
 
@@ -57,6 +57,7 @@ Preview in Chrome at 1280 px and 1024 px, run the simulator on both test pages, 
 | Material values or sample curves | [materials](docs/cards/features/materials.md) |
 | Protocol text | [protocols](docs/cards/features/protocols.md) |
 | Colors, fonts, layouts, styles | [display-settings](docs/cards/features/display-settings.md), [layouts](docs/cards/features/layouts.md), [styles](docs/cards/features/styles.md) |
+| Tips, pop-ups, notes | [shared-popups](docs/cards/features/shared-popups.md) |
 | What search finds | [site-search](docs/cards/features/site-search.md) |
 | Publishing and checks | [deploy-checks](docs/cards/features/deploy-checks.md) |
 

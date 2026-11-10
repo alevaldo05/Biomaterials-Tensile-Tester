@@ -9,6 +9,7 @@ Setup, connection, Start/STOP/Tare, recording, auto-stop, and CSV on the two tes
 - `live.js`
 - `data/device.js`
 - `data/checklist.js`
+- `ui.js` (the checklist pop-up is the shared Site pop-up; see shared-popups card)
 - Test pages `test-uniaxial-tension.html`, `test-stress-relaxation.html`
 - CSS: `styles.css` Live test and Load Test pages, test setup in steps, pre-test checklist
 
