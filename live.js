@@ -27,13 +27,14 @@
 
   /* ---------- page layout ---------- */
   app.innerHTML =
+    '<div class="gs-switch"><label class="check"><input type="checkbox" id="steps-all"> Show all steps</label></div>' +
     '<div class="live-layout">' +
       '<form class="panel" id="spec" novalidate aria-labelledby="spec-title">' +
         '<h2 id="spec-title">Specimen and settings</h2>' +
         '<div class="setup-col">' +
         '<h3 class="step-h">1. Specimen</h3>' +
         field('s-mat', 'Material', 'type="text" autocomplete="off" maxlength="100" aria-describedby="s-mat-hint"') +
-        '<p class="small muted" id="s-mat-hint">Type the material name.</p>' +
+        '<p class="small muted" id="s-mat-hint" hidden>Type the material name.</p>' +
         field('s-id', 'Specimen ID', 'type="text" autocomplete="off"') +
         '</div><div class="setup-col">' +
         '<h3 class="step-h">2. Dimensions (mm)</h3>' +
@@ -54,7 +55,6 @@
         '<label class="pf"><span>Notes</span><textarea id="s-notes" rows="2"></textarea></label>' +
         '</div><div class="setup-foot">' +
         '<p class="small"><button type="button" class="btn-link" id="s-example">Fill example values</button></p>' +
-        '<p class="small muted">Example values come from the labeled sample data. Replace them with your specimen’s measured dimensions.</p>' +
         '</div>' +
       '</form>' +
       '<div class="live-main">' +
@@ -77,7 +77,7 @@
           '</div>' +
           '<p class="small muted" id="r-why"></p>' +
           '<section class="review" aria-labelledby="rv-title"><h3 class="step-h" id="rv-title">5. Review before starting</h3><p class="rv-sum" id="rv-sum"></p></section>' +
-          '<p class="small muted">Esc also sends STOP while connected. <a href="help.html">Help and keyboard keys</a></p>' +
+          '<p class="small muted esc-line">Esc also sends STOP while connected. <a href="help.html">Help and keyboard keys</a></p>' +
           '<p class="csv-msg" id="r-msg" role="status"></p>' +
           '<details class="rv-det" id="rv-det"><summary>Show every value to review</summary><p class="small muted" id="c-explain">Simulator readings are labeled “Simulated data, not measured”. A USB tester is draft and unvalidated.</p><div id="rv-body"></div></details>' +
           '<p class="small muted" id="r-info"></p>' +
@@ -224,11 +224,130 @@
       (warns.length ? '<p class="rv-h">Check:</p>' + items(warns) : '');
     /* Only redraw when something changed, so a button is never replaced while it is being pressed. */
     if (html !== lastReview) { lastReview = html; box.innerHTML = html; }
+    if (stepsReady) stepsUpdate();
   }
   $('rv-body').addEventListener('click', function (e) {
     var b = e.target.closest ? e.target.closest('button[data-fix]') : null;
-    if (b && $(b.getAttribute('data-fix'))) $(b.getAttribute('data-fix')).focus();
+    var t = b && $(b.getAttribute('data-fix'));
+    if (t) { showStepOf(t); t.focus(); }
   });
+  /* ---------- guided steps ----------
+     One setup step at a time (the default), or every step at once with the "Show all steps" switch (remembered in this browser).
+     This only shows and hides the existing markup and adds a step bar and Back/Next buttons; no field, id, or message is rebuilt. */
+  var STEP_NAMES = ['Specimen', 'Dimensions', 'Test settings', 'Connection', 'Review and start'];
+  var layoutEl = app.querySelector('.live-layout'), stepsReady = false, cur = 1, maxStep = 1;
+  var setupCols = app.querySelectorAll('.setup-col'), connRow = app.querySelector('.conn-row'), reviewSec = app.querySelector('section.review');
+  function stepHead(n) { return n <= 3 ? setupCols[n - 1].querySelector('.step-h') : n === 4 ? connRow.querySelector('.step-h') : $('rv-title'); }
+  function stepFields(n) { return n === 2 ? ['s-L0', 's-W', 's-T'] : n === 3 ? ['s-speed'].concat(isRelax ? ['s-hold', 's-holds'] : []) : []; }
+  function stepValid(n) { return n === 4 ? !!link : stepFields(n).every(function (id) { return !problemText(id); }); }
+  function stepWhy(n) {
+    if (n === 4) return link ? '' : 'Connect to the tester or use the simulator to continue.';
+    var bad = stepFields(n).filter(function (id) { return problemText(id); })[0];
+    return bad ? problemText(bad) : '';
+  }
+  function stepSummary(n) {
+    var s = spec();
+    if (n === 1) return [s.matLabel, s.id].filter(Boolean).join(' · ') || 'Nothing typed (optional)';
+    if (n === 2) return s.L0 && s.W && s.T ? sig(s.L0, 4) + ' × ' + sig(s.W, 4) + ' × ' + sig(s.T, 4) + ' mm' : 'Needs entries';
+    if (n === 3) return s.speed && (!isRelax || (s.hold_mm && s.hold_s)) ? sig(s.speed, 4) + ' mm/min' + (isRelax ? ' · hold ' + sig(s.hold_mm, 4) + ' mm, ' + sig(s.hold_s, 4) + ' s' : '') : 'Needs entries';
+    if (n === 4) return !link ? 'Not connected' : link.kind === 'sim' ? 'Simulator' : 'USB tester';
+    var p = problemList().length;
+    return running ? 'Recording' : hasData ? 'Test finished' : p ? p + (p === 1 ? ' entry to fix' : ' entries to fix') : 'Ready to start';
+  }
+  /* Tag each step's markup, add the step bar and the Back/Next rows. */
+  setupCols[0].setAttribute('data-step', '1'); setupCols[1].setAttribute('data-step', '2'); setupCols[2].setAttribute('data-step', '3');
+  connRow.setAttribute('data-step', '4');
+  if (connRow.nextElementSibling && !connRow.nextElementSibling.classList.contains('run-bar')) connRow.nextElementSibling.setAttribute('data-step', '4');  /* the USB-unavailable note */
+  reviewSec.setAttribute('data-step', '5'); $('rv-det').setAttribute('data-step', '5'); $('r-why').setAttribute('data-step', '5');
+  var bar = document.createElement('ol');
+  bar.className = 'gs-bar'; bar.setAttribute('aria-label', 'Test setup steps');
+  bar.innerHTML = STEP_NAMES.map(function (nm, i) {
+    return '<li><button type="button" class="sb" data-go="' + (i + 1) + '"><span class="sb-n" aria-hidden="true">' + (i + 1) + '</span><span class="sb-t">' + nm + '</span><span class="sb-s"></span></button></li>';
+  }).join('');
+  layoutEl.parentNode.insertBefore(bar, layoutEl);
+  function navFor(n) {
+    var d = document.createElement('div'); d.className = 'gs-nav';
+    d.innerHTML = (n > 1 ? '<button type="button" class="btn-secondary" data-back>Back</button>' : '') + (n < 5 ? '<button type="button" class="btn" data-next>Next</button>' : '') + '<span class="gs-why" role="status" aria-live="polite"></span>';
+    return d;
+  }
+  [1, 2, 3].forEach(function (n) { setupCols[n - 1].appendChild(navFor(n)); });
+  var nav4 = navFor(4); nav4.setAttribute('data-step', '4'); connRow.parentNode.insertBefore(nav4, (connRow.nextElementSibling && connRow.nextElementSibling.getAttribute('data-step') === '4') ? connRow.nextElementSibling.nextSibling : connRow.nextSibling);
+  var nav5 = navFor(5); nav5.setAttribute('data-step', '5'); $('rv-det').parentNode.insertBefore(nav5, $('rv-det').nextSibling);
+  /* "?" help on each step heading (both views). The text is existing wording; the tip copies it from the hidden element named here. */
+  var HELP = {
+    1: ['s-mat-hint', null],
+    2: ['help-step2', 'Example values come from the labeled sample data. Replace them with your specimen’s measured dimensions.'],
+    3: ['help-step3', ['speed'].concat(isRelax ? ['holdmm', 'holdstrain'] : []).map(function (k) { var t = window.TERMS && window.TERMS[k]; return t ? t.name + ': ' + t.def : ''; }).filter(Boolean).join(' ')],
+    4: ['help-step4', 'Simulator readings are labeled “Simulated data, not measured”. A USB tester is draft and unvalidated.'],
+    5: ['help-step5', 'Check the values against your specimen.']
+  };
+  [1, 2, 3, 4, 5].forEach(function (n) {
+    var h = HELP[n], head = stepHead(n);
+    if (!h[0] || !head) return;
+    if (h[1]) { var hid = document.createElement('div'); hid.id = h[0]; hid.hidden = true; hid.textContent = h[1]; app.appendChild(hid); }
+    if (n === 3 && !app.querySelector('#help-step3').textContent) return;
+    var q = document.createElement('button'); q.type = 'button'; q.className = 'help-q'; q.textContent = '?';
+    q.setAttribute('aria-label', 'Help for ' + STEP_NAMES[n - 1].toLowerCase()); q.setAttribute('data-tip-id', h[0]);
+    head.appendChild(q);
+  });
+  function stepsUpdate() {
+    var guidedOn = document.documentElement.getAttribute('data-steps') !== 'all';
+    layoutEl.classList.toggle('cur-setup', cur <= 3);
+    for (var k = 1; k <= 5; k++) layoutEl.classList.toggle('cur-' + k, k === cur);
+    layoutEl.classList.toggle('running', running); layoutEl.classList.toggle('has-run', running || hasData); layoutEl.classList.toggle('ended', !running && hasData);
+    app.querySelectorAll('[data-step]').forEach(function (el) { el.classList.toggle('is-current', el.getAttribute('data-step') === String(cur)); });
+    bar.querySelectorAll('.sb').forEach(function (b) {
+      var n = +b.getAttribute('data-go'), done = n < maxStep || (n === maxStep && n < cur) || (n === 5 && hasData && !running);
+      b.disabled = n > maxStep || running; b.classList.toggle('is-done', done && n !== cur); b.classList.toggle('is-cur', n === cur);
+      if (n === cur) b.setAttribute('aria-current', 'step'); else b.removeAttribute('aria-current');
+      b.querySelector('.sb-n').textContent = done && n !== cur ? '✓' : String(n);
+      b.querySelector('.sb-s').textContent = stepSummary(n);
+    });
+    app.querySelectorAll('.gs-nav').forEach(function (nv) {
+      var n = nv.getAttribute('data-step') ? +nv.getAttribute('data-step') : +nv.parentNode.getAttribute('data-step');
+      var nx = nv.querySelector('[data-next]'), why = nv.querySelector('.gs-why');
+      if (nx) nx.disabled = !stepValid(n);
+      if (why) why.textContent = nx && !stepValid(n) ? stepWhy(n) : '';
+    });
+    var sw = $('steps-all'); if (sw) sw.checked = !guidedOn;
+  }
+  function goStep(n, focus) {
+    cur = Math.max(1, Math.min(5, n)); maxStep = Math.max(maxStep, cur);
+    stepsUpdate();
+    if (focus) { var h = stepHead(cur); if (h) { h.setAttribute('tabindex', '-1'); h.focus(); } }
+  }
+  /* Make the step holding an element current (used by "Go to this field" and links from search). */
+  function showStepOf(el) {
+    var host = el.closest ? el.closest('[data-step]') : null;
+    if (host) { cur = +host.getAttribute('data-step'); maxStep = Math.max(maxStep, cur); stepsUpdate(); }
+  }
+  bar.addEventListener('click', function (e) { var b = e.target.closest ? e.target.closest('.sb') : null; if (b && !b.disabled) goStep(+b.getAttribute('data-go'), true); });
+  app.addEventListener('click', function (e) {
+    var t = e.target.closest ? e.target.closest('[data-next],[data-back]') : null;
+    if (!t) return;
+    var n = +(t.closest('[data-step]') || {getAttribute: function () { return cur; }}).getAttribute('data-step');
+    if (t.hasAttribute('data-next')) { if (stepValid(n)) goStep(n + 1, true); } else goStep(n - 1, true);
+  });
+  $('steps-all').addEventListener('change', function (e) {
+    var v = e.target.checked ? 'all' : 'guided';
+    document.documentElement.setAttribute('data-steps', v);
+    try { localStorage.setItem('steps', v); } catch (err) { /* applies to this page only */ }
+    stepsUpdate();
+  });
+  /* Links from search to a step open that step. */
+  function openFromHash() {
+    var id = location.hash.replace('#', ''), n = { 'spec-title': 1, 'rv-title': 5 }[id];
+    if (!n) return;
+    if (n === 5) maxStep = 5;
+    goStep(n, false);
+    var el = $(id); if (el && el.scrollIntoView) el.scrollIntoView();
+  }
+  window.addEventListener('hashchange', openFromHash);
+  stepsReady = true;
+  stepsUpdate();
+  openFromHash();
+
+
 
   /* The three numbers "Fill example values" wrote, so a test started with exactly those is labeled as example values. */
   var exampleDims = null;
