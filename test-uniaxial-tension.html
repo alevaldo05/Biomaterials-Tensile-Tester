@@ -44,25 +44,7 @@
     <div id="live-app" data-test="uniaxial"><p class="muted">Enable JavaScript to run a test.</p></div>
 
     <section class="section">
-      <details class="eq-details">
-      <summary>Governing equations</summary>
-      <div class="table-scroll">
-        <table class="eqs">
-          <thead><tr><th scope="col">Quantity</th><th scope="col">Equation</th><th scope="col">Definition</th></tr></thead>
-          <tbody>
-            <tr><th scope="row">Engineering stress</th><td class="eq"><math><mi>σ</mi><mo>=</mo><mfrac><mrow><mi>F</mi></mrow><mrow><msub><mi>A</mi><mn>0</mn></msub></mrow></mfrac></math></td><td><var>F</var>: axial force (N). <var>A</var><sub>0</sub>: original cross-sectional area (mm<sup>2</sup>). 1 N/mm<sup>2</sup> = 1 MPa.</td></tr>
-            <tr><th scope="row">Engineering strain</th><td class="eq"><math><mi>ε</mi><mo>=</mo><mfrac><mrow><mrow><mi>L</mi><mo>−</mo><msub><mi>L</mi><mn>0</mn></msub></mrow></mrow><mrow><msub><mi>L</mi><mn>0</mn></msub></mrow></mfrac></math></td><td><var>L</var>: current gauge length; <var>L</var><sub>0</sub>: original gauge length (mm). Dimensionless.</td></tr>
-            <tr><th scope="row">Modulus estimate (fitted slope)</th><td class="eq"><math><mi>E</mi><mo>=</mo><mfrac><mrow><mrow><mi mathvariant="normal">Δ</mi><mi>σ</mi></mrow></mrow><mrow><mrow><mi mathvariant="normal">Δ</mi><mi>ε</mi></mrow></mrow></mfrac></math></td><td>Slope of the linear (elastic) region, fitted by least squares; <var>&sigma;</var> = <var>E</var><var>&epsilon;</var> (Hooke&rsquo;s law). One value for the region, in MPa or GPa.</td></tr>
-            <tr><th scope="row">Local slope (tangent) estimate</th><td class="eq"><math><msub><mi>E</mi><mi mathvariant="normal">t</mi></msub><mo>(</mo><mi>ε</mi><mo>)</mo><mo>=</mo><mfrac><mrow><mrow><mi mathvariant="normal">d</mi><mi>σ</mi></mrow></mrow><mrow><mrow><mi mathvariant="normal">d</mi><mi>ε</mi></mrow></mrow></mfrac></math></td><td>Slope at one strain <var>&epsilon;</var>. Unlike <var>E</var>, it changes along the curve; in soft tissue it rises with strain (J-shaped curve).</td></tr>
-            <tr><th scope="row">Yield strength (0.2% offset)</th><td class="eq"><math><mi>σ</mi><mo>=</mo><mi>E</mi><mo>(</mo><mi>ε</mi><mo>−</mo><mn>0.002</mn><mo>)</mo></math></td><td>Stress at which the curve meets a line of slope <var>E</var> offset by 0.2% strain. Used for materials without a sharp yield point.</td></tr>
-            <tr><th scope="row">Ultimate tensile strength</th><td class="eq"><math><mi>UTS</mi><mo>=</mo><msub><mi>σ</mi><mi mathvariant="normal">max</mi></msub></math></td><td>Maximum engineering stress reached before failure.</td></tr>
-            <tr><th scope="row">Estimated true strain and stress (uniform, constant-volume assumption)</th><td class="eq"><math><msub><mi>ε</mi><mi mathvariant="normal">t</mi></msub><mo>=</mo><mi>ln</mi><mo>(</mo><mn>1</mn><mo>+</mo><mi>ε</mi><mo>)</mo><mo>,</mo><mspace width="1em"/><msub><mi>σ</mi><mi mathvariant="normal">t</mi></msub><mo>=</mo><mi>σ</mi><mo>(</mo><mn>1</mn><mo>+</mo><mi>ε</mi><mo>)</mo></math></td><td>Account for the changing cross-section; assume constant volume and uniform deformation, so valid before necking.</td></tr>
-            <tr><th scope="row">Energy density to recorded endpoint</th><td class="eq"><math><mi>U</mi><mo>=</mo><msubsup><mo>∫</mo><mn>0</mn><msub><mi>ε</mi><mi mathvariant="normal">f</mi></msub></msubsup><mi>σ</mi><mspace width="0.17em"/><mi mathvariant="normal">d</mi><mi>ε</mi></math></td><td>Energy absorbed per unit volume up to failure strain <var>&epsilon;</var><sub>f</sub> (MJ/m<sup>3</sup>).</td></tr>
-          </tbody>
-        </table>
-      </div>
-      <p class="muted small">Equations use engineering (nominal) quantities unless noted. Reference methods: ASTM E8/E8M and ISO 6892-1 for metals; this project cites no consensus skin test standard, so preconditioning, hydration and rate are specified per draft protocol.</p>
-      </details>
+      <p class="small">Point at an underlined term for its definition and equation. The full table of governing equations is on the <a href="protocol-uniaxial-tension.html#general/graph">protocol page</a>.</p>
     </section>
 
     <p class="small"><a href="index.html">Home</a></p>

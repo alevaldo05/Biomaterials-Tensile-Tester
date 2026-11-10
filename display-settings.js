@@ -16,7 +16,8 @@
     grid: { values: ["major", "off", "minor"], fallback: "major" },
     stressunit: { values: ["mpa", "kpa"], fallback: "mpa" },
     strainunit: { values: ["ratio", "percent"], fallback: "ratio" },
-    digits: { values: ["standard", "4", "5"], fallback: "standard" }
+    digits: { values: ["standard", "4", "5"], fallback: "standard" },
+    steps: { values: ["guided", "all"], fallback: "guided" }
   };
 
   function saved(name) {
