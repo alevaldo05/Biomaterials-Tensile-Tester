@@ -63,6 +63,59 @@
   --danger-ink: #2a1414;
   color-scheme: dark;
 }
+/* Purple dark and Pink dark: built like the green dark theme (dark background, light text, a lighter accent, lighter mark, focus, and danger). */
+:root[data-theme="purple-dark"] {
+  --bg: #1c1826;
+  --surface: #252033;
+  --ink: #ece8f5;
+  --muted: #b9b0cf;
+  --line: #3a3350;
+  --accent: #b79df0;
+  --accent-ink: #1b1430;
+  --accent-hover: #c9b6f5;
+  --link: #c8b5f7;
+  --mark: #f0a24b;
+  --focus: #dccffb;
+  --danger: #f0a3a3;
+  --danger-ink: #2a1414;
+  color-scheme: dark;
+}
+:root[data-theme="pink-dark"] {
+  --bg: #26171d;
+  --surface: #2f1e26;
+  --ink: #f6e9ee;
+  --muted: #d3b4c0;
+  --line: #4a303b;
+  --accent: #f08fb0;
+  --accent-ink: #2a0f1a;
+  --accent-hover: #f5a6c0;
+  --link: #f7a9c4;
+  --mark: #f0a24b;
+  --focus: #ffd0df;
+  --danger: #f0a3a3;
+  --danger-ink: #2a1414;
+  color-scheme: dark;
+}
+/* MU colors: a separate theme in Manhattan University's colors (colors only: no logo, seal, or wordmark; not an official theme).
+   Manhattan Green #046A38. The values come from the project plan and have NOT been compared with the official guidelines yet.
+   Gold #F5A800 is light, so it is used only as an accent (the header underline below), never as text. */
+:root[data-theme="mu"] {
+  --bg: #ffffff;
+  --surface: #f3f8f0;
+  --ink: #14201a;
+  --muted: #44524a;
+  --line: #cdd9ca;
+  --accent: #046A38;
+  --accent-ink: #ffffff;
+  --accent-hover: #035a2f;
+  --link: #046A38;
+  --mark: #9a6700;
+  --focus: #02391e;
+  --danger: #9a3a3a;
+  --danger-ink: #ffffff;
+  color-scheme: light;
+}
+:root[data-theme="mu"] .topbar { border-bottom: 3px solid #F5A800; }
 
 /* Text size and spacing (Settings): --ts multiplies the browser's own text size (100% = unchanged) and
    --sp scales the gaps and padding between blocks. Controls, focus rings, and warnings keep their size.
