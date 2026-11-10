@@ -69,8 +69,8 @@ sub, sup { line-height: 0; font-size: 0.75em; }
 .results th, .results td { padding: 0.4rem 0; border-top: 1px solid var(--line); vertical-align: top; text-align: left; }
 .results th { font-weight: 600; padding-right: 0.75rem; }
 .results td { text-align: right; font-variant-numeric: tabular-nums; font-weight: 700; white-space: nowrap; }
-/* kPa and percent make some values long (for example 212100000 kPa): let those wrap rather than push the page sideways. */
-:root[data-stressunit="kpa"] .results td, :root[data-strainunit="percent"] .results td { white-space: normal; }
+/* kPa, percent, and 4 or 5 displayed digits make some values long (for example 212100000 kPa, or 5 digits in the Lab style's wider monospace type): let those wrap rather than push the page sideways. */
+:root[data-stressunit="kpa"] .results td, :root[data-strainunit="percent"] .results td, :root[data-digits="4"] .results td, :root[data-digits="5"] .results td { white-space: normal; }
 /* When the side panel is narrower than the widest value (large text with a sidebar, or a narrow window), let values wrap instead of widening the page. At the usual panel width (18.75rem) nothing changes. */
 @container (max-width: 18.5rem) { .results td { white-space: normal; } }
 /* Large text (about 125% and up): Readout and Key results show each value on its own line under its label,
