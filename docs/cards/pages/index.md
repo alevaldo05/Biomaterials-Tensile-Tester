@@ -9,7 +9,7 @@ Homepage: title, the New Test and Load Test actions, the About the tester paragr
 - HTML: `index.html` (headings, layout, ids `hero-title`, `about-title`, `how-title`, `proto-title`)
 - Scripts in order: `display-settings.js`, `ui.js` (head), `data/text/home.js`, `text.js`, `layouts.js`, `data/search-index.js`, `site-search.js`, `build-number.js`
 - Words: `data/text/home.js` (see `EDITING-TEXT.md`)
-- CSS: `styles.css` sections Top bar, Home, Home additions; `layouts.css` Start screen
+- CSS: `styles.css` (Top bar), `css/home.css` (Home, Home additions); `layouts.css` Start screen
 
 ## What the user sees
 - Header with logo, main menu (Home, Learn, Protocols, Materials, Calibration, About, Help, Settings) and the search button

@@ -31,7 +31,8 @@ Every page except `404.html` starts with a "Skip to main content" link (`.skip-l
 
 | File | Used by | What it does |
 |---|---|---|
-| `styles.css` | every page | Shared styles, the seven color themes (green light and dark, purple light and dark, pink light and dark, MU colors), and the three font stacks. |
+| `styles.css` | every page | Shared styles (theme colors, text size, fonts, top bar, page, buttons, Settings), the seven color themes (green light and dark, purple light and dark, pink light and dark, MU colors), and the three font stacks. |
+| `css/*.css` | every page | The page-specific styles that used to be in `styles.css`, split by their own section headings with the order unchanged: `graph.css` (graph pages), `test-setup.css` (test setup in steps), `home.css`, `protocol.css`, `live.css` (live test and Load Test), `about.css`, `materials.css`, `checklist.css`, `calibration.css`, `compare.css`, `report.css`, `extras.css` (page text, Help and Materials extras, Motion, Settings previews, data checks, version line), `guided.css` (guided test steps). **Every page links them all, in this order, right after `styles.css`** (the cascade depends on the order; `scripts/check-site.js` checks it). |
 | `styles-looks.css` | every page | The four optional styles (Lab instrument, Clinical clean, Engineering drawing, Academic report). |
 | `layouts.css` | every page | Styles for the five layouts and the Settings choices. |
 | `display-settings.js` | every page | Applies the saved color theme, font, style, layout, text size, spacing, motion, and graph choices before the page appears; colors the browser-tab icon to match the selected theme; runs the Settings choices. |
@@ -107,6 +108,7 @@ Every page except `404.html` starts with a "Skip to main content" link (`.skip-l
 | Before you test, Background, Glossary | `learn.html` |
 | About page text, Project status, references | `about.html` |
 | Colors, spacing, themes, fonts | `styles.css` |
+| The look of one page or feature (graph, live test, Materials, Calibration, Compare, report, guided steps...) | its file in `css/` |
 | Styles (looks) | `styles-looks.css`, `display-settings.js` |
 | The header logo (the "BTT" letters; its color follows the selected theme through `--accent`, and `--logo-ink` on the Lab style's dark header) | the same `<svg class="logo">` in each page's header, `.logo` in `styles.css` |
 | Layouts | `layouts.css`, `layouts.js` |
@@ -114,5 +116,7 @@ Every page except `404.html` starts with a "Skip to main content" link (`.skip-l
 | Test page behavior, CSV download | `live.js` |
 
 ## Script order
+
+Stylesheets: every page links `styles.css`, then `css/graph.css`, `css/test-setup.css`, `css/home.css`, `css/protocol.css`, `css/live.css`, `css/about.css`, `css/materials.css`, `css/checklist.css`, `css/calibration.css`, `css/compare.css`, `css/report.css`, `css/extras.css`, `css/guided.css`, then `styles-looks.css`, `layouts.css`, `ui.css` (the 404 page links the first fourteen with the full site address). Do not reorder them.
 
 Pages load scripts in this order, and the order matters: `display-settings.js` (in `<head>`), then `ui.js` (in `<head>`, every page with the header menu), then `data/*.js` (`materials.js` first, then `samples.js`, then `sample-models.js`; `terms.js` before `graph.js` and `calibration.js`), then `graph.js`, then `excel-export.js` (graph pages only), then the page script (`live.js`, `load-test.js`, `protocol-page.js`, or `further-reading.js`), then `layouts.js`, then `data/search-index.js` and `site-search.js` (every page with a header menu), and (on Help, About, and Settings only) last `page-nav.js`.

@@ -1,0 +1,49 @@
+/* Test setup in steps, messages beside entries, and the review before starting (live.js). Part of the site's styles: every page links these files in the order listed in FILES.md. */
+/* Test setup in steps, messages beside entries, and the review before starting (live.js) */
+.step-h { margin: 0.5rem 0 0; font-size: 0.9375rem; }
+.pf-wrap { display: grid; gap: 0.2rem; }
+.pf-msg { font-size: 0.8125rem; font-weight: 600; color: var(--danger); }
+.pf-msg.warn { padding-left: 0.4rem; border-left: 3px solid var(--mark); font-weight: 400; color: var(--ink); }
+.pf-note { margin: 0; padding-left: 0.4rem; border-left: 3px solid var(--mark); font-size: 0.8125rem; }
+.review { margin: 0.4rem 0; padding: 0.4rem 0.9rem 0.5rem; border: 1px solid var(--line); border-radius: 8px; background: var(--bg); }
+.review .step-h { margin: 0; }
+.rv-sum { margin: 0.2rem 0 0; font-size: 0.875rem; }
+.rv-det { margin: 0.5rem 0 0.75rem; padding: 0.5rem 0.9rem; border: 1px solid var(--line); border-radius: 8px; background: var(--bg); }
+.rv-det summary { cursor: pointer; font-size: 0.9375rem; font-weight: 600; }
+.rv-dl { display: grid; grid-template-columns: max-content minmax(0, 1fr); gap: 0.2rem 0.9rem; margin: 0.5rem 0; font-size: 0.875rem; }
+.rv-dl dt { color: var(--muted); }
+.rv-dl dd { margin: 0; font-weight: 600; font-variant-numeric: tabular-nums; overflow-wrap: anywhere; }
+.rv-dl dd.rv-bad { color: var(--danger); }
+.rv-h { margin: 0.5rem 0 0; font-size: 0.875rem; font-weight: 700; }
+.rv-ok { margin: 0.5rem 0 0; font-size: 0.875rem; }
+.rv-list { margin: 0.25rem 0 0; padding-left: 1.1rem; font-size: 0.875rem; }
+.csv-help { margin-bottom: 0.75rem; font-size: 0.875rem; }
+.csv-help p { margin: 0.5rem 0 0; color: var(--muted); }
+.csv-help pre { margin: 0.5rem 0 0; padding: 0.5rem 0.75rem; border: 1px solid var(--line); border-radius: 6px; background: var(--surface); overflow-x: auto; }
+.csv-help code { font-size: 0.8125rem; }
+.eq-details > summary { font-size: 1.125rem; font-weight: 700; }
+.eq-details[open] > summary { margin-bottom: 0.5rem; }
+.model { margin: 0.25rem 0 0; font-size: 0.8125rem; color: var(--muted); }
+
+.table-scroll { overflow-x: auto; }
+.eqs { width: 100%; border-collapse: collapse; font-size: 0.9375rem; }
+.eqs th, .eqs td { padding: calc(0.5rem * var(--sp)) 0.75rem calc(0.5rem * var(--sp)) 0; border-top: 1px solid var(--line); vertical-align: top; text-align: left; }
+.eqs thead th { border-top: 0; font-size: 0.8125rem; color: var(--muted); text-transform: uppercase; letter-spacing: 0.04em; }
+.eqs tbody th { font-weight: 600; white-space: nowrap; }
+.eqs .eq { font-size: 1rem; white-space: nowrap; }
+
+@media (max-width: 900px) {
+  .graph-grid { grid-template-columns: minmax(0, 1fr); }
+}
+@media (max-width: 720px) {
+  .customize .fields { grid-template-columns: minmax(0, 1fr); }
+  .eqs tbody th, .eqs .eq { white-space: normal; }
+}
+@media print {
+  .topbar, .back, .customize, .graph-actions, .hint, .tips, .file-details, .segmented, .zoom-tools, .range-note { display: none; }
+  body { background: #fff; color: #000; }
+  .chart-wrap { border: 0; }
+  .proto-tabs, .step-nav, .step-links { display: none; }
+  .proto-panel[hidden] { display: block; }
+}
+

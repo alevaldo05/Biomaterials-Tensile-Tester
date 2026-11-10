@@ -9,7 +9,7 @@ Three shared pieces in `window.SiteUI`: a Tip (floating text on hover or focus),
 - `ui.js` (loads right after `display-settings.js` in `<head>`, before every page script)
 - `ui.css` (linked after `layouts.css`)
 - `live.js` (`showChecklist` builds the checklist on `SiteUI.dialog`)
-- `styles.css` (checklist-only rules `.pt-*`)
+- `css/checklist.css` (checklist-only rules `.pt-*`)
 - On every page with the header menu (all except `404.html`)
 
 ## What the user sees

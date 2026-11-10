@@ -1,0 +1,163 @@
+/* Graph pages: the graph, Readout, Key results, graph tools, and the Load Test layout. Part of the site's styles: every page links these files in the order listed in FILES.md. */
+/* ---------- Graph pages ---------- */
+main.wide { max-width: 70rem; }
+.topbar .inner { max-width: 70rem; }
+.sr-only {
+  position: absolute; width: 1px; height: 1px; margin: -1px; padding: 0;
+  overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; border: 0;
+}
+/* Skip link: off-screen until it gets keyboard focus, then a bar at the top left. The ring is drawn inside the bar so it shows on every header color. */
+.skip-link { position: absolute; left: 0.5rem; top: -4rem; z-index: 1000; padding: 0.6rem 1rem; background: var(--accent); color: var(--accent-ink); font-weight: 600; text-decoration: underline; border-radius: 0.375rem; }
+.skip-link:focus { top: 0.5rem; outline: 3px solid var(--accent-ink); outline-offset: -6px; }
+main:focus { outline: none; }
+/* Page navigation (page-nav.js): Help search, "Back to top" links, and hidden rows while searching. */
+.to-top { margin: 0.75rem 0 0; font-size: 0.875rem; }
+.status { margin: 0 0 0.5rem; }
+.status .badge { margin: 0 0.5rem 0 0; }
+.small { font-size: 0.875rem; }
+var { font-family: inherit; font-style: italic; }
+math { font-family: "STIX Two Math", "Cambria Math", "Latin Modern Math", math, serif; font-size: 1.2em; }
+sub, sup { line-height: 0; font-size: 0.75em; }
+
+.segmented { margin: 0 0 1rem; }
+.segmented .options { gap: 0; }
+.segmented label {
+  position: relative;
+  border-radius: 0;
+  margin-left: -1px;
+  padding: 0.4rem 1rem;
+}
+.segmented label:first-child { border-radius: 6px 0 0 6px; margin-left: 0; }
+.segmented label:last-child { border-radius: 0 6px 6px 0; }
+.segmented input { position: absolute; opacity: 0; width: 1px; height: 1px; }
+.segmented label:has(input:checked) { background: var(--accent); color: var(--accent-ink); border-color: var(--accent); font-weight: 600; z-index: 1; }
+.segmented label:has(input:focus-visible) { outline: 3px solid var(--focus); outline-offset: 2px; z-index: 2; }
+
+.graph-grid { display: grid; grid-template-columns: minmax(0, 1fr) min(18.75rem, 46%); gap: calc(1.5rem * var(--sp)); align-items: start; }
+.chart-wrap { border: 1px solid var(--line); border-radius: 8px; background: var(--surface); padding: 0.5rem; touch-action: pan-y; }
+/* Dragging on a graph draws a zoom box or pans, so the text on the graph must not be highlighted. */
+.chart-wrap, .chart-wrap * { -webkit-user-select: none; user-select: none; }
+.chart-wrap svg { display: block; width: 100%; height: auto; cursor: crosshair; }
+.hint { margin: 0.5rem 0; font-size: 0.875rem; color: var(--muted); }
+.graph-actions { display: flex; gap: 0.5rem; flex-wrap: wrap; margin-bottom: 0.75rem; }
+.btn-secondary {
+  padding: 0.4rem 1rem; border: 1px solid var(--accent); border-radius: 6px;
+  background: transparent; color: var(--link); font: inherit; font-weight: 600; cursor: pointer;
+}
+.btn-secondary:hover { background: var(--surface); }
+
+.customize { border-top: 1px solid var(--line); padding-top: 0.75rem; }
+.customize .fields { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 0.75rem 1rem; padding-top: 0.75rem; }
+.customize label, .field-color > span { display: grid; gap: 0.25rem; font-size: 0.875rem; font-weight: 600; }
+.customize label.check { display: flex; align-items: center; gap: 0.5rem; font-weight: 400; }
+.customize input[type="text"], .customize select {
+  width: 100%; padding: 0.4rem 0.5rem; border: 1px solid var(--line); border-radius: 6px;
+  background: var(--surface); color: var(--ink); font: inherit; font-weight: 400;
+}
+.customize input[type="range"], .customize input[type="checkbox"] { accent-color: var(--accent); }
+.customize input[type="color"] { width: 2.25rem; height: 2rem; padding: 0; border: 1px solid var(--line); border-radius: 6px; background: var(--surface); }
+.color-row { display: flex; align-items: center; gap: 0.4rem; flex-wrap: wrap; }
+.swatch { width: 1.5rem; height: 1.5rem; border: 2px solid var(--surface); border-radius: 50%; outline: 1px solid var(--muted); cursor: pointer; }
+
+.graph-grid + h2 { margin-top: 1.75rem; }
+.graph-side h2 { margin-top: 0; }
+.graph-side h2:not(:first-child) { margin-top: 1.25rem; }
+.readout { display: grid; grid-template-columns: 1fr auto; gap: 0.25rem 0.75rem; margin: 0; font-size: 0.9375rem; }
+.readout dt { color: var(--muted); }
+.readout dd { margin: 0; text-align: right; font-variant-numeric: tabular-nums; font-weight: 600; }
+.results { width: 100%; border-collapse: collapse; font-size: 0.9375rem; }
+.results th, .results td { padding: 0.4rem 0; border-top: 1px solid var(--line); vertical-align: top; text-align: left; }
+.results th { font-weight: 600; padding-right: 0.75rem; }
+.results td { text-align: right; font-variant-numeric: tabular-nums; font-weight: 700; white-space: nowrap; }
+/* kPa and percent make some values long (for example 212100000 kPa): let those wrap rather than push the page sideways. */
+:root[data-stressunit="kpa"] .results td, :root[data-strainunit="percent"] .results td { white-space: normal; }
+/* When the side panel is narrower than the widest value (large text with a sidebar, or a narrow window), let values wrap instead of widening the page. At the usual panel width (18.75rem) nothing changes. */
+@container (max-width: 18.5rem) { .results td { white-space: normal; } }
+/* Large text (about 125% and up): Readout and Key results show each value on its own line under its label,
+   so they fit the side column. Normal-size text is unaffected. */
+.graph-side { container-type: inline-size; }
+@container (max-width: 15em) {
+  .readout { grid-template-columns: minmax(0, 1fr); gap: 0; }
+  .readout dd { margin-bottom: 0.4rem; text-align: left; }
+  .results, .results tbody, .results tr, .results th, .results td { display: block; }
+  .results th { padding-right: 0; }
+  .results td { padding-top: 0; border-top: 0; text-align: left; white-space: normal; }
+}
+/* graph tools: regions, zoom, key-result highlight */
+.graph-toggles { display: flex; gap: 1.25rem; flex-wrap: wrap; margin: 0 0 0.75rem; }
+.btn-small { padding: 0.25rem 0.6rem; font-size: 0.875rem; }
+.res-tools { display: flex; align-items: center; gap: 0.5rem; flex-wrap: wrap; margin: 0 0 0.5rem; font-size: 0.875rem; color: var(--muted); }
+.res-btn { background: none; border: 0; padding: 0; margin: 0; font: inherit; font-weight: 600; color: var(--ink); text-align: left; cursor: pointer; text-decoration: underline dotted var(--muted); text-underline-offset: 0.2em; }
+.res-btn:disabled { cursor: default; text-decoration: none; }
+.res-btn:focus-visible, .results input.res-show:focus-visible { outline: 3px solid var(--focus); outline-offset: 2px; }
+.results tr.is-hl > * { background: color-mix(in srgb, var(--mark) 14%, transparent); }
+.res-head { display: flex; align-items: flex-start; gap: 0.45rem; }
+.results input.res-show { margin: 0.2em 0 0; flex: none; }
+.results .def { padding-left: 1.45rem; }
+.chart-frame { position: relative; }
+.zoom-tools { position: absolute; top: 0.7rem; right: 0.8rem; display: flex; gap: 0.25rem; z-index: 2; }
+.zoom-tools button { width: 1.9rem; height: 1.9rem; padding: 0; display: inline-flex; align-items: center; justify-content: center; border: 1px solid var(--muted); border-radius: 6px; background: var(--surface); color: var(--ink); cursor: pointer; }
+.zoom-tools button:hover:not(:disabled) { background: var(--bg); border-color: var(--ink); }
+.zoom-tools button:disabled { opacity: 0.45; cursor: default; }
+.zoom-tools button:focus-visible { outline: 3px solid var(--focus); outline-offset: 2px; }
+.zoom-box { position: absolute; border: 2px dashed var(--accent); background: color-mix(in srgb, var(--accent) 12%, transparent); pointer-events: none; z-index: 1; }
+.range-note { margin: 0.4rem 0 0; font-size: 0.875rem; color: var(--muted); font-variant-numeric: tabular-nums; min-height: 1.3em; }
+.chart-wrap.zoomed svg { cursor: grab; }
+.chart-wrap.panning svg { cursor: grabbing; }
+.schematic { margin: 0.75rem 0; }
+.schematic summary { cursor: pointer; font-weight: 600; }
+.schem-svg { display: block; width: 100%; max-width: 32rem; height: auto; margin-top: 0.5rem; }
+.results .def { display: block; font-weight: 400; font-size: 0.8125rem; color: var(--muted); }
+/* New Test and Load Test: Key results shows each name and value; the definitions open with the "Show definitions" switch. */
+.graph-side.compact:not(.show-defs) .results .def { display: none; }
+.copy-msg { min-width: 4.5rem; font-size: 0.8125rem; color: var(--muted); }
+.defs-toggle { margin-left: auto; display: inline-flex; align-items: center; gap: 0.4rem; }
+.defs-toggle input { width: 1rem; height: 1rem; accent-color: var(--accent); }
+.tips { margin: 0.5rem 0; }
+/* Load Test: what the opened file says about the test (specimen, material, date, notes, why it ended). Closed until opened. */
+.file-details { margin: 0.5rem 0 0.75rem; padding: 0.5rem 1rem; border: 1px solid var(--line); border-radius: 8px; background: var(--surface); }
+.file-details summary { cursor: pointer; font-size: 0.9375rem; font-weight: 600; }
+.fd-list { display: grid; grid-template-columns: repeat(auto-fill, minmax(14rem, 1fr)); gap: 0.5rem 1.5rem; margin: 0.6rem 0 0.2rem; }
+.fd-list dt { color: var(--muted); font-size: 0.8125rem; }
+.fd-list dd { margin: 0; font-weight: 600; overflow-wrap: anywhere; }
+.fd-list .fd-wide { grid-column: 1 / -1; }
+/* Load Test: the page shows a dashed frame while a file is being dragged over it. */
+main.drop-active { outline: 3px dashed var(--accent); outline-offset: -6px; }
+/* Load Test with a file open: toolbar and parameters sit directly under the graph. */
+.graph-toolbar { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 0.5rem 1.25rem; margin: 0.75rem 0; }
+.graph-toolbar .graph-toggles, .graph-toolbar .graph-actions { margin: 0; }
+.graph-toolbar .btn-secondary { padding: 0.35rem 0.8rem; }
+/* Load Test and New Test: when the area is too narrow for the graph and the Readout column side by side at the chosen text size
+   (a narrow window, a sidebar, or large text), Readout and Key results go under the graph. */
+#graph-app { container-type: inline-size; }
+@container (max-width: 50rem) { #graph-app .graph-grid.stacked { grid-template-columns: minmax(0, 1fr); } }
+.params-block { margin: 0.75rem 0 1rem; padding: 0.9rem 1.1rem 1rem; border: 1px solid var(--line); border-radius: 8px; background: var(--surface); }
+.params-block h2 { margin: 0 0 0.5rem; font-size: 1.0625rem; }
+.params-block .param-fields { grid-template-columns: repeat(auto-fill, minmax(9.5rem, 1fr)); margin: 0 0 0.75rem; }
+.params-block .graph-actions { margin-bottom: 0.25rem; }
+.params-block .tips { margin: 0.25rem 0 0; }
+/* The setup controls shrink to one row once a file is open. */
+.load-form.loaded { display: flex; flex-wrap: wrap; align-items: flex-end; gap: 0.25rem 1.5rem; }
+.load-form.loaded .segmented { margin: 0 0 0.5rem; }
+.load-form.loaded #mode-one { display: flex; flex-wrap: wrap; align-items: center; gap: 0.25rem 1rem; margin: 0 0 0.5rem; }
+.load-form.loaded #mode-one .step-label { display: none; }
+.load-form.loaded #mode-one .graph-actions, .load-form.loaded #mode-one .csv-msg { margin: 0; }
+.load-form.loaded .csv-help { flex-basis: 100%; }
+.tips summary { cursor: pointer; font-size: 0.875rem; font-weight: 600; }
+.tips .hint { margin: 0.4rem 0 0; }
+
+.param-fields { display: grid; grid-template-columns: repeat(auto-fit, minmax(11.875rem, 1fr)); gap: 0.75rem 1.25rem; margin: 0.5rem 0; }
+.pf { display: grid; gap: 0.25rem; align-content: start; }
+.pf > span { font-size: 0.875rem; font-weight: 700; }
+.pf input[type="number"], .pf input[type="text"], .pf output {
+  display: block; width: 100%; padding: 0.35rem 0.5rem; border: 1px solid var(--line); border-radius: 6px;
+  background: var(--surface); color: var(--ink); font: inherit; font-weight: 700; font-variant-numeric: tabular-nums;
+}
+.pf output { border-style: dashed; background: transparent; }
+.pf input:disabled { opacity: 0.6; }
+.pf input[aria-invalid="true"] { border-color: var(--danger); outline: 1px solid var(--danger); }
+.pf-check { display: flex; align-items: center; gap: 0.5rem; align-self: end; padding-bottom: 0.35rem; }
+.pf-check input { width: 1.125rem; height: 1.125rem; accent-color: var(--accent); }
+.param-note { margin: 0.25rem 0 0.5rem; font-size: 0.875rem; color: var(--muted); }
+.csv-msg { margin: 0 0 0.5rem; min-height: 1.25rem; font-size: 0.875rem; color: var(--muted); }
+.csv-msg.error { color: var(--danger); font-weight: 600; }

@@ -8,7 +8,7 @@ Display choices remembered in this browser. See [display settings and themes](..
 ## Files
 - HTML: `settings.html` (fieldsets `set-theme`, `set-layout`, `set-font`, `set-style`, `set-textsize`, `set-spacing`, `set-motion`, `set-linewidth`, `set-curve`, `set-grid`, `set-stressunit`, `set-strainunit`, `set-digits`, `set-checklist`, `set-helpprompts`; button `reset-display`)
 - Scripts in order: `display-settings.js`, `ui.js` (head), `layouts.js`, `data/search-index.js`, `site-search.js`, `page-nav.js`, `build-number.js`
-- CSS: `styles.css` Settings, `layouts.css` Settings page choices
+- CSS: `styles.css` (Settings), `css/extras.css` (Settings page previews), `layouts.css` Settings page choices
 
 ## What the user sees
 - Theme, font, layout, style, text size, spacing, motion, graph line, curve, grid, stress unit, strain unit, digits, pre-test checklist, Reset

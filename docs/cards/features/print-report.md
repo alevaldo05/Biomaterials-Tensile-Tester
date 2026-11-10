@@ -8,7 +8,7 @@ A one-page, Draft-labeled report opened in the browser print window.
 ## Files
 - `report.js`
 - Used by `graph.js` (the Print report button on test pages and Load Test), `compare.js`, `calibration.js`, and `text.js` (blank run sheet on Learn)
-- CSS: `styles.css` Printable report
+- CSS: `css/report.css`
 
 ## What the user sees
 - Print report button; blank run sheet on Learn
