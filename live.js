@@ -351,8 +351,9 @@
   });
   /* Links from search to a step open that step. */
   function openFromHash() {
-    var id = location.hash.replace('#', ''), n = { 'spec-title': 1, 'rv-title': 5 }[id];
-    if (!n) return;
+    var id = location.hash.replace('#', ''), STEP_OF = { 'spec-title': 1, 'rv-title': 5 };
+    if (!Object.prototype.hasOwnProperty.call(STEP_OF, id)) return;   /* words such as #constructor are not steps */
+    var n = STEP_OF[id];
     if (n === 5) maxStep = 5;
     goStep(n, false);
     var el = $(id); if (el && el.scrollIntoView) el.scrollIntoView();
