@@ -1,0 +1,29 @@
+/* Shared pop-up pieces (ui.js). Colors come only from the theme variables so every theme, layout, and style works. */
+
+/* Site pop-up: the shared look of every <dialog> on the site (the pre-test checklist uses it). */
+dialog.site-dialog { width: min(36rem, calc(100% - 2rem)); max-height: calc(100vh - 2rem); overflow: auto; padding: 1.25rem 1.5rem; border: 1px solid var(--muted); border-radius: 10px; background: var(--surface); color: var(--ink); }
+dialog.site-dialog::backdrop { background: rgba(0, 0, 0, 0.5); }
+dialog.site-dialog h2 { margin: 0 0 0.5rem; font-size: 1.25rem; }
+dialog.site-dialog h3 { margin: 1rem 0 0.35rem; font-size: 1rem; }
+dialog.site-dialog button:focus-visible { outline: 3px solid var(--focus); outline-offset: 2px; }
+
+/* Tip: floats over the page (fixed), so it never moves other content. */
+.siteui-tip { position: fixed; z-index: 60; max-width: min(22rem, calc(100vw - 1rem)); padding: 0.4rem 0.65rem; border: 1px solid var(--muted); border-radius: 6px; background: var(--surface); color: var(--ink); font-size: 0.875rem; line-height: 1.4; box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2); pointer-events: none; animation: siteui-fade 0.12s ease-out; }
+.siteui-tip[hidden] { display: none; }
+
+/* Dismissible note: small, not modal. The stack sits above the pinned STOP bar and never covers it. */
+.siteui-notes { position: fixed; left: 1rem; bottom: 1rem; z-index: 35; display: grid; gap: 0.5rem; width: min(22rem, calc(100vw - 2rem)); }
+body.has-stop-dock .siteui-notes { bottom: 6.5rem; }
+.siteui-note { display: flex; gap: 0.5rem; align-items: flex-start; padding: 0.6rem 0.75rem; border: 1px solid var(--muted); border-left: 4px solid var(--accent); border-radius: 6px; background: var(--surface); color: var(--ink); font-size: 0.9375rem; box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2); animation: siteui-fade 0.12s ease-out; }
+.siteui-note-body { flex: 1; min-width: 0; }
+.siteui-note-body p { margin: 0; }
+.siteui-note-body strong + p { margin-top: 0.2rem; }
+.siteui-note-x { flex: none; width: 1.75rem; height: 1.75rem; padding: 0; border: 0; border-radius: 4px; background: none; color: var(--ink); font-size: 1.25rem; line-height: 1; cursor: pointer; }
+.siteui-note-x:hover { background: var(--bg); }
+.siteui-note-x:focus-visible { outline: 3px solid var(--focus); outline-offset: 2px; }
+
+@keyframes siteui-fade { from { opacity: 0; } to { opacity: 1; } }
+@media (prefers-reduced-motion: reduce) { .siteui-tip, .siteui-note { animation: none; } }
+:root[data-motion="reduced"] .siteui-tip, :root[data-motion="reduced"] .siteui-note { animation: none; }
+:root[data-motion="standard"] .siteui-tip, :root[data-motion="standard"] .siteui-note { animation: siteui-fade 0.12s ease-out; }
+@media print { .siteui-tip, .siteui-notes, dialog.site-dialog { display: none; } }

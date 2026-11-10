@@ -7,7 +7,7 @@ Tensile-testing background, Project status, Further reading list, and references
 
 ## Files
 - HTML: `about.html` (ids `measures-title`, `why-title`, `compare-title`, `skin-title`, `time-title`, `skin-why-title`, `limits-title`, `status-title`, `reading-title`, `articles`, `refs-title`)
-- Scripts in order: `display-settings.js` (head), `data/text/about.js`, `text.js`, `data/articles.js`, `further-reading.js`, `layouts.js`, `data/search-index.js`, `site-search.js`, `page-nav.js`, `build-number.js`
+- Scripts in order: `display-settings.js`, `ui.js` (head), `data/text/about.js`, `text.js`, `data/articles.js`, `further-reading.js`, `layouts.js`, `data/search-index.js`, `site-search.js`, `page-nav.js`, `build-number.js`
 - Words: `data/text/about.js`; list entries: `data/articles.js`
 
 ## What the user sees
