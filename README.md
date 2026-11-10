@@ -141,4 +141,8 @@ There is no build and no automated test suite in this repository. Changes are ch
 
 Nothing is uploaded to GitHub, merged, or published without the project owner's okay. AI assistants prepare changes on a separate branch and show a preview; the owner decides whether the branch is uploaded, opens the pull request into `main`, merges, and publishes. The site is published with GitHub Pages (https, so USB still works in Chrome): merging into `main` publishes it. Expected address: <https://alevaldo05.github.io/Biomaterials-Tensile-Tester/> (to be confirmed on the first deploy). How to set it up and how to tell when a deploy has finished: [docs/DEPLOY.md](docs/DEPLOY.md). Backups and branch organization: [docs/BRANCHES.md](docs/BRANCHES.md).
 
+## Project summary and cards
+
+[PROJECT-SUMMARY.md](PROJECT-SUMMARY.md) is a short overview. Each page and feature has a one-page card in `docs/cards/` (purpose, files, behavior to keep, labels that must stay, how to check). Open the summary and the card for what you are changing; update the card in the same change.
+
 [AGENTS.md](AGENTS.md) holds the workflow for AI assistants (Claude, ChatGPT, Gemini); `CLAUDE.md` loads it in Claude Code.
