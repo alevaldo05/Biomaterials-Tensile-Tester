@@ -14,7 +14,7 @@
     msgEl.className = 'csv-msg' + (isError ? ' error' : '');
   }
   /* "Need help?" and the one-minute hint use the sentence this page already shows under its title. */
-  if (window.HelpCoach) window.HelpCoach.setContext({ key: 'load', title: 'Load Test', lines: function () { var s = document.querySelector('.sub'); return [s ? s.textContent : '']; } });
+  if (window.HelpCoach) window.HelpCoach.setContext({ key: 'load', title: 'Load Test', tutorial: 'load-compare', lines: function () { var s = document.querySelector('.sub'); return [s ? s.textContent : '']; } });
   function testType() { return document.querySelector('input[name="load-test"]:checked').value; }
 
   /* Mode switch: "Open one file" (below, unchanged) or "Compare several files" (compare.js). */

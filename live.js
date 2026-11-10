@@ -274,6 +274,8 @@
   var nav4 = navFor(4); nav4.setAttribute('data-step', '4'); connRow.parentNode.insertBefore(nav4, (connRow.nextElementSibling && connRow.nextElementSibling.getAttribute('data-step') === '4') ? connRow.nextElementSibling.nextSibling : connRow.nextSibling);
   var nav5 = navFor(5); nav5.setAttribute('data-step', '5'); $('rv-det').parentNode.insertBefore(nav5, $('rv-det').nextSibling);
   /* "?" help on each step heading (both views). The text is existing wording; the tip copies it from the hidden element named here. */
+  /* Which tutorial each step's "?" opens and "Watch how" offers (tutorials.js; not offered while a test is recording). */
+  var TUT_OF = { 1: 'dimensions', 2: 'dimensions', 3: 'run-simulated', 4: 'run-simulated', 5: 'run-simulated' };
   var HELP = {
     1: ['s-mat-hint', null],
     2: ['help-step2', 'Example values come from the labeled sample data. Replace them with your specimen’s measured dimensions.'],
@@ -288,6 +290,7 @@
     if (n === 3 && !app.querySelector('#help-step3').textContent) return;
     var q = document.createElement('button'); q.type = 'button'; q.className = 'help-q'; q.textContent = '?';
     q.setAttribute('aria-label', 'Help for ' + STEP_NAMES[n - 1].toLowerCase()); q.setAttribute('data-tip-id', h[0]);
+    q.addEventListener('click', function () { if (window.Tutorials) window.Tutorials.open(TUT_OF[n]); });
     head.appendChild(q);
   });
   function stepsUpdate() {
@@ -320,8 +323,8 @@
       window.HelpCoach.setContext({ key: 'test-run-' + running, title: running ? 'Test running' : 'Test finished', quiet: true, lines: function () { var e = app.querySelector('.esc-line'); return [msgEl.textContent, e ? e.textContent : '']; } });
       return;
     }
-    if (!guidedOn) { window.HelpCoach.setContext({ key: 'test-all', title: 'Setting up the test', lines: function () { return [1, 2, 3, 4, 5].map(helpText); } }); return; }
-    window.HelpCoach.setContext({ key: 'test-step-' + cur, title: cur + '. ' + STEP_NAMES[cur - 1], lines: function () { return [helpText(cur), stepWhy(cur)]; } });
+    if (!guidedOn) { window.HelpCoach.setContext({ key: 'test-all', title: 'Setting up the test', tutorial: 'run-simulated', lines: function () { return [1, 2, 3, 4, 5].map(helpText); } }); return; }
+    window.HelpCoach.setContext({ key: 'test-step-' + cur, title: cur + '. ' + STEP_NAMES[cur - 1], tutorial: TUT_OF[cur], lines: function () { return [helpText(cur), stepWhy(cur)]; } });
   }
   function goStep(n, focus) {
     cur = Math.max(1, Math.min(5, n)); maxStep = Math.max(maxStep, cur);
