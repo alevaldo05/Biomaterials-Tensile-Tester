@@ -11,7 +11,7 @@ Setup, connection, Start/STOP/Tare, recording, auto-stop, and CSV on the two tes
 - `data/checklist.js`
 - `ui.js` (the checklist pop-up is the shared Site pop-up; see shared-popups card)
 - Test pages `test-uniaxial-tension.html`, `test-stress-relaxation.html`
-- CSS: `styles.css` Live test and Load Test pages, test setup in steps, pre-test checklist
+- CSS: `css/live.css` (Live test and Load Test pages), `css/test-setup.css` (test setup in steps), `css/checklist.css` (pre-test checklist)
 
 ## What the user sees
 - Steps 1 Specimen, 2 Dimensions, 3 Test settings, 4 Connection, 5 Review before starting

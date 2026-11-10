@@ -8,7 +8,7 @@ The two test pages show one setup step at a time (the default), with a "Show all
 ## Files
 - `live.js` (the "guided steps" section: step bar, Back/Next rows, "?" buttons, `STEP_NAMES`, `HELP`, `stepsUpdate`, `goStep`, `showStepOf`, `openFromHash`)
 - `display-settings.js` (`steps` key in `SETTINGS`: `guided` default, `all`)
-- `styles.css` (section "Guided test steps": `.gs-bar`, `.sb`, `.gs-nav`, `.gs-why`, `.help-q`, `.gs-switch`)
+- `css/guided.css` ( `.gs-bar`, `.sb`, `.gs-nav`, `.gs-why`, `.help-q`, `.gs-switch`)
 - `test-uniaxial-tension.html`, `test-stress-relaxation.html` (the Governing equations table was replaced by a line and a link to the protocol page)
 - `data/terms.js` (definitions used in the step 3 help)
 

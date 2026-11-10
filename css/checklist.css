@@ -1,0 +1,13 @@
+/* Pre-test checklist pop-up. Part of the site's styles: every page links these files in the order listed in FILES.md. */
+/* ---------- Pre-test checklist pop-up (test pages, only when turned on in Settings) ----------
+   The pop-up box itself (size, border, backdrop, headings, focus) is the shared dialog.site-dialog in ui.css. */
+.pt-note { margin: 0 0 0.5rem; padding: 0.5rem 0.75rem; border-left: 4px solid var(--danger); background: var(--bg); font-size: 0.9375rem; }
+.pt-list { list-style: none; margin: 0; padding: 0; display: grid; gap: 0.25rem; }
+.pt-list label { display: flex; gap: 0.6rem; align-items: flex-start; padding: 0.4rem 0.5rem; border-radius: 6px; cursor: pointer; }
+.pt-list label:hover { background: var(--bg); }
+.pt-list input { flex: none; width: 1.15rem; height: 1.15rem; margin: 0.2rem 0 0; accent-color: var(--accent); }
+.pt-list input:focus-visible { outline: 3px solid var(--focus); outline-offset: 2px; }
+.pt-count { margin: 0.9rem 0 0.5rem; font-size: 0.9375rem; color: var(--muted); }
+.pt-actions { display: flex; gap: 0.6rem; flex-wrap: wrap; }
+.pt-actions .btn:disabled { opacity: 0.5; cursor: not-allowed; }
+
