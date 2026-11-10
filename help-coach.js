@@ -76,7 +76,7 @@
     if (ctx && ctx.tutorial && window.Tutorials && window.Tutorials.has(ctx.tutorial) && !document.body.classList.contains('has-stop-dock')) {
       var w = document.createElement('p'), wb = document.createElement('button');
       wb.type = 'button'; wb.className = 'btn-secondary btn-small'; wb.textContent = 'Watch how';
-      wb.addEventListener('click', function () { var id = ctx.tutorial; toggleCard(false); window.Tutorials.open(id); });
+      wb.addEventListener('click', function () { var id = ctx.tutorial; toggleCard(false); window.Tutorials.show(id); });
       w.appendChild(wb); b.appendChild(w);
     }
     var p2 = document.createElement('p'), a = document.createElement('a');
