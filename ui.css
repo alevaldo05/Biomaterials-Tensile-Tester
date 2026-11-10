@@ -11,6 +11,11 @@ dialog.site-dialog button:focus-visible { outline: 3px solid var(--focus); outli
 .siteui-tip { position: fixed; z-index: 60; max-width: min(22rem, calc(100vw - 1rem)); padding: 0.4rem 0.65rem; border: 1px solid var(--muted); border-radius: 6px; background: var(--surface); color: var(--ink); font-size: 0.875rem; line-height: 1.4; box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2); pointer-events: none; animation: siteui-fade 0.12s ease-out; }
 .siteui-tip[hidden] { display: none; }
 
+/* Leave pop-up (SiteUI.leaveGuard) */
+.lv-text { margin: 0 0 0.75rem; }
+.lv-stoprow { display: flex; flex-wrap: wrap; align-items: center; gap: 0.5rem 1rem; margin: 0 0 0.9rem; padding: 0.6rem 0.75rem; border-left: 4px solid var(--danger); background: var(--bg); }
+.lv-actions { display: flex; flex-wrap: wrap; gap: 0.6rem; }
+
 /* Dismissible note: small, not modal. The stack sits above the pinned STOP bar and never covers it. */
 .siteui-notes { position: fixed; left: 1rem; bottom: 1rem; z-index: 35; display: grid; gap: 0.5rem; width: min(22rem, calc(100vw - 2rem)); }
 body.has-stop-dock .siteui-notes { bottom: 6.5rem; }
