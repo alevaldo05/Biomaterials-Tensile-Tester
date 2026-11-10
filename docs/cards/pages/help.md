@@ -3,7 +3,7 @@
 Page card. Update it in the same change as the page.
 
 ## Purpose
-Troubleshooting (problem and action table), Keyboard (only keys that work), Tutorials (a list that opens short animated illustrations, see [tutorials](../features/tutorials.md)), and the numbered References list.
+Troubleshooting (problem and action table), Keyboard (only keys that work), Tutorials (a list of links to short animated illustrations that play on the page where you do the thing, see [tutorials](../features/tutorials.md)), and the numbered References list.
 
 ## Files
 - HTML: `help.html` (ids `trouble-title`, `keys-title`, `tutorials-title`, `helprefs-title`)

@@ -20,7 +20,7 @@ html[data-steps="guided"] .gs-bar li { min-width: 0; }
 .sb.is-done .sb-n { border-color: var(--accent); color: var(--link); }
 html[data-steps="guided"] .gs-nav { display: flex; flex-wrap: wrap; align-items: center; gap: 0.5rem 0.75rem; margin: 0.25rem 0 0; }
 .gs-why { font-size: 0.875rem; color: var(--muted); }
-html[data-steps="guided"] .setup-col > .gs-nav, html[data-steps="guided"] .setup-col > .step-h, html[data-steps="guided"] .setup-col > .pf-note, html[data-steps="guided"] .setup-col > .gs-fill { grid-column: 1 / -1; }
+html[data-steps="guided"] .setup-col > .gs-nav, html[data-steps="guided"] .setup-col > .step-h, html[data-steps="guided"] .setup-col > .pf-note, html[data-steps="guided"] .setup-col > .gs-fill, html[data-steps="guided"] .setup-col > .tut-slot { grid-column: 1 / -1; }
 html[data-steps="guided"] .live-layout [data-step]:not(.is-current) { display: none; }
 html[data-steps="guided"] .live-layout .panel { grid-template-columns: minmax(0, 1fr); }
 html[data-steps="guided"] .live-layout .setup-col { grid-template-columns: repeat(auto-fit, minmax(12rem, 1fr)); gap: 0.6rem 1.25rem; }
@@ -29,6 +29,7 @@ html[data-steps="guided"] .live-layout.running [data-step] { display: none; }
 /* Connection, review, run buttons: the step's content first, then the run row. STOP is never inside a step and is always shown. */
 html[data-steps="guided"] .control-bar { display: flex; flex-direction: column; }
 html[data-steps="guided"] .control-bar > .conn-row { order: 1; }
+html[data-steps="guided"] .control-bar > .tut-slot { order: 2; }
 html[data-steps="guided"] .control-bar > .gs-nav[data-step="4"] { order: 3; }
 html[data-steps="guided"] .control-bar > .review { order: 4; }
 html[data-steps="guided"] .control-bar > .rv-det { order: 5; }

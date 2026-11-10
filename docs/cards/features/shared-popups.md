@@ -30,7 +30,6 @@ Three shared pieces in `window.SiteUI`: a Tip (floating text on hover or focus),
 
 ## Depends on
 - Features: live test, display settings (Motion)
-- The tutorial pop-up is built on the Site pop-up too (see [tutorials](tutorials.md))
 - The leave pop-up is built on the Site pop-up (see [leave-popup](leave-popup.md))
 - Page ids `pt-title`, `pt-go`, `pt-cancel`, `pt-count`, `r-start`
 
