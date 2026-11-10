@@ -28,6 +28,7 @@
   /* ---------- page layout ---------- */
   app.innerHTML =
     '<div class="gs-switch"><label class="check"><input type="checkbox" id="steps-all"> Show all steps</label></div>' +
+    '<div class="tut-slot" data-tutorial="run-simulated"></div>' +
     '<div class="live-layout">' +
       '<form class="panel" id="spec" novalidate aria-labelledby="spec-title">' +
         '<h2 id="spec-title">Specimen and settings</h2>' +
@@ -56,6 +57,7 @@
         field('s-env', 'Environment, optional', 'type="text" autocomplete="off"') +
         '<label class="pf"><span>Notes</span><textarea id="s-notes" rows="2"></textarea></label>' +
         '</div>' +
+        '<div class="tut-slot" data-tutorial="dimensions" data-step="2"></div>' +   /* across the whole setup card (wide enough to read); only shown at the Dimensions step in the guided view */
       '</form>' +
       '<div class="live-main">' +
         '<div class="control-bar">' +
@@ -69,6 +71,7 @@
           '</div>' +
           '</div>' +
           (hasSerial ? '' : '<p class="small muted">USB serial requires a supporting desktop browser, a secure context, permission for the selected port, and compatible controller software. In this project, USB works in Chrome only; this browser does not offer it here. The simulator works here.</p>') +
+          '<div class="tut-slot" data-tutorial="connect-usb" data-step="4"></div>' +
           '<div class="run-bar">' +
             '<button type="button" class="btn-secondary" id="r-tare">Tare</button>' +
             '<button type="button" class="btn btn-start" id="r-start">Start test</button>' +
@@ -83,9 +86,12 @@
           '<p class="small muted" id="r-info"></p>' +
         '</div>' +
         '<div id="graph-app"></div>' +
+        '<div class="tut-slot tut-after" data-tutorial="graph-zoom"></div>' +
+        '<div class="tut-slot tut-after" data-tutorial="download"></div>' +
       '</div>' +
     '</div>';
 
+  if (window.Tutorials) window.Tutorials.scan(app);   /* "Watch how" buttons for the spots marked above (tutorials.js) */
   function $(id) { return document.getElementById(id); }
   var Checklist = window.LiveChecklist.create($, esc), checklistOn = Checklist.on, showChecklist = Checklist.show;
   var csv = window.LiveCsv.create(spec, CFG, TG, isRelax);
@@ -276,8 +282,8 @@
   var nav4 = navFor(4); nav4.setAttribute('data-step', '4'); connRow.parentNode.insertBefore(nav4, (connRow.nextElementSibling && connRow.nextElementSibling.getAttribute('data-step') === '4') ? connRow.nextElementSibling.nextSibling : connRow.nextSibling);
   var nav5 = navFor(5); nav5.setAttribute('data-step', '5'); $('rv-det').parentNode.insertBefore(nav5, $('rv-det').nextSibling);
   /* "?" help on each step heading (both views). The text is existing wording; the tip copies it from the hidden element named here. */
-  /* Which tutorial each step's "?" opens and "Watch how" offers (tutorials.js; not offered while a test is recording). */
-  var TUT_OF = { 1: 'dimensions', 2: 'dimensions', 3: 'run-simulated', 4: 'run-simulated', 5: 'run-simulated' };
+  /* Which tutorial each step's "?" opens and "Watch how" offers: each plays inline on this page (tutorials.js; not offered while a test is recording). */
+  var TUT_OF = { 1: 'run-simulated', 2: 'dimensions', 3: 'run-simulated', 4: 'run-simulated', 5: 'run-simulated' };
   var HELP = {
     1: ['s-mat-hint', null],
     2: ['help-step2', 'Example values come from the labeled sample data. Replace them with your specimen’s measured dimensions.'],
@@ -292,7 +298,7 @@
     if (n === 3 && !app.querySelector('#help-step3').textContent) return;
     var q = document.createElement('button'); q.type = 'button'; q.className = 'help-q'; q.textContent = '?';
     q.setAttribute('aria-label', 'Help for ' + STEP_NAMES[n - 1].toLowerCase()); q.setAttribute('data-tip-id', h[0]);
-    q.addEventListener('click', function () { if (window.Tutorials) window.Tutorials.open(TUT_OF[n]); });
+    q.addEventListener('click', function () { if (window.Tutorials) window.Tutorials.show(TUT_OF[n]); });
     head.appendChild(q);
   });
   function stepsUpdate() {
@@ -354,6 +360,11 @@
   /* Links from search to a step open that step. */
   function openFromHash() {
     var id = location.hash.replace('#', ''), STEP_OF = { 'spec-title': 1, 'rv-title': 5 };
+    if (/^tut-/.test(id)) {   /* a link to a tutorial (for example from the Help page): go to its step, then open it */
+      var slot = $(id);
+      if (slot && window.Tutorials) { showStepOf(slot); setTimeout(function () { window.Tutorials.show(id.slice(4)); }, 80); }
+      return;
+    }
     if (!Object.prototype.hasOwnProperty.call(STEP_OF, id)) return;   /* words such as #constructor are not steps */
     var n = STEP_OF[id];
     if (n === 5) maxStep = 5;

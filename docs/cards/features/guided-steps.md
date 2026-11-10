@@ -19,7 +19,7 @@ The two test pages show one setup step at a time (the default), with a "Show all
 - Back and Next under each step; Next is unavailable until the step's required entries are valid, and the line under it says why (for example "Enter the gauge length in mm.")
 - STOP is outside the steps and always shown; Tare, Start, and auto-stop appear on step 5. While recording only the step bar, STOP, and the graph remain
 - The graph, Readout, and Key results appear when recording starts; downloads and Print report when the test ends
-- "?" on every step heading (both views) shows existing wording as a tip (opens on hover and Tab); clicking it opens that step's tutorial (see [tutorials](tutorials.md))
+- "?" on every step heading (both views) shows existing wording as a tip (opens on hover and Tab); clicking it scrolls to and opens that step's tutorial, which plays inline on the page (see [tutorials](tutorials.md))
 - "Show all steps" (top right of the page) restores the full layout; saved in this browser (key `steps`); Settings Reset clears it
 
 ## Behavior to keep
