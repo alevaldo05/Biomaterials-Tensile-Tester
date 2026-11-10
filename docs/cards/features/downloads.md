@@ -8,7 +8,7 @@ Download data as CSV (opens in Excel), the numeric .xlsx file, and the graph as 
 ## Files
 - `live-csv.js` (the CSV text and file name on test pages)
 - `live.js` (the Download button)
-- `graph.js` (CSV reading, PNG, SVG)
+- `graph-core.js` (CSV reading), `graph.js` (PNG, SVG)
 - `excel-export.js` (hand-written zip and XML)
 
 ## What the user sees
