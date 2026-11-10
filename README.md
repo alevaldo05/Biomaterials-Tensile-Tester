@@ -144,7 +144,7 @@ Nothing is uploaded to GitHub, merged, or published without the project owner's 
 
 ## Tutorials
 
-The Help page has a **Tutorials** section: short animated illustrations of the screen (run a simulated test, enter specimen dimensions, connect over USB, read and zoom the graph, download the data, load and compare files, enter a calibration). Each opens in a small window with Pause, Replay, and a close button, and says it is an illustration, not a recording of a real test. With Motion set to Reduced (or the system asking for less motion) they are shown as still frames with Back and Next. They also open from **Need help?** ("Watch how") and from a step's "?" on the test pages, but not while a test is recording. They are drawn from `data/tutorials.js` with SVG and CSS; no video or outside files.
+Short animated illustrations of the screen (run a simulated test, enter specimen dimensions, connect over USB, read and zoom the graph, download the data, load and compare files, enter a calibration) play **on the page where you do the thing**: press **Watch how** at the spot (at the top of each test page, at the Dimensions and Connection steps, under the graph, on Load Test, on Calibration). Each opens a wide panel with Pause, Replay, and Hide, and says it is an illustration, not a recording of a real test. With Motion set to Reduced (or the system asking for less motion) they are shown as still frames with Back and Next. The Help page has a Tutorials list of links to each spot, and **Need help?** and a step's "?" jump to them. They are hidden while a test is recording. They are drawn from `data/tutorials.js` with SVG and CSS; no video or outside files.
 
 ## Definitions on hover
 
