@@ -16,6 +16,7 @@ Saved display choices and the four color themes (green light, green dark, purple
 ## Behavior to keep
 - Stored names `light`, `dark`, `purple`, `pink` stay
 - Saved in this browser only; appearance only
+- Also saved by the test pages (not on the Settings page): key `steps` (`guided`, `all`), see [guided-steps](guided-steps.md); Reset clears it
 - Reset clears them
 
 ## Labels that must stay

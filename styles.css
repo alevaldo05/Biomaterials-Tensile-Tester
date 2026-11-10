@@ -965,3 +965,50 @@ table.mt-compare caption .linkbtn { font-size: 0.875rem; font-weight: 400; }
 /* Site version line at the foot of the page */
 .build-number { margin: 1.5rem auto 1rem; max-width: 70rem; padding: 0 1rem; font-size: 0.8125rem; color: var(--muted, inherit); text-align: center; }
 .build-number-side { margin: 0.25rem 0 0; padding: 0; text-align: left; max-width: none; }
+
+/* ---------- Guided test steps (live.js; the "Show all steps" switch turns this off) ---------- */
+.gs-switch { display: flex; justify-content: flex-end; margin: 0 0 0.5rem; font-size: 0.9375rem; }
+.gs-switch .check { display: inline-flex; align-items: center; gap: 0.4rem; cursor: pointer; }
+.gs-switch input { width: 1.05rem; height: 1.05rem; accent-color: var(--accent); }
+.gs-bar, .gs-nav { display: none; }
+.help-q { margin-left: 0.4rem; width: 1.4rem; height: 1.4rem; padding: 0; border: 1px solid var(--accent); border-radius: 50%; background: var(--surface); color: var(--link); font: inherit; font-size: 0.8125rem; font-weight: 700; line-height: 1; cursor: help; text-decoration: none; vertical-align: 0.1em; }
+.help-q:hover { background: var(--bg); }
+.help-q:focus-visible { outline: 3px solid var(--focus); outline-offset: 2px; }
+html[data-steps="guided"] .gs-bar { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 0.5rem; margin: 0 0 0.75rem; padding: 0; list-style: none; }
+html[data-steps="guided"] .gs-bar li { min-width: 0; }
+.sb { display: grid; grid-template-columns: 1.6rem minmax(0, 1fr); column-gap: 0.5rem; align-items: center; width: 100%; height: 100%; padding: 0.45rem 0.6rem; border: 1px solid var(--line); border-radius: 8px; background: var(--surface); color: var(--ink); font: inherit; text-align: left; cursor: pointer; }
+.sb:disabled { opacity: 0.55; cursor: not-allowed; }
+.sb:focus-visible { outline: 3px solid var(--focus); outline-offset: 2px; }
+.sb-n { grid-row: 1 / 3; display: flex; align-items: center; justify-content: center; width: 1.6rem; height: 1.6rem; border: 1px solid var(--muted); border-radius: 50%; font-size: 0.8125rem; font-weight: 700; }
+.sb-t { font-size: 0.875rem; font-weight: 700; overflow-wrap: anywhere; }
+.sb-s { font-size: 0.8125rem; color: var(--muted); overflow-wrap: anywhere; }
+.sb.is-cur { border-color: var(--accent); box-shadow: inset 0 0 0 1px var(--accent); background: var(--bg); }
+.sb.is-cur .sb-n { background: var(--accent); border-color: var(--accent); color: var(--accent-ink); }
+.sb.is-done .sb-n { border-color: var(--accent); color: var(--link); }
+html[data-steps="guided"] .gs-nav { display: flex; flex-wrap: wrap; align-items: center; gap: 0.5rem 0.75rem; margin: 0.25rem 0 0; }
+.gs-why { font-size: 0.875rem; color: var(--muted); }
+html[data-steps="guided"] .setup-col > .gs-nav, html[data-steps="guided"] .setup-col > .step-h, html[data-steps="guided"] .setup-col > .pf-note { grid-column: 1 / -1; }
+html[data-steps="guided"] .live-layout [data-step]:not(.is-current) { display: none; }
+html[data-steps="guided"] .live-layout .panel { grid-template-columns: minmax(0, 1fr); }
+html[data-steps="guided"] .live-layout .setup-col { grid-template-columns: repeat(auto-fit, minmax(12rem, 1fr)); gap: 0.6rem 1.25rem; }
+html[data-steps="guided"] .live-layout:not(.cur-setup) #spec, html[data-steps="guided"] .live-layout.running #spec { display: none; }
+html[data-steps="guided"] .live-layout.running [data-step] { display: none; }
+/* Connection, review, run buttons: the step's content first, then the run row. STOP is never inside a step and is always shown. */
+html[data-steps="guided"] .control-bar { display: flex; flex-direction: column; }
+html[data-steps="guided"] .control-bar > .conn-row { order: 1; }
+html[data-steps="guided"] .control-bar > .gs-nav[data-step="4"] { order: 3; }
+html[data-steps="guided"] .control-bar > .review { order: 4; }
+html[data-steps="guided"] .control-bar > .rv-det { order: 5; }
+html[data-steps="guided"] .control-bar > .run-bar { order: 6; }
+html[data-steps="guided"] .control-bar > #r-why { order: 7; }
+html[data-steps="guided"] .control-bar > .gs-nav[data-step="5"] { order: 8; }
+html[data-steps="guided"] .control-bar > .esc-line { order: 9; }
+html[data-steps="guided"] .control-bar > #r-msg { order: 10; }
+html[data-steps="guided"] .control-bar > #r-info { order: 11; }
+html[data-steps="guided"] .live-layout:not(.cur-5) #r-tare, html[data-steps="guided"] .live-layout:not(.cur-5) #r-start, html[data-steps="guided"] .live-layout.running #r-tare, html[data-steps="guided"] .live-layout.running #r-start { display: none; }
+html[data-steps="guided"] .live-layout:not(.cur-5):not(.running) .run-bar .check { display: none; }
+/* The graph, Readout, and Key results appear when recording starts; downloads and Print report when the test ends. */
+html[data-steps="guided"] .live-layout:not(.has-run) #graph-app { display: none; }
+html[data-steps="guided"] .live-layout:not(.ended) #g-actions { display: none; }
+@media (max-width: 900px) { html[data-steps="guided"] .gs-bar { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+@media print { .gs-switch, .gs-bar, .gs-nav, .help-q { display: none; } }

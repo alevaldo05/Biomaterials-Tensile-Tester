@@ -19,6 +19,7 @@ Setup, connection, Start/STOP/Tare, recording, auto-stop, and CSV on the two tes
 - STOP pinned to the bottom of the window while recording, with "Not an emergency stop."
 
 ## Behavior to keep
+- The setup is shown one step at a time by default (see [guided-steps](guided-steps.md)); every id listed here still exists
 - Setup labels (Gauge length, Area, Crosshead speed, Hold displacement, Hold strain) show a definition tip (see [hover-definitions](hover-definitions.md))
 - Start is unavailable until connected (and until the optional checklist is ticked)
 - Esc sends STOP while connected; Esc in the checklist pop-up and in the search does not

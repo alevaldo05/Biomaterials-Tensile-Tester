@@ -1,0 +1,37 @@
+# Guided test steps
+
+Feature card. Update it in the same change as the feature.
+
+## Purpose
+The two test pages show one setup step at a time (the default), with a "Show all steps" switch for the full layout. Helper text that only explained a field moved into "?" tips. Nothing is rebuilt: existing markup is shown and hidden.
+
+## Files
+- `live.js` (the "guided steps" section: step bar, Back/Next rows, "?" buttons, `STEP_NAMES`, `HELP`, `stepsUpdate`, `goStep`, `showStepOf`, `openFromHash`)
+- `display-settings.js` (`steps` key in `SETTINGS`: `guided` default, `all`)
+- `styles.css` (section "Guided test steps": `.gs-bar`, `.sb`, `.gs-nav`, `.gs-why`, `.help-q`, `.gs-switch`)
+- `test-uniaxial-tension.html`, `test-stress-relaxation.html` (the Governing equations table was replaced by a line and a link to the protocol page)
+- `data/terms.js` (definitions used in the step 3 help)
+
+## What the user sees
+- Step bar: 1 Specimen, 2 Dimensions, 3 Test settings, 4 Connection, 5 Review and start. Done steps show a check and a one-line summary and can be reopened; later steps are locked until reached
+- Back and Next under each step; Next is unavailable until the step's required entries are valid, and the line under it says why (for example "Enter the gauge length in mm.")
+- STOP is outside the steps and always shown; Tare, Start, and auto-stop appear on step 5. While recording only the step bar, STOP, and the graph remain
+- The graph, Readout, and Key results appear when recording starts; downloads and Print report when the test ends
+- "?" on every step heading (both views) shows existing wording as a tip (opens on hover and Tab)
+- "Show all steps" (top right of the page) restores the full layout; saved in this browser (key `steps`); Settings Reset clears it
+
+## Behavior to keep
+- Every existing `id`, field message, the Review panel and its "Go to this field" buttons (they open the right step), Start disabled until connected, the checklist pop-up, the pinned STOP bar, the tab-title status, inputs disabled while recording
+- Links from search to `#spec-title` and `#rv-title` open step 1 and step 5
+- Esc still sends STOP while connected; `.gs-` class names (not `.step-nav`, which the protocol pages use)
+
+## Labels that must stay
+- Safety line and "Not an emergency stop."; dimension source note; "Simulated data, not measured"; Draft badge; "hardware connection is untested"
+
+## Depends on
+- live-test, hover-definitions, shared-popups, display-settings
+
+## How to check
+- `node scripts/check-site.js`
+- Press Next through all five steps to Start on both test pages; run the simulator to a CSV download
+- Turn on "Show all steps": the page matches the old full layout; reload keeps the choice
