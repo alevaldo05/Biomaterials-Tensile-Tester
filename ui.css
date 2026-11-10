@@ -13,8 +13,18 @@ dialog.site-dialog button:focus-visible { outline: 3px solid var(--focus); outli
 
 /* Leave pop-up (SiteUI.leaveGuard) */
 .lv-text { margin: 0 0 0.75rem; }
-.lv-stoprow { display: flex; flex-wrap: wrap; align-items: center; gap: 0.5rem 1rem; margin: 0 0 0.9rem; padding: 0.6rem 0.75rem; border-left: 4px solid var(--danger); background: var(--bg); }
-.lv-actions { display: flex; flex-wrap: wrap; gap: 0.6rem; }
+.lv-choices { display: grid; gap: 0.6rem; }
+.lv-choice { display: block; width: 100%; padding: 0.7rem 1rem; border: 1px solid var(--accent); border-radius: 6px; background: transparent; color: var(--ink); font: inherit; text-align: left; cursor: pointer; }
+.lv-choice:hover { background: var(--bg); }
+.lv-choice:focus-visible { outline: 3px solid var(--focus); outline-offset: 2px; }
+.lv-label { display: block; font-weight: 700; }
+.lv-note { display: block; margin-top: 0.15rem; font-size: 0.875rem; color: var(--muted); }
+.lv-primary { background: var(--accent); border-color: var(--accent); color: var(--accent-ink); }
+.lv-primary:hover { background: var(--accent-hover); }
+.lv-primary .lv-note { color: var(--accent-ink); }
+.lv-stopbtn { background: var(--danger); border-color: var(--danger); color: var(--danger-ink); }
+.lv-stopbtn:hover { background: var(--danger); filter: brightness(1.1); }
+.lv-stopbtn .lv-note { color: var(--danger-ink); }
 
 /* Dismissible note: small, not modal. The stack sits above the pinned STOP bar and never covers it. */
 .siteui-notes { position: fixed; left: 1rem; bottom: 1rem; z-index: 35; display: grid; gap: 0.5rem; width: min(22rem, calc(100vw - 2rem)); }
