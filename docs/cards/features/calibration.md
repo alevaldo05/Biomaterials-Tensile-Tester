@@ -15,7 +15,7 @@ Fit a line to hand-typed readings versus known masses (F = m g).
 
 ## Behavior to keep
 - No reading changes; no traceability claim; nothing saved
-- Leave warning when values are typed
+- Leave warning when values are typed: the site pop-up for links inside the site (see [leave-popup](leave-popup.md)) and `beforeunload` for closing the tab, reload, and Back
 
 ## Labels that must stay
 - "Tare is not a calibration"

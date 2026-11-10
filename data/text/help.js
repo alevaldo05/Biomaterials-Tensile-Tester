@@ -36,6 +36,7 @@ window.SITE_TEXT.help = {
         } },
         { h3: "About USB and browsers" },
         "USB serial requires a supporting desktop browser, an appropriate secure context, permission to access the selected port, and compatible device and controller software. In this project, USB is used from Chrome. Firefox 151 desktop added Web Serial support ([Mozilla announcement](#ref-25)), but this project has not been tested in Firefox. HTTPS enables one required condition (a secure context); browser, permissions, device, driver, and controller support still need testing. Safari does not offer Web Serial, so use the simulator there.",
+        "When a test is recording, or its data has not been downloaded, clicking a link on the page opens a pop-up asking whether to leave; you can stay, leave, download first once the test has stopped, or press STOP while it is recording. Closing the tab, reloading, or pressing Back shows your browser’s own box instead, which this site cannot change. Leaving a page does not stop the machine.",
         { note: "The on-screen STOP button and the Esc key are requests sent through a computer and a connection that can fail. They are not an emergency stop." }
       ]
     },
@@ -63,6 +64,7 @@ window.SITE_TEXT.help = {
             [ "Esc", "Material box on the Materials page", "Close the list and keep the current material." ],
             [ "↑ and ↓", "Search box in the header", "Move through the results." ],
             [ "Enter", "Search box in the header", "Open the highlighted result." ],
+            [ "Esc", "Leave pop-up", "Chooses Stay. It does not send STOP; use the STOP button in the pop-up while a test is recording." ],
             [ "Esc", "Search box in the header", "Close the search and return to the search button. On a test page it closes the search only and does not send STOP." ]
           ]
         } }

@@ -133,7 +133,7 @@
   function go(it) {
     var target = href(it), same = it.p === current;
     closeBox(false);
-    if (same && it.a) { location.hash = '#' + it.a; } else { location.href = target; }
+    if (same && it.a) { location.hash = '#' + it.a; } else if (window.SiteUI) { window.SiteUI.navigate(target); } else { location.href = target; }
   }
 
   window.addEventListener('resize', function () { layoutBox(); place(); });

@@ -8,6 +8,12 @@
    SiteUI.dialog(opts)           opts: { className, labelledBy, html }. A <dialog> in the site's look, added to the page.
                                  Esc closes it and does not reach the page (so Esc does not send STOP).
                                  Returns { el, show(), close() }, or null where <dialog> is not supported.
+   SiteUI.leaveGuard(fn)         fn() returns null (nothing to lose) or { text, stop, download: { label, run } }. While it returns an object, a click on a
+                                 link that would leave the page, and SiteUI.navigate(url), open the "Leave without saving?" pop-up instead:
+                                 Stay (the default; Esc does the same), Leave without saving, and, when given, a Download button
+                                 and a STOP button (stop() is called; the pop-up then shows the new state). Closing the tab, reloading, and Back
+                                 cannot be caught here; pages keep their beforeunload handler and skip it while SiteUI.leaving is true.
+   SiteUI.navigate(url)          Go to url, through the guard.
    SiteUI.note(opts)             opts: { text, title, host, onClose }. A small card with an X button; not modal, never takes focus.
                                  Returns { el, close() }. */
 (function () {
@@ -125,5 +131,68 @@
     return { el: el, close: close };
   }
 
-  window.SiteUI = { tip: tip, dialog: dialog, note: note };
+  /* ---------- Leave pop-up ---------- */
+  var guardFn = null, leavingFlag = false;
+  function leaveNow(url) {
+    leavingFlag = true; api.leaving = true;          /* the page's own beforeunload box is skipped for this one leave */
+    setTimeout(function () { leavingFlag = false; api.leaving = false; }, 4000);
+    location.href = url;
+  }
+  function askLeave(url) {
+    var spec = guardFn && guardFn();
+    if (!spec) { location.href = url; return; }
+    var d = dialog({ className: 'leave-dialog', labelledBy: 'lv-title' });
+    if (!d) {                                          /* very old browser without <dialog> */
+      if (window.confirm('Leave without saving?\n\n' + spec.text)) leaveNow(url);
+      return;
+    }
+    var el = d.el;
+    function render() {
+      spec = guardFn && guardFn();
+      if (!spec) { d.close(); leaveNow(url); return; }  /* nothing is left to lose */
+      el.textContent = '';
+      var h = document.createElement('h2'); h.id = 'lv-title'; h.textContent = 'Leave without saving?'; el.appendChild(h);
+      var p = document.createElement('p'); p.className = 'lv-text'; p.textContent = spec.text; el.appendChild(p);
+      if (spec.stop) {
+        var row = document.createElement('div'); row.className = 'lv-stoprow';
+        var sb = document.createElement('button'); sb.type = 'button'; sb.className = 'btn-stop'; sb.id = 'lv-stop'; sb.textContent = 'STOP \u2014 sends a stop command';
+        var sn = document.createElement('span'); sn.className = 'small'; sn.textContent = 'Not an emergency stop.';
+        sb.addEventListener('click', function () { spec.stop(); render(); var s2 = el.querySelector('#lv-stay'); if (s2) s2.focus(); });
+        row.appendChild(sb); row.appendChild(sn); el.appendChild(row);
+      }
+      var acts = document.createElement('div'); acts.className = 'lv-actions';
+      var stay = document.createElement('button'); stay.type = 'button'; stay.className = 'btn'; stay.id = 'lv-stay'; stay.textContent = 'Stay';
+      stay.addEventListener('click', function () { el.close(); });
+      acts.appendChild(stay);
+      if (spec.download) {
+        var dl = document.createElement('button'); dl.type = 'button'; dl.className = 'btn-secondary'; dl.id = 'lv-dl'; dl.textContent = spec.download.label;
+        dl.addEventListener('click', function () { spec.download.run(); setTimeout(function () { el.close(); leaveNow(url); }, 500); });
+        acts.appendChild(dl);
+      }
+      var lv = document.createElement('button'); lv.type = 'button'; lv.className = 'btn-secondary'; lv.id = 'lv-leave'; lv.textContent = 'Leave without saving';
+      lv.addEventListener('click', function () { el.close(); leaveNow(url); });
+      acts.appendChild(lv);
+      el.appendChild(acts);
+    }
+    render();
+    el.addEventListener('close', function () { if (el.parentNode) el.parentNode.removeChild(el); }, { once: true });
+    d.show();
+    var st = el.querySelector('#lv-stay'); if (st) st.focus();
+  }
+  document.addEventListener('click', function (e) {
+    if (!guardFn || e.defaultPrevented || e.button !== 0 || e.metaKey || e.ctrlKey || e.shiftKey || e.altKey) return;
+    var a = e.target && e.target.closest ? e.target.closest('a[href]') : null;
+    if (!a || (a.target && a.target !== '_self') || a.hasAttribute('download')) return;
+    var u; try { u = new URL(a.href, location.href); } catch (x) { return; }
+    if (!/^(https?|file):$/.test(u.protocol)) return;
+    if (u.origin === location.origin && u.pathname === location.pathname && u.search === location.search && u.hash) return;   /* a link within this page */
+    if (!guardFn()) return;
+    e.preventDefault(); e.stopPropagation();
+    askLeave(u.href);
+  }, true);
+
+  var api = { tip: tip, dialog: dialog, note: note, leaving: false,
+    leaveGuard: function (fn) { guardFn = fn; },
+    navigate: function (url) { if (guardFn && guardFn()) askLeave(new URL(url, location.href).href); else location.href = url; } };
+  window.SiteUI = api;
 })();
