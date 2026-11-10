@@ -685,8 +685,8 @@
   /* A click on a link inside the site: the site's own "Leave without saving?" pop-up (ui.js). Closing the tab, reloading, and Back
      cannot be caught that way, so the browser's own box stays for them. */
   if (window.SiteUI) window.SiteUI.leaveGuard(function () {
-    if (running) return { text: 'A test is still recording. Leaving this page does not stop the machine, and the data so far will be lost.', stop: function () { stopTest('Stopped by you. STOP sent.'); } };
-    if (hasData && !downloaded) return { text: 'This test\u2019s data has not been downloaded. It is kept only in this tab and will be lost.', download: { label: 'Download CSV and leave', run: function () { $('dl-csv').click(); } } };
+    if (running) return { text: 'A test is still recording. Leaving this page does not stop the machine, and the data so far will be lost.', stayNote: 'Keep recording and keep your data.', leaveNote: 'The data so far will be lost.', stop: function () { stopTest('Stopped by you. STOP sent.'); } };
+    if (hasData && !downloaded) return { text: 'This test\u2019s data has not been downloaded. It is kept only in this tab and will be lost.', stayNote: 'Keep your data on this page.', leaveNote: 'The data will be lost.', download: { label: 'Download CSV and leave', note: 'Saves the CSV file first, then leaves.', run: function () { $('dl-csv').click(); } } };
     return null;
   });
   window.addEventListener('beforeunload', function (e) {

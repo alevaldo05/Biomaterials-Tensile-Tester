@@ -297,7 +297,7 @@
   if (window.SiteUI) window.SiteUI.leaveGuard(function () {
     if (!unsaved()) return null;
     var b = document.getElementById('c-dl');
-    return { text: 'The numbers typed on this page are not saved anywhere and will be lost.', download: b && !b.disabled ? { label: 'Download record and leave', run: function () { b.click(); } } : null };
+    return { text: 'The numbers typed on this page are not saved anywhere and will be lost.', stayNote: 'Keep your typed numbers on this page.', leaveNote: 'The typed numbers will be lost.', download: b && !b.disabled ? { label: 'Download record and leave', note: 'Saves the record first, then leaves.', run: function () { b.click(); } } : null };
   });
   window.addEventListener('beforeunload', function (e) {
     if (window.SiteUI && window.SiteUI.leaving) return;

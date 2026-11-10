@@ -153,25 +153,26 @@
       el.textContent = '';
       var h = document.createElement('h2'); h.id = 'lv-title'; h.textContent = 'Leave without saving?'; el.appendChild(h);
       var p = document.createElement('p'); p.className = 'lv-text'; p.textContent = spec.text; el.appendChild(p);
+      /* Each choice is one full-width button: a bold label and one plain line saying what it does. */
+      function choice(cls, id, label, note, onClick) {
+        var b = document.createElement('button'); b.type = 'button'; b.className = 'lv-choice ' + cls; b.id = id;
+        var l = document.createElement('span'); l.className = 'lv-label'; l.textContent = label; b.appendChild(l);
+        var n = document.createElement('span'); n.className = 'lv-note'; n.textContent = note; b.appendChild(n);
+        b.addEventListener('click', onClick); return b;
+      }
+      var acts = document.createElement('div'); acts.className = 'lv-choices';
       if (spec.stop) {
-        var row = document.createElement('div'); row.className = 'lv-stoprow';
-        var sb = document.createElement('button'); sb.type = 'button'; sb.className = 'btn-stop'; sb.id = 'lv-stop'; sb.textContent = 'STOP \u2014 sends a stop command';
-        var sn = document.createElement('span'); sn.className = 'small'; sn.textContent = 'Not an emergency stop.';
-        sb.addEventListener('click', function () { spec.stop(); render(); var s2 = el.querySelector('#lv-stay'); if (s2) s2.focus(); });
-        row.appendChild(sb); row.appendChild(sn); el.appendChild(row);
+        acts.appendChild(choice('lv-stopbtn', 'lv-stop', 'STOP \u2014 sends a stop command', 'Stops the test. Not an emergency stop.', function () {
+          spec.stop(); render(); var s2 = el.querySelector('#lv-stay'); if (s2) s2.focus();
+        }));
       }
-      var acts = document.createElement('div'); acts.className = 'lv-actions';
-      var stay = document.createElement('button'); stay.type = 'button'; stay.className = 'btn'; stay.id = 'lv-stay'; stay.textContent = 'Stay';
-      stay.addEventListener('click', function () { el.close(); });
-      acts.appendChild(stay);
+      acts.appendChild(choice('lv-primary', 'lv-stay', 'Stay', spec.stayNote || 'Keep this page as it is.', function () { el.close(); }));
       if (spec.download) {
-        var dl = document.createElement('button'); dl.type = 'button'; dl.className = 'btn-secondary'; dl.id = 'lv-dl'; dl.textContent = spec.download.label;
-        dl.addEventListener('click', function () { spec.download.run(); setTimeout(function () { el.close(); leaveNow(url); }, 500); });
-        acts.appendChild(dl);
+        acts.appendChild(choice('', 'lv-dl', spec.download.label, spec.download.note || 'Saves the file first, then leaves.', function () {
+          spec.download.run(); setTimeout(function () { el.close(); leaveNow(url); }, 500);
+        }));
       }
-      var lv = document.createElement('button'); lv.type = 'button'; lv.className = 'btn-secondary'; lv.id = 'lv-leave'; lv.textContent = 'Leave without saving';
-      lv.addEventListener('click', function () { el.close(); leaveNow(url); });
-      acts.appendChild(lv);
+      acts.appendChild(choice('', 'lv-leave', 'Leave without saving', spec.leaveNote || 'Anything not saved will be lost.', function () { el.close(); leaveNow(url); }));
       el.appendChild(acts);
     }
     render();
