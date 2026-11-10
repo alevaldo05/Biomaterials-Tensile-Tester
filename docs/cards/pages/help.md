@@ -3,11 +3,11 @@
 Page card. Update it in the same change as the page.
 
 ## Purpose
-Troubleshooting (problem and action table), Keyboard (only keys that work), and the numbered References list.
+Troubleshooting (problem and action table), Keyboard (only keys that work), Tutorials (a list that opens short animated illustrations, see [tutorials](../features/tutorials.md)), and the numbered References list.
 
 ## Files
-- HTML: `help.html` (ids `trouble-title`, `keys-title`, `helprefs-title`)
-- Scripts in order: `display-settings.js`, `ui.js` (head), `data/references.js`, `data/text/help.js`, `text.js`, `layouts.js`, `data/search-index.js`, `site-search.js`, `page-nav.js`, `build-number.js`
+- HTML: `help.html` (ids `trouble-title`, `keys-title`, `tutorials-title`, `helprefs-title`)
+- Scripts in order: `display-settings.js`, `ui.js` (head), `data/references.js`, `data/text/help.js`, `data/tutorials.js`, `text.js`, `tutorials.js`, `layouts.js`, `data/search-index.js`, `site-search.js`, `page-nav.js`, `build-number.js`
 - Words: `data/text/help.js`; references: `data/references.js` (37 entries from the owner's research, not independently opened)
 
 ## What the user sees

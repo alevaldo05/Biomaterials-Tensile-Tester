@@ -2,7 +2,7 @@
    Nothing is saved or sent. The only stored value is the Settings choice "Help prompts" (data-helpprompts on <html>).
 
    The page script tells it two things:
-     HelpCoach.setContext({ key, title, lines })  what the person is doing now (lines: a list of strings, or a function that returns one; quiet: true = no one-minute hint).
+     HelpCoach.setContext({ key, title, lines })  what the person is doing now (lines: a list of strings, or a function that returns one; quiet: true = no one-minute hint; tutorial: id of a tutorial for the "Watch how" button).
                                                   The wording comes from text the page already shows. Use setContext(null) when no help is needed
                                                   (a test is recording). After a minute without activity in the same context, one hint shows it.
      HelpCoach.report(problemKey)                 something went wrong (keys are in data/help-tips.js). The hint shows the matching
@@ -73,6 +73,12 @@
     var b = card.querySelector('.hc-body');
     var h = document.createElement('h2'); h.id = 'hc-title'; h.textContent = ctx ? ctx.title : 'Help'; b.appendChild(h);
     l.forEach(function (t) { var p = document.createElement('p'); p.textContent = t; b.appendChild(p); });
+    if (ctx && ctx.tutorial && window.Tutorials && window.Tutorials.has(ctx.tutorial) && !document.body.classList.contains('has-stop-dock')) {
+      var w = document.createElement('p'), wb = document.createElement('button');
+      wb.type = 'button'; wb.className = 'btn-secondary btn-small'; wb.textContent = 'Watch how';
+      wb.addEventListener('click', function () { var id = ctx.tutorial; toggleCard(false); window.Tutorials.open(id); });
+      w.appendChild(wb); b.appendChild(w);
+    }
     var p2 = document.createElement('p'), a = document.createElement('a');
     a.href = TIPS.troubleshooting.href; a.textContent = TIPS.troubleshooting.label; p2.appendChild(a); b.appendChild(p2);
   }

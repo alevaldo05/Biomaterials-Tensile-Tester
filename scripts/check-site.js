@@ -156,6 +156,35 @@ begin('3. Data files');
       }
       return '';
     },
+    'data/tutorials.js': function (g) {
+      var T = g.TUTORIALS;
+      if (!T || !isStr(T.label) || !Array.isArray(T.list) || !T.list.length) return 'TUTORIALS needs a label and a list of tutorials';
+      var seen = {};
+      for (var i = 0; i < T.list.length; i++) {
+        var t = T.list[i], where = 'tutorial ' + (i + 1) + (t && t.id ? ' (' + t.id + ')' : '');
+        if (!t || !isStr(t.id) || !isStr(t.title)) return where + ' needs an id and a title';
+        if (seen[t.id]) return where + ': the id is used twice';
+        seen[t.id] = 1;
+        if (!Array.isArray(t.captions) || t.captions.length < 2 || t.captions.length > 4) return where + ' needs 2 to 4 captions';
+        if (!Array.isArray(t.boxes) || !t.boxes.length || !Array.isArray(t.frames) || t.frames.length < 2) return where + ' needs boxes and at least 2 frames';
+        var ids = {}, b, f, j, m;
+        for (j = 0; j < t.boxes.length; j++) {
+          b = t.boxes[j];
+          if (!b || !isStr(b.id) || !isStr(b.kind) || typeof b.x !== 'number' || typeof b.y !== 'number' || typeof b.w !== 'number' || typeof b.h !== 'number') return where + ': box ' + (j + 1) + ' needs id, kind, x, y, w, h';
+          if (ids[b.id]) return where + ': box id "' + b.id + '" is used twice';
+          ids[b.id] = 1;
+          if (b.x < 0 || b.y < 0 || b.x + b.w > 400 || b.y + b.h > 250) return where + ': box "' + b.id + '" is outside the 400 x 250 drawing';
+        }
+        for (j = 0; j < t.frames.length; j++) {
+          f = t.frames[j];
+          if (!f || typeof f.caption !== 'number' || f.caption < 0 || f.caption >= t.captions.length) return where + ': frame ' + (j + 1) + ' names a caption that does not exist';
+          if (!ids[f.point]) return where + ': frame ' + (j + 1) + ' points at "' + f.point + '", which is not a box';
+          for (m = 0; m < (f.mark || []).length; m++) if (!ids[f.mark[m]]) return where + ': frame ' + (j + 1) + ' marks "' + f.mark[m] + '", which is not a box';
+          for (m in (f.set || {})) if (!ids[m]) return where + ': frame ' + (j + 1) + ' sets "' + m + '", which is not a box';
+        }
+      }
+      return '';
+    },
     'data/help-tips.js': function (g) {
       var T = g.HELP_TIPS;
       if (!T || typeof T.stuckMs !== 'number' || typeof T.noReadingsMs !== 'number' || typeof T.fieldErrorMs !== 'number' || !T.problems) return 'HELP_TIPS needs stuckMs, noReadingsMs, fieldErrorMs, troubleshooting, and problems';

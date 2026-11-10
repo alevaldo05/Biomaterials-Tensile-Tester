@@ -142,6 +142,10 @@ There is no build and no automated test suite in this repository. Changes are ch
 
 Nothing is uploaded to GitHub, merged, or published without the project owner's okay. AI assistants prepare changes on a separate branch and show a preview; the owner decides whether the branch is uploaded, opens the pull request into `main`, merges, and publishes. The site is published with GitHub Pages (https, so USB still works in Chrome): merging into `main` publishes it. Expected address: <https://alevaldo05.github.io/Biomaterials-Tensile-Tester/> (to be confirmed on the first deploy). How to set it up and how to tell when a deploy has finished: [docs/DEPLOY.md](docs/DEPLOY.md). Backups and branch organization: [docs/BRANCHES.md](docs/BRANCHES.md).
 
+## Tutorials
+
+The Help page has a **Tutorials** section: short animated illustrations of the screen (run a simulated test, enter specimen dimensions, connect over USB, read and zoom the graph, download the data, load and compare files, enter a calibration). Each opens in a small window with Pause, Replay, and a close button, and says it is an illustration, not a recording of a real test. With Motion set to Reduced (or the system asking for less motion) they are shown as still frames with Back and Next. They also open from **Need help?** ("Watch how") and from a step's "?" on the test pages, but not while a test is recording. They are drawn from `data/tutorials.js` with SVG and CSS; no video or outside files.
+
 ## Definitions on hover
 
 Terms with a dotted underline (Key results, Readout, setup labels, table headings on Compare, Materials, and Calibration) show a small box with the definition when you point at them or press Tab to them; Esc closes it. The words come from `data/terms.js`; Key results use the same text as the "Show definitions" switch, which stays (off by default).
