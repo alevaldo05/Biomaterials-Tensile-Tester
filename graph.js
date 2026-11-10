@@ -951,6 +951,10 @@
       if (el.log) el.log.checked = st.logx;
     }
 
+    /* Readout label (without markup) -> entry in data/terms.js. Labels with no entry have no tip. */
+    var READOUT_TERMS = { 'Strain, ε': 'strain', 'Stress, σ': 'stress', 'Stress, σ(t)': 'stress', 'Force, F': 'force', 'Slope, dσ/dε (local)': 'tangent',
+      'True strain, εt (est.)': 'truestrain', 'True stress, σt (est.): uniform, constant-volume assumption': 'truestress', 'True stress, σt (est.)': 'truestress',
+      'Ratio, σ(t)/σ0': 'ratio', 'Relaxed': 'relaxed', 'σ(t)/ε0 (apparent)': 'apparent' };
     function readoutRows(i) {
       var r = rec(), X = r.x, Y = r.y, raw = r.raw, rows;
       var F = raw && raw.F ? ['Force, F', dsig(raw.F[i], 4) + ' N'] : null;
@@ -995,7 +999,17 @@
         } else tl.style.display = 'none';
       }
       var rows = readoutRows(idx);
-      readout.innerHTML = rows.map(function (q) { return '<dt>' + q[0] + '</dt><dd>' + q[1] + '</dd>'; }).join('');
+      /* Labels get a definition tip (data/terms.js). When only the values changed, update them in place so a label keeping keyboard focus is not redrawn. */
+      var labelKey = rows.map(function (q) { return q[0]; }).join('\u0001'), dds = readout.querySelectorAll('dd');
+      if (readout.getAttribute('data-labels') === labelKey && dds.length === rows.length) {
+        rows.forEach(function (q, j) { if (dds[j].innerHTML !== q[1]) dds[j].innerHTML = q[1]; });
+      } else {
+        readout.setAttribute("data-labels", labelKey);
+        readout.innerHTML = rows.map(function (q) {
+          var tk = READOUT_TERMS[plain(q[0])];
+          return '<dt' + (tk ? ' data-term="' + tk + '" tabindex="0"' : '') + '>' + q[0] + '</dt><dd>' + q[1] + '</dd>';
+        }).join('');
+      }
       if (announce) live.textContent = rows.slice(0, 2).map(function (q) { return q[0].replace(/<[^>]+>/g, '') + ' ' + q[1]; }).join(', ');
     }
 
@@ -1053,7 +1067,7 @@
       var k = follow ? null : kpts(r);
       root.querySelector('#results').innerHTML = res.map(function (q, i) {
         var key = KEYS[i], on = keyAvailable(key, k), dis = on ? '' : ' disabled';
-        return '<tr data-key="' + key + '"><th scope="row"><div class="res-head"><input type="checkbox" class="res-show" data-show="' + key + '" aria-label="Show ' + esc(plain(q[0])) + ' on graph"' + dis + '><button type="button" class="res-btn" data-hl="' + key + '" aria-pressed="false"' + dis + '>' + q[0] + '</button></div><span class="def">' + q[2] + '</span></th><td>' + q[1] + '</td></tr>';
+        return '<tr data-key="' + key + '"><th scope="row"><div class="res-head"><input type="checkbox" class="res-show" data-show="' + key + '" aria-label="Show ' + esc(plain(q[0])) + ' on graph"' + dis + '><button type="button" class="res-btn" data-hl="' + key + '" data-tip-id="def-' + key + '" aria-pressed="false"' + dis + '>' + q[0] + '</button></div><span class="def" id="def-' + key + '">' + q[2] + '</span></th><td>' + q[1] + '</td></tr>';
       }).join('');
       syncRows();
     }

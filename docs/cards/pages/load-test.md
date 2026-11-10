@@ -7,7 +7,7 @@ Open an earlier CSV in the browser only, or compare several files. See [compare]
 
 ## Files
 - HTML: `load-test.html` (ids `load-form`, `mode-one`, `load-file`, `mode-compare`, `cmp-file`, `graph-app`, `compare-app`)
-- Scripts in order: `display-settings.js`, `ui.js` (head), `data/samples.js`, `graph.js`, `excel-export.js`, `report.js`, `load-test.js`, `compare.js`, `layouts.js`, `data/search-index.js`, `site-search.js`, `build-number.js`
+- Scripts in order: `display-settings.js`, `ui.js` (head), `data/samples.js`, `data/terms.js`, `graph.js`, `excel-export.js`, `report.js`, `load-test.js`, `compare.js`, `layouts.js`, `data/search-index.js`, `site-search.js`, `build-number.js`
 
 ## What the user sees
 - Mode switch (one file, Compare several files), file picker, drop onto the page

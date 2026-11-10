@@ -156,6 +156,11 @@ begin('3. Data files');
       }
       return '';
     },
+    'data/terms.js': function (g) {
+      if (!g.TERMS || typeof g.TERMS !== 'object') return 'TERMS should be an object with one entry per term';
+      for (var k in g.TERMS) { var e = g.TERMS[k]; if (!e || !isStr(e.name) || !isStr(e.def) || typeof e.eq !== 'string' || typeof e.unit !== 'string') return 'term "' + k + '" needs name, def, eq, and unit (eq and unit may be empty text)'; }
+      return Object.keys(g.TERMS).length ? '' : 'TERMS is empty';
+    },
     'data/articles.js': function (g) { return Array.isArray(g.ARTICLES) ? '' : 'ARTICLES should be a list (it may be empty)'; }
   };
   ['home', 'learn', 'about', 'help'].forEach(function (k) {

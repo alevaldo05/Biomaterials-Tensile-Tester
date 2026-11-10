@@ -7,7 +7,7 @@ Compare force readings typed by hand with known masses. See [calibration](../fea
 
 ## Files
 - HTML: `calibration.html` (ids `cal-app`, `cal-results`, `how-section`, `limits-section`)
-- Scripts in order: `display-settings.js`, `ui.js` (head), `report.js`, `calibration.js`, `layouts.js`, `data/search-index.js`, `site-search.js`, `build-number.js`
+- Scripts in order: `display-settings.js`, `ui.js` (head), `data/terms.js`, `report.js`, `calibration.js`, `layouts.js`, `data/search-index.js`, `site-search.js`, `build-number.js`
 
 ## What the user sees
 - Enter points table, fit and errors, chart, CSV record, Copy results, Print report

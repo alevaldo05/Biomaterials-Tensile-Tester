@@ -14,6 +14,7 @@ Fit a line to hand-typed readings versus known masses (F = m g).
 - Table, fit, errors, chart, CSV record, Copy results, Print
 
 ## Behavior to keep
+- Column headings and Gain/Zero offset show a definition tip (see [hover-definitions](hover-definitions.md))
 - No reading changes; no traceability claim; nothing saved
 - Leave warning when values are typed: the site pop-up for links inside the site (see [leave-popup](leave-popup.md)) and `beforeunload` for closing the tab, reload, and Back
 

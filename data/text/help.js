@@ -51,6 +51,7 @@ window.SITE_TEXT.help = {
           labels: [ "Where", "What it does" ],
           rows: [
             [ "Esc", "Test pages, while connected", "Sends a STOP command. It depends on page focus, event handling, and a working connection. It is not a physical emergency stop. While the pre-test checklist pop-up is open, Esc closes the pop-up and does not send STOP." ],
+            [ "Tab", "Underlined terms (Key results, Readout, setup labels, table headings)", "Opens a small box with the definition. It closes when you move on, and Esc closes it; on a test page Esc still sends STOP." ],
             [ "← and →", "Graph", "Move the readout to the previous or next point. Hold Shift to move ten points." ],
             [ "Home and End", "Graph", "Move the readout to the first or last point." ],
             [ "+ and −", "Graph", "Zoom in and out. Display only; calculated results do not change." ],

@@ -78,7 +78,7 @@
     '<p class="cal-example" id="cal-example" role="status" hidden><strong>Example numbers, not measured.</strong> Replace them with your own readings, or press Clear all.</p>' +
     '<div class="table-scroll" tabindex="0" role="region" aria-label="Calibration points">' +
       '<table class="cal-table"><caption class="sr-only">Known masses and tester readings</caption><thead><tr>' +
-        '<th scope="col">#</th><th scope="col" id="th-m">Known mass (g)</th><th scope="col">Force from the mass (N)</th><th scope="col">Tester reading (N)</th><th scope="col">Error (N)</th><th scope="col">Error (% of reading)</th><th scope="col">Flag</th>' +
+        '<th scope="col">#</th><th scope="col" id="th-m">Known mass (g)</th><th scope="col"><span data-term="forcemass" tabindex="0">Force from the mass (N)</span></th><th scope="col">Tester reading (N)</th><th scope="col"><span data-term="errN" tabindex="0">Error (N)</span></th><th scope="col"><span data-term="errPct" tabindex="0">Error (% of reading)</span></th><th scope="col">Flag</th>' +
       '</tr></thead><tbody id="cal-rows"></tbody></table>' +
     '</div>' +
     '<p class="muted small">Error = reading − force from the mass. Error (% of reading) = error ÷ reading × 100. A flag appears only if you enter a tolerance above. Percentages are large and not very meaningful when the reading is close to zero.</p>' +
@@ -150,8 +150,8 @@
     var html = warn;
     if (f.ok) {
       html += '<dl class="mat-dl cal-dl">' +
-        '<dt>Gain (reading per newton of force)</dt><dd>' + sig(f.a, 6) + '</dd>' +
-        '<dt>Zero offset (N)</dt><dd>' + sig(f.b, 4) + '</dd>' +
+        '<dt data-term="gain" tabindex="0">Gain (reading per newton of force)</dt><dd>' + sig(f.a, 6) + '</dd>' +
+        '<dt data-term="offset" tabindex="0">Zero offset (N)</dt><dd>' + sig(f.b, 4) + '</dd>' +
         '<dt>R²</dt><dd>' + (f.r2 === null ? '—' : sig(f.r2, 6)) + '</dd>' +
         '<dt>Points used</dt><dd>' + f.n + (f.n < 5 ? ' <span class="muted small">(5 or more is better)</span>' : '') + '</dd>' +
         '<dt>Largest error (N)</dt><dd>' + sig(f.big, 4) + '</dd></dl>' +

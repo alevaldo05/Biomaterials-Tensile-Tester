@@ -17,6 +17,7 @@ Typical property ranges, comparison, chart, and example curves.
 - Typing Material box, tables, comparison, Young's modulus vs density chart
 
 ## Behavior to keep
+- Young's modulus and Tensile strength column headings show a definition tip (see [hover-definitions](hover-definitions.md))
 - Values stay "Typical, unreviewed" until the owner or advisor approves them
 - Never cite a source that was not actually read
 
