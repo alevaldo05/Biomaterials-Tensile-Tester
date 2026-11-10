@@ -141,7 +141,12 @@
 
   /* Esc closes an open tip only. The event is left alone so a test page still sends STOP. */
   document.addEventListener('keydown', function (e) { if (e.key === 'Escape') hideTip(); });
-  window.addEventListener('scroll', hideTip, true);
+  /* Scrolling keeps the tip with its word; it closes only when the word has scrolled out of the window. (Tab can scroll a word into view, so closing on every scroll would hide the tip it just opened.) */
+  window.addEventListener('scroll', function () {
+    if (!tipTarget) return;
+    var r = tipTarget.getBoundingClientRect();
+    if (r.bottom < 0 || r.top > document.documentElement.clientHeight || r.right < 0 || r.left > document.documentElement.clientWidth) hideTip(); else place();
+  }, true);
   window.addEventListener('resize', hideTip);
 
   /* ---------- Site pop-up ---------- */
