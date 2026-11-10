@@ -442,5 +442,25 @@ begin('12. Stylesheet order');
   if (failures === before) ok(PAGES.length + ' pages link the same stylesheets in the same order (' + ref.length + ' on each page, the 404 page the first ' + (ref.indexOf('styles-looks.css')) + ')');
 })();
 
+/* 13. Script order for the split files: each page loads the pieces before the file that uses them. */
+begin('13. Split script order');
+(function () {
+  var before = failures, rules = [['live.js', ['live-links.js', 'live-checklist.js', 'live-csv.js']]], count = 0;
+  PAGES.forEach(function (page) {
+    var list = scriptsOf(read(page)).map(function (s) { return localPath(page, s); });
+    rules.forEach(function (r) {
+      var at = list.indexOf(r[0]);
+      if (at < 0) return;
+      count++;
+      r[1].forEach(function (need) {
+        var pos = list.indexOf(need);
+        if (pos < 0) fail(page + ' loads ' + r[0] + ' but not ' + need + ' (it must be listed before ' + r[0] + ').');
+        else if (pos > at) fail(page + ' lists ' + need + ' after ' + r[0] + '; it must come before it.');
+      });
+    });
+  });
+  if (failures === before) ok(count + ' page/script pairs list the split pieces before the file that uses them');
+})();
+
 console.log('\n' + (failures ? failures + ' problem' + (failures === 1 ? '' : 's') + ' found. Fix them before merging; the site is not published while a check fails.' : 'All checks passed.'));
 process.exit(failures ? 1 : 0);

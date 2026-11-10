@@ -6,7 +6,8 @@ Feature card. Update it in the same change as the feature.
 Setup, connection, Start/STOP/Tare, recording, auto-stop, and CSV on the two test pages.
 
 ## Files
-- `live.js`
+- `live.js` (the page: setup form, review, guided steps, run control, readings)
+- `live-links.js` (USB and simulator links), `live-checklist.js` (pre-test checklist pop-up), `live-csv.js` (CSV text); load before `live.js`
 - `data/device.js`
 - `data/checklist.js`
 - `ui.js` (the checklist pop-up is the shared Site pop-up; see shared-popups card)
