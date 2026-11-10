@@ -6,7 +6,8 @@ Feature card. Update it in the same change as the feature.
 A labeled stand-in for the tester so every feature works without hardware and in Safari.
 
 ## Files
-- `live.js` (the "Use simulator" link)
+- `live-links.js` (`SimLink`: the simulator)
+- `live.js` (the "Use simulator" button)
 - `data/samples.js`, `data/sample-models.js` (curves)
 - `graph.js` (source labels)
 

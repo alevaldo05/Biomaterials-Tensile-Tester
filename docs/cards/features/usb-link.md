@@ -6,7 +6,8 @@ Feature card. Update it in the same change as the feature.
 Web Serial connection to the tester (Chrome only). The message format is a draft.
 
 ## Files
-- `live.js` (button `c-usb`, `c-off`)
+- `live-links.js` (`SerialLink`: the Web Serial connection)
+- `live.js` (buttons `c-usb`, `c-off`)
 - `data/device.js` (baud rate, commands START/STOP/TARE/PING, reading columns, limits)
 
 ## What the user sees
