@@ -8,7 +8,7 @@ Overlay several CSV files of one test type on Load Test.
 ## Files
 - `compare.js`
 - `load-test.js`
-- `graph.js` (numbers)
+- `graph-core.js` / `graph.js` (numbers)
 
 ## What the user sees
 - Overlay graph, table per specimen with mean and sample standard deviation, summary CSV, Copy summary, PNG, SVG, Excel, Print
