@@ -45,3 +45,6 @@ html[data-steps="guided"] .live-layout:not(.has-run) #graph-app { display: none;
 html[data-steps="guided"] .live-layout:not(.ended) #g-actions { display: none; }
 @media (max-width: 900px) { html[data-steps="guided"] .gs-bar { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
 @media print { .gs-switch, .gs-bar, .gs-nav, .help-q { display: none; } }
+/* The step buttons (Back, Next) and the run buttons (Tare, Start test, STOP) share one height and padding in every style, so they look in proportion. STOP stays red; the styles still choose the type and corners. */
+:root .gs-nav .btn, :root .gs-nav .btn-secondary, :root .run-bar .btn, :root .run-bar .btn-secondary, :root .run-bar .btn-stop { box-sizing: border-box; display: inline-flex; align-items: center; justify-content: center; min-height: 2.75rem; padding: 0.4rem 1.5rem; line-height: 1.25; }
+:root .gs-nav .btn, :root .gs-nav .btn-secondary { min-width: 6.5rem; }
