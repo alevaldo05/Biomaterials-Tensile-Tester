@@ -7,6 +7,7 @@ Publishing with GitHub Pages and the pre-publish checks.
 
 ## Files
 - `scripts/check-site.js`
+- `scripts/check-combinations.js` (optional, by hand; needs Playwright; every theme x layout x style plus pairwise coverage of all display choices)
 - `scripts/build-site.sh`
 - `.github/workflows/deploy.yml`
 - `docs/DEPLOY.md`

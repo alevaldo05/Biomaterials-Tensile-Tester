@@ -42,6 +42,7 @@ Read this file, then only the cards for the page or feature being changed. Updat
 ```
 python3 -m http.server 8000     # then open http://localhost:8000/
 node scripts/check-site.js      # must pass before any pull request
+node scripts/check-combinations.js --quick   # optional, by hand: many display combinations in a real browser (needs Playwright)
 ```
 
 Preview in Chrome at 1280 px and 1024 px, run the simulator on both test pages, and look for "Refused to" in the console. Safari and Windows are targets but usually cannot be tried by an assistant.
