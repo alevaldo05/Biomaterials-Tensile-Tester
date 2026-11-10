@@ -1,0 +1,18 @@
+/* Compare several files (Load Test). Part of the site's styles: every page links these files in the order listed in FILES.md. */
+/* ---------- Compare several files (Load Test) ---------- */
+#compare-app { margin-top: 1rem; }
+.cmp-card { padding: calc(1.1rem * var(--sp)) 1.4rem; margin: 0 0 calc(1.25rem * var(--sp)); border: 1px solid var(--line); border-radius: 10px; background: var(--surface); }
+.cmp-card h2 { margin: 0 0 0.6rem; font-size: 1.15rem; }
+.cmp-list { list-style: none; margin: 0 0 0.5rem; padding: 0; display: grid; gap: 0.3rem; }
+.cmp-list li { display: flex; flex-wrap: wrap; align-items: center; gap: 0.25rem 0.75rem; padding: 0.3rem 0.4rem; border-radius: 6px; }
+.cmp-list li.is-off { opacity: 0.6; }
+.cmp-list label { display: inline-flex; align-items: center; gap: 0.5rem; cursor: pointer; }
+.cmp-list input:focus-visible { outline: 3px solid var(--focus); outline-offset: 2px; }
+.cmp-sw { flex: none; }
+.cmp-warn { margin: 0 0 0.6rem; padding: 0.5rem 0.75rem; border-left: 4px solid var(--danger); background: var(--surface); font-size: 0.9375rem; }
+.cmp-chart svg { display: block; width: 100%; max-width: 54rem; height: auto; }
+.cmp-table { min-width: 44rem; table-layout: auto; }
+.cmp-table .unit { color: var(--muted); font-weight: 400; white-space: nowrap; }
+.cmp-table tfoot th, .cmp-table tfoot td { font-weight: 700; border-top: 2px solid var(--line); }
+.cmp-table tfoot tr + tr th, .cmp-table tfoot tr + tr td { border-top: 1px solid var(--line); }
+

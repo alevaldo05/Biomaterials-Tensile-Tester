@@ -1,0 +1,47 @@
+/* Protocol pages: tabs, steps, and the jump list. Part of the site's styles: every page links these files in the order listed in FILES.md. */
+/* ---------- Protocol pages ---------- */
+.pill-links { display: flex; flex-wrap: wrap; gap: 0.5rem; margin: 0.5rem 0 0.25rem; }
+.pill-links a { padding: 0.3rem 0.9rem; border: 1px solid var(--line); border-radius: 999px; text-decoration: none; color: var(--ink); background: var(--surface); }
+.pill-links a:hover { border-color: var(--accent); }
+.pill-links a[aria-current="page"] { border-color: var(--accent); box-shadow: inset 0 0 0 1px var(--accent); font-weight: 600; color: var(--link); }
+.protocol .lead { max-width: 75ch; }
+.protocol-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: calc(0.25rem * var(--sp)) 2rem; }
+.protocol-part h2 { margin: 0.75rem 0 0.35rem; font-size: 1rem; }
+.protocol-part ul, .protocol-part ol { margin: 0; padding-left: 1.4rem; }
+.protocol-part li { margin-bottom: calc(0.3rem * var(--sp)); }
+.protocol-part.wide-part { grid-column: 1 / -1; }
+.ph { padding: 0 0.15em; border-radius: 3px; background: color-mix(in srgb, var(--accent) 16%, transparent); color: var(--ink); font-weight: 600; }
+/* tabs and steps */
+.proto-tabs { display: flex; flex-wrap: wrap; gap: 0.25rem; border-bottom: 1px solid var(--line); margin: 1.25rem 0; }
+.proto-tabs button { background: none; border: 0; border-bottom: 3px solid transparent; margin-bottom: -1px; padding: 0.6rem 1rem; font: inherit; font-weight: 600; color: var(--muted); cursor: pointer; }
+.proto-tabs button:hover { color: var(--ink); }
+.proto-tabs button[aria-selected="true"] { color: var(--ink); border-bottom-color: var(--accent); }
+.proto-tabs button:focus-visible { outline: 3px solid var(--focus); outline-offset: -3px; }
+.proto-panel { container-type: inline-size; outline: none; }
+.steps-layout { display: grid; grid-template-columns: min(17rem, 40%) minmax(0, 1fr); gap: calc(2rem * var(--sp)); align-items: start; }
+.step-nav { position: sticky; top: 1rem; max-height: calc(100vh - 2rem); overflow: auto; padding: 0.9rem 1rem; border: 1px solid var(--line); border-radius: 10px; background: var(--surface); }
+.step-nav h2 { font-size: 0.95rem; margin: 0 0 0.5rem; }
+.step-nav ol { list-style: none; margin: 0; padding: 0; display: grid; gap: 0.15rem; }
+.step-nav a { display: flex; gap: 0.5rem; padding: 0.35rem 0.45rem; border-radius: 6px; text-decoration: none; color: var(--ink); font-size: 0.875rem; line-height: 1.3; }
+.step-nav a:hover { background: var(--bg); }
+.step-nav a.is-here { background: color-mix(in srgb, var(--accent) 14%, transparent); font-weight: 600; }
+.step-nav a:focus-visible, .step-links a:focus-visible, .copy-link:focus-visible { outline: 3px solid var(--focus); outline-offset: 2px; }
+.step-nav .n { flex: none; min-width: 1.4rem; color: var(--muted); }
+.step-cards { list-style: none; margin: 0; padding: 0; display: grid; gap: calc(0.9rem * var(--sp)); }
+.step-card { display: grid; grid-template-columns: 2.2rem minmax(0, 1fr); gap: 0.9rem; padding: calc(1rem * var(--sp)) 1.1rem; border: 1px solid var(--line); border-radius: 10px; background: var(--surface); scroll-margin-top: 1rem; }
+.step-card:focus-visible { outline: 3px solid var(--focus); }
+.step-num { display: inline-flex; align-items: center; justify-content: center; width: 2.2rem; height: 2.2rem; border-radius: 50%; background: var(--accent); color: var(--accent-ink); font-weight: 700; }
+.step-text { margin: 0 0 0.5rem; font-size: 1.0625rem; }
+.step-links { display: flex; flex-wrap: wrap; gap: 0.35rem 0.9rem; margin: 0; font-size: 0.875rem; }
+.step-links a, .copy-link { color: var(--link); }
+.copy-link { background: none; border: 0; padding: 0; font: inherit; text-decoration: underline; cursor: pointer; }
+.step-card.flash { animation: stepflash 1.2s ease-out; }
+@keyframes stepflash { from { box-shadow: 0 0 0 4px color-mix(in srgb, var(--accent) 45%, transparent); } to { box-shadow: 0 0 0 0 transparent; } }
+@media (prefers-reduced-motion: reduce) { .step-card.flash { animation: none; } }
+/* large text: the jump list goes above the steps instead of beside them */
+@container (max-width: 50em) {
+  .steps-layout { grid-template-columns: minmax(0, 1fr); }
+  .step-nav { position: static; max-height: none; }
+  .protocol-grid { grid-template-columns: minmax(0, 1fr); }
+}
+

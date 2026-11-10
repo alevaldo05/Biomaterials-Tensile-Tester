@@ -418,5 +418,29 @@ begin('11. Project cards');
   if (failures === before) ok(PAGES.length + ' pages have a card; ' + cards.length + ' cards name only files and links that exist');
 })();
 
+/* 12. Every page links the same stylesheets in the same order (the styles are split into css/*.css and the cascade depends on the order). */
+begin('12. Stylesheet order');
+(function () {
+  var before = failures, ref = null, refPage = '';
+  function sheets(page) {
+    var out = [], re = /<link[^>]*rel\s*=\s*"stylesheet"[^>]*href\s*=\s*"([^"]+)"/gi, m, html = read(page);
+    while ((m = re.exec(html))) out.push(m[1].indexOf(SITE_PATH) === 0 ? m[1].slice(SITE_PATH.length) : m[1]);
+    return out;
+  }
+  PAGES.forEach(function (page) {
+    if (page === '404.html') return;
+    var list = sheets(page);
+    if (!ref) { ref = list; refPage = page; return; }
+    if (JSON.stringify(list) !== JSON.stringify(ref)) fail(page + ' links different stylesheets (or a different order) than ' + refPage + '. Every page must link the same list, in the same order (see FILES.md).');
+  });
+  if (!ref || ref[0] !== 'styles.css') fail('The first stylesheet on every page must be styles.css.');
+  else {
+    /* the 404 page links only the shared styles (up to styles-looks.css), with the full site address */
+    var shared = ref.slice(0, ref.indexOf('styles-looks.css') >= 0 ? ref.indexOf('styles-looks.css') : ref.length);
+    if (exists('404.html') && JSON.stringify(sheets('404.html')) !== JSON.stringify(shared)) fail('404.html must link the same shared stylesheets as the other pages (styles.css and css/*.css, up to styles-looks.css), in the same order.');
+  }
+  if (failures === before) ok(PAGES.length + ' pages link the same stylesheets in the same order (' + ref.length + ' on each page, the 404 page the first ' + (ref.indexOf('styles-looks.css')) + ')');
+})();
+
 console.log('\n' + (failures ? failures + ' problem' + (failures === 1 ? '' : 's') + ' found. Fix them before merging; the site is not published while a check fails.' : 'All checks passed.'));
 process.exit(failures ? 1 : 0);

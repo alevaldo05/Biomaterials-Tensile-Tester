@@ -1,0 +1,16 @@
+/* About page. Part of the site's styles: every page links these files in the order listed in FILES.md. */
+/* ---------- About page ---------- */
+.topbar nav { flex-wrap: wrap; }
+@media (max-width: 400px) { .topbar nav { gap: 0.125rem; } .topbar nav a { padding: 0.25rem 0.45rem; } }
+.section .glossary + p { margin-top: 0.75rem; }
+.compare { margin: 0.75rem 0; }
+.compare tbody th { white-space: normal; width: 9rem; }
+.compare td { width: 42%; color: var(--muted); }
+@media (max-width: 720px) {
+  .compare thead { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
+  .compare, .compare tbody, .compare tr, .compare th, .compare td { display: block; width: auto; }
+  .compare tr { padding: 0.625rem 0; border-top: 1px solid var(--line); }
+  .compare th, .compare td { padding: 0.15rem 0; border-top: 0; }
+  .compare td::before { content: attr(data-label) ": "; font-weight: 600; color: var(--ink); }
+}
+
