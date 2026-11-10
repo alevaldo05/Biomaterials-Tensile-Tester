@@ -1,0 +1,43 @@
+/* Theme preview (theme-preview.html). Each .pv block defines its own set of the site's color variables; the samples inside use
+   the site's real classes, so they look as they would on a page in that theme. Preview only: nothing here is used by the site. */
+.pv-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 1.25rem; margin: 1rem 0 1.5rem; }
+@media (max-width: 1100px) { .pv-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+@media (max-width: 720px) { .pv-grid { grid-template-columns: minmax(0, 1fr); } }
+
+.pv { display: grid; gap: 0.75rem; align-content: start; padding: 0.75rem; border: 1px solid #888; border-radius: 10px; background: var(--bg); color: var(--ink); font-size: 0.9375rem; }
+.pv h2 { margin: 0; font-size: 1.0625rem; }
+.pv .pv-sub { margin: -0.4rem 0 0; font-size: 0.8125rem; color: var(--muted); }
+.pv .pv-unv { margin: 0; padding: 0.2rem 0.5rem; border-left: 4px solid var(--mark); background: var(--surface); font-size: 0.8125rem; }
+.pv a { color: var(--link); }
+.pv .pv-head { display: flex; align-items: center; justify-content: space-between; gap: 0.5rem; padding: 0.4rem 0.6rem; border-bottom: 1px solid var(--line); background: var(--surface); }
+.pv .pv-logo { color: var(--accent); font-weight: 800; letter-spacing: 0.02em; }
+.pv .pv-nav { display: flex; flex-wrap: wrap; gap: 0.2rem 0.7rem; font-size: 0.8125rem; }
+.pv .pv-nav a { text-decoration: none; }
+.pv .pv-row { display: flex; flex-wrap: wrap; align-items: center; gap: 0.5rem 0.75rem; }
+.pv .pv-card { padding: 0.6rem 0.75rem; border: 1px solid var(--line); border-radius: 8px; background: var(--surface); }
+.pv .pv-card h3 { margin: 0 0 0.2rem; font-size: 0.9375rem; }
+.pv .pv-card p { margin: 0; }
+.pv table { width: 100%; border-collapse: collapse; font-size: 0.8125rem; }
+.pv th, .pv td { padding: 0.25rem 0.4rem; border-top: 1px solid var(--line); text-align: left; }
+.pv thead th { border-top: 0; color: var(--muted); }
+.pv .pv-warn { margin: 0; padding: 0.35rem 0.6rem; border-left: 4px solid var(--mark); background: var(--surface); font-size: 0.8125rem; }
+.pv .pv-err { margin: 0; color: var(--danger); font-weight: 600; font-size: 0.8125rem; }
+.pv .pv-graph { display: block; width: 100%; height: auto; border: 1px solid var(--line); border-radius: 6px; background: var(--surface); }
+.pv .pv-focus { outline: 3px solid var(--focus); outline-offset: 2px; }
+.pv .pv-ctl { padding: 0.3rem 0.6rem; border: 1px solid var(--accent); border-radius: 6px; background: var(--surface); color: var(--ink); font: inherit; font-size: 0.8125rem; }
+.pv .pv-cr { font-size: 0.75rem; }
+.pv .pv-cr th { font-weight: 600; }
+.pv .pv-cr td.n { text-align: right; font-variant-numeric: tabular-nums; }
+.pv .pv-ok { color: var(--ink); font-weight: 700; }
+.pv .pv-bad { color: var(--danger); font-weight: 700; }
+
+/* The seven color sets. Same variable names as the site's real themes (styles.css). */
+.pv[data-pv="green-light"] { --bg:#f6f2e9; --surface:#fbf8f1; --ink:#1f2a24; --muted:#4a5a50; --line:#d6d2c4; --accent:#3f6b52; --accent-ink:#ffffff; --accent-hover:#335841; --link:#2f5a43; --mark:#b45309; --focus:#1f4d36; --danger:#9a3a3a; --danger-ink:#ffffff; color-scheme: light; }
+.pv[data-pv="green-dark"] { --bg:#1b2420; --surface:#222d28; --ink:#e8efe9; --muted:#b0bfb5; --line:#36443d; --accent:#7fb08f; --accent-ink:#14201a; --accent-hover:#93c0a1; --link:#94c6a5; --mark:#f0a24b; --focus:#b6dcc2; --danger:#f0a3a3; --danger-ink:#2a1414; color-scheme: dark; }
+/* MU colors: values from the project plan, UNVERIFIED. Manhattan Green #046A38; secondary green #A3D032; gold #F5A800. */
+.pv[data-pv="mu-green-light"] { --bg:#f6f2e9; --surface:#fbf8f1; --ink:#1f2a24; --muted:#4a5a50; --line:#d6d2c4; --accent:#046A38; --accent-ink:#ffffff; --accent-hover:#035a2f; --link:#046A38; --mark:#b45309; --focus:#02391e; --danger:#9a3a3a; --danger-ink:#ffffff; color-scheme: light; }
+.pv[data-pv="mu-green-dark"] { --bg:#1b2420; --surface:#222d28; --ink:#e8efe9; --muted:#b0bfb5; --line:#36443d; --accent:#A3D032; --accent-ink:#14201a; --accent-hover:#b4dc58; --link:#b4dc58; --mark:#F5A800; --focus:#d6ef9c; --danger:#f0a3a3; --danger-ink:#2a1414; color-scheme: dark; }
+.pv[data-pv="mu"] { --bg:#ffffff; --surface:#f3f8f0; --ink:#14201a; --muted:#44524a; --line:#cdd9ca; --accent:#046A38; --accent-ink:#ffffff; --accent-hover:#035a2f; --link:#046A38; --mark:#9a6700; --focus:#02391e; --danger:#9a3a3a; --danger-ink:#ffffff; color-scheme: light; }
+.pv[data-pv="mu"] .pv-head { border-bottom: 3px solid #F5A800; }   /* gold as an accent only, never as text */
+.pv[data-pv="purple-dark"] { --bg:#1c1826; --surface:#252033; --ink:#ece8f5; --muted:#b9b0cf; --line:#3a3350; --accent:#b79df0; --accent-ink:#1b1430; --accent-hover:#c9b6f5; --link:#c8b5f7; --mark:#f0a24b; --focus:#dccffb; --danger:#f0a3a3; --danger-ink:#2a1414; color-scheme: dark; }
+.pv[data-pv="pink-dark"] { --bg:#26171d; --surface:#2f1e26; --ink:#f6e9ee; --muted:#d3b4c0; --line:#4a303b; --accent:#f08fb0; --accent-ink:#2a0f1a; --accent-hover:#f5a6c0; --link:#f7a9c4; --mark:#f0a24b; --focus:#ffd0df; --danger:#f0a3a3; --danger-ink:#2a1414; color-scheme: dark; }
