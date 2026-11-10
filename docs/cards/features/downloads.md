@@ -6,7 +6,8 @@ Feature card. Update it in the same change as the feature.
 Download data as CSV (opens in Excel), the numeric .xlsx file, and the graph as PNG or SVG.
 
 ## Files
-- `live.js` (CSV on test pages)
+- `live-csv.js` (the CSV text and file name on test pages)
+- `live.js` (the Download button)
 - `graph.js` (CSV reading, PNG, SVG)
 - `excel-export.js` (hand-written zip and XML)
 
