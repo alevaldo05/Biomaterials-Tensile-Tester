@@ -26,6 +26,12 @@ dialog.site-dialog button:focus-visible { outline: 3px solid var(--focus); outli
 .lv-stopbtn:hover { background: var(--danger); filter: brightness(1.1); }
 .lv-stopbtn .lv-note { color: var(--danger-ink); }
 
+/* Terms: a quiet dotted underline marks a word that has a definition (hover or Tab). */
+[data-term], [data-tip-id] { text-decoration: underline dotted; text-decoration-thickness: 1px; text-underline-offset: 0.2em; cursor: help; }
+.siteui-tip-name { font-weight: 600; margin-bottom: 0.15rem; }
+.siteui-tip-eq, .siteui-tip-unit { margin-top: 0.15rem; color: var(--muted); }
+@media print { [data-term], [data-tip-id] { text-decoration: none; } }
+
 /* Dismissible note: small, not modal. The stack sits above the pinned STOP bar and never covers it. */
 .siteui-notes { position: fixed; left: 1rem; bottom: 1rem; z-index: 35; display: grid; gap: 0.5rem; width: min(22rem, calc(100vw - 2rem)); }
 body.has-stop-dock .siteui-notes { bottom: 6.5rem; }

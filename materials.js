@@ -24,6 +24,8 @@
   function fam(id) { return FAMS.filter(function (f) { return f.id === id; })[0]; }
   function rng(r) { return r ? (r[0] === r[1] ? String(r[0]) : r[0] + '–' + r[1]) : null; }
   function midv(r) { return r ? (r[0] + r[1]) / 2 : -1; }
+  /* property column -> entry in data/terms.js; columns with no wording in the project (density, elongation, Poisson's ratio, yield) have no tip */
+  var MAT_TERMS = { E: 'youngs', uts: 'uts' };
   var COLS = [
     ['E', 'Young’s modulus (GPa)', function (m) { return rng(m.E); }, function (m) { return midv(m.E); }],
     ['rho', 'Density (kg/m³)', function (m) { return rng(m.rho); }, function (m) { return midv(m.rho); }],
@@ -185,7 +187,7 @@
         '<colgroup><col style="width:9%"><col style="width:14%"><col style="width:9%"><col style="width:9%"><col style="width:9%"><col style="width:11%"><col style="width:9%"><col style="width:8%"><col style="width:12%"><col style="width:10%"></colgroup>' +
         '<thead><tr><th>Compare</th><th>Material</th>' + COLS.map(function (c) {
           var on = s && s.col === c[0];
-          return '<th' + (c[3] ? ' aria-sort="' + (on ? (s.dir > 0 ? 'ascending' : 'descending') : 'none') + '"' : '') + '>' + (c[3] ? '<button type="button" class="sortbtn" data-fam="' + f.id + '" data-col="' + c[0] + '">' + c[1] + (on ? (s.dir > 0 ? ' ▲' : ' ▼') : '') + '</button>' : c[1]) + '</th>';
+          return '<th' + (c[3] ? ' aria-sort="' + (on ? (s.dir > 0 ? 'ascending' : 'descending') : 'none') + '"' : '') + '>' + (c[3] ? '<button type="button" class="sortbtn"' + (MAT_TERMS[c[0]] ? ' data-term="' + MAT_TERMS[c[0]] + '"' : '') + ' data-fam="' + f.id + '" data-col="' + c[0] + '">' + c[1] + (on ? (s.dir > 0 ? ' ▲' : ' ▼') : '') + '</button>' : c[1]) + '</th>';
         }).join('') + '<th>What changes the value</th><th>Status</th></tr></thead><tbody>' +
         ms.map(function (m) {
           return '<tr' + (m.id === sel ? ' class="sel"' : '') + '><td><input type="checkbox" data-cmp="' + m.id + '" aria-label="Compare ' + esc(m.name) + '"' + (compare.indexOf(m.id) >= 0 ? ' checked' : '') + '></td>' +
