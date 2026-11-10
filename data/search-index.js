@@ -51,7 +51,7 @@ window.SEARCH_INDEX = [
   { t: "Review before starting (New Test)", p: "test-uniaxial-tension.html", a: "rv-title", w: "Uniaxial Tension test", k: "review values start required entries" },
   { t: "Specimen and settings (Stress Relaxation)", p: "test-stress-relaxation.html", a: "spec-title", w: "Stress Relaxation test", k: "material specimen id dimensions hold displacement duration speed temperature environment" },
   { t: "Review before starting (Stress Relaxation)", p: "test-stress-relaxation.html", a: "rv-title", w: "Stress Relaxation test", k: "review values start required entries" },
-  { t: "Color theme (Settings)", p: "settings.html", a: "set-theme", w: "Settings", k: "color theme green light dark purple pink" },
+  { t: "Color theme (Settings)", p: "settings.html", a: "set-theme", w: "Settings", k: "color theme green light dark purple pink mu manhattan university colors" },
   { t: "Layout (Settings)", p: "settings.html", a: "set-layout", w: "Settings", k: "layout start screen sidebar cards tabs reading" },
   { t: "Font (Settings)", p: "settings.html", a: "set-font", w: "Settings", k: "font serif sans humanist" },
   { t: "Style (Settings)", p: "settings.html", a: "set-style", w: "Settings", k: "style standard lab instrument clinical engineering drawing academic" },
