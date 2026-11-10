@@ -15,6 +15,7 @@ The two test pages show one setup step at a time (the default), with a "Show all
 ## What the user sees
 - Step bar: 1 Specimen, 2 Dimensions, 3 Test settings, 4 Connection, 5 Review and start. Done steps show a check and a one-line summary and can be reopened; later steps are locked until reached
 - Dimensions and Test settings each have their own small link, **Fill example dimensions** and **Fill example settings**, that fills only that step (nothing is prefilled; type your own instead if you prefer). Specimen has none. The links are disabled while a test runs
+- Back, Next, Tare, Start test, and STOP share one height and padding in every style (`css/guided.css`, last rule); STOP stays red
 - Back and Next under each step; Next is unavailable until the step's required entries are valid, and the line under it says why (for example "Enter the gauge length in mm.")
 - STOP is outside the steps and always shown; Tare, Start, and auto-stop appear on step 5. While recording only the step bar, STOP, and the graph remain
 - The graph, Readout, and Key results appear when recording starts; downloads and Print report when the test ends
