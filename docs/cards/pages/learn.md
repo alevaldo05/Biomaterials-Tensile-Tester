@@ -7,7 +7,7 @@ Before you test (checklist), Background (biomechanics, why tensile testing matte
 
 ## Files
 - HTML: `learn.html` (ids `before-title`, `bg-title`, `gloss-title`)
-- Scripts in order: `display-settings.js` (head), `data/checklist.js`, `data/text/learn.js`, `report.js`, `text.js`, `layouts.js`, `data/search-index.js`, `site-search.js`, `build-number.js`
+- Scripts in order: `display-settings.js`, `ui.js` (head), `data/checklist.js`, `data/text/learn.js`, `report.js`, `text.js`, `layouts.js`, `data/search-index.js`, `site-search.js`, `build-number.js`
 - Words: `data/text/learn.js`
 - CSS: `styles.css` Home additions, Back to top
 

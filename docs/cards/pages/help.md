@@ -7,7 +7,7 @@ Troubleshooting (problem and action table), Keyboard (only keys that work), and 
 
 ## Files
 - HTML: `help.html` (ids `trouble-title`, `keys-title`, `helprefs-title`)
-- Scripts in order: `display-settings.js` (head), `data/references.js`, `data/text/help.js`, `text.js`, `layouts.js`, `data/search-index.js`, `site-search.js`, `page-nav.js`, `build-number.js`
+- Scripts in order: `display-settings.js`, `ui.js` (head), `data/references.js`, `data/text/help.js`, `text.js`, `layouts.js`, `data/search-index.js`, `site-search.js`, `page-nav.js`, `build-number.js`
 - Words: `data/text/help.js`; references: `data/references.js` (37 entries from the owner's research, not independently opened)
 
 ## What the user sees

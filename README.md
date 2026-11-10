@@ -82,7 +82,7 @@ There are no environment variables, accounts, or keys. The settings are:
 | Protocol text | `data/protocols.js` | Draft placeholders. Text in `[square brackets]` is highlighted as still to be decided. |
 | Further reading | `data/articles.js` | Empty until links are added. Only `http://` and `https://` links are shown. |
 
-Test data is never saved by the site. It stays in the browser tab until you download it, and the page warns before you leave with data that hasn't been downloaded.
+Test data is never saved by the site. It stays in the browser tab until you download it, and the page warns before you leave with data that hasn't been downloaded (clicking a link in the site opens the site's own "Leave without saving?" pop-up, with a STOP button while recording; closing the tab, reloading, or Back shows the browser's own box, which a site cannot restyle).
 
 ## Tester message format (draft)
 

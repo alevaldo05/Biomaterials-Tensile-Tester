@@ -496,19 +496,15 @@
     var C = window.PRETEST_CHECKLIST, tissue = true;
     var groups = C.groups.map(function (g) { return { name: g.name, items: g.items.filter(function (it) { return !it.tissue || tissue; }) }; });
     var total = groups.reduce(function (n, g) { return n + g.items.length; }, 0);
-    if (typeof HTMLDialogElement === 'undefined' || !HTMLDialogElement.prototype.showModal) {
+    if (!window.SiteUI || typeof HTMLDialogElement === 'undefined' || !HTMLDialogElement.prototype.showModal) {
       /* very old browser without <dialog>: a plain confirmation that lists the same items */
       var lines = groups.map(function (g) { return g.name + ':\n' + g.items.map(function (it) { return ' - ' + it.text; }).join('\n'); }).join('\n\n');
       if (window.confirm(C.title + '\n\n' + lines + '\n\nHave you done all of these?')) onConfirm();
       return;
     }
     if (!checklistDlg) {
-      checklistDlg = document.createElement('dialog');
-      checklistDlg.className = 'pretest';
-      checklistDlg.setAttribute('aria-labelledby', 'pt-title');
-      /* Esc only closes this pop-up; it must not also reach the page's Esc-sends-STOP shortcut */
-      checklistDlg.addEventListener('keydown', function (e) { if (e.key === 'Escape') e.stopPropagation(); });
-      document.body.appendChild(checklistDlg);
+      /* the shared site pop-up (ui.js): it keeps Esc from reaching the page's Esc-sends-STOP shortcut */
+      checklistDlg = window.SiteUI.dialog({ className: 'pretest', labelledBy: 'pt-title' }).el;
     }
     var dlg = checklistDlg;
     dlg.innerHTML =
@@ -686,7 +682,15 @@
     msg('Data downloaded as ' + fileBase() + '.csv. Open it in Excel, or reopen it later with Load Test.');
   });
 
+  /* A click on a link inside the site: the site's own "Leave without saving?" pop-up (ui.js). Closing the tab, reloading, and Back
+     cannot be caught that way, so the browser's own box stays for them. */
+  if (window.SiteUI) window.SiteUI.leaveGuard(function () {
+    if (running) return { text: 'A test is still recording. Leaving this page does not stop the machine, and the data so far will be lost.', stayNote: 'Keep recording and keep your data.', leaveNote: 'The data so far will be lost.', stop: function () { stopTest('Stopped by you. STOP sent.'); } };
+    if (hasData && !downloaded) return { text: 'This test\u2019s data has not been downloaded. It is kept only in this tab and will be lost.', stayNote: 'Keep your data on this page.', leaveNote: 'The data will be lost.', download: { label: 'Download CSV and leave', note: 'Saves the CSV file first, then leaves.', run: function () { $('dl-csv').click(); } } };
+    return null;
+  });
   window.addEventListener('beforeunload', function (e) {
+    if (window.SiteUI && window.SiteUI.leaving) return;
     if (running || (hasData && !downloaded)) { e.preventDefault(); e.returnValue = ''; }
   });
 
