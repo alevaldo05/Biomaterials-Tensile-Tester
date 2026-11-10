@@ -292,8 +292,16 @@
     rows = masses.map(function (m, i) { var F = m * 0.001 * G0; return { m: String(m), r: String(parseFloat((1.012 * F + 0.08 + noise[i]).toFixed(3))) }; });
     example = true; dirty = true; renderRows(); update();
   });
+  function unsaved() { return dirty && rows.some(function (r) { return r.m !== '' || r.r !== ''; }); }
+  /* A click on a link inside the site: the site's own "Leave without saving?" pop-up (ui.js). Closing the tab, reloading, and Back keep the browser's own box. */
+  if (window.SiteUI) window.SiteUI.leaveGuard(function () {
+    if (!unsaved()) return null;
+    var b = document.getElementById('c-dl');
+    return { text: 'The numbers typed on this page are not saved anywhere and will be lost.', stayNote: 'Keep your typed numbers on this page.', leaveNote: 'The typed numbers will be lost.', download: b && !b.disabled ? { label: 'Download record and leave', note: 'Saves the record first, then leaves.', run: function () { b.click(); } } : null };
+  });
   window.addEventListener('beforeunload', function (e) {
-    if (dirty && rows.some(function (r) { return r.m !== '' || r.r !== ''; })) { e.preventDefault(); e.returnValue = ''; }
+    if (window.SiteUI && window.SiteUI.leaving) return;
+    if (unsaved()) { e.preventDefault(); e.returnValue = ''; }
   });
 
   renderRows();

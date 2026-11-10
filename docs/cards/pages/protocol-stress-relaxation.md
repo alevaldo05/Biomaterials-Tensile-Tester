@@ -7,7 +7,7 @@ Draft procedure for Stress Relaxation, same four tabs. See [protocols](../featur
 
 ## Files
 - HTML: `protocol-stress-relaxation.html`
-- Scripts in order: same as the Uniaxial Tension protocol: `display-settings.js` (head), `data/materials.js`, `data/samples.js`, `data/sample-models.js`, `data/protocols.js`, `graph.js`, `excel-export.js`, `protocol-page.js`, `layouts.js`, `data/search-index.js`, `site-search.js`, `build-number.js`
+- Scripts in order: same as the Uniaxial Tension protocol: `display-settings.js`, `ui.js` (head), `data/materials.js`, `data/samples.js`, `data/sample-models.js`, `data/protocols.js`, `graph.js`, `excel-export.js`, `protocol-page.js`, `layouts.js`, `data/search-index.js`, `site-search.js`, `build-number.js`
 
 ## What the user sees
 - Same tabs as the Uniaxial Tension protocol
