@@ -11,7 +11,7 @@
 
   var TEXT = {
     onPage: 'On this page', jumpTo: 'Jump to', top: 'Back to top',
-    groups: { appearance: 'Appearance', graphs: 'Graphs', units: 'Units and digits', checklist: 'Pre-test checklist' }
+    groups: { appearance: 'Appearance', graphs: 'Graphs', units: 'Units and digits', checklist: 'Pre-test checklist', help: 'Help prompts' }
   };
 
   function el(tag, attrs) {

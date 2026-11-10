@@ -304,6 +304,13 @@
     if (unsaved()) { e.preventDefault(); e.returnValue = ''; }
   });
 
+  /* "Need help?" and the one-minute hint use the sentence this page already shows above the table, until values are typed. */
+  function coach() {
+    if (!window.HelpCoach) return;
+    window.HelpCoach.setContext(unsaved() ? null : { key: 'cal', title: 'Enter points', lines: function () { var p = document.querySelector('#enter-section > p'); return [p ? p.textContent : '']; } });
+  }
+  app.addEventListener('input', coach); app.addEventListener('change', coach); app.addEventListener('click', coach);
+  coach();
   renderRows();
   update();
 })();
