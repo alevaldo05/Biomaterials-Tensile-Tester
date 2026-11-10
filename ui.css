@@ -61,6 +61,61 @@ body.has-stop-dock .hc-btn { bottom: 6rem; }
 body.has-stop-dock .hc-card { bottom: 9rem; }
 @media print { .hc-btn, .hc-card { display: none; } }
 
+/* Tutorials (tutorials.js): the pop-up, the drawing of the screen, and the captions. Theme variables only. */
+dialog.tutorial-dialog { width: min(56rem, calc(100% - 2rem)); }
+.tut-head { display: flex; align-items: flex-start; justify-content: space-between; gap: 1rem; }
+.tut-head h2 { margin: 0; }
+.tut-x { flex: none; width: 2rem; height: 2rem; padding: 0; border: 0; border-radius: 4px; background: none; color: var(--ink); font-size: 1.5rem; line-height: 1; cursor: pointer; }
+.tut-x:hover { background: var(--bg); }
+.tut-x:focus-visible { outline: 3px solid var(--focus); outline-offset: 2px; }
+.tut-label { margin: 0.25rem 0 0; font-size: 0.875rem; color: var(--muted); }
+.tut-note { font-weight: 600; color: var(--ink); }
+.tut-body { display: grid; grid-template-columns: minmax(0, 1.7fr) minmax(0, 1fr); gap: 1rem 1.5rem; align-items: start; margin: 0.75rem 0; }
+.tut-fig { min-width: 0; }
+.tut-svg { display: block; width: 100%; height: auto; }
+.tut-caps { margin: 0; padding: 0 0 0 1.4rem; display: grid; gap: 0.6rem; }
+.tut-caps li { padding: 0.25rem 0.5rem; border-left: 4px solid transparent; }
+.tut-caps li.is-now { border-left-color: var(--accent); background: var(--bg); font-weight: 700; }
+.tut-live { margin: 0 0 0.5rem; font-size: 0.875rem; color: var(--muted); }
+.tut-ctl { display: flex; flex-wrap: wrap; gap: 0.6rem; }
+.tutorial-dialog.is-still .tut-live { font-weight: 600; color: var(--ink); }
+.tut-svg .tw { fill: var(--bg); stroke: var(--muted); }
+.tut-svg .th { fill: var(--surface); stroke: var(--line); }
+.tut-svg .tlogo { fill: var(--accent); font-family: inherit; font-size: 11px; font-weight: 700; }
+.tut-svg .tmenu { fill: var(--muted); font-family: inherit; font-size: 7px; }
+.tut-svg .tt { fill: var(--ink); font-family: inherit; font-size: 10px; }
+.tut-svg .tm { text-anchor: middle; }
+.tut-svg .tb .tr { fill: var(--surface); stroke: var(--line); }
+.tut-svg .tb-btn .tr { stroke: var(--accent); }
+.tut-svg .tb-btn .tt { fill: var(--link); font-weight: 700; }
+.tut-svg .tb-primary .tr { fill: var(--accent); stroke: var(--accent); }
+.tut-svg .tb-primary .tt { fill: var(--accent-ink); font-weight: 700; }
+.tut-svg .tb-stop .tr { fill: var(--danger); stroke: var(--danger); }
+.tut-svg .tb-stop .tt { fill: var(--danger-ink); font-weight: 700; }
+.tut-svg .tb-field .tr { fill: var(--bg); }
+.tut-svg .tb-field .tt { font-weight: 600; }
+.tut-svg .tb-tab .tr { fill: var(--surface); }
+.tut-svg .tb-tab .tt { font-size: 8px; }
+.tut-svg .tb-tab.is-cur .tr { fill: var(--accent); stroke: var(--accent); }
+.tut-svg .tb-tab.is-cur .tt { fill: var(--accent-ink); font-weight: 700; }
+.tut-svg .tb-link .tt { fill: var(--link); text-decoration: underline; }
+.tut-svg .tb-label .tt { fill: var(--muted); }
+.tut-svg .tb-graph .tr, .tut-svg .tb-table .tr { fill: var(--surface); }
+.tut-svg .tc { fill: none; stroke: var(--accent); stroke-width: 2; }
+.tut-svg .tl { stroke: var(--line); }
+.tut-svg .tb-zoombox .tr { fill: none; stroke: var(--accent); stroke-width: 1.5; stroke-dasharray: 4 3; }
+.tut-svg .is-hidden { display: none; }
+.tut-svg .is-mark .tr { stroke: var(--focus); stroke-width: 2.5; }
+.tut-svg .tb-label.is-mark .tt, .tut-svg .tb-link.is-mark .tt { font-weight: 700; fill: var(--ink); }
+.tut-svg .tptr { transition: transform 0.8s ease; transform: translate(0, 0); }
+.tut-svg .tpa { fill: var(--ink); stroke: var(--surface); stroke-width: 1; }
+.tutorial-dialog:not(.is-still) .tut-svg .is-mark .tr { animation: tut-pulse 1.2s ease-in-out infinite; }
+.tutorial-dialog.is-still .tut-svg .tptr { transition: none; }
+@keyframes tut-pulse { 50% { stroke-width: 4; } }
+@media (max-width: 720px) { .tut-body { grid-template-columns: minmax(0, 1fr); } }
+.tut-list { margin: 0.5rem 0; padding-left: 1.2rem; display: grid; gap: 0.35rem; }
+@media print { .tutorial-dialog { display: none; } }
+
 @keyframes siteui-fade { from { opacity: 0; } to { opacity: 1; } }
 @media (prefers-reduced-motion: reduce) { .siteui-tip, .siteui-note { animation: none; } }
 :root[data-motion="reduced"] .siteui-tip, :root[data-motion="reduced"] .siteui-note { animation: none; }
