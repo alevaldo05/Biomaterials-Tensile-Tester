@@ -1,0 +1,94 @@
+/* Materials page and the material choice on protocol pages. Part of the site's styles: every page links these files in the order listed in FILES.md. */
+/* ---------- Materials page and the material choice on protocol pages ---------- */
+.mat-pick { display: flex; align-items: center; flex-wrap: wrap; gap: 0.5rem 0.9rem; margin: 0 0 1rem; }
+.mat-pick label { font-weight: 600; }
+.mat-pick select { font: inherit; padding: 0.45rem 0.6rem; border: 1px solid var(--muted); border-radius: 6px; background: var(--surface); color: var(--ink); min-width: min(24rem, 100%); max-width: 100%; }
+.mat-pick .mc-wrap { position: relative; display: inline-block; width: min(32rem, 100%); }
+.mat-pick .mc-input { box-sizing: border-box; width: 100%; font: inherit; padding: 0.45rem 2rem 0.45rem 0.6rem; border: 1px solid var(--muted); border-radius: 6px; background: var(--surface); color: var(--ink); text-overflow: ellipsis; }
+.mat-pick .mc-input:focus-visible { outline: 3px solid var(--focus); outline-offset: 2px; }
+.mc-arrow { position: absolute; right: 0.75rem; top: 50%; width: 0.5rem; height: 0.5rem; margin-top: -0.35rem; border-right: 2px solid var(--muted); border-bottom: 2px solid var(--muted); transform: rotate(45deg); pointer-events: none; }
+.mc-list { position: absolute; z-index: 30; left: 0; right: 0; top: 100%; margin-top: 0.2rem; padding: 0.25rem 0; max-height: min(22rem, 60vh); overflow-y: auto; background: var(--surface); color: var(--ink); border: 1px solid var(--muted); border-radius: 6px; box-shadow: 0 6px 18px rgba(0, 0, 0, 0.18); }
+.mc-list[hidden] { display: none; }
+.mc-gh { padding: 0.4rem 0.7rem 0.15rem; font-size: 0.8125rem; font-weight: 700; color: var(--muted); }
+.mc-opt { padding: 0.35rem 0.7rem 0.35rem 1.1rem; cursor: pointer; }
+.mc-opt.current { font-weight: 700; }
+.mc-opt.active { background: var(--accent); color: var(--accent-ink); outline: 2px solid transparent; }
+.mc-none { padding: 0.5rem 0.7rem; color: var(--muted); }
+.mat-pick select:focus-visible { outline: 3px solid var(--focus); outline-offset: 2px; }
+.mat-link { font-size: 0.9375rem; }
+.tag { display: inline-block; font-size: 0.75rem; line-height: 1.5; border: 1px solid var(--muted); border-radius: 999px; padding: 0 0.55rem; color: var(--muted); white-space: nowrap; }
+.mat-panel { container-type: inline-size; outline: none; }
+.mat-card { padding: calc(1.1rem * var(--sp)) 1.4rem; margin: 0 0 calc(1.25rem * var(--sp)); border: 1px solid var(--line); border-radius: 10px; background: var(--surface); }
+.mat-card h2 { margin: 0 0 0.5rem; font-size: 1.15rem; display: flex; align-items: center; gap: 0.5rem; }
+.mat-card h2 .mat-sw, .mt caption .mat-sw { flex: none; }
+.mat-overview { display: grid; grid-template-columns: minmax(0, 1fr); gap: 1.25rem; align-items: start; }
+.mat-overview .mat-dl { max-width: 44rem; }
+.mat-overview .mat-card { margin: 0; }
+.mat-dl { display: grid; grid-template-columns: max-content minmax(0, 1fr); gap: 0.4rem 1rem; margin: 0.75rem 0; font-size: 0.9375rem; }
+.mat-dl dt { color: var(--muted); }
+.mat-dl dd { margin: 0; font-weight: 600; font-variant-numeric: tabular-nums; }
+.mat-links { display: flex; flex-wrap: wrap; align-items: center; gap: 0.6rem 1rem; margin: 1rem 0 0.5rem; }
+.linkbtn { background: none; border: 0; padding: 0; font: inherit; color: var(--link); text-decoration: underline; cursor: pointer; text-align: left; }
+.linkbtn.strong { font-weight: 700; color: var(--ink); text-decoration: underline dotted var(--muted); text-underline-offset: 0.2em; }
+.linkbtn:focus-visible, .sortbtn:focus-visible, .mt input:focus-visible { outline: 3px solid var(--focus); outline-offset: 2px; }
+table.mt { width: 100%; min-width: 58rem; border-collapse: collapse; font-size: 0.875rem; table-layout: fixed; }
+table.mt-compare { min-width: 0; }
+table.mt caption { text-align: left; font-weight: 700; font-size: 1.05rem; padding: 0 0 0.5rem; }
+table.mt caption .cap { display: inline-flex; align-items: center; gap: 0.5rem; }
+table.mt th, table.mt td { padding: calc(0.45rem * var(--sp)) 0.5rem; border-top: 1px solid var(--line); text-align: left; vertical-align: top; overflow-wrap: break-word; }
+table.mt thead th { color: var(--muted); font-weight: 600; font-size: 0.8125rem; border-top: 0; border-bottom: 2px solid var(--line); }
+table.mt td.n { font-variant-numeric: tabular-nums; }
+table.mt td.st { color: var(--muted); font-size: 0.8125rem; }
+table.mt tr.sel > * { background: color-mix(in srgb, var(--accent) 13%, transparent); }
+table.mt .sub { display: block; color: var(--muted); font-size: 0.78rem; font-weight: 400; }
+table.mt-compare th[scope="row"] { color: var(--muted); font-weight: 600; width: 22%; }
+table.mt-compare caption .linkbtn { font-size: 0.875rem; font-weight: 400; }
+.sortbtn { background: none; border: 0; padding: 0; font: inherit; font-weight: 600; color: inherit; cursor: pointer; text-align: left; text-decoration: underline dotted var(--muted); text-underline-offset: 0.2em; }
+.mat-chart-grid { display: grid; grid-template-columns: minmax(0, 1fr) min(18rem, 46%); gap: 1.5rem; align-items: start; }
+.mat-chart { position: relative; }
+.mat-chart svg { display: block; width: 100%; height: auto; }
+.mat-pt { cursor: pointer; outline: none; }
+.mat-pt:hover rect, .mat-pt:focus-visible rect { stroke-width: 3; }
+.mat-pt:focus-visible { outline: none; }
+.mat-pt:focus-visible rect { stroke: var(--ink); stroke-width: 3; }
+.mat-tip { position: absolute; z-index: 3; pointer-events: none; padding: 0.35rem 0.6rem; border: 1px solid var(--muted); border-radius: 6px; background: var(--surface); color: var(--ink); font-size: 0.8125rem; box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15); white-space: nowrap; }
+#mat-side h3 { margin: 0 0 0.5rem; font-size: 1rem; display: flex; align-items: center; gap: 0.5rem; }
+.legend { display: flex; flex-wrap: wrap; gap: 0.35rem 1rem; margin: 0.75rem 0; font-size: 0.875rem; }
+.legend span { display: inline-flex; align-items: center; gap: 0.35rem; }
+@container (max-width: 56em) {
+  .mat-overview, .mat-chart-grid { grid-template-columns: minmax(0, 1fr); }
+}
+/* Materials, Material tab, wide window: the material details on the left (about 2 parts) and the example graph on the right
+   (about 3 parts). The graph card is its own container, so its Readout and Key results go under the graph in the narrower column. */
+.mat-graphcard { container-type: inline-size; }
+@container (max-width: 50rem) { .mat-graphcard .graph-grid { grid-template-columns: minmax(0, 1fr); } }
+@container (min-width: 56em) {
+  .mat-overview { grid-template-columns: minmax(0, 2fr) minmax(0, 3fr); gap: 1rem; }
+  .mat-overview .mat-graphcard { grid-column: 2; grid-row: 1 / span 2; }
+  .mat-overview #mat-detail { grid-column: 1; grid-row: 1; }
+  .mat-overview .mat-params { grid-column: 1; grid-row: 2; }
+  #mat-detail .mat-dl { gap: 0.3rem 0.9rem; font-size: 0.9rem; }
+}
+.mat-params[hidden] { display: none; }
+.mat-params h2 { margin: 0 0 0.5rem; font-size: 1.15rem; }
+.mat-params .param-fields { grid-template-columns: repeat(auto-fill, minmax(9.5rem, 1fr)); margin: 0 0 0.75rem; }
+/* Materials chart filters and list (materials.js) */
+.chart-tools { display: grid; gap: 0.65rem; margin: 0.75rem 0 0.5rem; padding: 0.75rem 0.9rem; border: 1px solid var(--line); border-radius: 8px; background: var(--bg); }
+.chart-tools p, .chart-keys { margin: 0; }
+.chart-fams { display: flex; flex-wrap: wrap; gap: 0.4rem; }
+.fam-btn { display: inline-flex; align-items: center; gap: 0.35rem; padding: 0.3rem 0.7rem; border: 1px solid var(--muted); border-radius: 999px; background: var(--surface); color: var(--ink); font: inherit; font-size: 0.875rem; cursor: pointer; }
+.fam-btn[aria-pressed="true"] { border-color: var(--accent); box-shadow: inset 0 0 0 1px var(--accent); font-weight: 600; }
+.fam-btn[aria-pressed="false"] { border-style: dashed; color: var(--muted); }
+.fam-state { width: 0.9rem; text-align: center; font-weight: 700; }
+.chart-opts { display: flex; flex-wrap: wrap; gap: 0.4rem 1.25rem; font-size: 0.9375rem; }
+.chart-opts label { display: inline-flex; align-items: center; gap: 0.4rem; }
+.chart-opts input { width: 1.05rem; height: 1.05rem; accent-color: var(--accent); }
+.chart-find { display: flex; flex-wrap: wrap; align-items: center; gap: 0.5rem; }
+.chart-find label { font-size: 0.9375rem; font-weight: 600; }
+.chart-find input[type="search"] { min-width: min(16rem, 100%); padding: 0.4rem 0.6rem; border: 1px solid var(--muted); border-radius: 6px; background: var(--surface); color: var(--ink); font: inherit; }
+.chart-keys { margin: 0 0 0.75rem; }
+.chart-list { margin: 1rem 0 0; }
+.chart-list summary { cursor: pointer; font-weight: 600; }
+.chart-list table { margin-top: 0.5rem; }
+@media print { .stop-dock { display: none; } body.has-stop-dock { padding-bottom: 0; } .mc-arrow, .mc-list { display: none; } .mat-pick select + .tag { display: none; } .mat-panel[hidden] { display: block; } .chart-tools, .chart-keys { display: none; } }
+

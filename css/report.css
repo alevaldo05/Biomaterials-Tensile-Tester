@@ -1,0 +1,73 @@
+/* Printable report (report.js). Part of the site's styles: every page links these files in the order listed in FILES.md. */
+/* ---------- Printable report (report.js) ---------- */
+#print-report { display: none; }
+@media print {
+  @page { margin: 11mm; }
+  body.printing-report { display: block !important; background: #fff !important; color: #000 !important; min-height: 0 !important; }
+  body.printing-report > *:not(#print-report) { display: none !important; }
+  body.printing-report #print-report { display: block !important; }
+  .report { font-size: 9pt; line-height: 1.3; color: #000; }
+  .report h1 { font-size: 20pt; margin: 0; font-weight: 700; }
+  .report h2 { font-size: 10.5pt; margin: 0.5rem 0 0.2rem; border-bottom: 1px solid #000; padding-bottom: 1pt; font-variant: normal; letter-spacing: 0; }
+  /* Section headings print black in every theme and style (the Lab style gives h2 a light grey that vanishes on white paper). */
+  body.printing-report .report h2, body.printing-report .report h3 { color: #000; }
+  .rp-head { display: flex; justify-content: space-between; align-items: flex-start; gap: 1rem; }
+  .rp-kicker { margin: 0; font-size: 9pt; letter-spacing: 0.04em; text-transform: uppercase; }
+  .rp-draft { margin: 0; padding: 1pt 8pt; border: 1px solid #000; border-radius: 999px; font-size: 8.5pt; font-weight: 700; text-transform: uppercase; }
+  .rp-source { margin: 0.4rem 0 0; padding: 3pt 8pt; border: 1.5px solid #000; font-size: 10.5pt; }
+  .rp-details { display: grid; grid-template-columns: 1fr 1fr; gap: 1pt 18pt; margin: 0.25rem 0 0; }
+  .rp-details div { display: flex; gap: 6pt; break-inside: avoid; }
+  .rp-details dt { flex: none; min-width: 7.5rem; font-weight: 700; }
+  .rp-details dd { margin: 0; overflow-wrap: anywhere; }
+  .rp-graph { margin: 0.5rem 0 0; }
+  .rp-graph svg { display: block; width: 100%; max-height: 6cm; height: auto; } /* the single-test report grew with the data checks, dimension source, and hold-start rows; this keeps it on one page */
+  .rp-table { width: 100%; border-collapse: collapse; margin: 0.2rem 0; font-size: 8.8pt; }
+  .rp-table th, .rp-table td { padding: 2pt 5pt; border: 1px solid #777; text-align: left; vertical-align: top; }
+  .rp-table thead th { background: #eee; }
+  .rp-table tbody th { font-weight: 700; width: 24%; }
+  .rp-table td.n { font-variant-numeric: tabular-nums; }
+  .rp-tag { font-size: 8pt; font-weight: 400; border: 1px solid #000; border-radius: 999px; padding: 0 6pt; margin-left: 4pt; }
+  .rp-method, .rp-note { margin: 0.2rem 0; font-size: 8.8pt; }
+  .rp-warn { margin: 2pt 0; padding: 2pt 6pt; border-left: 3px solid #000; font-size: 8.8pt; }
+  .rp-foot { margin-top: 0.5rem; font-size: 8.3pt; border-top: 1px solid #000; padding-top: 3pt; }
+  .rp-foot p { margin: 0 0 6pt; }
+  .rp-sign { display: flex; justify-content: space-between; gap: 1rem; margin-top: 12pt; }
+  /* Blank run sheet (report.js printBlank). Lines and boxes are drawn with borders so they print even when background graphics are off.
+     Spacing is in points and headings are restated, so the sheet stays on one page whatever the text size or style on screen. */
+  .report.rp-blank h2 { margin: 7pt 0 3pt; padding-bottom: 1pt; border-bottom: 1px solid #000; color: #000; font-size: 10.5pt; font-weight: 700; text-transform: none; letter-spacing: normal; }
+  .report.rp-blank h3 { margin: 4pt 0 2pt; color: #000; font-size: 9.5pt; font-weight: 700; text-transform: none; letter-spacing: normal; }
+  .rp-blank .rp-head { gap: 12pt; }
+  .rp-blank .rp-source { margin: 5pt 0 0; }
+  .rp-form { display: grid; grid-template-columns: 1fr 1fr; gap: 8pt 18pt; margin: 5pt 0 2pt; }
+  .rp-field { display: flex; align-items: flex-end; gap: 5pt; break-inside: avoid; }
+  .rp-field span { flex: none; font-weight: 700; }
+  .rp-field i { flex: 1; min-height: 12pt; border-bottom: 1px solid #000; }
+  .rp-field b { flex: 1; display: flex; align-items: flex-end; gap: 14pt; font-weight: 400; }
+  .rp-wide { grid-column: 1 / -1; }
+  .rp-check { display: inline-flex; align-items: center; white-space: nowrap; }
+  .rp-box { display: inline-block; flex: none; width: 8.5pt; height: 8.5pt; margin-right: 5pt; border: 1px solid #000; }
+  .rp-cols { display: grid; grid-template-columns: 1fr 1fr; gap: 0 18pt; }
+  .rp-checklist { list-style: none; margin: 2pt 0; padding: 0; }
+  .rp-checklist li { display: flex; align-items: flex-start; margin: 0 0 3.5pt; break-inside: avoid; }
+  .rp-checklist .rp-box { margin-top: 1.5pt; }
+  .rp-blank .rp-note { margin: 3pt 0; }
+  .rp-notes { margin-top: 7pt; }
+  .rp-notes > span { font-weight: 700; }
+  .rp-line { height: 15pt; border-bottom: 1px solid #000; }
+  .rp-blank .rp-foot { margin-top: 10pt; }
+  .rp-table tr, .rp-foot, .rp-method, .rp-warn { break-inside: avoid; }
+  .rp-cal .rp-graph svg { max-height: 7cm; }
+  .rp-fit { break-inside: avoid; }
+  /* A heading never ends a page on its own. */
+  .report h2, .report h3 { break-after: avoid; }
+  /* Comparison report: tighter spacing so a few specimens fit on one page. */
+  .rp-compare { font-size: 8.5pt; line-height: 1.22; }
+  .rp-compare h2 { margin: 0.3rem 0 0.15rem; }
+  .rp-compare .rp-table { font-size: 8.2pt; }
+  .rp-compare .rp-table th, .rp-compare .rp-table td { padding: 1.5pt 4pt; }
+  .rp-compare .rp-graph svg { max-height: 5cm; }
+  .rp-compare .rp-foot { margin-top: 0.3rem; }
+  .rp-compare .rp-sign { margin-top: 8pt; }
+  .rp-compare .rp-graph svg { max-height: 6.2cm; }
+}
+

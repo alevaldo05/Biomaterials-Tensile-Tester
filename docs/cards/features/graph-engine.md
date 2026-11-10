@@ -8,7 +8,7 @@ Feature card. Update it in the same change as the feature.
 ## Files
 - `graph.js` (1,482 lines)
 - `excel-export.js` (loaded right after)
-- CSS: `styles.css` Graph pages, graph tools, Key results
+- CSS: `css/graph.css` (Graph pages, graph tools, Key results)
 - Used by the test, protocol, Load Test, and Materials pages
 
 ## What the user sees

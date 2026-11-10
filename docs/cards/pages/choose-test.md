@@ -8,7 +8,7 @@ The page after New Test: Uniaxial Tension or Stress Relaxation, each opening its
 ## Files
 - HTML: `choose-test.html`
 - Scripts in order: `display-settings.js`, `ui.js` (head), `layouts.js`, `data/search-index.js`, `site-search.js`, `build-number.js`
-- CSS: `styles.css` Test choices
+- CSS: `styles.css` (Test choices)
 
 ## What the user sees
 - Two choices: Uniaxial Tension and Stress Relaxation
