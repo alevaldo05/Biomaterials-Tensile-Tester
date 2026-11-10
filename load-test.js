@@ -13,6 +13,8 @@
     msgEl.textContent = (isError ? 'Could not open the file. ' : '') + text;
     msgEl.className = 'csv-msg' + (isError ? ' error' : '');
   }
+  /* "Need help?" and the one-minute hint use the sentence this page already shows under its title. */
+  if (window.HelpCoach) window.HelpCoach.setContext({ key: 'load', title: 'Load Test', lines: function () { var s = document.querySelector('.sub'); return [s ? s.textContent : '']; } });
   function testType() { return document.querySelector('input[name="load-test"]:checked').value; }
 
   /* Mode switch: "Open one file" (below, unchanged) or "Compare several files" (compare.js). */
@@ -42,13 +44,14 @@
     if (!file) return;
     if (file.size > 20e6) { msg('The file is larger than 20 MB.', true); input.value = ''; return; }
     var reader = new FileReader();
-    reader.onerror = function () { msg('The file could not be read.', true); };
+    reader.onerror = function () { msg('The file could not be read.', true); if (window.HelpCoach) window.HelpCoach.report('csv'); };
     reader.onload = function () {
       try {
         var r = TG.fromCSV(file.name, String(reader.result), testType());
         TG.mount(graph, { test: testType(), mode: 'load', record: r });
         document.getElementById('load-form').classList.add('loaded');
         btn.textContent = 'Open another file';
+        if (window.HelpCoach) window.HelpCoach.setContext(null);
         msg('Opened ' + file.name + ': ' + r.x.length + ' points' + (r.simulated ? ' (simulated, not measured)' : '') + '. ' +
           (r.direct ? '' : r.dimsFromFile ? 'Dimensions come from the file.' : 'This file does not contain enough information for dimension-based calculations. Example dimensions are not measurements; enter the specimen’s measured dimensions below the graph.'));
       } catch (err) {
@@ -56,6 +59,7 @@
         document.getElementById('load-form').classList.remove('loaded');
         btn.textContent = 'Choose CSV file';
         msg(err.message, true);
+        if (window.HelpCoach) window.HelpCoach.report('csv');
       }
       input.value = '';
     };

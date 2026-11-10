@@ -310,6 +310,18 @@
       if (why) why.textContent = nx && !stepValid(n) ? stepWhy(n) : '';
     });
     var sw = $('steps-all'); if (sw) sw.checked = !guidedOn;
+    coachContext(guidedOn);
+  }
+  /* What "Need help?" shows, and the one-minute hint, use wording this page already has (the "?" help and the reason Next is unavailable). */
+  function helpText(n) { var e = HELP[n] && $(HELP[n][0]); return e ? e.textContent : ''; }
+  function coachContext(guidedOn) {
+    if (!window.HelpCoach) return;
+    if (running || hasData) {   /* the card shows the status line and the Esc line this page already has; no one-minute hint while a test is running or finished */
+      window.HelpCoach.setContext({ key: 'test-run-' + running, title: running ? 'Test running' : 'Test finished', quiet: true, lines: function () { var e = app.querySelector('.esc-line'); return [msgEl.textContent, e ? e.textContent : '']; } });
+      return;
+    }
+    if (!guidedOn) { window.HelpCoach.setContext({ key: 'test-all', title: 'Setting up the test', lines: function () { return [1, 2, 3, 4, 5].map(helpText); } }); return; }
+    window.HelpCoach.setContext({ key: 'test-step-' + cur, title: cur + '. ' + STEP_NAMES[cur - 1], lines: function () { return [helpText(cur), stepWhy(cur)]; } });
   }
   function goStep(n, focus) {
     cur = Math.max(1, Math.min(5, n)); maxStep = Math.max(maxStep, cur);
@@ -367,7 +379,13 @@
   });
   /* A message appears after you leave an entry (or press Start) and updates as you fix it. */
   $('spec').addEventListener('focusout', function (e) {
-    if (FIELD_IDS.indexOf(e.target.id) >= 0) { touched[e.target.id] = true; checkField(e.target.id); }
+    if (FIELD_IDS.indexOf(e.target.id) >= 0) {
+      touched[e.target.id] = true; checkField(e.target.id);
+      var fid = e.target.id;
+      if (window.HelpCoach && window.HELP_TIPS && problemText(fid)) {
+        setTimeout(function () { if (problemText(fid)) window.HelpCoach.report('field'); else window.HelpCoach.resolve('field'); }, window.HELP_TIPS.fieldErrorMs);
+      }
+    }
   });
   $('spec').addEventListener('input', function (e) {
     var id = e.target.id;
@@ -555,7 +573,7 @@
     var parts = s.split(/[,;\t]/), c = DEV.columns, sc = DEV.scale;
     var t = toNum(parts[c.time]) * sc.time, F = toNum(parts[c.force]) * sc.force, d = toNum(parts[c.displacement]) * sc.displacement;
     if (!isFinite(t) || !isFinite(F) || !isFinite(d)) {
-      if (running) skipped++;
+      if (running) { skipped++; if (skipped === 1 && window.HelpCoach) window.HelpCoach.report('skippedLines'); }
       infoEl.textContent = 'Message from tester: ' + s.slice(0, 160);
       return;
     }
@@ -565,7 +583,7 @@
     if (t0 === null) { t0 = t; d0 = d; }
     var raw = rec.raw;
     raw.t.push(t - t0); raw.d.push(d - d0); raw.F.push(F);
-    if (!hasData) { hasData = true; downloaded = false; }
+    if (!hasData) { hasData = true; downloaded = false; if (window.HelpCoach) window.HelpCoach.resolve('noReadings'); }
     var n = raw.t.length;
     if (!isRelax) {
       if (F > peakF) peakF = F;
@@ -666,6 +684,10 @@
     sendCmd(isRelax ? fill(DEV.commands.startRelaxation, { speed: s.speed, hold_mm: s.hold_mm, hold_s: s.hold_s }) : fill(DEV.commands.startUniaxial, { speed: s.speed }));
     if (DEV.commands.heartbeat && DEV.heartbeatMs) heartbeat = setInterval(function () { sendCmd(DEV.commands.heartbeat); }, DEV.heartbeatMs);
     msg('Test running' + (link.kind === 'sim' ? ' (simulated)' : '') + '. Press STOP or Esc to stop.');
+    if (window.HelpCoach && window.HELP_TIPS && link.kind !== 'sim') {
+      var started = rec;
+      setTimeout(function () { if (running && rec === started && !hasData) window.HelpCoach.report('noReadings'); }, window.HELP_TIPS.noReadingsMs);
+    }
   }
   function finish(reason, isError) {
     running = false;
@@ -702,6 +724,11 @@
     }).catch(function (e) {
       if (e && e.name === 'NotFoundError') msg('No port was selected.');
       else msg('Could not connect: ' + (e && e.message ? e.message : e), true);
+      /* a hint with the matching Troubleshooting row (help-coach.js); it says what could be wrong, not what is */
+      if (window.HelpCoach && e) {
+        if (e.name === 'NotFoundError' || e.name === 'SecurityError' || e.name === 'NotAllowedError') window.HelpCoach.report('permission');
+        else if (e.name === 'NetworkError' || e.name === 'InvalidStateError') window.HelpCoach.report('port');
+      }
     });
   });
   $('c-sim').addEventListener('click', function () {

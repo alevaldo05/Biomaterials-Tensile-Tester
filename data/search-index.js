@@ -65,6 +65,7 @@ window.SEARCH_INDEX = [
   { t: "Strain unit (Settings)", p: "settings.html", a: "set-strainunit", w: "Settings", k: "strain unit percent ratio" },
   { t: "Displayed digits (Settings)", p: "settings.html", a: "set-digits", w: "Settings", k: "digits decimals significant" },
   { t: "Pre-test checklist (Settings)", p: "settings.html", a: "set-checklist", w: "Settings", k: "checklist reminder before start" },
+  { t: "Help prompts (Settings)", p: "settings.html", a: "set-helpprompts", w: "Settings", k: "help prompts hints need help button on off" },
   { t: "Troubleshooting", p: "help.html", a: "trouble-title", w: "Help", k: "problem fix action table" },
   { t: "The USB button is unavailable", p: "help.html", a: "trouble-title", w: "Help: Troubleshooting", k: "usb serial web serial chrome safari browser unavailable" },
   { t: "\"That is not a number\" message beside a field", p: "help.html", a: "trouble-title", w: "Help: Troubleshooting", k: "number digits comma point unit mm field message" },

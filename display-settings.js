@@ -17,7 +17,8 @@
     stressunit: { values: ["mpa", "kpa"], fallback: "mpa" },
     strainunit: { values: ["ratio", "percent"], fallback: "ratio" },
     digits: { values: ["standard", "4", "5"], fallback: "standard" },
-    steps: { values: ["guided", "all"], fallback: "guided" }
+    steps: { values: ["guided", "all"], fallback: "guided" },
+    helpprompts: { values: ["on", "off"], fallback: "on" }
   };
 
   function saved(name) {
@@ -57,7 +58,7 @@
   }
 
   /* These apply at once on the Settings page (CSS only, or read by the graph the next time it is drawn). */
-  var NO_RELOAD = ["theme", "font", "checklist", "textsize", "spacing", "motion", "linewidth", "curve", "grid", "stressunit", "strainunit", "digits"];
+  var NO_RELOAD = ["theme", "font", "checklist", "textsize", "spacing", "motion", "linewidth", "curve", "grid", "stressunit", "strainunit", "digits", "helpprompts"];
 
   /* Settings page: radio groups named theme, font, style, layout, and a reset button. */
   function settingsPage() {
