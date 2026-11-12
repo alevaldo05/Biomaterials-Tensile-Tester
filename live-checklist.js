@@ -32,7 +32,7 @@
           }).join('') + '</ul>';
         }).join('') +
         '<p class="pt-count" id="pt-count" aria-live="polite"></p>' +
-        '<div class="pt-actions"><button type="button" class="btn" id="pt-go" disabled>Start test</button>' +
+        '<div class="pt-actions"><button type="button" class="btn" id="pt-go" disabled>Start recording</button>' +
         '<button type="button" class="btn-secondary" id="pt-cancel">Cancel</button></div>';
       var boxes = [].slice.call(dlg.querySelectorAll('input[type="checkbox"]')), go = dlg.querySelector('#pt-go');
       function update() {

@@ -26,26 +26,10 @@ html[data-steps="guided"] .live-layout .panel { grid-template-columns: minmax(0,
 html[data-steps="guided"] .live-layout .setup-col { grid-template-columns: repeat(auto-fit, minmax(12rem, 1fr)); gap: 0.6rem 1.25rem; }
 html[data-steps="guided"] .live-layout:not(.cur-setup) #spec, html[data-steps="guided"] .live-layout.running #spec { display: none; }
 html[data-steps="guided"] .live-layout.running [data-step] { display: none; }
-/* Connection, review, run buttons: the step's content first, then the run row. STOP is never inside a step and is always shown. */
-html[data-steps="guided"] .control-bar { display: flex; flex-direction: column; }
-html[data-steps="guided"] .control-bar > .conn-row { order: 1; }
-html[data-steps="guided"] .control-bar > .tut-slot { order: 2; }
-html[data-steps="guided"] .control-bar > .gs-nav[data-step="4"] { order: 3; }
-html[data-steps="guided"] .control-bar > .review { order: 4; }
-html[data-steps="guided"] .control-bar > .rv-det { order: 5; }
-html[data-steps="guided"] .control-bar > .run-bar { order: 6; }
-html[data-steps="guided"] .control-bar > #r-why { order: 7; }
-html[data-steps="guided"] .control-bar > .gs-nav[data-step="5"] { order: 8; }
-html[data-steps="guided"] .control-bar > .esc-line { order: 9; }
-html[data-steps="guided"] .control-bar > #r-msg { order: 10; }
-html[data-steps="guided"] .control-bar > #r-info { order: 11; }
-html[data-steps="guided"] .live-layout:not(.cur-5) #r-tare, html[data-steps="guided"] .live-layout:not(.cur-5) #r-start, html[data-steps="guided"] .live-layout.running #r-tare, html[data-steps="guided"] .live-layout.running #r-start { display: none; }
-html[data-steps="guided"] .live-layout:not(.cur-5):not(.running) .run-bar .check { display: none; }
-/* The graph, Readout, and Key results appear when recording starts; downloads and Print report when the test ends. */
-html[data-steps="guided"] .live-layout:not(.has-run) #graph-app { display: none; }
+/* The graph is always shown (empty until readings arrive); Readout and Key results appear when recording starts (css/workspace.css); downloads and Print report when the test ends. */
 html[data-steps="guided"] .live-layout:not(.ended) #g-actions { display: none; }
 @media (max-width: 900px) { html[data-steps="guided"] .gs-bar { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
 @media print { .gs-switch, .gs-bar, .gs-nav, .help-q { display: none; } }
-/* The step buttons (Back, Next) and the run buttons (Tare, Start test, STOP) share one height and padding in every style, so they look in proportion. STOP stays red; the styles still choose the type and corners. */
-:root .gs-nav .btn, :root .gs-nav .btn-secondary, :root .run-bar .btn, :root .run-bar .btn-secondary, :root .run-bar .btn-stop { box-sizing: border-box; display: inline-flex; align-items: center; justify-content: center; min-height: 2.75rem; padding: 0.4rem 1.5rem; line-height: 1.25; }
+/* The step buttons (Back, Next) and the run buttons (Tare, Start recording, End recording, STOP tester) share one height and padding in every style, so they look in proportion. STOP stays red; the styles still choose the type and corners. */
+:root .gs-nav .btn, :root .gs-nav .btn-secondary, :root .ws-toolbar .btn, :root .ws-toolbar .btn-secondary, :root .ws-toolbar .btn-stop { box-sizing: border-box; display: inline-flex; align-items: center; justify-content: center; min-height: 2.5rem; padding: 0.35rem 1rem; line-height: 1.25; }
 :root .gs-nav .btn, :root .gs-nav .btn-secondary { min-width: 6.5rem; }
