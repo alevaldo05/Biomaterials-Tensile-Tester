@@ -449,7 +449,7 @@ begin('12. Stylesheet order');
 /* 13. Script order for the split files: each page loads the pieces before the file that uses them. */
 begin('13. Split script order');
 (function () {
-  var before = failures, rules = [['live.js', ['live-links.js', 'live-checklist.js', 'live-csv.js']], ['graph.js', ['graph-core.js']]], count = 0;
+  var before = failures, rules = [['live.js', ['live-links.js', 'live-checklist.js', 'live-csv.js', 'live-shell.js', 'live-material.js']], ['graph.js', ['graph-core.js']]], count = 0;
   PAGES.forEach(function (page) {
     var list = scriptsOf(read(page)).map(function (s) { return localPath(page, s); });
     rules.forEach(function (r) {
