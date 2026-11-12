@@ -20,6 +20,11 @@ Short animated illustrations of the screen (a simplified drawing with a pointer 
 - With Motion Reduced (or the system asking for less motion while Motion is Follow system): still frames with Back and Next, no loop
 - Help page: a **Tutorials** section (between Keyboard and References) listing the 7 as links to page#tut-ID, which opens the panel
 
+## What the drawings show
+- They draw the current workspace, not the old tabs: a Setup sidebar (steps 1 to 5, then the current step) beside the toolbar (Use simulator or Connect to tester (USB), Tare, Start recording, End recording, STOP tester with "Not an emergency stop."), the readings strip, and the graph. `data/tutorials.js` has a `sidebar()` helper for the shared sidebar boxes.
+- Run a simulated test ends with Save data; Dimensions ends with Next; Connect over USB uses the toolbar button and the status line; Read and zoom the graph covers the Readout, the three views, Zoom, Autoscale, Reset view, and Expand graph (closed with Close expanded graph, not Esc); Download shows Save data, New test, PNG, SVG, Print report; Load and compare shows the File sidebar; Calibration is unchanged.
+- When the workspace screens change, redraw the matching tutorial.
+
 ## Behavior to keep
 - Every tutorial says it is an illustration of the screen, not a recording of a real test; the USB one also says the hardware connection is untested
 - Hidden while a test is recording (no panel near STOP): `Tutorials.show` returns false, the spots are not displayed
