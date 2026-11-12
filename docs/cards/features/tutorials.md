@@ -16,6 +16,7 @@ Short animated illustrations of the screen (a simplified drawing with a pointer 
 
 ## What the user sees
 - A **Watch how: <title>** button at the spot; it opens a wide panel with the drawing (drawn about 1.6 times larger so the text stays small), 2 to 4 numbered captions (the current one bold), a loop of about 10 s, and Pause/Play, Replay, and Hide
+- When the panel is narrower than 40rem (Reading layout, Sidebar at large text) the captions sit under the drawing so it keeps the full width
 - With Motion Reduced (or the system asking for less motion while Motion is Follow system): still frames with Back and Next, no loop
 - Help page: a **Tutorials** section (between Keyboard and References) listing the 7 as links to page#tut-ID, which opens the panel
 
