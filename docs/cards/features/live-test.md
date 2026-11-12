@@ -7,7 +7,7 @@ Setup, connection, Start/STOP/Tare, recording, auto-stop, and CSV on the two tes
 
 ## Files
 - `live.js` (the page: setup form, review, guided steps, run control, readings)
-- `live-links.js` (USB and simulator links), `live-checklist.js` (pre-test checklist pop-up), `live-csv.js` (CSV text); load before `live.js`
+- `live-links.js` (the USB link; the simulator is in `live-sim.js` and only the practice page loads it), `live-checklist.js` (pre-test checklist pop-up), `live-csv.js` (CSV text); load before `live.js`
 - `data/device.js`
 - `data/checklist.js`
 - `ui.js` (the checklist pop-up is the shared Site pop-up; see shared-popups card)
@@ -36,4 +36,4 @@ Setup, connection, Start/STOP/Tare, recording, auto-stop, and CSV on the two tes
 - Simulator, USB link, graph engine, downloads, print report
 
 ## How to check
-- Run the simulator from Connect to CSV download; STOP works; Esc sends STOP
+- On the practice page, run the simulator from Connect to CSV download; STOP works; Esc sends STOP. The real test pages have no simulator

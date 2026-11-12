@@ -27,5 +27,5 @@ Open an earlier CSV in the browser only, or compare several files. See [compare]
 
 ## How to check
 - `node scripts/check-site.js`
-- Load a CSV downloaded from the simulator; key results match the test page
+- Load a CSV downloaded from the practice page; key results match the page it came from
 - Compare two files
