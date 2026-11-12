@@ -21,6 +21,7 @@ Download data as CSV (opens in Excel), the numeric .xlsx file, and the graph as 
 
 ## Labels that must stay
 - Source label in the file header (simulated, sample, measured)
+- One optional header line, `# Offset yield (% strain),<value>`, only when the offset yield was used; Load Test reads it back, and files without it read as before
 
 ## Depends on
 - Graph engine

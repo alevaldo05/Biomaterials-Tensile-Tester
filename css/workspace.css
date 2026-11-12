@@ -31,9 +31,9 @@ html[data-steps="guided"] .ws-side .gs-bar { grid-template-columns: minmax(0, 1f
 .ws-grp-t { position: absolute; top: 0; left: 0; font-size: 0.6875rem; letter-spacing: 0.08em; text-transform: uppercase; color: var(--muted); font-weight: 700; }
 .ws-grp .conn, .ws-grp .graph-actions { margin: 0; }
 .ws-grp .graph-actions { display: flex; flex-wrap: wrap; gap: 0.4rem; }
-.ws-grp-tester { margin-left: auto; padding-left: 1rem; border-left: 1px solid var(--line); flex-direction: row; }
+.ws-grp-tester { margin-left: auto; padding-left: 1rem; border-left: 1px solid var(--line); flex-direction: column; align-items: flex-start; gap: 0.15rem; }
 .ws-grp-tester .ws-grp-t { left: 1rem; }
-.ws-grp-tester .ws-nes { max-width: 7rem; line-height: 1.15; }
+.ws-grp-tester .ws-nes { line-height: 1.15; font-size: 0.8125rem; }
 .ws-nes { font-weight: 600; color: var(--ink); }
 :root .ws-toolbar .ws-setup-open { display: none; align-self: flex-end; }
 #r-why { margin: 0; min-height: 1.2em; line-height: 1.2; }
@@ -106,3 +106,45 @@ dialog.ws-dlg { width: min(32rem, calc(100vw - 2rem)); padding: 1.1rem 1.25rem; 
 .ws-dlg h2 { margin: 0 0 0.5rem; font-size: 1.15rem; }
 .ws-dlg p { margin: 0 0 1rem; }
 .ws-dlg-btns { display: flex; flex-wrap: wrap; gap: 0.5rem; }
+
+/* ---------- Graph tools row, views, Expand (graph.js, live pages and Load Test) ---------- */
+.g-toolbar { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 0.4rem 1rem; margin: 0 0 0.4rem; }
+.g-views { display: inline-flex; flex-wrap: wrap; }
+.g-view { padding: 0.35rem 0.8rem; border: 1px solid var(--accent); background: var(--bg); color: var(--link); font: inherit; font-size: 0.9375rem; font-weight: 600; cursor: pointer; margin-left: -1px; }
+.g-view:first-child { margin-left: 0; border-radius: 6px 0 0 6px; }
+.g-view:last-child { border-radius: 0 6px 6px 0; }
+.g-view:only-child { border-radius: 6px; }
+.g-view.is-on { background: var(--accent); color: var(--accent-ink); }
+.g-view[aria-disabled="true"] { opacity: 0.55; cursor: not-allowed; }
+.g-view:focus-visible { outline: 3px solid var(--focus); outline-offset: 2px; position: relative; }
+.g-tools { display: flex; flex-wrap: wrap; gap: 0.35rem; }
+.g-tools [aria-pressed="true"] { background: var(--accent); color: var(--accent-ink); border-color: var(--accent); }
+.g-vwhy { margin: 0 0 0.4rem; }
+/* Expand graph: the graph area fills the window; it stays under the pinned STOP bar (z-index 40) */
+#graph-app.ws-expanded { position: fixed; inset: 0; z-index: 30; background: var(--bg); padding: 0.6rem 0.8rem 4.5rem; overflow: auto; }
+#graph-app.ws-expanded .chart-wrap svg { max-height: calc(100vh - 11rem); }
+body.ws-graph-expanded { overflow: hidden; }
+/* Customize graph is for after the test (Load Test always shows it: the file is already a finished test) */
+.live-layout:not(.ended) details.customize { display: none; }
+@media print { #graph-app.ws-expanded { position: static; } }
+
+/* ---------- Live pages: Key results and Readout as collapsible panels, in this order below the graph ---------- */
+.live-layout #graph-app .graph-grid { display: flex; flex-direction: column; align-items: stretch; gap: 0.5rem; }
+.live-layout #graph-app .graph-main > *, .live-layout #graph-app .graph-side > * { order: 2; min-width: 0; }
+.live-layout #graph-app .graph-main, .live-layout #graph-app .graph-side { display: contents; }
+.live-layout #graph-app .g-toolbar, .live-layout #graph-app .g-vwhy { order: 0; }
+.live-layout #graph-app .chart-frame { order: 1; }
+.live-layout #graph-app .ws-panel#ws-p-res { order: 3; }
+.live-layout #graph-app .ws-panel#ws-p-read { order: 4; }
+.live-layout #graph-app .graph-toggles { order: 5; }
+.live-layout #graph-app #g-actions { order: 6; }
+.live-layout #graph-app details.schematic { order: 7; }
+.live-layout #graph-app details.customize { order: 8; }
+.live-layout:not(.has-run) #graph-app .ws-panel { display: none; }
+.ws-panel { border: 1px solid var(--line); border-radius: 8px; background: var(--surface); }
+.ws-panel > summary { cursor: pointer; padding: 0.5rem 0.75rem; font-weight: 700; }
+.ws-panel > .gs-a, .ws-panel > .gs-b { padding: 0.25rem 0.75rem 0.75rem; margin: 0; }
+.ws-panel .gs-a > h2, .ws-panel .gs-b > h2 { display: none; }
+.ws-panel .gs-b .res-tools { margin-top: 0; }
+.pf-check { display: flex; align-items: center; justify-content: space-between; gap: 0.5rem; }
+.pf-check input[type="checkbox"] { width: 1.1rem; height: 1.1rem; accent-color: var(--accent); }
