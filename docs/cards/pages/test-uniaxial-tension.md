@@ -7,7 +7,7 @@ Live Uniaxial Tension test with a USB tester (no simulator; the simulator is onl
 
 ## Files
 - HTML: `test-uniaxial-tension.html` (`live-app` with `data-test="uniaxial"`, safety line, a line pointing at the protocol page's equations)
-- Scripts in order: `display-settings.js`, `ui.js` (head), `data/materials.js`, `data/samples.js`, `data/sample-models.js`, `data/device.js`, `data/checklist.js`, `data/text/help.js`, `data/help-tips.js`, `data/terms.js`, `data/tutorials.js`, `graph-core.js`, `graph.js`, `excel-export.js`, `report.js`, `tutorials.js`, `help-coach.js`, `live-links.js`, `live-checklist.js`, `live-csv.js`, `live.js`, `layouts.js`, `data/search-index.js`, `site-search.js`, `build-number.js`
+- Scripts in order: `display-settings.js`, `ui.js` (head), `data/materials.js`, `data/samples.js`, `data/sample-models.js`, `data/device.js`, `data/checklist.js`, `data/text/help.js`, `data/help-tips.js`, `data/terms.js`, `data/tutorials.js`, `graph-core.js`, `graph.js`, `excel-export.js`, `report.js`, `tutorials.js`, `help-coach.js`, `live-links.js`, `live-checklist.js`, `live-csv.js`, `live-material.js`, `live-shell.js`, `live.js`, `layouts.js`, `data/search-index.js`, `site-search.js`, `build-number.js`
 - Page-specific: only the HTML text and the test type
 
 ## What the user sees
@@ -23,7 +23,7 @@ Live Uniaxial Tension test with a USB tester (no simulator; the simulator is onl
 - Safety line: the on-screen STOP button is not an emergency stop
 
 ## Depends on
-- Features: live test, USB link, graph engine, CSV and Excel downloads, print report
+- Features: live test, workspace, USB link, graph engine, CSV and Excel downloads, print report
 
 ## How to check
 - `node scripts/check-site.js`

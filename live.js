@@ -36,7 +36,7 @@
         '<h2 id="spec-title">Specimen and settings</h2>' +
         '<div class="setup-col">' +
         '<h3 class="step-h">1. Specimen</h3>' +
-        field('s-mat', 'Material', 'type="text" autocomplete="off" maxlength="100" aria-describedby="s-mat-hint"') +
+        field('s-mat', 'Material <span class="ws-req" aria-hidden="true">*</span>', 'type="text" autocomplete="off" maxlength="100"', true) +
         '<p class="small muted" id="s-mat-hint" hidden>Type the material name.</p>' +
         field('s-id', 'Specimen ID', 'type="text" autocomplete="off"') +
         '</div><div class="setup-col">' +
@@ -55,8 +55,8 @@
           '<div class="pf"><span data-term="holdstrain" tabindex="0">Hold strain, ε<sub>0</sub> = ΔL/L<sub>0</sub></span><output id="s-e0">—</output></div>' +
           field('s-holds', 'Hold duration (s)', undefined, true) : '') +
         '<p class="small gs-fill"><button type="button" class="btn-link" id="s-example-settings">Fill example settings</button></p>' +
-        field('s-temp', 'Temperature (°C), optional', 'type="text" inputmode="decimal" autocomplete="off"', true) +
-        field('s-env', 'Environment, optional', 'type="text" autocomplete="off"') +
+        field('s-temp', 'Temperature (°C)', 'type="text" inputmode="decimal" autocomplete="off"', true) +
+        field('s-env', 'Environment', 'type="text" autocomplete="off"') +
         '<label class="pf"><span>Notes</span><textarea id="s-notes" rows="2"></textarea></label>' +
         '</div>' +
         '<div class="tut-slot" data-tutorial="dimensions" data-step="2"></div>' +   /* across the whole setup card (wide enough to read); only shown at the Dimensions step in the guided view */
@@ -75,8 +75,8 @@
           '<div class="tut-slot" data-tutorial="connect-usb" data-step="4"></div>' +
           '<div class="run-bar">' +
             '<button type="button" class="btn-secondary" id="r-tare">Tare</button>' +
-            '<button type="button" class="btn btn-start" id="r-start">Start test</button>' +
-            '<button type="button" class="btn-stop" id="r-stop">STOP — sends a stop command</button>' +
+            '<button type="button" class="btn btn-start" id="r-start">Start recording</button>' +
+            '<button type="button" class="btn-stop" id="r-stop">STOP tester</button>' +
             '<label class="check"><input type="checkbox" id="r-auto" checked> ' + (isRelax ? 'Auto-stop at end of hold' : 'Send STOP after detected force drop') + '</label>' +
           '</div>' +
           '<p class="small muted" id="r-why"></p>' +
@@ -153,7 +153,7 @@
     dn.textContent = ex ? 'These dimensions are example values from the labeled sample data, not measurements of your specimen.' : '';
   }
   /* The entries Start needs, with the unit to name in messages. */
-  var FIELDS = [['s-L0', 'gauge length', 'mm'], ['s-W', 'width', 'mm'], ['s-T', 'thickness', 'mm'], ['s-speed', 'crosshead speed', 'mm/min']]
+  var FIELDS = [['s-mat', 'material', ''], ['s-L0', 'gauge length', 'mm'], ['s-W', 'width', 'mm'], ['s-T', 'thickness', 'mm'], ['s-speed', 'crosshead speed', 'mm/min']]
     .concat(isRelax ? [['s-hold', 'hold displacement', 'mm'], ['s-holds', 'hold duration', 's']] : []);
   var FIELD_IDS = FIELDS.map(function (q) { return q[0]; }).concat(['s-temp']), touched = {};
   function fieldInfo(id) { return FIELDS.filter(function (q) { return q[0] === id; })[0]; }
@@ -161,6 +161,7 @@
   function problemText(id) {
     var q = fieldInfo(id), r = read(id);
     if (!q) return '';
+    if (id === 's-mat') return $('s-mat').value.trim() ? '' : 'Enter or choose the material.';
     if (r.state === 'empty') return 'Enter the ' + q[1] + ' in ' + q[2] + '.';
     if (r.state === 'text') return 'That is not a number. Enter digits only, for example 12.5 (' + q[2] + ').';
     if (r.value <= 0) return 'Enter a number greater than 0 (' + q[2] + ').';
@@ -205,8 +206,8 @@
       else row(label, q.state === 'empty' ? 'missing' : q.state === 'text' ? 'not a number' : 'must be greater than 0', true);
     }
     row('Test', isRelax ? 'Stress relaxation' : 'Uniaxial tension');
-    row('Material', s.matLabel || 'not entered (optional)');
-    row('Specimen ID', s.id || 'not entered (optional)');
+    if (!s.matLabel) row('Material', 'missing', true); else row('Material', s.matLabel);
+    row('Specimen ID', s.id || 'not entered');
     val('s-L0', 'Gauge length L₀', 'mm'); val('s-W', 'Width', 'mm'); val('s-T', 'Thickness', 'mm');
     row('Area A₀', s.W && s.T ? sig(s.W * s.T, 4) + ' mm²' : '—');
     row('Dimension source', dimSourceNow() === 'example' ? 'Example values (not measured)' : 'Typed by you');
@@ -216,8 +217,8 @@
       row('Hold strain ε₀', s.hold_mm && s.L0 ? sig(s.hold_mm / s.L0, 4) : '—');
       val('s-holds', 'Hold duration', 's');
     }
-    row('Temperature', s.temp || 'not entered (optional)');
-    row('Environment', s.env || 'not entered (optional)');
+    row('Temperature', s.temp || 'not entered');
+    row('Environment', s.env || 'not entered');
     var md = modeRow();
     row('Connection', md[0], md[1]);
     row('Pre-test checklist', checklistOn() ? 'On: a checklist pop-up opens when you press Start' : 'Off (it can be turned on in Settings)');
@@ -247,7 +248,7 @@
   var layoutEl = app.querySelector('.live-layout'), stepsReady = false, cur = 1, maxStep = 1;
   var setupCols = app.querySelectorAll('.setup-col'), connRow = app.querySelector('.conn-row'), reviewSec = app.querySelector('section.review');
   function stepHead(n) { return n <= 3 ? setupCols[n - 1].querySelector('.step-h') : n === 4 ? connRow.querySelector('.step-h') : $('rv-title'); }
-  function stepFields(n) { return n === 2 ? ['s-L0', 's-W', 's-T'] : n === 3 ? ['s-speed'].concat(isRelax ? ['s-hold', 's-holds'] : []) : []; }
+  function stepFields(n) { return n === 1 ? ['s-mat'] : n === 2 ? ['s-L0', 's-W', 's-T'] : n === 3 ? ['s-speed'].concat(isRelax ? ['s-hold', 's-holds'] : []) : []; }
   function stepValid(n) { return n === 4 ? !!link : stepFields(n).every(function (id) { return !problemText(id); }); }
   function stepWhy(n) {
     if (n === 4) return link ? '' : (PRACTICE ? 'Use the simulator to continue.' : 'Connect to the tester to continue.');
@@ -256,7 +257,7 @@
   }
   function stepSummary(n) {
     var s = spec();
-    if (n === 1) return [s.matLabel, s.id].filter(Boolean).join(' · ') || 'Nothing typed (optional)';
+    if (n === 1) return [s.matLabel, s.id].filter(Boolean).join(' · ') || 'Nothing typed';
     if (n === 2) return s.L0 && s.W && s.T ? sig(s.L0, 4) + ' × ' + sig(s.W, 4) + ' × ' + sig(s.T, 4) + ' mm' : 'Needs entries';
     if (n === 3) return s.speed && (!isRelax || (s.hold_mm && s.hold_s)) ? sig(s.speed, 4) + ' mm/min' + (isRelax ? ' · hold ' + sig(s.hold_mm, 4) + ' mm, ' + sig(s.hold_s, 4) + ' s' : '') : 'Needs entries';
     if (n === 4) return !link ? 'Not connected' : link.kind === 'sim' ? 'Simulator' : 'USB tester';
@@ -267,7 +268,7 @@
   setupCols[0].setAttribute('data-step', '1'); setupCols[1].setAttribute('data-step', '2'); setupCols[2].setAttribute('data-step', '3');
   connRow.setAttribute('data-step', '4');
   if (connRow.nextElementSibling && !connRow.nextElementSibling.classList.contains('run-bar')) connRow.nextElementSibling.setAttribute('data-step', '4');  /* the USB-unavailable note */
-  reviewSec.setAttribute('data-step', '5'); $('rv-det').setAttribute('data-step', '5'); $('r-why').setAttribute('data-step', '5');
+  reviewSec.setAttribute('data-step', '5'); $('rv-det').setAttribute('data-step', '5');   /* #r-why (why Start is unavailable) stays in the workspace, always shown */
   var bar = document.createElement('ol');
   bar.className = 'gs-bar'; bar.setAttribute('aria-label', 'Test setup steps');
   bar.innerHTML = STEP_NAMES.map(function (nm, i) {
@@ -282,6 +283,11 @@
   [1, 2, 3].forEach(function (n) { setupCols[n - 1].appendChild(navFor(n)); });
   var nav4 = navFor(4); nav4.setAttribute('data-step', '4'); connRow.parentNode.insertBefore(nav4, (connRow.nextElementSibling && connRow.nextElementSibling.getAttribute('data-step') === '4') ? connRow.nextElementSibling.nextSibling : connRow.nextSibling);
   var nav5 = navFor(5); nav5.setAttribute('data-step', '5'); $('rv-det').parentNode.insertBefore(nav5, $('rv-det').nextSibling);
+  /* The workspace layout (live-shell.js): moves the markup built above into a Setup sidebar and a workspace with a toolbar, a measurement strip, and the graph. */
+  reviewSec.insertAdjacentHTML('beforeend', '<p class="small muted ws-start-hint">Press Start recording in the toolbar above the graph.</p>');
+  var LOCK_IDS = ['s-mat', 's-id', 's-L0', 's-W', 's-T', 's-speed', 's-hold', 's-holds', 's-temp', 's-env', 's-example-dims', 's-example-settings'];
+  var matBox = window.LiveMaterial ? window.LiveMaterial.attach($('s-mat'), ['Rabbit tissue', 'Test']) : null;   /* the Material box: choose a ready choice or type your own */
+  var shell = window.LiveShell.build({ app: app, layout: layoutEl, main: app.querySelector('.live-main'), form: $('spec'), bar: bar, controlBar: app.querySelector('.control-bar') });
   /* "?" help on each step heading (both views). The text is existing wording; the tip copies it from the hidden element named here. */
   /* Which tutorial each step's "?" opens and "Watch how" offers: each plays inline on this page (tutorials.js; not offered while a test is recording). */
   var TUT_OF = PRACTICE ? { 1: 'run-simulated', 2: 'dimensions', 3: 'run-simulated', 4: 'run-simulated', 5: 'run-simulated' } : { 2: 'dimensions', 4: 'connect-usb' };
@@ -446,24 +452,44 @@
     details: function () { return csv.metaRows(rec, startedAt, endReason); }
   });
 
+  /* ---------- measurement strip (live-shell.js draws it; these are the latest readings, nothing is invented) ---------- */
+  var lastF = null, lastD = null;
+  function stripNow() {
+    if (!shell) return;
+    var s = spec(), A = s.W && s.T ? s.W * s.T : null, n = rec && rec.raw ? rec.raw.t.length : 0;
+    shell.strip({
+      f: lastF, d: lastD, t: (running || hasData) && n ? rec.raw.t[n - 1] : null, s: lastF !== null && A ? lastF / A : null,
+      state: !link ? 'Not connected' : running ? 'Recording' : hasData ? 'Ended' : 'Connected \u00b7 ready',
+      dot: running ? 'run' : link ? 'on' : '',
+      src: PRACTICE ? (link || hasData ? 'Simulated data, not measured' : 'No data yet') : (running || hasData ? 'Measured (tester not validated)' : link ? 'Live from the tester (not validated)' : 'No data yet')
+    });
+  }
+
   function ui() {
     var on = !!link;
     if ($('c-usb')) { $('c-usb').hidden = on; $('c-usb').disabled = !hasSerial; }
     if ($('c-sim')) $('c-sim').hidden = on;
     $('c-off').hidden = !on; $('c-off').disabled = running;
-    $('r-tare').disabled = !on || running;
-    $('r-start').disabled = !on || running;
+    $('r-tare').disabled = !on || running || hasData;
+    $('r-start').disabled = !on || running || hasData;
     $('r-stop').disabled = !on;
+    $('r-end').disabled = !running;
     /* While recording, the same STOP button is pinned to the bottom of the window so it stays in reach when the page is scrolled. */
     var dock = $('stop-dock'); if (dock) { dock.hidden = !running; document.body.classList.toggle('has-stop-dock', running); }
     $('dl-csv').disabled = running || !hasData;
     if ($('r-print')) $('r-print').disabled = running || !hasData;
-    ['s-mat', 's-speed', 's-hold', 's-holds', 's-example-dims', 's-example-settings'].forEach(function (id) { if ($(id)) $(id).disabled = running; });
+    /* The setup is locked while recording and after the test, until New test. Notes stays editable. */
+    var lock = running || hasData;
+    LOCK_IDS.forEach(function (id) { if ($(id)) $(id).disabled = lock; });
+    if (matBox) matBox.setDisabled(lock);
+    shell.lockNote(running ? 'Locked while recording.' : hasData ? 'Locked: this test\u2019s data cannot be changed. Download it, or choose New test.' : '');
+    shell.showEnded(!running && hasData);
     $('r-why').textContent = on || running ? '' : (PRACTICE ? 'Start is available after you connect: press “Use simulator”.' : 'Start is available after you connect: press “Connect to tester (USB)”.');
     $('c-dot').className = 'dot' + (running ? ' run' : on ? ' on' : '');
     document.title = running ? 'Recording · ' + baseTitle : (on && hasData ? 'Stopped · ' + baseTitle : baseTitle);
     $('c-text').textContent = !on ? 'Not connected' : (running ? 'Recording · ' : 'Connected · ') + (link.kind === 'sim' ? 'simulator (not measured)' : 'tester (USB)');
     if (!on) $('c-now').textContent = '';
+    stripNow();
     renderReview();
   }
 
@@ -488,7 +514,8 @@
       return;
     }
     var now = performance.now();
-    if (now - lastNow > 150) { lastNow = now; $('c-now').textContent = '· Force ' + sig(F, 4) + ' N · Displacement ' + sig(d, 4) + ' mm'; }
+    lastF = F; lastD = running && d0 !== null ? d - d0 : d;
+    if (now - lastNow > 150) { lastNow = now; $('c-now').textContent = '· Force ' + sig(F, 4) + ' N · Displacement ' + sig(d, 4) + ' mm'; stripNow(); }
     if (!running) return;
     if (t0 === null) { t0 = t; d0 = d; }
     var raw = rec.raw;
@@ -533,7 +560,6 @@
       $(probs[0].id).focus();
       return;
     }
-    if (hasData && !downloaded && !window.confirm('Start a new test? The current data has not been downloaded and will be cleared.')) return;
     if (checklistOn()) { showChecklist(begin); return; }
     begin();
   }
@@ -548,7 +574,8 @@
     api.setRecord(rec);
     t0 = d0 = null; peakF = 0; holdStart = null; skipped = 0; hasData = false; downloaded = true;
     startedAt = new Date(); endReason = ''; infoEl.textContent = '';
-    running = true;
+    running = true; lastF = lastD = null;
+    shell.collapse(true);   /* the setup folds away so the graph has the room; Setup reopens it */
     ui();
     sendCmd(isRelax ? fill(DEV.commands.startRelaxation, { speed: s.speed, hold_mm: s.hold_mm, hold_s: s.hold_s }) : fill(DEV.commands.startUniaxial, { speed: s.speed }));
     if (DEV.commands.heartbeat && DEV.heartbeatMs) heartbeat = setInterval(function () { sendCmd(DEV.commands.heartbeat); }, DEV.heartbeatMs);
@@ -558,9 +585,9 @@
       setTimeout(function () { if (running && rec === started && !hasData) window.HelpCoach.report('noReadings'); }, window.HELP_TIPS.noReadingsMs);
     }
   }
-  function finish(reason, isError) {
+  function finish(reason, isError, keepHeartbeat) {
     running = false;
-    clearInterval(heartbeat); heartbeat = null;
+    if (!keepHeartbeat) { clearInterval(heartbeat); heartbeat = null; }   /* End recording keeps the heartbeat: it does not tell the tester to stop */
     endReason = reason;
     rec.skippedLines = skipped;
     api.refresh(false);
@@ -574,11 +601,17 @@
     else msg('STOP sent.');
   }
 
+  /* End recording: stop saving readings on this page. NO stop command is sent, so the tester is not told to stop; STOP tester does that. */
+  function endRecording() {
+    if (!running) return;
+    finish('Recording ended. No stop command was sent; the tester may still be moving. Press STOP tester to stop it.', false, true);
+  }
+
   function attach(l) {
     link = l;
     l.onLine = onLine;
     l.onClose = function (why) {
-      link = null;
+      link = null; clearInterval(heartbeat); heartbeat = null; lastF = lastD = null;
       if (running) finish(why + ' Recording stopped; the data so far is kept.', true);
       else msg(why, true);
       ui();
@@ -607,21 +640,56 @@
       msg('Simulator connected (practice). Its readings are simulated, not measured. Enter the specimen values (or use the Fill example links in the Dimensions and Test settings steps), then press Start.');
     });
   });
-  $('c-off').addEventListener('click', function () {
-    if (running || !link) return;
+  function disconnectNow() {   /* after a finished test, disconnecting clears the test (like New test); before a test, only the connection ends */
     var l = link;
-    link = null;
+    if (!l) return;
+    link = null; clearInterval(heartbeat); heartbeat = null; lastF = lastD = null;
+    if (hasData) resetTest();
     ui();
     l.close().then(function () { msg('Disconnected.'); });
+  }
+  $('c-off').addEventListener('click', function () {
+    if (running || !link) return;
+    if (hasData && !downloaded) askSave('disconnect', disconnectNow); else disconnectNow();
   });
   $('r-tare').addEventListener('click', function () { sendCmd(DEV.commands.tare); msg('TARE sent: force zeroed.'); });
   $('r-start').addEventListener('click', startTest);
+  $('r-end').addEventListener('click', endRecording);
+
+  /* ---------- after the test: Save data, New test, Disconnect ---------- */
+  $('r-save').addEventListener('click', function () { $('dl-csv').click(); });
+  function resetTest() {   /* a fresh, empty test: the record, graph, strip, entries, and messages are cleared and the entries unlock; the connection stays */
+    rec = newRecord('none'); api.setRecord(rec);
+    t0 = d0 = null; peakF = 0; holdStart = null; skipped = 0; hasData = false; downloaded = true; startedAt = null; endReason = '';
+    lastF = lastD = null; exampleDims = null; touched = {};
+    ['s-mat', 's-id', 's-L0', 's-W', 's-T', 's-speed', 's-hold', 's-holds', 's-temp', 's-env', 's-notes'].forEach(function (id) { if ($(id)) $(id).value = ''; });
+    clearMessages(); infoEl.textContent = ''; msg('');
+    cur = 1; maxStep = 1; updateOutputs(); shell.collapse(false);
+    ui(); api.refresh(false); stepsUpdate();
+  }
+  /* When the data has not been downloaded, ask before it is cleared. mode: 'new' or 'disconnect'; then() runs after Save or Don't save. */
+  function askSave(mode, then) {
+    var W = mode === 'new'
+      ? { t: 'Save this test before you start a new one?', a: 'Download and start new test', b: 'Don\u2019t save, start new test' }
+      : { t: 'Save this test before you disconnect?', a: 'Download and disconnect', b: 'Don\u2019t save, disconnect' };
+    var d = window.SiteUI && window.SiteUI.dialog({ className: 'ws-dlg', labelledBy: 'ws-dlg-t',
+      html: '<h2 id="ws-dlg-t">' + W.t + '</h2><p>This test\u2019s data has not been downloaded. It is kept only in this tab, and this clears it from the page.</p>' +
+        '<div class="ws-dlg-btns"><button type="button" class="btn" id="ws-dlg-save">' + W.a + '</button><button type="button" class="btn-secondary" id="ws-dlg-no">' + W.b + '</button><button type="button" class="btn-secondary" id="ws-dlg-cancel">Cancel</button></div>' });
+    if (!d) { if (window.confirm(W.t + ' Its data has not been downloaded and will be cleared. Continue?')) then(); return; }
+    function done(fn) { d.close(); d.el.remove(); if (fn) fn(); }
+    d.el.querySelector('#ws-dlg-save').addEventListener('click', function () { $('dl-csv').click(); done(then); });
+    d.el.querySelector('#ws-dlg-no').addEventListener('click', function () { done(then); });
+    d.el.querySelector('#ws-dlg-cancel').addEventListener('click', function () { done(); });
+    d.el.addEventListener('close', function () { if (d.el.parentNode) d.el.remove(); });
+    d.show();
+  }
+  $('r-new').addEventListener('click', function () { if (running) return; if (hasData && !downloaded) askSave('new', resetTest); else resetTest(); });
   $('r-stop').addEventListener('click', function () { stopTest('Stopped by you. STOP sent.'); });
   (function () {
     var dock = document.createElement('div');
     dock.className = 'stop-dock'; dock.id = 'stop-dock'; dock.hidden = true;
     dock.setAttribute('role', 'region'); dock.setAttribute('aria-label', 'STOP while recording');
-    dock.innerHTML = '<span class="small">Not an emergency stop.</span><button type="button" class="btn-stop" id="r-stop-dock">STOP — sends a stop command</button>';
+    dock.innerHTML = '<span class="small">Not an emergency stop.</span><button type="button" class="btn-stop" id="r-stop-dock">STOP tester</button>';
     document.body.appendChild(dock);
     $('r-stop-dock').addEventListener('click', function () { stopTest('Stopped by you. STOP sent.'); });
   })();

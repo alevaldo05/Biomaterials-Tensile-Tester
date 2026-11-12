@@ -17,7 +17,7 @@ window.TUTORIALS = {
   label: 'Illustration of the screen, not a recording of a real test.',
   list: [
     { id: 'run-simulated', page: 'practice.html', where: 'at the top of the practice page', title: 'Run a simulated test',
-      captions: ['Fill in the dimensions and settings step by step, typing your own or using the Fill example links.', 'On Connection, choose Use simulator.', 'On Review and start, press Start test.', 'Press STOP when you want the test to end.'],
+      captions: ['Fill in the dimensions and settings step by step, typing your own or using the Fill example links.', 'In the toolbar, choose Use simulator.', 'On Review and start, press Start recording in the toolbar.', 'Press STOP tester when you want the test to end.'],
       boxes: [
         { id: 't1', kind: 'tab', x: 12, y: 32, w: 70, h: 22, text: 'Specimen', cur: [0] }, { id: 't2', kind: 'tab', x: 86, y: 32, w: 70, h: 22, text: 'Dimensions', cur: [0] },
         { id: 't3', kind: 'tab', x: 160, y: 32, w: 70, h: 22, text: 'Settings', cur: [0] }, { id: 't4', kind: 'tab', x: 234, y: 32, w: 70, h: 22, text: 'Connection', cur: [1] },
@@ -27,8 +27,8 @@ window.TUTORIALS = {
         { id: 'f1', kind: 'field', x: 24, y: 112, w: 100, h: 24, text: '10', in: [0] }, { id: 'f2', kind: 'field', x: 134, y: 112, w: 100, h: 24, text: '5', in: [0] }, { id: 'f3', kind: 'field', x: 244, y: 112, w: 100, h: 24, text: '1.5', in: [0] },
         { id: 'sim', kind: 'btn', x: 24, y: 90, w: 120, h: 26, text: 'Use simulator', in: [1] }, { id: 'usb', kind: 'btn', x: 154, y: 90, w: 150, h: 26, text: 'Connect to tester (USB)', in: [1] },
         { id: 'st', kind: 'label', x: 24, y: 140, w: 200, h: 16, text: 'Connected · simulator (not measured)', in: [2, 3] },
-        { id: 'tare', kind: 'btn', x: 24, y: 90, w: 60, h: 26, text: 'Tare', in: [2, 3] }, { id: 'start', kind: 'primary', x: 92, y: 90, w: 100, h: 26, text: 'Start test', in: [2, 3] },
-        { id: 'stop', kind: 'stop', x: 200, y: 90, w: 170, h: 26, text: 'STOP', in: [2, 3] },
+        { id: 'tare', kind: 'btn', x: 24, y: 90, w: 60, h: 26, text: 'Tare', in: [2, 3] }, { id: 'start', kind: 'primary', x: 92, y: 90, w: 100, h: 26, text: 'Start recording', in: [2, 3] },
+        { id: 'stop', kind: 'stop', x: 200, y: 90, w: 170, h: 26, text: 'STOP tester', in: [2, 3] },
         { id: 'g', kind: 'graph', x: 12, y: 200, w: 376, h: 44, in: [3] },
         { id: 'sn', kind: 'label', x: 20, y: 236, w: 200, h: 12, text: 'Simulated data, not measured', in: [3] }
       ],
