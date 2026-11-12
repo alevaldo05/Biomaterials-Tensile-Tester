@@ -199,14 +199,20 @@ async function feature(page, name, port, issues) {
   var base = 'http://127.0.0.1:' + port + '/';
   if (name === 'practice' || name === 'practice-relaxation') { await runTest(page, issues); return; }   /* the simulator exists only on the practice page; the real test pages cannot run without a tester */
   if (name === 'load-test') {
+    async function loadSide(open) {
+      if (!(await visible(page, '#ws-setup-open'))) return;
+      var isOpen = await page.evaluate(function () { return document.querySelector('.ws-side').classList.contains('is-open'); });
+      if (open && !isOpen) await page.click('#ws-setup-open'); else if (!open && isOpen) await page.click('#ws-side-toggle');
+    }
     var csv = Buffer.from(sampleCsv());
     await page.setInputFiles('#load-file', { name: 'sample.csv', mimeType: 'text/csv', buffer: csv });
     await page.waitForSelector('#results tr', { timeout: 6000 }).catch(function () { issues.push({ k: 'load', m: 'Load Test did not show key results for a sample file' }); });
     if (!(await visible(page, '#graph-app svg'))) issues.push({ k: 'graph', m: 'Load Test graph is not shown' });
     var r1 = await page.evaluate(inPage); r1.issues.forEach(function (x) { x.m = '(file open) ' + x.m; issues.push(x); });
+    await loadSide(true);   /* the File sidebar is a drawer when the room is narrow; the tutorial and the mode choice are inside it */
     await page.click('#tut-load-compare .tut-toggle').catch(function () { issues.push({ k: 'tutorial', m: 'Load Test: the Watch how button could not be clicked' }); });
     if (!(await visible(page, '#tut-panel-load-compare'))) issues.push({ k: 'tutorial', m: 'Load Test: the inline tutorial did not open' }); else { var rt = await page.evaluate(inPage); rt.issues.forEach(function (x) { x.m = '(tutorial open) ' + x.m; issues.push(x); }); }
-    await page.goto(base + 'load-test.html'); await page.check('input[name="load-mode"][value="compare"]');
+    await page.goto(base + 'load-test.html'); await loadSide(true); await page.check('input[name="load-mode"][value="compare"]'); await loadSide(false);
     await page.setInputFiles('#cmp-file', [{ name: 'a.csv', mimeType: 'text/csv', buffer: csv }, { name: 'b.csv', mimeType: 'text/csv', buffer: csv }]);
     await page.waitForSelector('.cmp-table', { timeout: 6000 }).catch(function () { issues.push({ k: 'compare', m: 'Compare did not show its table for two files' }); });
     var r2 = await page.evaluate(inPage); r2.issues.forEach(function (x) { x.m = '(compare) ' + x.m; issues.push(x); });

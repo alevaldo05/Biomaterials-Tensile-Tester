@@ -2,7 +2,7 @@
    files in the order listed in FILES.md. Theme variables only. Desktop first; at 1100 px and below the sidebar is a drawer. */
 .live-layout { --ws-side-w: 19.5rem; grid-template-columns: var(--ws-side-w) minmax(0, 1fr); gap: 0.75rem; align-items: start; }
 .live-layout.ws-collapsed { --ws-side-w: 3rem; }
-.live-main { min-width: 0; display: grid; gap: 0.5rem; }
+.live-main { min-width: 0; display: grid; grid-template-columns: minmax(0, 1fr); gap: 0.5rem; }
 /* the workspace uses the width of the window (the page's text column is for reading pages) */
 main.wide:has(.live-layout) { max-width: none; }
 .ws-toolbar [hidden], .ws-side [hidden] { display: none !important; }
@@ -57,17 +57,15 @@ html[data-steps="guided"] .ws-side .gs-bar { grid-template-columns: minmax(0, 1f
 .live-main #graph-app .graph-grid { grid-template-columns: minmax(0, 1fr); }
 .live-layout:not(.has-run) #graph-app .graph-side { display: none; }
 
-/* Narrow windows: the sidebar is a drawer opened by the Setup button */
-@media (max-width: 68.75rem) {
-  .live-layout, .live-layout.ws-collapsed { grid-template-columns: minmax(0, 1fr); }
-  .ws-side { position: fixed; top: 0; left: 0; bottom: 0; width: min(22rem, 92vw); max-height: none; z-index: 60; transform: translateX(-105%); box-shadow: 0 0 30px rgba(0, 0, 0, 0.3); }
-  .ws-side.is-open { transform: none; }
-  .ws-collapsed .ws-side-body, .ws-collapsed .ws-side-title { display: grid; }
-  .ws-collapsed .ws-side-title { display: block; }
-  :root .ws-toolbar .ws-setup-open { display: inline-flex; }
-  .ws-grp-tester { margin-left: 0; padding-left: 0; border-left: 0; }
-  .ws-grp-tester .ws-grp-t { left: 0; }
-}
+/* Narrow room (window 1100 px or narrower, or large text): the sidebar is a drawer opened by the Setup button (the class comes from live-shell.js / load-shell.js) */
+.live-layout.ws-narrow, .live-layout.ws-narrow.ws-collapsed { grid-template-columns: minmax(0, 1fr); }
+.live-layout.ws-narrow .ws-side { position: fixed; top: 0; left: 0; bottom: 0; width: min(22rem, 92vw); max-height: none; z-index: 60; transform: translateX(-105%); box-shadow: 0 0 30px rgba(0, 0, 0, 0.3); }
+.live-layout.ws-narrow .ws-side.is-open { transform: none; }
+.live-layout.ws-narrow.ws-collapsed .ws-side-body, .live-layout.ws-narrow.ws-collapsed .ws-side-title { display: grid; }
+.live-layout.ws-narrow.ws-collapsed .ws-side-title { display: block; }
+:root .live-layout.ws-narrow .ws-toolbar .ws-setup-open { display: inline-flex; }
+.live-layout.ws-narrow .ws-grp-tester { margin-left: 0; padding-left: 0; border-left: 0; }
+.live-layout.ws-narrow .ws-grp-tester .ws-grp-t { left: 0; }
 @media (max-width: 45rem) {
   .ws-cell { flex-basis: 45%; border-left: 0; border-top: 1px solid var(--line); }
   .ws-v b { font-size: 1.3rem; }
@@ -148,3 +146,23 @@ body.ws-graph-expanded { overflow: hidden; }
 .ws-panel .gs-b .res-tools { margin-top: 0; }
 .pf-check { display: flex; align-items: center; justify-content: space-between; gap: 0.5rem; }
 .pf-check input[type="checkbox"] { width: 1.1rem; height: 1.1rem; accent-color: var(--accent); }
+
+/* ---------- Load Test workspace (load-shell.js) ---------- */
+.load-layout .load-form, .live-layout .load-form.loaded { display: block; }
+.load-layout .load-form .segmented { margin: 0 0 0.6rem; }
+.load-layout .load-form .segmented .options { flex-wrap: wrap; }
+.load-layout .load-form .csv-help { flex-basis: auto; }
+.load-layout .ws-toolbar { align-items: center; }
+.load-layout .ws-grp-file { padding-top: 0.95rem; }
+.load-layout #mode-one, .load-layout #mode-compare, .live-layout .load-form.loaded #mode-one { display: flex; flex-wrap: wrap; align-items: center; gap: 0.25rem 1rem; margin: 0; }
+.load-layout #mode-one[hidden], .load-layout #mode-compare[hidden] { display: none; }
+.load-layout .step-label, .live-layout .load-form.loaded #mode-one .step-label { margin: 0; }
+.load-layout .graph-actions, .load-layout .csv-msg { margin: 0; }
+.load-layout #compare-app { margin-top: 0; }
+.load-layout .ws-panel#ws-p-params { order: 5; }
+.load-layout .ws-panel#ws-p-params > .params-block { padding: 0.25rem 0.75rem 0.75rem; margin: 0; border: 0; }
+.load-layout .ws-panel#ws-p-params .params-block > h2 { display: none; }
+.load-layout .file-details { margin: 0 0 0.5rem; }
+.ws-strip[hidden] { display: none; }
+
+.load-layout #compare-app { min-width: 0; overflow-x: auto; }

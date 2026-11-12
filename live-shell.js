@@ -12,7 +12,14 @@
     /* o: { app, layout, main, form, bar, controlBar, practice } (elements built by live.js) */
     build: function (o) {
       var app = o.app, layout = o.layout, main = o.main, form = o.form, bar = o.bar, cb = o.controlBar;
-      var narrow = window.matchMedia ? window.matchMedia('(max-width: 68.75rem)') : { matches: false };
+      /* "Narrow" means the sidebar is a drawer: the window is 1100 px or narrower, or the room for the workspace is under 60rem (large text makes rem bigger). */
+      var mq = window.matchMedia ? window.matchMedia('(max-width: 68.75rem)') : null, narrow = { matches: false };
+      function measure() {
+        var rem = parseFloat(getComputedStyle(document.documentElement).fontSize) || 16, w = layout.parentNode ? layout.parentNode.clientWidth : window.innerWidth;
+        var n = !!(mq && mq.matches) || w < 60 * rem;
+        narrow.matches = n; layout.classList.toggle('ws-narrow', n);
+      }
+      measure();
 
       /* The pieces that go into the toolbar are taken out of the old control card first (the Connection step heading stays with its step). */
       var conn = cb.querySelector('p.conn'), actions = cb.querySelector('.graph-actions'), runBar = cb.querySelector('.run-bar');
@@ -89,8 +96,8 @@
         collapse(!layout.classList.contains('ws-collapsed'));
       });
       setupOpen.addEventListener('click', function () { side.classList.add('is-open'); labelToggle(); toggle.focus(); });
-      function onWidth() { if (!narrow.matches) side.classList.remove('is-open'); labelToggle(); }
-      if (narrow.addEventListener) narrow.addEventListener('change', onWidth); else if (narrow.addListener) narrow.addListener(onWidth);
+      function onWidth() { measure(); if (!narrow.matches) side.classList.remove('is-open'); labelToggle(); }
+      if (window.ResizeObserver && layout.parentNode) new ResizeObserver(function () { onWidth(); }).observe(layout.parentNode); else window.addEventListener('resize', onWidth);
       labelToggle();
 
       /* ---------- Strip values ---------- */

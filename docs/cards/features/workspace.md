@@ -13,11 +13,14 @@ The graph-first layout of the test pages and the practice page: a Setup sidebar 
 - `css/guided.css` (step bar and button sizes), `data/terms.js` (`ws_*` strip definitions)
 
 ## What the user sees
-- Setup sidebar (about 20rem): step bar, the current step, Back/Next; "Hide setup" folds it to a rail, and it folds by itself when recording starts. At 1100 px and narrower it is a drawer opened by the toolbar's Setup button
+- Setup sidebar (about 20rem): step bar, the current step, Back/Next; "Hide setup" folds it to a rail, and it folds by itself when recording starts. At 1100 px and narrower, or when large text leaves the workspace under 60rem of room, it is a drawer opened by the toolbar's Setup button (the shell adds the class `ws-narrow`)
 - Toolbar: Connection (Connect to tester (USB), or Use simulator on the practice page; Disconnect), Recording (Tare, Start recording, End recording; Save data and New test after a test), Tester (STOP tester and "Not an emergency stop.")
 - Measurement strip: Force, Displacement, Elapsed, Stress, Recording status, Data source; a dash when a value is missing; hover or Tab shows what each is
 - Material is required (drop-down of Rabbit tissue and Test, or type your own); red outline only after you enter and leave a box
 - Entries are locked while recording and after the test until New test (Notes stays editable)
+
+## Load Test
+- Load Test uses the same layout through `load-shell.js` (a File sidebar, a toolbar, a strip of facts read from the loaded file, the graph and its panels); see the [Load Test](../pages/load-test.md) card
 
 ## Graph and results
 - The graph area, its tools, panels, and offset yield are described in the [graph engine](graph-engine.md) card; Setup step 3 has the "Include offset yield (optional)" checkbox and box
