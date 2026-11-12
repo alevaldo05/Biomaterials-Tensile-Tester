@@ -36,5 +36,5 @@ The two test pages show one setup step at a time (the default), with a "Show all
 
 ## How to check
 - `node scripts/check-site.js`
-- Press Next through all five steps to Start on both test pages; run the simulator to a CSV download
+- Press Next through all five steps to Start on both test pages; on the practice page, run the simulator to a CSV download
 - Turn on "Show all steps": the page matches the old full layout; reload keeps the choice

@@ -3,7 +3,7 @@
 Page card. Update it in the same change as the page.
 
 ## Purpose
-Live Uniaxial Tension test with the simulator or a USB tester. Shared behavior: see [live test](../features/live-test.md).
+Live Uniaxial Tension test with a USB tester (no simulator; the simulator is only on the practice page). Shared behavior: see [live test](../features/live-test.md).
 
 ## Files
 - HTML: `test-uniaxial-tension.html` (`live-app` with `data-test="uniaxial"`, safety line, a line pointing at the protocol page's equations)
@@ -15,7 +15,7 @@ Live Uniaxial Tension test with the simulator or a USB tester. Shared behavior: 
 - Graph, Readout, Key results, downloads, Print report after a test
 
 ## Behavior to keep
-- Everything else is shared; see the live test, simulator, USB link, graph engine, downloads, and print report cards
+- Everything else is shared; see the live test, USB link, graph engine, downloads, and print report cards
 - Every control id used by `live.js` stays (`s-mat`, `s-L0`, `c-usb`, `r-start`, `r-stop`, ...)
 
 ## Labels that must stay
@@ -23,9 +23,9 @@ Live Uniaxial Tension test with the simulator or a USB tester. Shared behavior: 
 - Safety line: the on-screen STOP button is not an emergency stop
 
 ## Depends on
-- Features: live test, simulator, USB link, graph engine, CSV and Excel downloads, print report
+- Features: live test, USB link, graph engine, CSV and Excel downloads, print report
 
 ## How to check
 - `node scripts/check-site.js`
-- Run the simulator from Connect to CSV download
+- Use the practice page (simulator) to check setup, run and CSV download; USB itself is untested
 - No "Refused to" messages in the console

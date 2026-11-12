@@ -104,7 +104,7 @@
     var ICONS = {
       'about-title': 'M12 8h.01M11 12h1v5h1M12 3a9 9 0 1 0 0 18a9 9 0 0 0 0-18z', 'how-title': 'M8 6h12M8 12h12M8 18h12M4 6h.01M4 12h.01M4 18h.01',
       'proto-title': 'M6 3h9l4 4v14H6zM9 12h7M9 16h7', 'before-title': 'M9 11l3 3l8-8M20 12v7a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h9',
-      'bg-title': 'M4 19V5a2 2 0 0 1 2-2h13v16H6a2 2 0 0 0-2 2zM8 7h7', 'gloss-title': 'M4 18L9 6l5 12M6 14h6M15 12h5M15 16h5',
+      'practice-title': 'M7 4l12 8-12 8z', 'bg-title': 'M4 19V5a2 2 0 0 1 2-2h13v16H6a2 2 0 0 0-2 2zM8 7h7', 'gloss-title': 'M4 18L9 6l5 12M6 14h6M15 12h5M15 16h5',
       'status-title': 'M4 20V10M10 20V4M16 20v-6M22 20H2', 'reading-title': 'M12 6c-2-2-6-2-8-1v14c2-1 6-1 8 1c2-2 6-2 8-1V5c-2-1-6-1-8 1zM12 6v14'
     };
     var grid = el('div', { 'class': 'card-grid' });

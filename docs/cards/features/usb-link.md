@@ -26,4 +26,4 @@ Web Serial connection to the tester (Chrome only). The message format is a draft
 - Live test
 
 ## How to check
-- Without hardware, only the simulator and the unavailable message can be checked
+- Without hardware, only the unavailable message can be checked on the real pages (the practice page's simulator checks the rest of the screen); a test script may stand in for a serial port, but the site never does

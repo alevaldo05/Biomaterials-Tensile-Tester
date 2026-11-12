@@ -16,7 +16,7 @@
 window.TUTORIALS = {
   label: 'Illustration of the screen, not a recording of a real test.',
   list: [
-    { id: 'run-simulated', page: 'test-uniaxial-tension.html', where: 'at the top of each test page', title: 'Run a simulated test',
+    { id: 'run-simulated', page: 'practice.html', where: 'at the top of the practice page', title: 'Run a simulated test',
       captions: ['Fill in the dimensions and settings step by step, typing your own or using the Fill example links.', 'On Connection, choose Use simulator.', 'On Review and start, press Start test.', 'Press STOP when you want the test to end.'],
       boxes: [
         { id: 't1', kind: 'tab', x: 12, y: 32, w: 70, h: 22, text: 'Specimen', cur: [0] }, { id: 't2', kind: 'tab', x: 86, y: 32, w: 70, h: 22, text: 'Dimensions', cur: [0] },
