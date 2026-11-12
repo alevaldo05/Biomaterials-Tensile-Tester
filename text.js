@@ -13,7 +13,7 @@
   /* Which sections each page's text file must provide (the ids of the <h2> headings in the HTML). */
   var PAGES = {
     home: { file: 'data/text/home.js', sections: ['about-title', 'how-title', 'proto-title'] },
-    learn: { file: 'data/text/learn.js', sections: ['before-title', 'bg-title', 'gloss-title'] },
+    learn: { file: 'data/text/learn.js', sections: ['before-title', 'practice-title', 'bg-title', 'gloss-title'] },
     help: { file: 'data/text/help.js', sections: ['trouble-title', 'keys-title', 'helprefs-title'] },
     about: { file: 'data/text/about.js', sections: ['measures-title', 'why-title', 'compare-title', 'skin-title', 'time-title', 'skin-why-title', 'limits-title', 'status-title', 'refs-title'] }
   };

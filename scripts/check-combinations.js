@@ -134,7 +134,7 @@ function inPage() {
 }
 
 /* ---------- the work for one page ---------- */
-var PAGES = ['index', 'learn', 'about', 'help', 'choose-test', 'test-uniaxial-tension', 'test-stress-relaxation', 'load-test', 'calibration', 'materials', 'protocol-uniaxial-tension', 'protocol-stress-relaxation', 'settings', 'check-text'];
+var PAGES = ['index', 'learn', 'about', 'help', 'choose-test', 'test-uniaxial-tension', 'test-stress-relaxation', 'practice', 'practice-relaxation', 'load-test', 'calibration', 'materials', 'protocol-uniaxial-tension', 'protocol-stress-relaxation', 'settings', 'check-text'];
 async function visible(page, sel) { var e = await page.$(sel); return e ? page.isVisible(sel) : false; }
 
 async function runTest(page, issues) {
@@ -187,7 +187,7 @@ async function focusRings(page, issues) {
 }
 async function feature(page, name, port, issues) {
   var base = 'http://127.0.0.1:' + port + '/';
-  if (name === 'test-uniaxial-tension' || name === 'test-stress-relaxation') { await runTest(page, issues); return; }
+  if (name === 'practice' || name === 'practice-relaxation') { await runTest(page, issues); return; }   /* the simulator exists only on the practice page; the real test pages cannot run without a tester */
   if (name === 'load-test') {
     var csv = Buffer.from(sampleCsv());
     await page.setInputFiles('#load-file', { name: 'sample.csv', mimeType: 'text/csv', buffer: csv });
@@ -261,7 +261,7 @@ async function task(browser, port, combo, name, width, withFeature, withFocus) {
   page.on('response', function (r) { if (r.status() >= 400) issues.push({ k: 'request', m: r.status() + ' ' + r.url() }); });
   try {
     await page.addInitScript(function (c) { for (var k in c) localStorage.setItem(k, c[k]); }, combo);
-    await page.goto('http://127.0.0.1:' + port + '/' + name + '.html'); await page.waitForTimeout(120);
+    await page.goto('http://127.0.0.1:' + port + '/' + (name === 'practice-relaxation' ? 'practice.html#relaxation' : name + '.html')); await page.waitForTimeout(120);
     var r = await page.evaluate(inPage); r.issues.forEach(function (x) { issues.push(x); }); warns = r.warns;
     if (withFocus) await focusRings(page, issues);
     if (withFeature) await feature(page, name, port, issues);

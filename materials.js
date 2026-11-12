@@ -148,7 +148,7 @@
       '<p class="mat-links"><a class="btn" href="test-uniaxial-tension.html#' + m.id + '">Start a test with this material</a>' +
       '<a href="protocol-uniaxial-tension.html">Open its protocol</a>' +
       '<button type="button" class="linkbtn" id="mat-compare-btn">Compare with another material</button></p>' +
-      '<p class="muted small">Starting a test uses the labeled simulator, or your tester if one is connected. The hardware connection is untested.</p>';
+      '<p class="muted small">Starting a test uses your tester, connected over USB. To try the screen first, use the practice page (labeled simulator). The hardware connection is untested.</p>';
     document.getElementById('mat-compare-btn').addEventListener('click', function () {
       if (compare.indexOf(sel) < 0) { compare.push(sel); if (compare.length > 2) compare.shift(); }
       renderTables(); selectTab('properties'); setHash();
