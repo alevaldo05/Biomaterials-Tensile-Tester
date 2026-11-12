@@ -1,6 +1,6 @@
 /* Calibration page. Part of the site's styles: every page links these files in the order listed in FILES.md. */
 /* ---------- Calibration page ---------- */
-.cal-settings { display: grid; grid-template-columns: repeat(auto-fit, minmax(14rem, 1fr)); gap: 0.75rem 1.25rem; margin: 0.5rem 0 1rem; }
+.cal-settings { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(14rem, 100%), 1fr)); gap: 0.75rem 1.25rem; margin: 0.5rem 0 1rem; }
 .cal-settings .cal-notes { grid-column: 1 / -1; }
 .cal-settings textarea { width: 100%; resize: vertical; }
 .cal-example { margin: 0 0 0.75rem; padding: 0.5rem 0.75rem; border-left: 4px solid var(--danger); background: var(--surface); }
