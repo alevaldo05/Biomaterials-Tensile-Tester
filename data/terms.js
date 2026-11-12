@@ -6,6 +6,10 @@
    Leave eq or unit as "" when there is none. Plain text only. */
 window.TERMS = {
   offsetopt:   { name: 'Include offset yield (optional)', def: 'Tick this to calculate an offset yield after the test, then enter the offset in % strain (0.05 to 5; 0.2 is common). Leave it unticked and no offset yield is shown anywhere. The offset line is the fitted modulus line moved right by the offset, starting from the fitted line\u2019s own intercept, which compensates for a toe region. It is a method-dependent estimate; soft tissue has no standard yield point. It is set before the test and locks with the other entries.', eq: '\u03c3 = E\u03b5 + b \u2212 E \u00b7 offset', unit: '% strain' },
+  lt_points:   { name: 'Points', def: 'How many readings the loaded file holds.', eq: '', unit: '' },
+  lt_peakF:    { name: 'Peak force', def: 'Largest force in the file. It shows \u2014 when the file has no force column.', eq: '', unit: 'N' },
+  lt_duration: { name: 'Duration', def: 'Time from the first reading to the last, when the file has a time column (or, for stress relaxation, from the time axis).', eq: '', unit: 's' },
+  lt_dims:     { name: 'Dimensions', def: 'Where the specimen dimensions used for stress and strain come from: saved in the file, or example values that are not measurements.', eq: '', unit: '' },
   ws_force:    { name: 'Force, F', def: 'Latest axial force reading from the tester. It shows \u2014 until a reading arrives.', eq: '', unit: 'N' },
   ws_disp:     { name: 'Displacement', def: 'Crosshead movement since the start of the recording. This is not the specimen\u2019s own strain.', eq: '', unit: 'mm' },
   ws_elapsed:  { name: 'Elapsed time', def: 'Time from the first reading of this recording to the latest one.', eq: '', unit: 's' },

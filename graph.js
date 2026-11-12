@@ -532,11 +532,12 @@
       '<div class="sr-only" id="live" aria-live="polite"></div>';
     if (paramsHost) paramsHost.innerHTML = paramsExample;
 
-    /* Live pages: Readout and Key results are collapsible panels below the graph (closed while recording, opened when the test ends: api.panels). */
-    if (mode === 'live') {
-      [['.gs-b', 'Key results', 'ws-p-res'], ['.gs-a', 'Readout at the cursor', 'ws-p-read']].forEach(function (q) {
+    /* Live pages and Load Test: Readout and Key results (and, on Load Test, the Test parameters) are collapsible panels below the graph.
+       On the live pages they are closed while recording and opened when the test ends (api.panels); on Load Test the file is already a finished test, so they start open. */
+    if (mode === 'live' || mode === 'load') {
+      [['.gs-b', 'Key results', 'ws-p-res'], ['.gs-a', 'Readout at the cursor', 'ws-p-read']].concat(mode === 'load' ? [['.params-block', 'Test parameters', 'ws-p-params']] : []).forEach(function (q) {
         var n = root.querySelector(q[0]); if (!n) return;
-        var d = document.createElement('details'); d.className = 'ws-panel'; d.id = q[2];
+        var d = document.createElement('details'); d.className = 'ws-panel'; d.id = q[2]; d.open = mode === 'load';
         var sm = document.createElement('summary'); sm.textContent = q[1];
         n.parentNode.insertBefore(d, n); d.appendChild(sm); d.appendChild(n);
       });
