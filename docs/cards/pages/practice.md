@@ -7,7 +7,7 @@ Lets a learner try the test screen with a labeled simulator. It is reached from 
 
 ## Files
 - HTML: `practice.html` (`live-app` with `data-practice="true"`; the kind of test comes from `#uniaxial` or `#relaxation` in the address)
-- Scripts: the same as the test pages, plus `live-sim.js` and `practice-pick.js` (before `live.js`)
+- Scripts: the same as the test pages, plus `live-sim.js`, `live-material.js`, `live-shell.js`, and `practice-pick.js` (before `live.js`)
 - Styles: `css/extras.css` (`.practice-pick`)
 
 ## What the user sees
@@ -21,7 +21,7 @@ Lets a learner try the test screen with a labeled simulator. It is reached from 
 - Draft badge; "Simulated data, not measured"; safety line: the on-screen STOP button is not an emergency stop
 
 ## Depends on
-- Features: live test, simulator, graph engine, downloads, tutorials
+- Features: live test, workspace, simulator, graph engine, downloads, tutorials
 
 ## How to check
 - `node scripts/check-site.js`

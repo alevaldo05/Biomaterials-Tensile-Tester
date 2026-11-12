@@ -145,12 +145,22 @@ async function runTest(page, issues) {
     var tp = await page.evaluate(inPage); tp.issues.forEach(function (x) { x.m = '(tutorial open) ' + x.m; issues.push(x); });
     await page.click('#tut-panel-run-simulated .tut-hide');
   } else issues.push({ k: 'tutorial', m: 'the inline tutorial panel did not open on the test page' });
+  /* At 1100 px and narrower the Setup sidebar is a drawer: open it to use the setup, close it to use the toolbar. */
+  async function side(open) {
+    if (!(await visible(page, '#ws-setup-open'))) return;
+    var isOpen = await page.evaluate(function () { return document.querySelector('.ws-side').classList.contains('is-open'); });
+    if (open && !isOpen) await page.click('#ws-setup-open');
+    else if (!open && isOpen) await page.click('#ws-side-toggle');
+  }
+  await side(true);
+  await page.fill('#s-mat', 'Test');   /* Material is required */
   if (guided) {
     await page.click('.is-current [data-next]');
     await page.click('#s-example-dims'); await page.click('.is-current [data-next]');
     await page.click('#s-example-settings'); await page.click('.is-current [data-next]');
-    await page.click('#c-sim'); await page.click('.gs-nav[data-step="4"] [data-next]');
-  } else { await page.click('#c-sim'); await page.click('#s-example-dims'); await page.click('#s-example-settings'); }
+    await side(false); await page.click('#c-sim'); await side(true); await page.click('.gs-nav[data-step="4"] [data-next]');
+  } else { await page.click('#s-example-dims'); await page.click('#s-example-settings'); await side(false); await page.click('#c-sim'); }
+  await side(false);
   await page.click('#r-start');
   if (await visible(page, 'dialog.pretest[open]')) {
     var boxes = await page.$$('dialog.pretest input'); for (var b = 0; b < boxes.length; b++) await boxes[b].check();

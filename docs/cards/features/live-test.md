@@ -16,7 +16,7 @@ Setup, connection, Start/STOP/Tare, recording, auto-stop, and CSV on the two tes
 
 ## What the user sees
 - Steps 1 Specimen, 2 Dimensions, 3 Test settings, 4 Connection, 5 Review before starting
-- Start test, STOP, Tare, auto-stop checkbox, status in the tab title
+- Start recording, End recording (stops saving only; sends no stop command), STOP tester, Tare, auto-stop checkbox, status in the tab title; the layout is in the [workspace](workspace.md) card
 - STOP pinned to the bottom of the window while recording, with "Not an emergency stop."
 
 ## Behavior to keep
