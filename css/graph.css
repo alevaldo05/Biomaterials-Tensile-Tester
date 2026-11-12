@@ -117,7 +117,7 @@ sub, sup { line-height: 0; font-size: 0.75em; }
 /* Load Test: what the opened file says about the test (specimen, material, date, notes, why it ended). Closed until opened. */
 .file-details { margin: 0.5rem 0 0.75rem; padding: 0.5rem 1rem; border: 1px solid var(--line); border-radius: 8px; background: var(--surface); }
 .file-details summary { cursor: pointer; font-size: 0.9375rem; font-weight: 600; }
-.fd-list { display: grid; grid-template-columns: repeat(auto-fill, minmax(14rem, 1fr)); gap: 0.5rem 1.5rem; margin: 0.6rem 0 0.2rem; }
+.fd-list { display: grid; grid-template-columns: repeat(auto-fill, minmax(min(14rem, 100%), 1fr)); gap: 0.5rem 1.5rem; margin: 0.6rem 0 0.2rem; }
 .fd-list dt { color: var(--muted); font-size: 0.8125rem; }
 .fd-list dd { margin: 0; font-weight: 600; overflow-wrap: anywhere; }
 .fd-list .fd-wide { grid-column: 1 / -1; }
@@ -133,7 +133,7 @@ main.drop-active { outline: 3px dashed var(--accent); outline-offset: -6px; }
 @container (max-width: 50rem) { #graph-app .graph-grid.stacked { grid-template-columns: minmax(0, 1fr); } }
 .params-block { margin: 0.75rem 0 1rem; padding: 0.9rem 1.1rem 1rem; border: 1px solid var(--line); border-radius: 8px; background: var(--surface); }
 .params-block h2 { margin: 0 0 0.5rem; font-size: 1.0625rem; }
-.params-block .param-fields { grid-template-columns: repeat(auto-fill, minmax(9.5rem, 1fr)); margin: 0 0 0.75rem; }
+.params-block .param-fields { grid-template-columns: repeat(auto-fill, minmax(min(9.5rem, 100%), 1fr)); margin: 0 0 0.75rem; }
 .params-block .graph-actions { margin-bottom: 0.25rem; }
 .params-block .tips { margin: 0.25rem 0 0; }
 /* The setup controls shrink to one row once a file is open. */
@@ -146,7 +146,7 @@ main.drop-active { outline: 3px dashed var(--accent); outline-offset: -6px; }
 .tips summary { cursor: pointer; font-size: 0.875rem; font-weight: 600; }
 .tips .hint { margin: 0.4rem 0 0; }
 
-.param-fields { display: grid; grid-template-columns: repeat(auto-fit, minmax(11.875rem, 1fr)); gap: 0.75rem 1.25rem; margin: 0.5rem 0; }
+.param-fields { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(11.875rem, 100%), 1fr)); gap: 0.75rem 1.25rem; margin: 0.5rem 0; }
 .pf { display: grid; gap: 0.25rem; align-content: start; }
 .pf > span { font-size: 0.875rem; font-weight: 700; }
 .pf input[type="number"], .pf input[type="text"], .pf output {

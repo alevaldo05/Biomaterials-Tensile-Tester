@@ -255,7 +255,7 @@ details p { margin: 0.5rem 0 0; color: var(--muted); }
 /* Test choices */
 .choices {
   display: grid;
-  grid-template-columns: repeat(2, 1fr);
+  grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: 1rem;
   margin: 0;
   padding: 0;
@@ -306,6 +306,7 @@ fieldset {
   margin: 1.25rem 0 0.5rem;
   padding: 0;
   border: 0;
+  min-width: 0;
 }
 legend { padding: 0; margin-bottom: 0.5rem; font-weight: 600; }
 .options { display: flex; gap: 1.5rem; flex-wrap: wrap; }

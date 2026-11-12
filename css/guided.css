@@ -23,7 +23,7 @@ html[data-steps="guided"] .gs-nav { display: flex; flex-wrap: wrap; align-items:
 html[data-steps="guided"] .setup-col > .gs-nav, html[data-steps="guided"] .setup-col > .step-h, html[data-steps="guided"] .setup-col > .pf-note, html[data-steps="guided"] .setup-col > .gs-fill, html[data-steps="guided"] .setup-col > .tut-slot { grid-column: 1 / -1; }
 html[data-steps="guided"] .live-layout [data-step]:not(.is-current) { display: none; }
 html[data-steps="guided"] .live-layout .panel { grid-template-columns: minmax(0, 1fr); }
-html[data-steps="guided"] .live-layout .setup-col { grid-template-columns: repeat(auto-fit, minmax(12rem, 1fr)); gap: 0.6rem 1.25rem; }
+html[data-steps="guided"] .live-layout .setup-col { grid-template-columns: repeat(auto-fit, minmax(min(12rem, 100%), 1fr)); gap: 0.6rem 1.25rem; }
 html[data-steps="guided"] .live-layout:not(.cur-setup) #spec, html[data-steps="guided"] .live-layout.running #spec { display: none; }
 html[data-steps="guided"] .live-layout.running [data-step] { display: none; }
 /* The graph is always shown (empty until readings arrive); Readout and Key results appear when recording starts (css/workspace.css); downloads and Print report when the test ends. */

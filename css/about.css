@@ -13,4 +13,19 @@
   .compare th, .compare td { padding: 0.15rem 0; border-top: 0; }
   .compare td::before { content: attr(data-label) ": "; font-weight: 600; color: var(--ink); }
 }
+/* the same stacked form when large text makes the table too wide for the window */
+@media (max-width: 62rem) {
+  :root[data-textsize="150"] .compare thead { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
+  :root[data-textsize="150"] .compare, :root[data-textsize="150"] .compare tbody, :root[data-textsize="150"] .compare tr, :root[data-textsize="150"] .compare th, :root[data-textsize="150"] .compare td { display: block; width: auto; }
+  :root[data-textsize="150"] .compare tr { padding: 0.625rem 0; border-top: 1px solid var(--line); }
+  :root[data-textsize="150"] .compare th, :root[data-textsize="150"] .compare td { padding: 0.15rem 0; border-top: 0; }
+  :root[data-textsize="150"] .compare td::before { content: attr(data-label) ": "; font-weight: 600; color: var(--ink); }
+}
+@media (max-width: 84rem) {
+  :root[data-textsize="200"] .compare thead { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
+  :root[data-textsize="200"] .compare, :root[data-textsize="200"] .compare tbody, :root[data-textsize="200"] .compare tr, :root[data-textsize="200"] .compare th, :root[data-textsize="200"] .compare td { display: block; width: auto; }
+  :root[data-textsize="200"] .compare tr { padding: 0.625rem 0; border-top: 1px solid var(--line); }
+  :root[data-textsize="200"] .compare th, :root[data-textsize="200"] .compare td { padding: 0.15rem 0; border-top: 0; }
+  :root[data-textsize="200"] .compare td::before { content: attr(data-label) ": "; font-weight: 600; color: var(--ink); }
+}
 
