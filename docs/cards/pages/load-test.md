@@ -7,11 +7,11 @@ Open an earlier CSV in the browser only, or compare several files. See [compare]
 
 ## Files
 - HTML: `load-test.html` (ids `load-form`, `mode-one`, `load-file`, `mode-compare`, `cmp-file`, `graph-app`, `compare-app`)
-- Scripts in order: `display-settings.js`, `ui.js` (head), `data/samples.js`, `data/text/help.js`, `data/help-tips.js`, `data/terms.js`, `data/tutorials.js`, `graph-core.js`, `graph.js`, `excel-export.js`, `report.js`, `tutorials.js`, `help-coach.js`, `load-test.js`, `compare.js`, `layouts.js`, `data/search-index.js`, `site-search.js`, `build-number.js`
+- Scripts in order: `display-settings.js`, `ui.js` (head), `data/samples.js`, `data/text/help.js`, `data/help-tips.js`, `data/terms.js`, `data/tutorials.js`, `graph-core.js`, `graph.js`, `excel-export.js`, `report.js`, `tutorials.js`, `help-coach.js`, `load-shell.js`, `load-test.js`, `compare.js`, `layouts.js`, `data/search-index.js`, `site-search.js`, `build-number.js`
 
 ## What the user sees
-- Mode switch (one file, Compare several files), file picker, drop onto the page
-- Graph, Key results, File details, Print report; for compare an overlay graph, key results per specimen with mean and sample standard deviation, summary CSV, Copy summary
+- A File sidebar (mode switch, test type, tutorial, CSV format help; a drawer at 1100 px and narrower), a toolbar with the file buttons and messages, a strip of facts from the loaded file (Points, Peak force, Peak stress, Duration, Data, Dimensions; a dash when the file lacks it), drop onto the page
+- Graph with Key results, Readout, File details, and Test parameters as collapsible panels, Print report; for compare an overlay graph, key results per specimen with mean and sample standard deviation, summary CSV, Copy summary
 
 ## Graph
 - The graph has the workspace tools (view choice, Autoscale, Reset view, Expand graph, white/black look, Background) described in the [graph engine](../features/graph-engine.md) card; Customize graph is always available because the file is already a finished test. The offset-yield row appears only when the file's header has the optional offset line (or the existing 0.2% option is ticked)
