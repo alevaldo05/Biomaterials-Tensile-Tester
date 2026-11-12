@@ -19,6 +19,9 @@ The graph-first layout of the test pages and the practice page: a Setup sidebar 
 - Material is required (drop-down of Rabbit tissue and Test, or type your own); red outline only after you enter and leave a box
 - Entries are locked while recording and after the test until New test (Notes stays editable)
 
+## Graph and results
+- The graph area, its tools, panels, and offset yield are described in the [graph engine](graph-engine.md) card; Setup step 3 has the "Include offset yield (optional)" checkbox and box
+
 ## Behavior to keep
 - **End recording** only stops saving readings: no stop command is sent and the heartbeat continues, and the message says the tester may still be moving. **STOP tester**, Esc, and the pinned bar send the stop command. How the real tester behaves after End recording is not confirmed (the controller code is a draft)
 - New test and Disconnect after a finished test that was not downloaded ask first (Download and continue, Don't save and continue, Cancel; Esc cancels and does not send STOP); Disconnect before a test keeps the entries
