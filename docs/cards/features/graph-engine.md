@@ -12,6 +12,14 @@ Feature card. Update it in the same change as the feature.
 - CSS: `css/graph.css` (Graph pages, graph tools, Key results)
 - Used by the test, protocol, Load Test, and Materials pages
 
+## Workspace graph (test pages, practice page, Load Test)
+- A view choice (Force-displacement, Stress-strain, Force-time; relaxation: Stress-time, Force-time) with Autoscale, Reset view, Expand graph. Stress-strain needs valid dimensions and says so when it cannot be drawn. The views only change which recorded arrays are plotted; key points are mapped with exact conversions (displacement = strain x L0, force = stress x A0)
+- Starts white with a black curve (dark when the page theme is dark); Customize graph adds a Background choice; exports use the same colors
+- While a test records the axis maximum grows in steps of about 20%
+- On the live pages Readout and Key results are collapsible panels (closed while recording, open at the end) and Customize graph appears after the test
+- When key results are shown on the graph the cursor snaps to one within about 14 px and names it
+- Offset yield is opt-in (`params.offsetPct`): toe-compensated, labeled an estimate; no row, tick box, or marker when it was not asked for
+
 ## What the user sees
 - Graph, Readout, Key results with a "Show definitions" switch (`show-defs`, off by default, not a Settings option)
 - Region guides, highlighted key results, zoom and pan, tangent line, Customize graph

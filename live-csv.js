@@ -36,6 +36,7 @@
         ['Crosshead speed (mm/min)', p.speed_mm_min]
       ];
       if (isRelax) meta.push(['Hold displacement (mm)', p.hold_mm], ['Hold duration (s)', p.hold_s]);
+      if (!isRelax && p.offsetPct > 0) meta.push(['Offset yield (% strain)', p.offsetPct]);   /* only when it was asked for */
       meta.push(['Temperature (C)', s.temp], ['Environment', s.env], ['Notes', s.notes], ['End of test', endReason], ['Points', n]);
       var hst = isRelax ? TG.holdStartText(rec) : '';
       if (hst) meta.push(['Hold start', hst]);
