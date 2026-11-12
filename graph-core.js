@@ -110,7 +110,19 @@
     var a = forExport || !strainPct() ? sig(X[fit.i0], 3) : sig(X[fit.i0] * 100, 3) + ' %', b = forExport || !strainPct() ? sig(X[fit.i1], 3) : sig(X[fit.i1] * 100, 3) + ' %';
     return 'Fitted over ε = ' + a + ' to ' + b + ' (' + fit.w + ' points).';
   }
-  function uniaxialResults(rec) {
+  /* Offset yield, opt-in (params.offsetPct, in % strain): where the curve crosses a copy of the fitted modulus line moved right by the offset. Unlike the
+     0.2%-from-the-origin rule above, the moved line starts from the fitted line's own intercept, so a toe region does not push the result to the start of
+     the curve. A method-dependent estimate. Returns { x, y, off } or null when the curve never crosses the line. */
+  function offsetYield(X, Y, fit, offPct) {
+    var off = offPct / 100, n = X.length;
+    if (!fit || !(off > 0)) return null;
+    for (var m = 1; m < n; m++) {
+      var a = Y[m - 1] - (fit.slope * X[m - 1] + fit.b - fit.slope * off), b = Y[m] - (fit.slope * X[m] + fit.b - fit.slope * off);
+      if (a >= 0 && b < 0) { var t = a / (a - b); return { x: X[m - 1] + t * (X[m] - X[m - 1]), y: Y[m - 1] + t * (Y[m] - Y[m - 1]), off: off }; }
+    }
+    return null;
+  }
+  function uniaxialResults(rec, ropts) {
     var X = rec.x, Y = rec.y, n = X.length, p = rec.params;
     var rows = [
       ['Automatic modulus estimate, E', 'E = Δσ/Δε: largest fitted loading slope of σ vs ε found by the moving-window method (least squares over 5 points, or 1/60 of the points for long recordings). Not automatically a validated Young’s modulus; review the fitted interval.'],
@@ -119,15 +131,20 @@
       ['Estimated failure strain, ε<sub>f</sub> — force-drop rule', 'Last point before σ falls below 50% of UTS; this is not a confirmed rupture'],
       ['Energy density to recorded endpoint, U', 'U = ∫ σ dε from 0 to ε<sub>f</sub> (trapezoid rule)']
     ];
-    if (n < 2) return rows.map(function (q) { return [q[0], '—', q[1]]; });
+    if (n < 2) return rows.map(function (q, i) { var o = [q[0], '—', q[1]]; if (i === 1 && ropts && ropts.hideUnrequested && !(p.offsetPct > 0) && !p.yield) o.hidden = true; return o; });
     var fit = loadingFit(X, Y), E = fit ? fit.slope : NaN;
     var pk = peakIndex(Y), uts = Y[pk];
     var f = pk;
     while (f + 1 < n && Y[f + 1] >= 0.5 * uts) f++;
     var tough = 0;
     for (var k = 1; k <= f; k++) tough += 0.5 * (Y[k] + Y[k - 1]) * (X[k] - X[k - 1]);
-    var yieldTxt = 'not reported';
-    if (p.yield) {
+    var yieldTxt = 'not reported', offY = null, useOffset = p.offsetPct > 0;
+    if (useOffset) {
+      offY = offsetYield(X, Y, fit, p.offsetPct);
+      var pctTxt = String(parseFloat(Number(p.offsetPct).toPrecision(4)));
+      rows[1] = ['Offset yield, ' + pctTxt + '% offset, toe-compensated (estimate)', 'Intersection of the curve with the fitted modulus line moved right by ' + pctTxt + '% strain (the line starts from its own intercept, which compensates for a toe region). A method-dependent estimate; soft tissue has no standard yield point.'];
+      yieldTxt = offY ? fmtStress(offY.y) + ' at ε = ' + fmtStrain(offY.x) : 'not found (the curve never crosses the offset line)';
+    } else if (p.yield) {
       yieldTxt = '—';
       for (var m = 1; m < n; m++) {
         var a = Y[m - 1] - E * (X[m - 1] - 0.002), b = Y[m] - E * (X[m] - 0.002);
@@ -146,8 +163,9 @@
     }
     if (fit) rows[0][1] += ' ' + fitText(X, fit) + (strainPct() ? ' Shown per 1 of strain (mm/mm), not per percent.' : '');
     else rows[0][1] = 'No fitting window was found up to the peak (too few loading points), so no modulus estimate is reported.';
+    if (ropts && ropts.hideUnrequested && !useOffset && !p.yield) rows[1].hidden = true;   /* on the workspace pages the yield row appears only when it was asked for */
     var vals = [fit ? fmtStress(E) : '—', yieldTxt, fmtStress(uts) + ' at ε = ' + fmtStrain(X[pk]), detected ? fmtStrain(X[f]) : 'not detected', dsig(tough) + ' MJ/m³'];
-    return rows.map(function (q, i) { return [q[0], vals[i], q[1]]; });
+    return rows.map(function (q, i) { var o = [q[0], vals[i], q[1]]; if (q.hidden) o.hidden = true; return o; });
   }
   /* Hold start, as the live auto-stop sees it: the first reading where displacement (measured from the first reading) reaches
      HOLD_START_FRACTION of the hold displacement. Returns { i, target } or { why } when it cannot be found. Display and reporting
@@ -265,6 +283,10 @@
           break;
         }
       }
+    }
+    if (r.params && r.params.offsetPct > 0) {
+      var oy = offsetYield(X, Y, fit, r.params.offsetPct);
+      if (oy) k.yield = { x: oy.x, y: oy.y, off: oy.off, comp: true };
     }
     /* End of the skin toe region: no standard definition. Drawn where the slope first reaches half of the
        steepest slope, and labeled "approximate, for illustration". */
@@ -405,7 +427,7 @@
     ['test', 'test'], ['source', 'source'], ['material', 'material'], ['specimen id', 'id'], ['date', 'date'],
     ['gauge length', 'L0'], ['width', 'W'], ['thickness', 'T'], ['crosshead speed', 'speed'],
     ['hold displacement', 'hold_mm'], ['hold duration', 'hold_s'], ['temperature', 'temp'],
-    ['environment', 'env'], ['notes', 'notes'], ['dimensions source', 'dimsrc']
+    ['environment', 'env'], ['notes', 'notes'], ['dimensions source', 'dimsrc'], ['offset yield', 'offsetPct']
   ];
   function readMeta(line, meta) {
     var body = line.replace(/^["']?#\s*/, '');
@@ -471,6 +493,7 @@
     p.yield = !isRelax && mk !== 'biomaterial';
     p.rate_per_s = ''; p.preload_N = '';
     p.temperature_C = meta.temp || ''; p.environment = meta.env || '';
+    if (!isRelax && numMeta(meta.offsetPct) > 0) p.offsetPct = numMeta(meta.offsetPct);   /* the optional offset yield line a test page writes when it was used */
     var simulated = /simul/i.test(meta.source || '');
     var bits = ['Loaded from "' + name + '" in this browser tab only (not uploaded or saved)'];
     if (meta.material) bits.push('material: ' + meta.material);
@@ -547,6 +570,7 @@
     strainPct: strainPct,
     stressScale: stressScale,
     stressUnit: stressUnit,
+    offsetYield: offsetYield,
     uniaxialResults: uniaxialResults
   };
 })();

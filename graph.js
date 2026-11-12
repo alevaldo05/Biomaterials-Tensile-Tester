@@ -56,6 +56,22 @@
   var SCREEN = { bg: null, axis: 'var(--muted)', grid: 'var(--line)', text: 'var(--ink)', muted: 'var(--muted)', ring: 'var(--bg)' };
   var EXPORT = { bg: '#ffffff', axis: '#4a5a50', grid: '#d9ddd3', text: '#1f2a24', muted: '#4a5a50', ring: '#ffffff' };
 
+  /* ---------- the workspace look (live pages and Load Test) ---------- */
+  var DARK_THEMES = ['dark', 'purple-dark', 'pink-dark'];
+  function themeIsDark() {
+    var t = document.documentElement.getAttribute('data-theme');
+    if (t) return DARK_THEMES.indexOf(t) >= 0;
+    return !!(window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches);
+  }
+  function lumOf(hex) { var n = parseInt(String(hex).slice(1), 16) || 0; return (0.2126 * (n >> 16 & 255) + 0.7152 * (n >> 8 & 255) + 0.0722 * (n & 255)) / 255; }
+  /* Round up in steps of about 20 percent (1, 1.2, 1.5, 1.8, 2, 2.5, 3, 3.5, 4, 5, 6, 7, 8, 10 x 10^k), so an axis that grows while a test records changes rarely. */
+  function stableCeil(v) {
+    if (!(v > 0)) return 1;
+    var p = Math.pow(10, Math.floor(Math.log10(v))), m = v / p, L = [1, 1.2, 1.5, 1.8, 2, 2.5, 3, 3.5, 4, 5, 6, 7, 8, 10];
+    for (var i = 0; i < L.length; i++) if (m <= L[i] + 1e-9) return L[i] * p;
+    return 10 * p;
+  }
+
   /* Hand-drawn schematic of the usual skin curve regions. Not data: no numbers, no scale. */
   var SCHEMATIC = '<svg class="schem-svg" viewBox="0 0 480 210" role="img" aria-label="Schematic of skin curve regions: slack, toe, linear, failure. Illustration, not data.">' +
     '<defs><marker id="sc-ar" markerWidth="7" markerHeight="7" refX="3.5" refY="3.5" orient="auto-start-reverse" markerUnits="userSpaceOnUse"><path d="M0 0L7 3.5L0 7z" style="fill:var(--muted)"/></marker></defs>' +
@@ -97,9 +113,10 @@
       return v === null || v === '' ? fallback : v;
     }
     var gridPref = savedLook('grid', 'major'), widthPref = parseFloat(savedLook('linewidth', '3'));
+    var workspace = mode === 'live' || mode === 'load';   /* the graph-first look and tools: views, Expand, Autoscale, Background */
     var DEFAULTS = { color: null, width: widthPref >= 1 && widthPref <= 6 ? widthPref : 3, title: null, xLabel: null, yLabel: null, grid: gridPref !== 'off', minor: gridPref === 'minor',
-      style: savedLook('curve', 'line') === 'markers' ? 'markers' : 'line', logx: false };
-    var st = { mat: records[0].material };
+      style: savedLook('curve', 'line') === 'markers' ? 'markers' : 'line', logx: false, bg: 'theme', bgc: '#ffffff' };
+    var st = { mat: records[0].material, view: 'ss' };
     if (opts.material && records.some(function (r) { return r.material === opts.material; })) st.mat = opts.material;
     var lockMat = !!opts.lockMaterial;
     var idx = 0, geom = null;
@@ -115,6 +132,45 @@
       if (!r.x.length) return 0;
       if (isRelax) return Math.floor(r.x.length / 2);
       return peakIndex(r.y);
+    }
+
+    /* The graph's colors: white with black ink by default; a dark graph when the page theme is dark; or the Background chosen in Customize graph. */
+    function wsPal() {
+      var bg = st.bg === 'white' ? '#ffffff' : st.bg === 'black' ? '#000000' : st.bg === 'gray' ? '#e6e6e6' : st.bg === 'custom' ? st.bgc : (themeIsDark() ? '#14171a' : '#ffffff');
+      var light = lumOf(bg) > 0.5;
+      return { bg: bg, ink: light ? '#000000' : '#f5f5f5', axis: light ? '#111111' : '#e8e8e8', grid: light ? '#dcdcdc' : '#3b4046', text: light ? '#000000' : '#f5f5f5', muted: light ? '#4a4a4a' : '#bdbdbd', ring: bg };
+    }
+    function palFor(exp) { return workspace ? wsPal() : (exp ? EXPORT : SCREEN); }
+
+    /* ---------- views: stress-strain (the default), force-displacement, force-time ---------- */
+    function dimsOK(r) { var p = r.params && r.params.specimen; return !!(p && p.L0_mm > 0 && p.width_mm > 0 && p.thickness_mm > 0); }
+    var VIEW_LIST = isRelax ? [['ss', 'Stress\u2013time'], ['ft', 'Force\u2013time']] : [['ss', 'Stress\u2013strain'], ['fd', 'Force\u2013displacement'], ['ft', 'Force\u2013time']];
+    function timeArr(r) { return r.raw && r.raw.t && r.raw.t.length ? r.raw.t : (r.checkT && r.checkT.length ? r.checkT : null); }
+    function viewWhy(v, r) {   /* '' when the view can be drawn, else the reason */
+      var raw = r.raw, T = timeArr(r);
+      if (v === 'ss') return dimsOK(r) || r.source === 'sample' || !workspace ? '' : 'Stress\u2013strain needs the gauge length, width, and thickness.';
+      if (!raw || !raw.F || !raw.F.length) return 'This view needs the recorded force readings.';
+      if (v === 'fd' && !(raw.d && raw.d.length)) return 'This view needs displacement readings.';
+      if (v === 'ft' && !T) return 'This view needs time readings.';
+      return '';
+    }
+    function viewXY(r) {
+      var v = workspace ? st.view : 'ss', sp = r.params && r.params.specimen, L0 = sp ? sp.L0_mm : NaN, A0 = sp ? sp.width_mm * sp.thickness_mm : NaN;
+      var ss = { id: 'ss', x: r.x, y: r.y, xs: isRelax ? 1 : strainFactor(), ys: stressScale(), xl: axisLabel(isRelax, 'x'), yl: axisLabel(isRelax, 'y'),
+        map: function (p) { return p; }, mx: function (x) { return x; } };
+      if (v === 'ss' || viewWhy(v, r)) return ss;
+      /* time at a given strain, from the recorded readings (strain rises with time while the crosshead moves) */
+      function tOf(sv) {
+        var X = r.x, T = timeArr(r), n = X.length;
+        if (!n) return NaN;
+        if (sv <= X[0]) return T[0];
+        for (var i = 1; i < n; i++) if (X[i] >= sv) { var d = X[i] - X[i - 1]; return d > 0 ? T[i - 1] + (T[i] - T[i - 1]) * (sv - X[i - 1]) / d : T[i]; }
+        return T[n - 1];
+      }
+      if (v === 'fd') return { id: 'fd', x: r.raw.d, y: r.raw.F, xs: 1, ys: 1, xl: 'Displacement (mm)', yl: 'Force (N)',
+        map: function (p) { return { x: p.x * L0, y: p.y * A0 }; }, mx: function (x) { return x * L0; } };
+      return { id: 'ft', x: timeArr(r), y: r.raw.F, xs: 1, ys: 1, xl: 'Time (s)', yl: 'Force (N)',
+        map: function (p) { return { x: isRelax ? p.x : tOf(p.x), y: p.y * A0 }; }, mx: function (x) { return isRelax ? x : tOf(x); } };
     }
 
     /* Curve for the original dimensions, drawn dashed when the user changes dimensions */
@@ -133,6 +189,7 @@
       if (!kpCache || kpCache.r !== r || kpCache.sg !== sg) kpCache = { r: r, sg: sg, k: keyPoints(r, isRelax) };
       return kpCache.k;
     }
+    var KEYNAME = { E: 'Modulus fit (E)', yield: 'Offset yield (estimate)', uts: 'Ultimate tensile strength (UTS)', fail: 'Failure point (50% force drop)', s0: 'Peak stress (\u03c3\u2080)', hs: 'Hold start', send: 'Final stress', E0: 'Apparent ratio (\u03c3\u2080/\u03b5\u2080)', relaxed: 'Relaxed stress', tau: 'Relaxation time (\u03c4)' };
     var KEYS = isRelax ? ['s0', 'hs', 'send', 'relaxed', 'E0', 'tau'] : ['E', 'yield', 'uts', 'fail', 'tough'];
     function keyAvailable(key, k) {
       if (!k || !k.ok) return false;
@@ -145,7 +202,7 @@
 
     /* Textbook-style region guides (under the curve) and key-result points (over it). */
     function overlays(r, pal, o, g) {
-      var res = { under: '', over: '' };
+      var res = { under: '', over: '', keys: [] };
       if (o.noOverlay) return res;
       var anyShown = KEYS.some(function (q) { return shown[q]; }), active = !o.exp && hl;
       if (!regionsOn && !anyShown && !active) return res;
@@ -155,7 +212,7 @@
       var inX = function (v) { var x = g.sx(v); return x >= M.l - 0.5 && x <= W - M.r + 0.5; };
       var u = '', v = '';
       if (regionsOn) {
-        var regs = regionsFor(r, k, isRelax), tiers = [-1e9, -1e9, -1e9];
+        var regs = regionsFor(r, k, isRelax).map(function (rg) { return [rg[0], g.V.mx(rg[1]), g.V.mx(rg[2])].concat(rg.slice(3)); }), tiers = [-1e9, -1e9, -1e9];
         regs.forEach(function (rg, i) {
           if (i > 0 && inX(rg[1]) && g.sx(rg[1]) > M.l + 1) u += '<line x1="' + g.sx(rg[1]).toFixed(1) + '" x2="' + g.sx(rg[1]).toFixed(1) + '" y1="' + M.t + '" y2="' + (H - M.b) + '" stroke-dasharray="5 4" style="stroke:' + pal.muted + ';stroke-width:1.25"/>';
         });
@@ -169,11 +226,15 @@
           u += '<text x="' + cx.toFixed(1) + '" y="' + (M.t + 23 + t * 13) + '" text-anchor="middle" style="fill:' + pal.text + ';font-size:11px;font-style:italic;paint-order:stroke;stroke:' + pal.ring + ';stroke-width:3px">' + esc(rg[0]) + '</text>';
         });
       }
+      var curKey = null;   /* the key result being drawn (so the cursor can snap to its point and name it) */
       var placed = []; /* label boxes already drawn, so two results marked at the same place do not print on top of each other */
-      function pt(p, label, strong, below) {
-        if (!p || !inX(p.x)) return;
+      function pt(p0, label, strong, below) {
+        if (!p0) return;
+        var p = g.V.map(p0);   /* key points are in strain and stress (or time and stress); the view maps them to what is drawn */
+        if (!inX(p.x)) return;
         var cx = g.sx(p.x), cy = g.sy(p.y);
         if (cy < M.t - 1 || cy > H - M.b + 1) return;
+        if (!o.exp && curKey) res.keys.push({ id: curKey, name: KEYNAME[curKey] || curKey, px: cx, py: cy });
         var right = cx > W - M.r - 90;
         v += '<circle cx="' + cx.toFixed(1) + '" cy="' + cy.toFixed(1) + '" r="' + (strong ? 8 : 5) + '" style="fill:' + pal.ring + ';stroke:' + mark + ';stroke-width:' + (strong ? 3.5 : 2.5) + '"/>';
         if (label) {
@@ -185,24 +246,34 @@
         }
       }
       function seg(x1, y1, x2, y2, strong, dash) {
+        var a1 = g.V.map({ x: x1, y: y1 }), a2 = g.V.map({ x: x2, y: y2 }); x1 = a1.x; y1 = a1.y; x2 = a2.x; y2 = a2.y;
         v += '<line x1="' + g.sx(x1).toFixed(1) + '" y1="' + g.sy(y1).toFixed(1) + '" x2="' + g.sx(x2).toFixed(1) + '" y2="' + g.sy(y2).toFixed(1) + '"' + (dash ? ' stroke-dasharray="6 4"' : '') + ' clip-path="url(#plot-clip)" style="stroke:' + mark + ';stroke-width:' + (strong ? 3 : 2) + '"/>';
       }
-      var X = r.x, Y = r.y;
+      var V = g.V, X = V.x, Y = V.y;
       function draw1(key) {
         var strong = !o.exp && hl === key;
         if (!keyAvailable(key, k)) return;
+        curKey = key;
         if (key === 'E') {
-          var f = k.fit, span = g.xTop - g.xLo, xs = Math.max(g.xLo, X[f.i0] - 0.02 * span);
-          var xe = Math.min(g.xTop, X[f.i1] + 0.12 * span, (g.yTop * 0.95 - f.b) / f.slope);
-          if (xe > xs) seg(xs, f.slope * xs + f.b, xe, f.slope * xe + f.b, strong, true);
+          var f = k.fit, DX = r.x, DY = r.y;   /* the fitted line is in strain and stress */
+          if (V.id === 'ss') {
+            var span = g.xTop - g.xLo, xs = Math.max(g.xLo, DX[f.i0] - 0.02 * span);
+            var xe = Math.min(g.xTop, DX[f.i1] + 0.12 * span, (g.yTop * 0.95 - f.b) / f.slope);
+            if (xe > xs) seg(xs, f.slope * xs + f.b, xe, f.slope * xe + f.b, strong, true);
+          }
           var d = '';
           for (var i = f.i0; i <= f.i1; i++) d += (i === f.i0 ? 'M' : 'L') + g.sx(X[i]).toFixed(1) + ' ' + g.sy(Y[i]).toFixed(1);
           v += '<path d="' + d + '" fill="none" clip-path="url(#plot-clip)" style="stroke:' + mark + ';stroke-width:' + (strong ? 6 : 4.5) + ';stroke-linecap:round"/>';
-          var xm = (X[f.i0] + X[f.i1]) / 2;
+          var xm = (DX[f.i0] + DX[f.i1]) / 2;
           pt({ x: xm, y: f.slope * xm + f.b }, 'E (fitted slope)', strong, true);
         } else if (key === 'yield') {
-          seg(0.002, 0, k.yield.x, k.yield.y, strong, true);
-          pt(k.yield, 'σy (0.2% offset)', strong, true);
+          if (k.yield.comp && k.fit) {
+            seg(-k.fit.b / k.fit.slope + k.yield.off, 0, k.yield.x, k.yield.y, strong, true);
+            pt(k.yield, 'Offset yield (' + parseFloat((k.yield.off * 100).toPrecision(4)) + '% offset)', strong, true);
+          } else {
+            seg(0.002, 0, k.yield.x, k.yield.y, strong, true);
+            pt(k.yield, 'σy (0.2% offset)', strong, true);
+          }
         } else if (key === 'uts') pt(k.uts, 'UTS', strong);
         else if (key === 'fail') pt(k.fail, 'Failure', strong, true);
         else if (key === 'tough') {
@@ -231,10 +302,10 @@
 
     function build(r, pal, o) {
       o = o || {};
-      var X = r.x, Y = r.y, n = X.length;
+      var V = viewXY(r), X = V.x, Y = V.y, n = X.length;
       var log = st.logx && isRelax;
       var pw = W - M.l - M.r, ph = H - M.t - M.b;
-      var G = ghostCurve(r);
+      var G = V.id === 'ss' ? ghostCurve(r) : null;
       var xmax = Math.max(maxOf(X), G ? maxOf(G.x) : -Infinity), ymax = Math.max(maxOf(Y), G ? maxOf(G.y) : -Infinity);
       if (!(xmax > 0)) xmax = isRelax ? (r.params.hold_s > 0 ? Number(r.params.hold_s) : 60) : 0.1;
       if (!(ymax > 0)) ymax = 1;
@@ -249,13 +320,15 @@
         }
       }
       if (!log) {
-        var nt = niceTicks(0, xmax, 8);
-        xTop = Math.ceil(xmax / nt.step - 1e-9) * nt.step;
+        var xm = mode === 'live' && follow && !o.exp ? stableCeil(xmax) : xmax;   /* while recording, the axis grows in steps, not at every new point */
+        var nt = niceTicks(0, xm, 8);
+        xTop = Math.ceil(xm / nt.step - 1e-9) * nt.step;
         xTicks = niceTicks(0, xTop, 8).ticks;
       }
       var room = regionsOn && !follow && !o.noOverlay && n >= 10 ? 1.2 : 1.04;
-      var yt = niceTicks(0, ymax * room, 5);
-      var yTop = Math.ceil(ymax * room / yt.step) * yt.step;
+      var yWant = mode === 'live' && follow && !o.exp ? stableCeil(ymax * room) : ymax * room;
+      var yt = niceTicks(0, yWant, 5);
+      var yTop = Math.ceil(yWant / yt.step - 1e-9) * yt.step;
       var yTicks = niceTicks(0, yTop, 5).ticks;
       var xLo = 0, yLo = 0, base = { x1: xTop, y1: yTop };
       if (view && !log) {
@@ -266,10 +339,11 @@
       function sx(v) { return M.l + (log ? (Math.log10(v) - lo) / (hi - lo) : (v - xLo) / (xTop - xLo)) * pw; }
       function sy(v) { return M.t + ph - ((v - yLo) / (yTop - yLo)) * ph; }
 
-      var series = st.color || (o.exp ? '#3f6b52' : 'var(--accent)');
+      var series = st.color || (pal.ink ? pal.ink : (o.exp ? '#3f6b52' : 'var(--accent)'));
       var title = st.title !== null ? st.title : defTitle();
-      var xl = st.xLabel !== null ? st.xLabel : axisLabel(isRelax, 'x');
-      var yl = st.yLabel !== null ? st.yLabel : axisLabel(isRelax, 'y');
+      var xl = st.xLabel !== null && V.id === 'ss' ? st.xLabel : V.xl;
+      var yl = st.yLabel !== null && V.id === 'ss' ? st.yLabel : V.yl;
+      var tf = workspace ? 13 : 12, lf = workspace ? 14 : 13;   /* tick and axis-label text size */
       var scale = o.scale || 1;
       var s = '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ' + W + ' ' + H + '"' +
         (o.exp ? ' width="' + W * scale + '" height="' + H * scale + '"' : ' role="img" aria-label="' + esc(title) + '"') +
@@ -310,13 +384,13 @@
       s += '<line x1="' + M.l + '" x2="' + (W - M.r) + '" y1="' + (H - M.b) + '" y2="' + (H - M.b) + '" style="stroke:' + pal.axis + ';stroke-width:1.5"/>';
       s += '<line x1="' + M.l + '" x2="' + M.l + '" y1="' + M.t + '" y2="' + (H - M.b) + '" style="stroke:' + pal.axis + ';stroke-width:1.5"/>';
       yTicks.forEach(function (v) {
-        s += '<text x="' + (M.l - 9) + '" y="' + (sy(v) + 4) + '" text-anchor="end" style="fill:' + pal.muted + ';font-size:12px">' + sig(v * stressScale(), 6) + '</text>';
+        s += '<text x="' + (M.l - 9) + '" y="' + (sy(v) + 4) + '" text-anchor="end" style="fill:' + pal.muted + ';font-size:' + tf + 'px">' + sig(v * V.ys, 6) + '</text>';
       });
       xTicks.forEach(function (v) {
-        s += '<text x="' + sx(v) + '" y="' + (H - M.b + 20) + '" text-anchor="middle" style="fill:' + pal.muted + ';font-size:12px">' + sig(isRelax ? v : v * strainFactor(), 6) + '</text>';
+        s += '<text x="' + sx(v) + '" y="' + (H - M.b + 20) + '" text-anchor="middle" style="fill:' + pal.muted + ';font-size:' + tf + 'px">' + sig(v * V.xs, 6) + '</text>';
       });
-      s += '<text x="' + (M.l + pw / 2) + '" y="' + (H - 16) + '" text-anchor="middle" style="fill:' + pal.text + ';font-size:13px">' + esc(xl) + '</text>';
-      s += '<text transform="translate(18 ' + (M.t + ph / 2) + ') rotate(-90)" text-anchor="middle" style="fill:' + pal.text + ';font-size:13px">' + esc(yl) + '</text>';
+      s += '<text x="' + (M.l + pw / 2) + '" y="' + (H - 16) + '" text-anchor="middle" style="fill:' + pal.text + ';font-size:' + lf + 'px">' + esc(xl) + '</text>';
+      s += '<text transform="translate(18 ' + (M.t + ph / 2) + ') rotate(-90)" text-anchor="middle" style="fill:' + pal.text + ';font-size:' + lf + 'px">' + esc(yl) + '</text>';
 
       /* Screen positions for every point (used by the readout); long recordings draw a thinned path that keeps each bucket's min and max. */
       var px = [], i;
@@ -341,7 +415,7 @@
         d2 += (started ? 'L' : 'M') + px[k].toFixed(1) + ' ' + sy(Y[k]).toFixed(1);
         started = true;
       });
-      var ov = overlays(r, pal, o, { sx: sx, sy: sy, xLo: xLo, xTop: xTop, yLo: yLo, yTop: yTop });
+      var ov = overlays(r, pal, o, { sx: sx, sy: sy, xLo: xLo, xTop: xTop, yLo: yLo, yTop: yTop, V: V });
       s += ov.under;
       if (G) {
         var gd = '', gs = false;
@@ -369,9 +443,10 @@
       }
       /* The data-source line has its own row under the title, so a long file name cannot run into the x-axis title. */
       s += '<text x="' + M.l + '" y="43" style="fill:' + pal.muted + ';font-size:11px;font-style:italic">' + esc(sourceTag(r)) + '</text>';
-      if (!o.exp) s += '<g id="cur" clip-path="url(#plot-clip)" style="pointer-events:none"><line id="cur-t" style="display:none;stroke:' + pal.text + ';stroke-width:1.5"/><line id="cur-l" y1="' + M.t + '" y2="' + (H - M.b) + '" style="stroke:' + pal.text + ';stroke-width:1;stroke-dasharray:4 3"/><circle id="cur-c" r="6" style="fill:' + series + ';stroke:' + pal.text + ';stroke-width:2"/></g>';
+      if (!o.exp) s += '<g id="cur" clip-path="url(#plot-clip)" style="pointer-events:none"><line id="cur-t" style="display:none;stroke:' + pal.text + ';stroke-width:1.5"/><line id="cur-l" y1="' + M.t + '" y2="' + (H - M.b) + '" style="stroke:' + pal.text + ';stroke-width:1;stroke-dasharray:4 3"/><circle id="cur-c" r="6" style="fill:' + series + ';stroke:' + pal.text + ';stroke-width:2"/>' +
+        '<rect id="cur-nb" height="22" rx="4" style="display:none;fill:' + (pal.bg || 'var(--surface)') + ';stroke:' + pal.muted + '"/><text id="cur-nt" style="display:none;fill:' + pal.text + ';font-size:13px;font-weight:700"></text></g>';
       s += '</svg>';
-      if (!o.exp) geom = { px: px, sx: sx, sy: sy, xLo: xLo, xTop: xTop, yLo: yLo, yTop: yTop, base: base, log: log };
+      if (!o.exp) geom = { px: px, sx: sx, sy: sy, xLo: xLo, xTop: xTop, yLo: yLo, yTop: yTop, base: base, log: log, X: X, Y: Y, V: V, keys: ov.keys };
       return s;
     }
 
@@ -399,6 +474,11 @@
       (mode === 'example' ? '<fieldset class="segmented"' + (lockMat ? ' hidden' : '') + '><legend>Material</legend><div class="options" id="mats"></div></fieldset>' : '') +
       '<div class="graph-grid' + (stacked ? ' stacked' : '') + '">' +
         '<div class="graph-main">' +
+          (workspace ? '<div class="g-toolbar" role="toolbar" aria-label="Graph view and tools"><div class="g-views" id="g-views" role="group" aria-label="Graph view"></div>' +
+            '<div class="g-tools" role="group" aria-label="Graph display"><button type="button" class="btn-secondary btn-small" id="g-auto" title="Fit the vertical range to what is on screen">Autoscale</button>' +
+            '<button type="button" class="btn-secondary btn-small" id="g-reset" title="Show the whole curve again">Reset view</button>' +
+            '<button type="button" class="btn-secondary btn-small" id="g-expand" aria-pressed="false" title="Make the graph fill the window">Expand graph</button></div></div>' +
+            '<p class="small muted g-vwhy" id="g-vwhy" hidden></p>' : '') +
           '<div class="chart-frame">' +
             '<div class="chart-wrap" tabindex="0" role="group" aria-label="Interactive graph. Use the left and right arrow keys to move the readout; Home and End jump to the ends; plus and minus zoom; square brackets move the view left and right when zoomed."></div>' +
             '<div class="zoom-tools" role="group" aria-label="Zoom">' +
@@ -433,6 +513,8 @@
             '<label>Style<select id="f-style"><option value="line">Line</option><option value="markers">Line + markers</option></select></label>' +
             '<label>Line width <output id="f-w-out"></output><input type="range" id="f-w" min="1" max="6" step="0.5" aria-label="Line width"></label>' +
             '<div class="field-color"><span>Line color</span><div class="color-row"><input type="color" id="f-color" aria-label="Custom line color">' + swatches + '</div></div>' +
+            (workspace ? '<label>Background<select id="f-bg"><option value="theme">Match page theme</option><option value="white">White</option><option value="black">Black</option><option value="gray">Light gray</option><option value="custom">Custom color</option></select></label>' +
+              '<label>Custom background<input type="color" id="f-bgc" value="#ffffff" disabled></label>' : '') +
             '<label class="check"><input type="checkbox" id="f-grid"> Show grid</label>' +
             (isRelax ? '<label class="check"><input type="checkbox" id="f-log"> Logarithmic time axis</label>' : '') +
             '<div><button type="button" class="btn-secondary" id="f-reset">Reset to defaults</button></div>' +
@@ -450,13 +532,23 @@
       '<div class="sr-only" id="live" aria-live="polite"></div>';
     if (paramsHost) paramsHost.innerHTML = paramsExample;
 
+    /* Live pages: Readout and Key results are collapsible panels below the graph (closed while recording, opened when the test ends: api.panels). */
+    if (mode === 'live') {
+      [['.gs-b', 'Key results', 'ws-p-res'], ['.gs-a', 'Readout at the cursor', 'ws-p-read']].forEach(function (q) {
+        var n = root.querySelector(q[0]); if (!n) return;
+        var d = document.createElement('details'); d.className = 'ws-panel'; d.id = q[2];
+        var sm = document.createElement('summary'); sm.textContent = q[1];
+        n.parentNode.insertBefore(d, n); d.appendChild(sm); d.appendChild(n);
+      });
+    }
     var wrap = root.querySelector('.chart-wrap');
     var readout = root.querySelector('#readout');
     var live = root.querySelector('#live');
     var el = {
       title: root.querySelector('#f-title'), x: root.querySelector('#f-x'), y: root.querySelector('#f-y'),
       style: root.querySelector('#f-style'), w: root.querySelector('#f-w'), wOut: root.querySelector('#f-w-out'),
-      color: root.querySelector('#f-color'), grid: root.querySelector('#f-grid'), log: root.querySelector('#f-log')
+      color: root.querySelector('#f-color'), grid: root.querySelector('#f-grid'), log: root.querySelector('#f-log'),
+      bg: root.querySelector('#f-bg'), bgc: root.querySelector('#f-bgc')
     };
     function bind(node, evt, fn) { if (node) node.addEventListener(evt, fn); }
 
@@ -480,6 +572,7 @@
       el.color.value = st.color || '#3f6b52';
       el.grid.checked = st.grid;
       if (el.log) el.log.checked = st.logx;
+      if (el.bg) { el.bg.value = st.bg; el.bgc.value = st.bgc; el.bgc.disabled = st.bg !== 'custom'; }
     }
 
     /* Readout label (without markup) -> entry in data/terms.js. Labels with no entry have no tip. */
@@ -505,7 +598,7 @@
       return rows.filter(Boolean);
     }
 
-    function setCursor(i, announce) {
+    function setCursor(i, announce, keyName) {
       var r = rec(), n = r.x.length;
       var cur = wrap.querySelector('#cur');
       if (!n) {
@@ -515,21 +608,31 @@
       }
       while (geom.px[i] === null && i < n - 1) i++;
       idx = Math.max(0, Math.min(n - 1, i));
-      var x = geom.px[idx], y = geom.sy(r.y[idx]);
+      var x = geom.px[idx], y = geom.sy(geom.Y[idx]);
       var line = wrap.querySelector('#cur-l'), dot = wrap.querySelector('#cur-c');
       line.setAttribute('x1', x); line.setAttribute('x2', x);
       dot.setAttribute('cx', x); dot.setAttribute('cy', y);
       var tl = wrap.querySelector('#cur-t');
       if (tl) {
         var ta = idx > 0 ? idx - 1 : 0, tb = idx > 0 ? idx : 1, tdx = r.x[tb] - r.x[ta];
-        if (tangentOn && !isRelax && n > 1 && tdx > 0 && isFinite(r.y[tb] - r.y[ta])) {
+        if (tangentOn && !isRelax && geom.V.id === 'ss' && n > 1 && tdx > 0 && isFinite(r.y[tb] - r.y[ta])) {
           var tsl = (r.y[tb] - r.y[ta]) / tdx, hw = (geom.xTop - geom.xLo) * 0.1;
           tl.setAttribute('x1', geom.sx(r.x[idx] - hw)); tl.setAttribute('y1', geom.sy(r.y[idx] - tsl * hw));
           tl.setAttribute('x2', geom.sx(r.x[idx] + hw)); tl.setAttribute('y2', geom.sy(r.y[idx] + tsl * hw));
           tl.style.display = '';
         } else tl.style.display = 'none';
       }
+      var nb = wrap.querySelector('#cur-nb'), nt = wrap.querySelector('#cur-nt');
+      if (nb && nt) {   /* when the cursor has snapped to a shown key point, it names it */
+        if (keyName) {
+          nt.textContent = keyName; var tw = keyName.length * 7.4 + 16, left = x + 14 + tw > W - M.r;
+          var bx = left ? x - 14 - tw : x + 14, by = Math.max(M.t + 2, Math.min(y - 11, H - M.b - 24));
+          nb.setAttribute('x', bx); nb.setAttribute('y', by); nb.setAttribute('width', tw); nt.setAttribute('x', bx + 8); nt.setAttribute('y', by + 16);
+          nb.style.display = ''; nt.style.display = '';
+        } else { nb.style.display = 'none'; nt.style.display = 'none'; }
+      }
       var rows = readoutRows(idx);
+      if (keyName) rows.unshift(['Key point', keyName]);
       /* Labels get a definition tip (data/terms.js). When only the values changed, update them in place so a label keeping keyboard focus is not redrawn. */
       var labelKey = rows.map(function (q) { return q[0]; }).join('\u0001'), dds = readout.querySelectorAll('dd');
       if (readout.getAttribute('data-labels') === labelKey && dds.length === rows.length) {
@@ -553,12 +656,15 @@
         var d = Math.max(0, Math.min(8, 2 - Math.floor(Math.log10(hi - lo))));
         return lo.toFixed(d) + '–' + hi.toFixed(d);
       }
+      if (geom.V.id !== 'ss') return 'Showing ' + geom.V.xl.replace(/ \(.*$/, '').toLowerCase() + ' ' + f(geom.xLo, geom.xTop, 1) + ' ' + (geom.V.xl.match(/\((.*)\)/) || ['', ''])[1] + ', ' + geom.V.yl.replace(/ \(.*$/, '').toLowerCase() + ' ' + f(geom.yLo, geom.yTop, 1) + ' ' + (geom.V.yl.match(/\((.*)\)/) || ['', ''])[1] + '.';
       return 'Showing ' + (isRelax ? 'time ' + f(geom.xLo, geom.xTop, 1) + ' s' : 'strain ' + f(geom.xLo, geom.xTop, strainFactor()) + (strainPct() ? ' %' : '')) + ', stress ' + f(geom.yLo, geom.yTop, stressScale()) + ' ' + stressUnit() + '.';
     }
 
     function draw() {
       var r = rec();
-      wrap.innerHTML = build(r, SCREEN);
+      var pal0 = palFor(false);
+      wrap.innerHTML = build(r, pal0);
+      wrap.style.background = workspace && pal0.bg ? pal0.bg : '';
       setCursor(idx);
       var none = r.x.length < 2;
       root.querySelector('#dl-png').disabled = none;
@@ -574,6 +680,8 @@
       root.querySelector('#range-note').textContent = rangeText(none);
       root.querySelector('#schem').hidden = matKeyOf(r) !== 'biomaterial';
       var rg = root.querySelector('#t-regions'); if (rg) { rg.checked = regionsOn; rg.disabled = none || follow; }
+      var tg = root.querySelector('#t-tangent'); if (tg) tg.disabled = !!(geom && geom.V && geom.V.id !== 'ss');
+      if (workspace) { renderViewButtons(); var ga = root.querySelector('#g-auto'), gr = root.querySelector('#g-reset'); if (ga) ga.disabled = none || !view; if (gr) gr.disabled = !view; }
     }
 
     function plain(t) { return String(t).replace(/<[^>]+>/g, ''); }
@@ -594,9 +702,10 @@
       if (dq) { dq.textContent = dc ? dc.text : ''; dq.hidden = !(dc && dc.text); dq.className = 'data-checks' + (dc && dc.items.length ? ' warn' : ''); }
       var ds = root.querySelector('#dimsrc'), dtxt = follow || r.source === 'sample' ? '' : dimSourceText(r);
       if (ds) { ds.textContent = dtxt ? 'Dimensions: ' + dtxt + '.' : ''; ds.hidden = !dtxt; ds.className = 'data-checks' + (dimIsExample(r) ? ' warn' : ''); }
-      var res = isRelax ? relaxationResults(r) : uniaxialResults(r);
+      var res = isRelax ? relaxationResults(r) : uniaxialResults(r, { hideUnrequested: workspace });
       var k = follow ? null : kpts(r);
       root.querySelector('#results').innerHTML = res.map(function (q, i) {
+        if (q.hidden) return '';
         var key = KEYS[i], on = keyAvailable(key, k), dis = on ? '' : ' disabled';
         return '<tr data-key="' + key + '"><th scope="row"><div class="res-head"><input type="checkbox" class="res-show" data-show="' + key + '" aria-label="Show ' + esc(plain(q[0])) + ' on graph"' + dis + '><button type="button" class="res-btn" data-hl="' + key + '" data-tip-id="def-' + key + '" aria-pressed="false"' + dis + '>' + q[0] + '</button></div><span class="def" id="def-' + key + '">' + q[2] + '</span></th><td>' + q[1] + '</td></tr>';
       }).join('');
@@ -713,6 +822,8 @@
     bind(el.color, 'input', function () { st.color = el.color.value; draw(); });
     bind(el.grid, 'change', function () { st.grid = el.grid.checked; draw(); });
     bind(el.log, 'change', function () { st.logx = el.log.checked; draw(); });
+    bind(el.bg, 'change', function () { st.bg = el.bg.value; el.bgc.disabled = st.bg !== 'custom'; draw(); });
+    bind(el.bgc, 'input', function () { st.bgc = el.bgc.value; draw(); });
     root.querySelectorAll('.swatch').forEach(function (b) {
       b.addEventListener('click', function () { st.color = b.getAttribute('data-color'); el.color.value = st.color; draw(); });
     });
@@ -729,6 +840,19 @@
       return best;
     }
     var follow = false;
+    /* A shown key point within about 14 px of the pointer: the cursor snaps to it and names it. */
+    function keyNear(e) {
+      if (!geom || !geom.keys || !geom.keys.length) return null;
+      var box = wrap.querySelector('svg').getBoundingClientRect(), kx = W / box.width, ky = H / box.height;
+      var vx = (e.clientX - box.left) * kx, vy = (e.clientY - box.top) * ky, best = null, bd = 14 * kx;
+      geom.keys.forEach(function (k) { var d = Math.sqrt(Math.pow(k.px - vx, 2) + Math.pow(k.py - vy, 2)); if (d <= bd) { bd = d; best = k; } });
+      return best;
+    }
+    function nearestToPx(px) {
+      var best = -1, bd = Infinity;
+      for (var i = 0; i < geom.px.length; i++) { if (geom.px[i] === null) continue; var d = Math.abs(geom.px[i] - px); if (d < bd) { bd = d; best = i; } }
+      return best;
+    }
     /* Dragging: when zoomed, drag moves the view; otherwise (or with Shift held) drag draws a box to zoom to. */
     var press = null, frame = wrap.parentNode, zbox = root.querySelector('#zoom-box');
     function plotClient() {
@@ -767,6 +891,8 @@
         return;
       }
       if (follow) return;
+      var kp = keyNear(e);
+      if (kp) { var ki = nearestToPx(kp.px); if (ki >= 0) setCursor(ki, false, kp.name); return; }
       var i = nearest(e.clientX); if (i >= 0) setCursor(i);
     });
     /* Dragging or double-clicking on the graph must not highlight the text around it. */
@@ -775,7 +901,8 @@
     wrap.addEventListener('pointerdown', function (e) {
       if (follow) return;
       clearSelection();
-      var i = nearest(e.clientX); if (i >= 0) setCursor(i);
+      var kp0 = keyNear(e);
+      if (kp0) { var ki0 = nearestToPx(kp0.px); if (ki0 >= 0) setCursor(ki0, false, kp0.name); } else { var i = nearest(e.clientX); if (i >= 0) setCursor(i); }
       if (e.button !== 0 || !geom || geom.log || rec().x.length < 2) return;
       press = { x: e.clientX, y: e.clientY, mode: view && !e.shiftKey ? 'pan' : 'box', moved: false, v: view ? JSON.parse(JSON.stringify(view)) : null };
       if (press.mode === 'pan') { dragging = press; wrap.classList.add('panning'); }
@@ -819,6 +946,45 @@
     bind(root.querySelector('#z-in'), 'click', function () { zoomAt(0.7, 0.5, 0.5); });
     bind(root.querySelector('#z-out'), 'click', function () { zoomAt(1 / 0.7, 0.5, 0.5); });
     bind(root.querySelector('#z-reset'), 'click', function () { view = null; draw(); });
+    /* ---------- the workspace tools: views, Autoscale, Reset view, Expand graph ---------- */
+    /* While a test records the readings arrive faster than the graph is rebuilt, so a redraw from a button first brings the record up to date. */
+    function redraw() { if (mode === 'live') recompute(rec(), isRelax); draw(); }
+    function renderViewButtons() {
+      var host = root.querySelector('#g-views'); if (!host) return;
+      if (!host.children.length) {
+        host.innerHTML = VIEW_LIST.map(function (q) { return '<button type="button" class="g-view" data-view="' + q[0] + '" aria-pressed="false">' + q[1] + '</button>'; }).join('');
+      }
+      var r = rec(), reason = '';
+      [].forEach.call(host.querySelectorAll('.g-view'), function (b) {
+        var v = b.getAttribute('data-view'), why = viewWhy(v, r);
+        b.setAttribute('aria-disabled', why ? 'true' : 'false'); b.title = why;
+        b.setAttribute('aria-pressed', String(st.view === v)); b.classList.toggle('is-on', st.view === v);
+        if (st.view === v && why) reason = why;
+      });
+      var cur = viewWhy(st.view, r), w = root.querySelector('#g-vwhy'), blocked = viewWhy('ss', r);
+      var note = cur || (blocked && VIEW_LIST[0][0] === 'ss' ? blocked : '');
+      if (w) { w.hidden = !note; w.textContent = note; }
+    }
+    bind(root.querySelector('#g-views'), 'click', function (e) {
+      var b = e.target.closest ? e.target.closest('.g-view') : null; if (!b) return;
+      if (b.getAttribute('aria-disabled') === 'true') return;
+      st.view = b.getAttribute('data-view'); view = null; redraw(); idx = Math.min(idx, Math.max(0, rec().x.length - 1));
+    });
+    bind(root.querySelector('#g-reset'), 'click', function () { view = null; redraw(); });
+    bind(root.querySelector('#g-auto'), 'click', function () {
+      /* refit the vertical range to the points inside the visible horizontal range */
+      if (!geom || !view || geom.log) { view = null; redraw(); return; }
+      var X = geom.X, Y = geom.Y, lo = Infinity, hi = -Infinity;
+      for (var i = 0; i < X.length; i++) if (X[i] >= view.x0 && X[i] <= view.x1 && isFinite(Y[i])) { if (Y[i] < lo) lo = Y[i]; if (Y[i] > hi) hi = Y[i]; }
+      if (!(hi > lo)) return;
+      var pad = (hi - lo) * 0.08; view = { x0: view.x0, x1: view.x1, y0: Math.min(0, lo - pad), y1: hi + pad }; draw();
+    });
+    bind(root.querySelector('#g-expand'), 'click', function () {
+      var on = root.classList.toggle('ws-expanded'), b = root.querySelector('#g-expand');
+      b.setAttribute('aria-pressed', String(on)); b.textContent = on ? 'Close expanded graph' : 'Expand graph';
+      document.body.classList.toggle('ws-graph-expanded', on);
+      redraw();
+    });
     bind(root.querySelector('#t-regions'), 'change', function (e) { regionsOn = e.target.checked; regionsTouched = true; draw(); });
     bind(root.querySelector('#t-tangent'), 'change', function (e) { tangentOn = e.target.checked; setCursor(idx); });
     bind(root.querySelector('#show-all'), 'click', function () { KEYS.forEach(function (q) { shown[q] = true; }); syncRows(); draw(); });
@@ -850,7 +1016,7 @@
     });
     function keepCursorInView() {
       if (!view) return;
-      var r = rec(), xv = r.x[idx], yv = r.y[idx], sp, ch = false;
+      var xv = geom.X[idx], yv = geom.Y[idx], sp, ch = false;
       if (xv < view.x0 || xv > view.x1) { sp = view.x1 - view.x0; view.x0 = xv < view.x0 ? xv - sp * 0.1 : xv + sp * 0.1 - sp; view.x1 = view.x0 + sp; ch = true; }
       if (yv < view.y0 || yv > view.y1) { sp = view.y1 - view.y0; view.y0 = yv < view.y0 ? yv - sp * 0.1 : yv + sp * 0.1 - sp; view.y1 = view.y0 + sp; ch = true; }
       if (ch) draw();
@@ -893,10 +1059,10 @@
       setTimeout(function () { URL.revokeObjectURL(a.href); }, 1000);
     }
     bind(root.querySelector('#dl-svg'), 'click', function () {
-      save(new Blob([build(rec(), EXPORT, { exp: true, scale: 1.667 })], { type: 'image/svg+xml;charset=utf-8' }), fileBase() + '.svg');
+      save(new Blob([build(rec(), palFor(true), { exp: true, scale: 1.667 })], { type: 'image/svg+xml;charset=utf-8' }), fileBase() + '.svg');
     });
     bind(root.querySelector('#dl-png'), 'click', function () {
-      var svg = build(rec(), EXPORT, { exp: true, scale: 3.333 });
+      var svg = build(rec(), palFor(true), { exp: true, scale: 3.333 });
       var url = URL.createObjectURL(new Blob([svg], { type: 'image/svg+xml;charset=utf-8' }));
       var img = new Image();
       img.onload = function () {
@@ -988,9 +1154,11 @@
         renderResults(r);
         draw();
       },
+      /* Open or close the Readout and Key results panels (live pages). */
+      panels: function (open) { root.querySelectorAll('.ws-panel').forEach(function (d) { d.open = !!open; }); },
       setRecord: function (r) {
         records = [r]; st.mat = r.material; recompute(r, isRelax);
-        if (mode === 'live') { regionsOn = false; regionsTouched = false; wasFollow = false; }
+        if (mode === 'live') { regionsOn = false; regionsTouched = false; wasFollow = false; resetCustom(); st.view = 'ss'; view = null; shown = {}; hl = null; syncControls(); }
         drawMaterial();
       },
       /* Example mode: limit the Material choice to these material keys (null = all). */

@@ -6,6 +6,8 @@
 window.SEARCH_INDEX = [
   { t: "Home", p: "index.html", a: "", w: "Page", k: "start about the tester how it works" },
   { t: "New Test (choose a test)", p: "choose-test.html", a: "", w: "Page", k: "new test choose uniaxial stress relaxation start" },
+  { t: "Graph views, Autoscale, and Expand graph", p: "practice.html", a: "", w: "Page", k: "graph view force displacement stress strain time autoscale expand zoom reset customize background" },
+  { t: "Offset yield (optional)", p: "test-uniaxial-tension.html", a: "", w: "Page", k: "offset yield optional estimate toe checkbox key results" },
   { t: "Practice test (simulator)", p: "practice.html", a: "", w: "Page", k: "practice simulator simulated learn try demo test uniaxial relaxation no tester" },
   { t: "Practice with a simulated test", p: "learn.html", a: "practice-title", w: "Learn", k: "practice simulator simulated learn try" },
   { t: "Uniaxial Tension: new test", p: "test-uniaxial-tension.html", a: "", w: "Page", k: "new test tension pull specimen record connect usb start stop tare" },

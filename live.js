@@ -50,6 +50,8 @@
         '</div><div class="setup-col">' +
         '<h3 class="step-h">3. Test settings</h3>' +
         field('s-speed', 'Crosshead speed (mm/min)', undefined, true) +
+        (isRelax ? '' : '<label class="pf pf-check"><span data-term="offsetopt" tabindex="0">Include offset yield (optional)</span><input type="checkbox" id="s-useoff"></label>' +
+          '<div id="s-off-wrap" hidden>' + field('s-off', 'Offset (% strain) <span class="ws-req" aria-hidden="true">*</span>', 'type="text" inputmode="decimal" autocomplete="off" placeholder="e.g. 0.2"', true) + '</div>') +
         (isRelax ?
           field('s-hold', 'Hold displacement, ΔL (mm)', undefined, true) +
           '<div class="pf"><span data-term="holdstrain" tabindex="0">Hold strain, ε<sub>0</sub> = ΔL/L<sub>0</sub></span><output id="s-e0">—</output></div>' +
@@ -115,13 +117,19 @@
     return isFinite(v) ? { state: 'ok', value: v } : { state: 'text', value: null };
   }
   function num(id) { var r = read(id); return r.state === 'ok' && r.value > 0 ? r.value : null; }
+  /* Offset yield is opt-in: a number only when the box is ticked and holds a value from 0.05 to 5 (% strain). */
+  function offsetPctValue() {
+    var cb = $('s-useoff'); if (!cb || !cb.checked) return null;
+    var q = read('s-off'); return q.state === 'ok' && q.value >= 0.05 && q.value <= 5 ? q.value : null;
+  }
   function spec() {
     var m = $('s-mat').value.trim();
     return {
       mat: m, matLabel: m, matKey: SIM_CURVE, id: $('s-id').value.trim(),
       L0: num('s-L0'), W: num('s-W'), T: num('s-T'), speed: num('s-speed'),
       hold_mm: isRelax ? num('s-hold') : null, hold_s: isRelax ? num('s-holds') : null,
-      temp: $('s-temp').value.trim(), env: $('s-env').value.trim(), notes: $('s-notes').value.trim()
+      temp: $('s-temp').value.trim(), env: $('s-env').value.trim(), notes: $('s-notes').value.trim(),
+      offsetPct: offsetPctValue()
     };
   }
   function newRecord(source) {
@@ -141,7 +149,7 @@
     if (isRelax) { if (s.hold_mm) p.hold_mm = s.hold_mm; if (s.hold_s) p.hold_s = s.hold_s; }
     p.yield = !isRelax && !!(TG.sampleParams(test, s.matKey) || {}).yield;
     r.mk = TG.sampleRegion(test, s.matKey);
-    p.speed_mm_min = s.speed; p.temperature_C = s.temp; p.environment = s.env;
+    p.speed_mm_min = s.speed; p.temperature_C = s.temp; p.environment = s.env; p.offsetPct = s.offsetPct || 0;
     if (!running) r.label = [s.matLabel, s.id].filter(Boolean).join(' · ') || 'New test';
   }
   function updateOutputs() {
@@ -153,7 +161,7 @@
     dn.textContent = ex ? 'These dimensions are example values from the labeled sample data, not measurements of your specimen.' : '';
   }
   /* The entries Start needs, with the unit to name in messages. */
-  var FIELDS = [['s-mat', 'material', ''], ['s-L0', 'gauge length', 'mm'], ['s-W', 'width', 'mm'], ['s-T', 'thickness', 'mm'], ['s-speed', 'crosshead speed', 'mm/min']]
+  var FIELDS = [['s-mat', 'material', ''], ['s-L0', 'gauge length', 'mm'], ['s-W', 'width', 'mm'], ['s-T', 'thickness', 'mm'], ['s-speed', 'crosshead speed', 'mm/min']].concat(isRelax ? [] : [['s-off', 'offset', '% strain']])
     .concat(isRelax ? [['s-hold', 'hold displacement', 'mm'], ['s-holds', 'hold duration', 's']] : []);
   var FIELD_IDS = FIELDS.map(function (q) { return q[0]; }).concat(['s-temp']), touched = {};
   function fieldInfo(id) { return FIELDS.filter(function (q) { return q[0] === id; })[0]; }
@@ -161,6 +169,12 @@
   function problemText(id) {
     var q = fieldInfo(id), r = read(id);
     if (!q) return '';
+    if (id === 's-off') {
+      if (!$('s-useoff') || !$('s-useoff').checked) return '';
+      if (r.state === 'empty') return 'Enter the offset in % strain (0.05 to 5).';
+      if (r.state === 'text') return 'That is not a number. Enter digits only, for example 0.2.';
+      return r.value >= 0.05 && r.value <= 5 ? '' : 'Enter a value from 0.05 to 5 (% strain).';
+    }
     if (id === 's-mat') return $('s-mat').value.trim() ? '' : 'Enter or choose the material.';
     if (r.state === 'empty') return 'Enter the ' + q[1] + ' in ' + q[2] + '.';
     if (r.state === 'text') return 'That is not a number. Enter digits only, for example 12.5 (' + q[2] + ').';
@@ -212,6 +226,7 @@
     row('Area A₀', s.W && s.T ? sig(s.W * s.T, 4) + ' mm²' : '—');
     row('Dimension source', dimSourceNow() === 'example' ? 'Example values (not measured)' : 'Typed by you');
     val('s-speed', 'Crosshead speed', 'mm/min');
+    if (!isRelax && $('s-useoff') && $('s-useoff').checked) { if (offsetPctValue()) row('Offset yield', offsetPctValue() + '% strain offset (estimate)'); else row('Offset yield', problemText('s-off'), true); }
     if (isRelax) {
       val('s-hold', 'Hold displacement', 'mm');
       row('Hold strain ε₀', s.hold_mm && s.L0 ? sig(s.hold_mm / s.L0, 4) : '—');
@@ -248,7 +263,7 @@
   var layoutEl = app.querySelector('.live-layout'), stepsReady = false, cur = 1, maxStep = 1;
   var setupCols = app.querySelectorAll('.setup-col'), connRow = app.querySelector('.conn-row'), reviewSec = app.querySelector('section.review');
   function stepHead(n) { return n <= 3 ? setupCols[n - 1].querySelector('.step-h') : n === 4 ? connRow.querySelector('.step-h') : $('rv-title'); }
-  function stepFields(n) { return n === 1 ? ['s-mat'] : n === 2 ? ['s-L0', 's-W', 's-T'] : n === 3 ? ['s-speed'].concat(isRelax ? ['s-hold', 's-holds'] : []) : []; }
+  function stepFields(n) { return n === 1 ? ['s-mat'] : n === 2 ? ['s-L0', 's-W', 's-T'] : n === 3 ? ['s-speed'].concat(isRelax ? ['s-hold', 's-holds'] : ['s-off']) : []; }
   function stepValid(n) { return n === 4 ? !!link : stepFields(n).every(function (id) { return !problemText(id); }); }
   function stepWhy(n) {
     if (n === 4) return link ? '' : (PRACTICE ? 'Use the simulator to continue.' : 'Connect to the tester to continue.');
@@ -285,7 +300,7 @@
   var nav5 = navFor(5); nav5.setAttribute('data-step', '5'); $('rv-det').parentNode.insertBefore(nav5, $('rv-det').nextSibling);
   /* The workspace layout (live-shell.js): moves the markup built above into a Setup sidebar and a workspace with a toolbar, a measurement strip, and the graph. */
   reviewSec.insertAdjacentHTML('beforeend', '<p class="small muted ws-start-hint">Press Start recording in the toolbar above the graph.</p>');
-  var LOCK_IDS = ['s-mat', 's-id', 's-L0', 's-W', 's-T', 's-speed', 's-hold', 's-holds', 's-temp', 's-env', 's-example-dims', 's-example-settings'];
+  var LOCK_IDS = ['s-mat', 's-id', 's-L0', 's-W', 's-T', 's-speed', 's-hold', 's-holds', 's-temp', 's-env', 's-useoff', 's-off', 's-example-dims', 's-example-settings'];
   var matBox = window.LiveMaterial ? window.LiveMaterial.attach($('s-mat'), ['Rabbit tissue', 'Test']) : null;   /* the Material box: choose a ready choice or type your own */
   var shell = window.LiveShell.build({ app: app, layout: layoutEl, main: app.querySelector('.live-main'), form: $('spec'), bar: bar, controlBar: app.querySelector('.control-bar') });
   /* "?" help on each step heading (both views). The text is existing wording; the tip copies it from the hidden element named here. */
@@ -412,6 +427,11 @@
     if (isRelax) { $('s-hold').value = sig(p.hold_mm, 4); $('s-holds').value = p.hold_s; }
     afterFill(isRelax ? ['s-speed', 's-hold', 's-holds'] : ['s-speed'], 'Example settings filled in (from the sample data). Change them to your own values if you prefer.');
   });
+  if ($('s-useoff')) $('s-useoff').addEventListener('change', function () {
+    $('s-off-wrap').hidden = !this.checked;
+    if (!this.checked) { $('s-off').value = ''; touched['s-off'] = false; showMsg('s-off', ''); }
+    updateOutputs(); applySpec(rec); api.refresh(running); renderReview();
+  });
   /* A message appears after you leave an entry (or press Start) and updates as you fix it. */
   $('spec').addEventListener('focusout', function (e) {
     if (FIELD_IDS.indexOf(e.target.id) >= 0) {
@@ -453,7 +473,7 @@
   });
 
   /* ---------- measurement strip (live-shell.js draws it; these are the latest readings, nothing is invented) ---------- */
-  var lastF = null, lastD = null;
+  var lastF = null, lastD = null, lastPanels = null;
   function stripNow() {
     if (!shell) return;
     var s = spec(), A = s.W && s.T ? s.W * s.T : null, n = rec && rec.raw ? rec.raw.t.length : 0;
@@ -484,6 +504,7 @@
     if (matBox) matBox.setDisabled(lock);
     shell.lockNote(running ? 'Locked while recording.' : hasData ? 'Locked: this test\u2019s data cannot be changed. Download it, or choose New test.' : '');
     shell.showEnded(!running && hasData);
+    if (api && api.panels && lastPanels !== (!running && hasData)) { lastPanels = !running && hasData; api.panels(lastPanels); }
     $('r-why').textContent = on || running ? '' : (PRACTICE ? 'Start is available after you connect: press “Use simulator”.' : 'Start is available after you connect: press “Connect to tester (USB)”.');
     $('c-dot').className = 'dot' + (running ? ' run' : on ? ' on' : '');
     document.title = running ? 'Recording · ' + baseTitle : (on && hasData ? 'Stopped · ' + baseTitle : baseTitle);
@@ -662,7 +683,8 @@
     rec = newRecord('none'); api.setRecord(rec);
     t0 = d0 = null; peakF = 0; holdStart = null; skipped = 0; hasData = false; downloaded = true; startedAt = null; endReason = '';
     lastF = lastD = null; exampleDims = null; touched = {};
-    ['s-mat', 's-id', 's-L0', 's-W', 's-T', 's-speed', 's-hold', 's-holds', 's-temp', 's-env', 's-notes'].forEach(function (id) { if ($(id)) $(id).value = ''; });
+    ['s-mat', 's-id', 's-L0', 's-W', 's-T', 's-speed', 's-hold', 's-holds', 's-temp', 's-env', 's-off', 's-notes'].forEach(function (id) { if ($(id)) $(id).value = ''; });
+    if ($('s-useoff')) { $('s-useoff').checked = false; $('s-off-wrap').hidden = true; }
     clearMessages(); infoEl.textContent = ''; msg('');
     cur = 1; maxStep = 1; updateOutputs(); shell.collapse(false);
     ui(); api.refresh(false); stepsUpdate();
