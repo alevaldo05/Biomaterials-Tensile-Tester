@@ -64,7 +64,7 @@ body.has-stop-dock .hc-card { bottom: 9rem; }
 /* Tutorials (tutorials.js): each plays inline on its page, under a "Watch how" button: a wide panel with the drawing of the screen and the captions. Theme variables only. */
 .tut-slot { margin: 0.6rem 0; }
 .tut-slot:not(.tut-inline) { display: none; }
-.tut-panel { margin-top: 0.5rem; padding: 0.85rem 1.1rem; border: 1px solid var(--line); border-left: 4px solid var(--accent); border-radius: 8px; background: var(--surface); }
+.tut-panel { container-type: inline-size; margin-top: 0.5rem; padding: 0.85rem 1.1rem; border: 1px solid var(--line); border-left: 4px solid var(--accent); border-radius: 8px; background: var(--surface); }
 .tut-panel[hidden] { display: none; }
 .tut-label { margin: 0 0 0.25rem; font-size: 0.875rem; color: var(--muted); }
 .tut-note { font-weight: 600; color: var(--ink); }
@@ -112,6 +112,8 @@ body.has-stop-dock .hc-card { bottom: 9rem; }
 .tut-panel.is-still .tut-svg .tptr { transition: none; }
 @keyframes tut-pulse { 50% { stroke-width: 5; } }
 @media (max-width: 720px) { .tut-body { grid-template-columns: minmax(0, 1fr); } }
+/* A narrow panel (Reading layout, Sidebar at large text): captions go under the drawing so it keeps the full width. */
+@container (max-width: 40rem) { .tut-body { grid-template-columns: minmax(0, 1fr); } }
 .tut-list { margin: 0.5rem 0; padding-left: 1.2rem; display: grid; gap: 0.35rem; }
 /* Not while a test is recording (nothing near STOP). */
 body.has-stop-dock .tut-slot, .live-layout.running .tut-slot { display: none; }
