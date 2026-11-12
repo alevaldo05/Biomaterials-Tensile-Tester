@@ -279,6 +279,7 @@ begin('5. Build output');
   try {
     var v = JSON.parse(fs.readFileSync(path.join(out, 'version.json'), 'utf8'));
     if (v.commit !== sha || v.short !== short) fail('version.json has the wrong commit or short value');
+    if (v.version !== '2.0') fail('version.json should say "version": "2.0" (the number the page footers show)');
   } catch (e) { fail('version.json is missing or is not valid JSON'); }
   var asset = /\b(?:src|href)="[^"#?:]+\.(?:css|js)"/g, stamped = new RegExp('\\b(?:src|href)="[^"#?:]+\\.(?:css|js)\\?v=' + short + '"', 'g');
   PAGES.forEach(function (page) {
@@ -432,7 +433,7 @@ begin('12. Stylesheet order');
     return out;
   }
   PAGES.forEach(function (page) {
-    if (page === '404.html' || page === 'workspace-mockup.html') return;   /* the mock-up page links one extra stylesheet; remove this exception when it is deleted or merged */
+    if (page === '404.html') return;
     var list = sheets(page);
     if (!ref) { ref = list; refPage = page; return; }
     if (JSON.stringify(list) !== JSON.stringify(ref)) fail(page + ' links different stylesheets (or a different order) than ' + refPage + '. Every page must link the same list, in the same order (see FILES.md).');
@@ -449,7 +450,7 @@ begin('12. Stylesheet order');
 /* 13. Script order for the split files: each page loads the pieces before the file that uses them. */
 begin('13. Split script order');
 (function () {
-  var before = failures, rules = [['live.js', ['live-links.js', 'live-checklist.js', 'live-csv.js', 'live-shell.js', 'live-material.js']], ['graph.js', ['graph-core.js']]], count = 0;
+  var before = failures, rules = [['live.js', ['live-links.js', 'live-checklist.js', 'live-csv.js', 'live-shell.js', 'live-material.js']], ['graph.js', ['graph-core.js']], ['load-test.js', ['load-shell.js']]], count = 0;
   PAGES.forEach(function (page) {
     var list = scriptsOf(read(page)).map(function (s) { return localPath(page, s); });
     rules.forEach(function (r) {

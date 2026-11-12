@@ -68,7 +68,10 @@
 .back-top { margin: 1.5rem 0 0; }
 
 /* Site version line at the foot of the page */
-.build-number { margin: 1.5rem auto 1rem; max-width: 70rem; padding: 0 1rem; font-size: 0.8125rem; color: var(--muted, inherit); text-align: center; }
+.build-number { margin: 0 auto; max-width: 70rem; padding: 0 1rem; font-size: 0.8125rem; color: var(--muted, inherit); text-align: center; }
+/* The footer bar every page ends with: the version line (build-number.js) */
+.site-footer { margin: 2rem 0 0; padding: 0.75rem 0 1rem; border-top: 1px solid var(--line); background: var(--surface); }
+@media print { .site-footer { display: none; } }
 .build-number-side { margin: 0.25rem 0 0; padding: 0; text-align: left; max-width: none; }
 
 
