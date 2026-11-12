@@ -24,7 +24,7 @@
 .mat-overview { display: grid; grid-template-columns: minmax(0, 1fr); gap: 1.25rem; align-items: start; }
 .mat-overview .mat-dl { max-width: 44rem; }
 .mat-overview .mat-card { margin: 0; }
-.mat-dl { display: grid; grid-template-columns: max-content minmax(0, 1fr); gap: 0.4rem 1rem; margin: 0.75rem 0; font-size: 0.9375rem; }
+.mat-dl { display: grid; grid-template-columns: minmax(0, max-content) minmax(0, 1fr); gap: 0.4rem 1rem; margin: 0.75rem 0; font-size: 0.9375rem; }
 .mat-dl dt { color: var(--muted); }
 .mat-dl dd { margin: 0; font-weight: 600; font-variant-numeric: tabular-nums; }
 .mat-links { display: flex; flex-wrap: wrap; align-items: center; gap: 0.6rem 1rem; margin: 1rem 0 0.5rem; }
@@ -71,7 +71,7 @@ table.mt-compare caption .linkbtn { font-size: 0.875rem; font-weight: 400; }
 }
 .mat-params[hidden] { display: none; }
 .mat-params h2 { margin: 0 0 0.5rem; font-size: 1.15rem; }
-.mat-params .param-fields { grid-template-columns: repeat(auto-fill, minmax(9.5rem, 1fr)); margin: 0 0 0.75rem; }
+.mat-params .param-fields { grid-template-columns: repeat(auto-fill, minmax(min(9.5rem, 100%), 1fr)); margin: 0 0 0.75rem; }
 /* Materials chart filters and list (materials.js) */
 .chart-tools { display: grid; gap: 0.65rem; margin: 0.75rem 0 0.5rem; padding: 0.75rem 0.9rem; border: 1px solid var(--line); border-radius: 8px; background: var(--bg); }
 .chart-tools p, .chart-keys { margin: 0; }

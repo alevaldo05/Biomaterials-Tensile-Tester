@@ -79,3 +79,26 @@
 .practice-pick { display: flex; flex-wrap: wrap; gap: 0.5rem; margin: 0.25rem 0 0.75rem; }
 .practice-pick a { text-decoration: none; }
 .practice-pick a[aria-current="true"] { background: var(--accent); color: var(--accent-ink); border-color: var(--accent); }
+
+/* ---------- Small windows and large text: long words wrap, and the card rows become one column when text is big ---------- */
+main dt, main dd, main th, main td, main li, .link-list li, .choice, .card-grid .card, .options label { overflow-wrap: anywhere; min-width: 0; }
+.options label { max-width: 100%; }
+/* two or three columns of cards or steps need room: with bigger text they stack in wider windows */
+@media (max-width: 62rem) {
+  :root[data-textsize="150"] .choices, :root[data-textsize="150"] .card-grid, :root[data-textsize="150"] .steps { grid-template-columns: minmax(0, 1fr); }
+}
+@media (max-width: 84rem) {
+  :root[data-textsize="200"] .choices, :root[data-textsize="200"] .card-grid, :root[data-textsize="200"] .steps { grid-template-columns: minmax(0, 1fr); }
+}
+@media (max-width: 40rem) {
+  .choices, .card-grid { grid-template-columns: minmax(0, 1fr); }
+}
+.tag { white-space: normal; max-width: 100%; }
+.ac-title { overflow-wrap: anywhere; min-width: 0; }
+.action-card { min-width: 0; }
+@media (max-width: 40rem) { .action-card { padding: 1.1rem 1rem; } }
+.mat-pick button, .mat-pick .btn-secondary, .chart-tools button { max-width: 100%; white-space: normal; }
+@media (max-width: 40rem) { :root[data-layout="start"] .start-actions { grid-template-columns: minmax(0, 1fr); } }
+:root[data-textsize="150"] :root[data-layout="start"] .start-actions, :root[data-textsize="200"] :root[data-layout="start"] .start-actions { grid-template-columns: minmax(0, 1fr); }
+.btn, .btn-secondary { overflow-wrap: anywhere; max-width: 100%; }
+@media (max-width: 40rem) { .mat-card { padding-left: 1rem; padding-right: 1rem; } }
