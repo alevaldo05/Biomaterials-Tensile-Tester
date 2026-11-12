@@ -3,10 +3,10 @@
 Page card. Update it in the same change as the page.
 
 ## Purpose
-Before you test (checklist), Background (biomechanics, why tensile testing matters for skin), and the Glossary.
+Before you test (checklist), Practice with a simulated test (a link to the practice page), Background (biomechanics, why tensile testing matters for skin), and the Glossary.
 
 ## Files
-- HTML: `learn.html` (ids `before-title`, `bg-title`, `gloss-title`)
+- HTML: `learn.html` (ids `before-title`, `practice-title`, `bg-title`, `gloss-title`)
 - Scripts in order: `display-settings.js`, `ui.js` (head), `data/checklist.js`, `data/text/learn.js`, `report.js`, `text.js`, `layouts.js`, `data/search-index.js`, `site-search.js`, `build-number.js`
 - Words: `data/text/learn.js`
 - CSS: `css/home.css` (Home additions), `css/extras.css` (Back to top)

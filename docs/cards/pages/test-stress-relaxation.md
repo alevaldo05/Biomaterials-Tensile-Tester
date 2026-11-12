@@ -22,8 +22,8 @@ Live Stress Relaxation test (ramp, hold, decay). Shared behavior: see [live test
 - Safety line: the on-screen STOP button is not an emergency stop
 
 ## Depends on
-- Features: live test, simulator, USB link, graph engine, downloads, print report
+- Features: live test, USB link, graph engine, downloads, print report
 
 ## How to check
 - `node scripts/check-site.js`
-- Run the simulator through the hold and download the CSV
+- Use the practice page (simulator) to check the hold and CSV download; USB itself is untested

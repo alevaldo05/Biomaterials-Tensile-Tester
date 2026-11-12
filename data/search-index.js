@@ -6,8 +6,10 @@
 window.SEARCH_INDEX = [
   { t: "Home", p: "index.html", a: "", w: "Page", k: "start about the tester how it works" },
   { t: "New Test (choose a test)", p: "choose-test.html", a: "", w: "Page", k: "new test choose uniaxial stress relaxation start" },
-  { t: "Uniaxial Tension: new test", p: "test-uniaxial-tension.html", a: "", w: "Page", k: "new test tension pull specimen record simulator connect usb start stop tare" },
-  { t: "Stress Relaxation: new test", p: "test-stress-relaxation.html", a: "", w: "Page", k: "new test relaxation hold decay simulator connect usb start stop tare" },
+  { t: "Practice test (simulator)", p: "practice.html", a: "", w: "Page", k: "practice simulator simulated learn try demo test uniaxial relaxation no tester" },
+  { t: "Practice with a simulated test", p: "learn.html", a: "practice-title", w: "Learn", k: "practice simulator simulated learn try" },
+  { t: "Uniaxial Tension: new test", p: "test-uniaxial-tension.html", a: "", w: "Page", k: "new test tension pull specimen record connect usb start stop tare" },
+  { t: "Stress Relaxation: new test", p: "test-stress-relaxation.html", a: "", w: "Page", k: "new test relaxation hold decay connect usb start stop tare" },
   { t: "Load Test", p: "load-test.html", a: "", w: "Page", k: "open csv file earlier test compare several files overlay load" },
   { t: "Learn", p: "learn.html", a: "", w: "Page", k: "learn background checklist glossary" },
   { t: "Protocols", p: "protocol-uniaxial-tension.html", a: "", w: "Page", k: "procedure steps protocol" },

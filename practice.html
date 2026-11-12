@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' blob:; font-src 'self'; connect-src 'none'; form-action 'none'; base-uri 'none'; object-src 'none'">
+  <meta name="referrer" content="no-referrer">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="Practice a tensile test with a labeled simulator: set up a specimen, run a simulated test, and look at the graph. Simulated data, not measured; nothing here connects to a tester.">
+  <link rel="icon" href="favicon.svg" type="image/svg+xml">
+  <link rel="icon" href="favicon.png" type="image/png" sizes="64x64">
+  <title>Practice test – Biomaterials Tensile Tester</title>
+  <link rel="stylesheet" href="styles.css">
+  <link rel="stylesheet" href="css/graph.css">
+  <link rel="stylesheet" href="css/test-setup.css">
+  <link rel="stylesheet" href="css/home.css">
+  <link rel="stylesheet" href="css/protocol.css">
+  <link rel="stylesheet" href="css/live.css">
+  <link rel="stylesheet" href="css/about.css">
+  <link rel="stylesheet" href="css/materials.css">
+  <link rel="stylesheet" href="css/checklist.css">
+  <link rel="stylesheet" href="css/calibration.css">
+  <link rel="stylesheet" href="css/compare.css">
+  <link rel="stylesheet" href="css/report.css">
+  <link rel="stylesheet" href="css/extras.css">
+  <link rel="stylesheet" href="css/guided.css">
+  <link rel="stylesheet" href="styles-looks.css">
+  <link rel="stylesheet" href="layouts.css">
+  <link rel="stylesheet" href="ui.css">
+  <script src="display-settings.js"></script>
+  <script src="ui.js"></script>
+</head>
+<body>
+  <a class="skip-link" href="#main-content">Skip to main content</a>
+  <header class="topbar">
+    <div class="inner">
+      <a class="brand" href="index.html"><svg class="logo" viewBox="0 0 72 36" aria-hidden="true" focusable="false"><text x="36" y="28.5" text-anchor="middle" textLength="68" lengthAdjust="spacingAndGlyphs" font-family="Georgia, 'Times New Roman', serif" font-weight="700" font-size="34" style="fill:var(--logo-ink, var(--accent))">BTT</text></svg><span>Biomaterials Tensile Tester</span></a>
+      <nav aria-label="Main">
+        <a href="index.html">Home</a>
+        <a href="learn.html">Learn</a>
+        <a href="protocol-uniaxial-tension.html">Protocols</a>
+        <a href="materials.html">Materials</a>
+        <a href="calibration.html">Calibration</a>
+        <a href="about.html">About</a>
+        <a href="help.html">Help</a>
+        <a href="settings.html">Settings</a>
+      </nav>
+    </div>
+  </header>
+
+  <main id="main-content" tabindex="-1" class="wide">
+    <a class="back" href="learn.html">&larr; Back to Learn</a>
+    <p class="status"><span class="badge">Draft</span> <span class="muted">Practice page: simulated data, not measured. Nothing here connects to a tester.</span></p>
+    <h1>Practice test</h1>
+    <p class="sub">Learn the screen with a labeled simulator: enter a specimen, run a simulated test, and read the graph and key results. Choose the kind of test:</p>
+    <p class="practice-pick" role="group" aria-label="Kind of practice test"><a href="practice.html#uniaxial" id="pk-uniaxial" class="btn-secondary">Uniaxial Tension</a> <a href="practice.html#relaxation" id="pk-relaxation" class="btn-secondary">Stress Relaxation</a></p>
+    <p class="safety"><strong>Safety:</strong> the on-screen STOP button is not an emergency stop. Keep the machine&rsquo;s physical emergency-stop button within reach; it must work even if this page, the computer, or the cable fails.</p>
+
+    <div id="live-app" data-test="uniaxial" data-practice="true"><p class="muted">Enable JavaScript to run a test.</p></div>
+
+    <section class="section">
+      <p class="small">Point at an underlined term for its definition and equation. The full table of governing equations is on the <a href="protocol-uniaxial-tension.html#general/graph">protocol page</a>.</p>
+    </section>
+
+    <p class="small"><a href="learn.html">Back to Learn</a> &middot; <a href="index.html">Home</a></p>
+  </main>
+
+  <script src="data/materials.js"></script>
+  <script src="data/samples.js"></script>
+  <script src="data/sample-models.js"></script>
+  <script src="data/device.js"></script>
+  <script src="data/checklist.js"></script>
+  <script src="data/text/help.js"></script>
+  <script src="data/help-tips.js"></script>
+  <script src="data/tutorials.js"></script>
+  <script src="data/terms.js"></script>
+  <script src="graph-core.js"></script>
+  <script src="graph.js"></script>
+  <script src="excel-export.js"></script>
+  <script src="report.js"></script>
+  <script src="tutorials.js"></script>
+  <script src="help-coach.js"></script>
+  <script src="live-links.js"></script>
+  <script src="live-sim.js"></script>
+  <script src="live-checklist.js"></script>
+  <script src="live-csv.js"></script>
+  <script src="practice-pick.js"></script>
+  <script src="live.js"></script>
+  <script src="layouts.js"></script>
+  <script src="data/search-index.js"></script>
+  <script src="site-search.js"></script>
+  <script src="build-number.js"></script>
+</body>
+</html>

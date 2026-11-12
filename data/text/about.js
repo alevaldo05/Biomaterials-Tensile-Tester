@@ -136,7 +136,7 @@ window.SITE_TEXT.about = {
         { columns: [
           { heading: "Works now", blocks: [
             { list: [
-              "New Test pages with live graphing, Start/STOP/Tare commands, and CSV and image downloads, demonstrated with a labeled simulator.",
+              "New Test pages with live graphing, Start/STOP/Tare commands, and CSV and image downloads. A practice page has a labeled simulator for learning the screen.",
               "USB connection code, not yet tested with the real machine.",
               "Load Test for opening earlier CSV files.",
               "Draft protocols with example graphs from labeled sample data."
