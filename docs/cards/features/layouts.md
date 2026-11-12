@@ -11,6 +11,7 @@ Start screen, Sidebar, Cards, Tabs, Reading; they rearrange existing content.
 
 ## What the user sees
 - Page arranged to the chosen layout
+- Reading: the "On this page" list sits beside the text; when the page area is narrower than 50rem (large text) it goes above the text and the text uses the full width
 
 ## Behavior to keep
 - Content is written once; layouts only move it

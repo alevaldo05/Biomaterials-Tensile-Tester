@@ -49,7 +49,7 @@
 [data-layout="tabs"] main .section[role="tabpanel"] { border-top:0; padding:calc(1.5rem * var(--sp)) 0 calc(2rem * var(--sp)); }
 
 /* ---------- Reading ---------- */
-main.reading { max-width:70rem; }
+main.reading { max-width:70rem; container-type:inline-size; }
 .read-wrap { display:grid; grid-template-columns:minmax(0, 72ch) minmax(0, 13.75rem); justify-content:space-between; gap:3rem; }
 .read-col .section { border-top:0; padding:calc(2rem * var(--sp)) 2rem; margin:0 0 calc(1.25rem * var(--sp)); border-radius:12px; }
 .read-col .section:nth-of-type(odd) { background:var(--surface); }
@@ -60,6 +60,8 @@ main.reading { max-width:70rem; }
 .toc a { padding:0.3rem 0.75rem; border-left:2px solid var(--line); color:var(--muted); text-decoration:none; }
 .toc a:hover, .toc a.active { color:var(--ink); border-left-color:var(--accent); }
 .toc a.active { font-weight:600; }
+/* Narrow page area (large text): the "On this page" list goes above the text and the text uses the full width. */
+@container (max-width: 50rem) { .read-wrap { grid-template-columns:minmax(0, 1fr); gap:1.5rem; } .toc { position:static; order:-1; } }
 
 /* ---------- Settings page choices ---------- */
 .choice-grid { display:grid; grid-template-columns:repeat(auto-fill, minmax(11.875rem, 1fr)); gap:0.75rem; }
