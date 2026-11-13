@@ -164,11 +164,27 @@ describe('keyboard and focus (source checks; the Tab walk-through was done in Ch
     const app = src('App.tsx');
     expect(app).toContain('inert={narrow && !drawer}');
     expect(app).toMatch(/e\.key === 'Escape'\) setDrawer\(false\)/);
-    expect(app).not.toMatch(/Escape[^\n]*(stop|Stop)/);
+    expect(app).not.toMatch(/Escape[^\n]*(stopRecording|STOP|sendStop)/);
   });
   it('turns animation and smooth scrolling off for everyone who asks for reduced motion', () => {
     const css = src('app.css');
     expect(css).toMatch(/@media \(prefers-reduced-motion: reduce\) \{\s*\*, \*::before, \*::after \{[^}]*animation-duration: 0\.01ms !important[^}]*transition-duration: 0\.01ms !important/);
+  });
+});
+
+describe('menu and required fields (source checks; the required-field name was checked in Chromium)', () => {
+  const src = (f: string) => readFileSync(path.join(here, '../src', f), 'utf8');
+  it('moves focus into the Save data menu, closes it with Esc, and gives focus back to the button', () => {
+    const app = src('App.tsx');
+    expect(app).toContain('ref={saveMenu} onKeyDown={onMenuKey}');
+    expect(app).toMatch(/e\.key === 'Escape'\) \{[^}]*setSaveOpen\(false\); saveButton\.current\?\.focus\(\)/);
+    expect(app).toContain("querySelector<HTMLElement>('[role=\"menuitem\"]')?.focus()");
+    expect(app).toContain('aria-haspopup="menu"');
+  });
+  it('says "(required)" to screen readers while the red asterisk stays hidden from them', () => {
+    const parts = readFileSync(path.join(ROOT, 'packages/ui/src/parts.tsx'), 'utf8');
+    expect(parts).toContain('<span aria-hidden="true"> *</span><span className="sr-only"> (required)</span>');
+    expect(src('app.css')).toMatch(/\.sr-only \{[^}]*clip: rect\(0 0 0 0\)/);
   });
 });
 
