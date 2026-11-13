@@ -124,3 +124,21 @@ describe('session controller', () => {
     expect(c.message).toContain('connection was lost');
   });
 });
+
+describe('app preview (the build published with the website)', () => {
+  it('connects its pretend board by itself and offers no real connection', async () => {
+    const c = new TestController({ edition: 'learning', autoRun: false });
+    await c.startPreview();
+    expect(c.choices).toEqual(['simulated', 'replay']);
+    expect(c.source?.kind).toBe('simulated');
+    expect(c.state).toBe('ready');
+    expect(c.dataLabel).toBe('Simulated data, not measured');
+    await c.startPreview();   /* a second call changes nothing */
+    expect(c.simulator!.written.filter((b) => new TextDecoder().decode(b).includes('identify'))).toHaveLength(1);
+  });
+  it('does nothing in the lab edition', async () => {
+    const c = new TestController({ edition: 'lab', autoRun: false });
+    await c.startPreview();
+    expect(c.source).toBeNull();
+  });
+});

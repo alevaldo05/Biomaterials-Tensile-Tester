@@ -15,9 +15,15 @@ const csp = (): Plugin => ({
   transformIndexHtml: (html) => html.replace('<meta name="viewport"', `<meta http-equiv="Content-Security-Policy" content="${CSP}">\n  <meta name="viewport"`),
 });
 
+/* The preview build (published with the website) gets its own page title. */
+const previewTitle = (on: boolean): Plugin => ({
+  name: 'preview-title',
+  transformIndexHtml: (html) => (on ? html.replace(/<title>[^<]*<\/title>/, '<title>App preview – Biomaterials Tensile Tester</title>') : html),
+});
+
 export default defineConfig(({ mode }) => ({
   base: './',
-  plugins: [react(), csp(), siteData(path.resolve(path.dirname(fileURLToPath(import.meta.url)), '../..'))],
+  plugins: [react(), csp(), previewTitle(mode === 'learning'), siteData(path.resolve(path.dirname(fileURLToPath(import.meta.url)), '../..'))],
   define: { __EDITION__: JSON.stringify(mode === 'learning' ? 'learning' : 'lab') },
   build: { outDir: mode === 'learning' ? 'dist-learning' : 'dist', sourcemap: false },
   /* In development the API runs on its own port; the app reaches it at the same /api address it uses behind the gateway. */

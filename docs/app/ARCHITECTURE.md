@@ -14,7 +14,7 @@ Shared code lives in `packages/` so a change to a calculation or a file format r
 
 - **Calculations and files.** `packages/core` is checked on every run against the website's own scripts (`packages/core/reference`). If one side's numbers or CSV change without the other, `npm test` fails.
 - **Words.** The app reads the website's definitions (`data/terms.js`) and materials (`data/materials.js`) when it is built (`apps/tester/site-data.ts`), so editing those files changes both.
-- **Places.** On GitHub Pages the website carries the app's learning edition at `app/`; on the lab computer the gateway serves the website at `/` and the full app at `/app/`. The app's Learn and Help links point one folder up, so they reach whichever website it is served with.
+- **Places.** On GitHub Pages the website carries the app preview (the learning edition: three steps, an explanation and website link at each, simulated data only) at `app/`; on the lab computer the gateway serves the website at `/` and the full app at `/app/`. The app's Learn and Help links point one folder up, so they reach whichever website it is served with.
 - **Tests.** Live tests run only in the app. The website's own test pages were retired; its practice page (simulator) and Load Test remain, and CSV files from the app open in Load Test.
 
 The app is built so that changing the acquisition board, the ADC, or the connection changes only the device-side software, a device adapter, and settings. The graph, forms, recording, and exports do not change.

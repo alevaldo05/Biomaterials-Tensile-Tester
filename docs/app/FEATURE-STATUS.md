@@ -12,7 +12,7 @@ Updated with each stage. "Checked" means tried in Chrome's engine (Chromium on L
 - Save data: test CSV (opens on the website's Load Test page), Excel (.xlsx, checked with openpyxl, not Microsoft Excel), graph PNG and SVG, every raw sample as CSV, and a session file for replay.
 - Graph: three views, Autoscale, Reset view, Expand, scroll and drag zoom, pan, arrow-key readout, key-result markers with snapping.
 - Light and dark theme. Laptop, tablet, and phone widths (1366, 1280, 1024, 768, 390 px) without sideways scrolling.
-- Learning edition build: simulation and replay only; the USB serial and machine-control code are not in its files.
+- App preview (the learning edition build, published with the website): the pretend board connects by itself; only the Test and specimen, Dimensions, and Review steps are shown, each with a one-line explanation and a link to the website; an "About this preview" panel; a "Reading the curve" note after the test; replay of a saved session from Review. The USB serial and machine-control code are not in its files. Its words are in `apps/tester/src/preview-text.ts`.
 
 ## Back end and database
 

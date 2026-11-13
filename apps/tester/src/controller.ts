@@ -114,6 +114,13 @@ export class TestController {
     return kind === 'real' ? 'Measured' : kind === 'simulated' ? 'Simulated data, not measured' : 'Replayed' + (this.replayFile && this.replayFile.recordedFrom === 'simulated' ? ' (simulated data, not measured)' : ' recording');
   }
 
+  /** The app preview (learning edition) connects its pretend board by itself; there is nothing to choose. */
+  async startPreview(): Promise<void> {
+    if (this.edition !== 'learning' || this.source) return;
+    this.choice = 'simulated';
+    await this.connect();
+  }
+
   /* ---------- connection ---------- */
   async connect(): Promise<void> {
     if (this.source && this.source.state !== 'disconnected' && this.source.state !== 'fault') return;

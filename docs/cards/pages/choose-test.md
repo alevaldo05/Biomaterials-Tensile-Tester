@@ -12,7 +12,7 @@ The page after the **New Test** button on Home. The website no longer has live t
 
 ## What the user sees
 - Heading **New Test** and a sentence: tests on the tester are now run in the tester app; this website is for learning, protocols, materials, and reopening saved files
-- A primary link **Open the tester app** to `app/`, and, under it, a plain sentence: on this public website the app runs simulations and replays only; connecting to the tester over USB is done in the app installed on the lab computer
+- A primary link **Open the app preview** to `app/` (the tester app on simulated data, with an explanation at each step), and, under it, a plain sentence: on this public website the app runs simulations and replays only; connecting to the tester over USB is done in the app installed on the lab computer
 - A link **Practice with a simulated test** to `practice.html` and a link to **Load Test** (`load-test.html`, which also opens CSV files saved by the tester app); links to the two draft protocols
 
 ## Behavior to keep
