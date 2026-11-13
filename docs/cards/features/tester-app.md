@@ -7,6 +7,8 @@ The React and TypeScript app for running tests, the packages it shares with the 
 
 ## Files
 - `docs/app/ARCHITECTURE.md`
+- `docs/app/PROTOCOL.md` (the acquisition protocol; the code in `packages/protocol/` is the reference)
+- `packages/acquisition/`, `packages/recording/`, `packages/machine-control/`: sources and transports (simulator, replay, USB serial), the recorder and conversion chain, and the machine-control stub; `packages/recording/test/` holds the acceptance tests
 - `scripts/check-site.js` (leaves the app folders and workspace files alone)
 - `scripts/build-site.sh` (leaves them out of the published site)
 - Folders `packages/`, `apps/`, `firmware/`, `deploy/`; workspace files `package.json`, `package-lock.json`, `tsconfig.json`, `tsconfig.base.json`, `vitest.config.mjs`
@@ -21,6 +23,9 @@ The React and TypeScript app for running tests, the packages it shares with the 
 - The app sends no Start, STOP, Tare, speed, or position command to the tester
 - Machine control stays "unsupported" (sends nothing) until the tester's interface is verified and reviewed
 - `packages/core` gives the same results as the website's scripts (same CSV header lines, so files open on either side); a calculation changed on one side is changed on the other in the same change
+- Graph, calculation, and recording code never import a device adapter, a transport, or the wire protocol (a test checks this)
+- A calibration is used only when its whole signal path matches; without one, values stay in volts and no stress or strain is calculated
+- The USB serial transport is untested with real hardware, and the docs say so until it has been tried
 - The saved reference numbers change only when a website calculation is changed on purpose (`npm run reference:update`)
 
 ## Labels that must stay

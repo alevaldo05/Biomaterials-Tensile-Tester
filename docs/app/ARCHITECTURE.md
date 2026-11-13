@@ -62,7 +62,16 @@ Rules that hold everywhere:
 | Workspace, TypeScript, test runner | Implemented |
 | Reference tests of the website's calculations (`packages/core/reference`) | Implemented |
 | `packages/core`: stress, strain, modulus fit, offset yield, relaxation results, data checks, CSV reader and writer, Excel writer, calibration fit, comparison statistics | Implemented; every result is compared with the website's own scripts on the same inputs (CSV and Excel files byte for byte) |
-| Everything else in this file | Planned |
+| `packages/protocol`: protocol version 1 ([PROTOCOL](PROTOCOL.md)), run-time checks of every received line, line framer | Implemented |
+| `packages/acquisition`: common source interface, connection states and plain-language diagnostics, the protocol adapter | Implemented |
+| Simulator (a pretend device speaking the real protocol; can pose as different device types and produce faults on demand) | Implemented; its data is simulated, not measured |
+| Recorded-data replay | Implemented |
+| USB serial (Web Serial) transport | Implemented and checked with a stand-in port only; **untested with real hardware** |
+| `packages/recording`: conversion chain, calibration compatibility, recorder (raw and converted values, both timestamps, gaps, faults), session to test record | Implemented |
+| `packages/machine-control`: "unsupported", transmits nothing | Implemented (as a stub, on purpose) |
+| Device firmware (ESP32, Pico), Raspberry Pi service | Planned; none exists yet |
+| Electron, a network transport to a Raspberry Pi | Planned |
+| App screens, back end, database, containers | Planned |
 
 Two things `packages/core` does differently from the website on purpose (the website pages are unchanged):
 
