@@ -24,7 +24,8 @@ window.SITE_TEXT.learn = {
     "practice-title": {
       heading: "Practice with a simulated test",
       blocks: [
-        { p: "This website does not connect to the tester: real tests are run in the tester app (see [New Test](choose-test.html)). To learn the screen without a tester, use the [practice page](practice.html). It has a labeled simulator, and everything it shows is *Simulated data, not measured*. Nothing on it connects to a tester." }
+        { p: "This website does not connect to the tester: real tests are run in the [tester app](choose-test.html). To learn the steps without a tester, use the [practice page](practice.html). It has a labeled simulator, and everything it shows is *Simulated data, not measured*. Nothing on it connects to a tester." },
+        { p: "To reopen a CSV file saved earlier, from the practice page or the tester app, use [Load Test](load-test.html). It opens the file in this browser only; nothing is uploaded." }
       ]
     },
 

@@ -1,6 +1,6 @@
 /* Page layouts (Settings → Layout). Loaded at the end of every page. It only rearranges what is
    already on the page (content is written once in the HTML); it never changes data or controls.
-     start   – homepage shows large New Test / Load Test cards and a "More" row (default)
+     start   – homepage shows large Get the app / Learn and practice cards and a "More" row (default)
      sidebar – menu down the left side of every page
      cards   – long pages show each section as a separate box
      tabs    – long pages show one section at a time
@@ -51,10 +51,10 @@
     var heroActions = document.querySelector('.hero .actions');
     if (heroActions) heroActions.remove();
     var start = el('div', { 'class': 'start-actions' },
-      '<a class="action-card primary" href="choose-test.html">' + icon('M5 12h14M13 6l6 6-6 6') +
-        '<span class="ac-title">New Test</span><span class="ac-text">' + cardText('newTest', 'Start a test in the tester app, or practice with a simulated test.') + '</span></a>' +
-      '<a class="action-card" href="load-test.html">' + icon('M4 4h10l6 6v10H4zM14 4v6h6') +
-        '<span class="ac-title">Load Test</span><span class="ac-text">' + cardText('loadTest', 'Reopen an earlier CSV file in this browser.') + '</span></a>');
+      '<a class="action-card primary" href="choose-test.html">' + icon('M12 4v11M7 10l5 5 5-5M5 20h14') +
+        '<span class="ac-title">Get the app</span><span class="ac-text">' + cardText('getApp', 'The Windows app that connects to the tester and records tests. Download not yet available.') + '</span></a>' +
+      '<a class="action-card" href="learn.html">' + icon('M12 6c-2-2-6-2-8-1v14c2-1 6-1 8 1c2-2 6-2 8-1V5c-2-1-6-1-8 1zM12 6v14') +
+        '<span class="ac-title">Learn and practice</span><span class="ac-text">' + cardText('learnStart', 'Before you test, practice with a simulated test, reopen saved files, and the glossary.') + '</span></a>');
     main.insertBefore(start, main.firstChild);
     var proto = document.getElementById('protocols');
     if (proto) proto.hidden = true;   /* replaced by the Protocols card below */
@@ -63,7 +63,6 @@
       '<a class="mini-card" href="protocol-uniaxial-tension.html"><strong>Protocols <span class="badge badge-inline">Draft</span></strong><span>' + cardText('protocols', 'Procedures for each test and material.') + '</span></a>' +
       '<a class="mini-card" href="materials.html"><strong>Materials</strong><span>' + cardText('materials', 'Properties, a stiffness chart, and sample graphs for many materials.') + '</span></a>' +
       '<a class="mini-card" href="calibration.html"><strong>Calibration</strong><span>' + cardText('calibration', 'Compare force readings with known weights and record the result.') + '</span></a>' +
-      '<a class="mini-card" href="learn.html"><strong>Learn</strong><span>' + cardText('learn', 'Before you test, background, and glossary.') + '</span></a>' +
       '<a class="mini-card" href="about.html"><strong>About</strong><span>' + cardText('about', 'Tensile testing, project status, and references.') + '</span></a>' +
       '<a class="mini-card" href="help.html"><strong>Help</strong><span>' + cardText('help', 'Troubleshooting, keyboard keys, and references.') + '</span></a>' +
       '<a class="mini-card" href="settings.html"><strong>Settings</strong><span>' + cardText('settings', 'Color theme, style, and layout.') + '</span></a></div>'));
@@ -73,7 +72,7 @@
   if (layout === 'sidebar') {
     var header = document.querySelector('header.topbar');
     var brand = header ? header.querySelector('.brand') : null;
-    var items = [['Home', 'index.html'], ['New Test', 'choose-test.html'], ['Load Test', 'load-test.html'], ['Learn', 'learn.html'],
+    var items = [['Home', 'index.html'], ['Get the app', 'choose-test.html'], ['Learn', 'learn.html'], ['Load Test', 'load-test.html'],
       ['Protocols', 'protocol-uniaxial-tension.html'], ['Materials', 'materials.html'], ['Calibration', 'calibration.html'], ['About', 'about.html'], ['Help', 'help.html'], ['Settings', 'settings.html']];
     var current = /^protocol-/.test(page) ? 'protocol-uniaxial-tension.html' : page;
     var nav = el('nav', { 'aria-label': 'Main' });

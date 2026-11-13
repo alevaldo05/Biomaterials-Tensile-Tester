@@ -13,6 +13,7 @@ A "Need help?" button on the practice page, Load Test, and Calibration, plus sma
 - `live.js` (`coachContext`, the `report` call for a field error that stays), `load-test.js` (CSV that cannot be read), `calibration.js` (context)
 - `display-settings.js` (key `helpprompts`: `on` default, `off`), `settings.html` (Help prompts option), `page-nav.js` (jump list label)
 - `practice.html`, `load-test.html`, `calibration.html` (script tags)
+- `data/page-help.js` and `page-help.js`: the button on Home, Learn, the two protocol pages, Materials, About, and Help, with a few lines per page (draft wording) and no automatic hints (`quiet`); these pages load `data/text/help.js` before `data/help-tips.js` for the check
 
 ## What the user sees
 - **Need help?** at the bottom right, above the pinned STOP bar; it opens a small card with the current step's existing help wording and a link to Help > Troubleshooting; X closes it

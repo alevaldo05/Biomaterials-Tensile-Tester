@@ -41,9 +41,6 @@ function read(rel) { return fs.readFileSync(path.join(ROOT, rel), 'utf8'); }
 function exists(rel) { return FILES.indexOf(rel) >= 0; }
 
 var SITE_PATH = '/Biomaterials-Tensile-Tester/';  /* the folder name GitHub Pages serves the site under */
-/* The tester app is not in this repository's website files. The folder app/ is created only when the site is built for publishing
-   (scripts/build-site.sh adds it), so the link "app/" (and "app/index.html") on the New Test page cannot be found here. These two exact links are accepted. */
-var PUBLISH_TIME_LINKS = { 'app/': 1, 'app/index.html': 1 };
 
 /* The relative file a link points to, or null for web addresses, anchors, and mail links.
    A link that starts with SITE_PATH (used only by 404.html) is read from the project root. */
@@ -73,7 +70,6 @@ begin('1. Page links');
       var target = localPath(page, m[1]);
       if (target === null) continue;
       count++;
-      if (PUBLISH_TIME_LINKS[target]) continue;
       if (!exists(target)) fail(page + ' links to "' + m[1] + '", but that file is not in the project. Check the name and the folder.');
     }
   });
