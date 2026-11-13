@@ -1,6 +1,6 @@
 /* Load test: open a recorded test (a session file saved by this app, or a CSV file), see its graph and key results,
    and export it. Opening never sends anything to a device. Also the place for recent tests and exports. */
-import { useRef, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import type { TestType } from '@tensile/core';
 import { buildTestCsv, sig } from '@tensile/core';
 import { Panel } from '@tensile/ui';
@@ -19,6 +19,18 @@ export function LoadTest(p: {
   clear: () => void;
 }) {
   const [hint, setHint] = useState<'' | TestType>('');
+  /* Print report: every panel opens and the graph is drawn light for paper, then the browser's print window opens
+     (where the report can be saved as a PDF). Nothing is saved or sent by the app. */
+  const [printing, setPrinting] = useState(false);
+  const mainRef = useRef<HTMLElement | null>(null);
+  useEffect(() => {
+    if (!printing) return;
+    mainRef.current?.querySelectorAll('details').forEach((d) => { d.open = true; });
+    const done = () => setPrinting(false);
+    window.addEventListener('afterprint', done, { once: true });
+    const t = setTimeout(() => window.print(), 50);
+    return () => { clearTimeout(t); window.removeEventListener('afterprint', done); };
+  }, [printing]);
   const svg = useRef<SVGSVGElement | null>(null);
   const l = p.loaded, base = l ? l.name.replace(/\.(session\.json|json|csv)$/i, '') : 'test';
   const exportAs = async (what: 'original' | 'csv' | 'xlsx' | 'png' | 'svg') => {
@@ -33,7 +45,7 @@ export function LoadTest(p: {
     else if (what === 'png' && svg.current) save(base + '.png', [await svgToPng(svg.current)], 'image/png');
   };
   return (
-    <main className="page" id="main-content">
+    <main className="page" id="main-content" ref={mainRef}>
       <div className="row"><h1>Load test</h1>{l ? <button type="button" onClick={p.clear}>Open another</button> : null}</div>
       {!l ? (<>
         <section className="card-plain" aria-labelledby="open-title">
@@ -63,6 +75,10 @@ export function LoadTest(p: {
             </table></div>) : <p className="hint">No recorded tests on this computer yet.</p>}
         </section>
       </>) : (<>
+        <div className="print-only print-head">
+          <p><strong>Test report · Draft</strong> · printed {new Date().toLocaleString()}</p>
+          <p>Data: loaded from a file. {l.kind === 'session' ? 'Rebuilt from the readings in the session file.' : 'Imported CSV file.'} The hardware connection is untested.</p>
+        </div>
         <p className="notice">{l.provenance}</p>
         <div className="toolbar" role="toolbar" aria-label="Export">
           {l.record && l.setup ? <button type="button" onClick={() => void exportAs('csv')}>Test data (CSV)</button> : null}
@@ -70,8 +86,9 @@ export function LoadTest(p: {
           <button type="button" onClick={() => void exportAs('png')}>Graph (PNG)</button>
           <button type="button" onClick={() => void exportAs('svg')}>Graph (SVG)</button>
           <button type="button" onClick={() => void exportAs('original')}>Original file</button>
+          <button type="button" onClick={() => setPrinting(true)}>Print report</button>
         </div>
-        <RecordGraph record={l.record} test={l.test} theme={p.theme} showResults sourceTag={'Loaded: ' + l.name} emptyText={l.problem || 'No data.'} onSvg={(el) => { svg.current = el; }} />
+        <RecordGraph record={l.record} test={l.test} theme={printing ? 'light' : p.theme} showResults sourceTag={'Loaded: ' + l.name} emptyText={l.problem || 'No data.'} onSvg={(el) => { svg.current = el; }} />
         <Panel title="Key results" open><ResultsTable record={l.record} problem={l.problem} note={l.session?.endReason ?? ''} /></Panel>
         <Panel title="File details">
           <dl className="facts wide">

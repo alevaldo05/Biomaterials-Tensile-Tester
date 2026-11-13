@@ -230,3 +230,17 @@ input[type="password"] { width: 100%; background: var(--panel); border: 1px soli
   .results th, .results td { border: 0; padding: 1px 0; }
   .facts div, .facts.wide div { grid-template-columns: minmax(0, 1fr); gap: 0; }
 }
+
+/* Print report (Load test): only the report, on white paper. */
+.print-only { display: none; }
+@media print {
+  :root, :root[data-theme="dark"] { --bg: #fff; --surface: #fff; --panel: #fff; --ink: #000; --muted: #333; --line: #999; color-scheme: light; }
+  body { background: #fff; color: #000; font-size: 11pt; }
+  .top, .statusbar, .view-as, .help-button, .help-panel, .toolbar, .graph-tools, .views, .defs-switch, .graph-readout, main > .row button { display: none !important; }
+  .print-only { display: block; }
+  .print-head p { margin: 0 0 4px; }
+  .page { padding: 0; }
+  .graph-svg { max-height: none; }
+  .panel, .graph-card { break-inside: avoid; border-color: #999; }
+  .panel summary { list-style: none; }
+}
