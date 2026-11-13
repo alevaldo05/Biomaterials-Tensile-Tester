@@ -209,3 +209,14 @@ describe('control borders', () => {
     }
   });
 });
+
+describe('status page', () => {
+  it('names only files and folders that exist', () => {
+    const text = readFileSync(path.join(ROOT, 'docs/app/FEATURE-STATUS.md'), 'utf8');
+    const named = [...text.matchAll(/`([^`\s]+)`/g)].map((m) => m[1] as string)
+      .filter((t) => /\//.test(t) && !/[*<>{}$|]|\.\.\.|^https?:|^npm |^\/api|^api\//.test(t) && /(\.[a-z0-9]{1,5}|\/)$/i.test(t));
+    expect(named.length).toBeGreaterThan(5);
+    const missing = named.filter((t) => !existsSync(path.join(ROOT, t)) && !existsSync(path.join(ROOT, 'docs/app', t)));
+    expect(missing).toEqual([]);
+  });
+});
