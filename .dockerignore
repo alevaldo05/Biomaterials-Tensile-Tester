@@ -10,3 +10,4 @@ firmware/**/.pio
 firmware/**/.host-build
 deploy/.env
 deploy/backups
+deploy/certs

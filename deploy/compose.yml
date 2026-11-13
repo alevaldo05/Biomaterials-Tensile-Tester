@@ -1,5 +1,5 @@
 # The whole system on one computer: docker compose --env-file .env up -d   (run in this folder; see docs/app/CONTAINERS.md)
-# Five services, each its own image and version. Any one can be rebuilt or replaced while the others keep running:
+# Six services, each its own image and version. Any one can be rebuilt or replaced while the others keep running:
 #   docker compose up -d --no-deps --build api
 # Nothing here talks to the tensile tester: USB stays in the browser on the computer the tester is plugged into.
 name: tensile
@@ -8,7 +8,11 @@ services:
   gateway:
     build: { context: .., dockerfile: deploy/gateway/Dockerfile, args: { VERSION: "${GATEWAY_VERSION:-local}" } }
     image: ${IMAGE_PREFIX:-tensile}/gateway:${GATEWAY_VERSION:-local}
-    ports: ["${BIND_ADDRESS:-127.0.0.1}:${HTTP_PORT:-8080}:80"]
+    ports:
+      - "${BIND_ADDRESS:-127.0.0.1}:${HTTP_PORT:-8080}:80"
+      # HTTPS answers only when deploy/certs/cert.pem and key.pem exist (make-cert.sh); otherwise nothing listens here.
+      - "${BIND_ADDRESS:-127.0.0.1}:${HTTPS_PORT:-8443}:443"
+    volumes: ["./certs:/etc/nginx/certs:ro"]
     restart: unless-stopped
 
   web:
@@ -45,6 +49,21 @@ services:
       timeout: 5s
       retries: 5
     restart: unless-stopped
+
+  backup:
+    # Saves the database on a schedule into deploy/backups (see backup/loop.sh). Same image as db, nothing extra to download.
+    image: postgres:${POSTGRES_VERSION:-16-alpine}
+    entrypoint: ["sh", "/loop.sh"]
+    environment:
+      PGPASSWORD: ${POSTGRES_PASSWORD:?Set POSTGRES_PASSWORD in .env}
+      BACKUP_INTERVAL_HOURS: ${BACKUP_INTERVAL_HOURS:-24}
+      BACKUP_KEEP: ${BACKUP_KEEP:-14}
+      BACKUP_FIRST_DELAY_SECONDS: ${BACKUP_FIRST_DELAY_SECONDS:-300}
+    volumes:
+      - "./backup/loop.sh:/loop.sh:ro"
+      - "./backups:/backups"
+    restart: unless-stopped
+    # No depends_on: if the database is not up yet the backup is logged as failed and tried again at the next interval.
 
 volumes:
   # The saved tests, people, profiles, and calibrations. Removing the containers keeps it; "down -v" deletes it.
