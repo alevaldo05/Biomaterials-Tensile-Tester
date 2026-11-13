@@ -77,6 +77,8 @@ A sample line is about 110 characters. At the default 128 conversions per second
 5. Without calibration you can still record voltages only (tick "Record voltages only"); such a session never shows force, stress, or strain.
 6. Enter the specimen and dimensions, press **Start recording**, then start the test on the tester's own controller.
 
+A step-by-step wiring sheet for a first bench test (ESP32, ADS1115, a potentiometer as the voltage source, the tester not connected) is in [BREADBOARD-TEST.md](BREADBOARD-TEST.md).
+
 ## First connection: bench record
 
 Use this sheet the first time a board is connected to the app. **The tester stays disconnected.** Use a bench voltage source (a lab supply or a battery with a divider that someone has reviewed) kept inside the ADS1115's allowed input range for your supply, and read it with a reference meter. This sheet does not say what voltages, pins, or circuits are right; those come from the reviewed interface design. It records what happened, so nothing is assumed.
