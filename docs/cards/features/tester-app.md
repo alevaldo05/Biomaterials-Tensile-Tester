@@ -70,7 +70,7 @@ The React and TypeScript app for running tests, the packages it shares with the 
 - [graph-engine](graph-engine.md), [downloads](downloads.md), [calibration](calibration.md), [compare](compare.md) (the scripts the reference tests run)
 
 ## How to check
-- `bash firmware/esp32-ads1115/test/host/build-and-test.sh` (needs a C++ compiler); `pio run -e esp32dev` in `firmware/esp32-ads1115` (needs PlatformIO and its download hosts)
+- `bash firmware/esp32-ads1115/test/host/build-and-test.sh` (needs a C++ compiler); `pio run -e esp32dev` in `firmware/esp32-ads1115` (needs PlatformIO and its download hosts); the `firmware-build` job in `.github/workflows/app.yml` runs it on GitHub (compile only)
 - `npm run app:build`, then open each screen in Chrome at 1366, 1280, 1024, 768, and 390 px, light and dark; recording, recovery, and Load test are covered by `apps/tester/test/` with a stand-in device
 - `npm install` once, then `npm test` and `npm run typecheck`
 - `node scripts/check-site.js`
