@@ -40,7 +40,7 @@ export function csvFileBase(rec: Pick<TestRecord, 'source'>, ctx: Pick<CsvContex
 /** One CSV cell: text that Excel could read as a formula gets a leading apostrophe; separators and quotes are quoted. */
 export function csvCell(v: unknown): string {
   let s = v === null || v === undefined || (typeof v === 'number' && !Number.isFinite(v)) ? '' : String(v);
-  if (/^[=+\-@]/.test(s) && !/^-?\d/.test(s)) s = "'" + s;
+  if (/^[=+\-@]/.test(s) && !/^-?\d+(\.\d+)?([eE][+-]?\d+)?$/.test(s)) s = "'" + s;
   if (/[",;\r\n]/.test(s)) s = '"' + s.replace(/"/g, '""') + '"';
   return s;
 }

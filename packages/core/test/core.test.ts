@@ -6,7 +6,7 @@ import { csvVariants, SPEC, STARTED, syntheticRelaxation, syntheticUniaxial } fr
 import { loadLegacy } from '../reference/legacy.mjs';
 import {
   buildTestCsv, clone, csvFileBase, csvMetaRows, dataChecks, dimSourceText, holdStartText, initSample, keyNumbers, keyPoints,
-  loadingFit, modulusFitText, niceTicks, offsetYield, recompute, recordFromCsv, regionsFor, skippedRowsText, sig, sourceTag,
+  loadingFit, modulusFitText, niceTicks, offsetYield, recompute, csvCell, recordFromCsv, regionsFor, skippedRowsText, sig, sourceTag,
 } from '../src/index';
 import type { CsvContext, DimSource, TestParams, TestRecord, TestType } from '../src/index';
 
@@ -126,6 +126,15 @@ describe('rows the CSV reader leaves out', () => {
   it('says "row" for exactly one', () => {
     const one = recordFromCsv('o.csv', head + rows(20) + '\n9,xyz\n', 'uniaxial', { defaults });
     expect(skippedRowsText(one)).toBe('1 row of the file could not be read as numbers and was left out.');
+  });
+});
+
+describe('csvCell formula guard', () => {
+  it('writes plain numbers as they are and puts an apostrophe before anything that could be a formula', () => {
+    for (const n of ['0', '12', '-3', '-0.25', '1.5e-7', '-2E+5']) expect(csvCell(n)).toBe(n);
+    for (const bad of ['=1+1', '+SUM(A1)', '@A1', '-2+cmd|\' /C calc\'!A0', '-1 MPa', '-1.5.2', '-', '=-3']) expect(csvCell(bad)).toBe(bad.includes(',') || bad.includes('"') ? '"\'' + bad.replace(/"/g, '""') + '"' : "'" + bad);
+    expect(csvCell(-3.5)).toBe('-3.5');
+    expect(csvCell('plain text')).toBe('plain text');
   });
 });
 

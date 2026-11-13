@@ -83,7 +83,7 @@ type CellValue = string | number | null | undefined;
 
 function cell(v: CellValue): string {
   let s = v === null || v === undefined || (typeof v === 'number' && !isFinite(v)) ? '' : String(v);
-  if (/^[=+\-@]/.test(s) && !/^-?\d/.test(s)) s = "'" + s; /* keep Excel from treating text as a formula */
+  if (/^[=+\-@]/.test(s) && !/^-?\d+(\.\d+)?([eE][+-]?\d+)?$/.test(s)) s = "'" + s; /* keep Excel from treating text as a formula */
   if (/[",;\r\n]/.test(s)) s = '"' + s.replace(/"/g, '""') + '"';
   return s;
 }
