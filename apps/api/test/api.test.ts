@@ -248,6 +248,16 @@ describe.skipIf(!PG_BIN)('API against a real PostgreSQL', () => {
       expect((await call(app, 'POST', '/auth/login', null, { username: u.username, password: PW })).statusCode).toBe(200);   /* unchanged */
     });
 
+    it('refuses a new password equal to the current one, and keeps the must-change flag', async () => {
+      const u = await mkUser(uname('temp'), 'user', { must: true });
+      const cookie = await login(app, u.username);
+      const same = await call(app, 'POST', '/auth/password', cookie, { current: PW, next: PW });
+      expect(same.statusCode).toBe(400);
+      expect(same.json().error.code).toBe('weak_password');
+      expect((await db.query('select must_change_password from users where id = $1', [u.id])).rows[0].must_change_password).toBe(true);
+      expect((await call(app, 'POST', '/auth/password', cookie, { current: PW, next: 'a different password' })).statusCode).toBe(200);
+    });
+
     it('accepts exactly 10 characters', async () => {
       const u = await mkSignedIn();
       expect((await call(app, 'POST', '/auth/password', u.cookie, { current: PW, next: '1234567890' })).statusCode).toBe(200);

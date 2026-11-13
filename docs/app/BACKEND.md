@@ -59,6 +59,7 @@ All under `/api/v1`, JSON. Changes (POST, PATCH) must carry the header `x-tensil
 ### Limits and refusals when saving
 - Saving a test: at most 30 saves a minute for each person (429, `too_many_saves`); the same file saved twice by the same person answers 409 (`duplicate`, with the number of the saved test); arrival times must fall between the years 2000 and 2100 (400).
 - A cookie that cannot be decoded counts as signed out (401), not as a server error.
+- A new password must differ from the current one, so a temporary password has to be replaced (400, `weak_password`).
 - Signing in also clears sign-ins that have run out. Sign-in attempts keep their own limit.
 - These counters are kept in the API's memory, so they reset when it restarts and are per copy of the API.
 
