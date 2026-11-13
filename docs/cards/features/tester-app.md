@@ -9,6 +9,7 @@ The React and TypeScript app for running tests, the packages it shares with the 
 - `docs/app/ARCHITECTURE.md`
 - `docs/app/FEATURE-STATUS.md` (what is implemented, simulated, untested, unsupported; update it with every stage)
 - `packages/ui/` and `apps/tester/`: the graph and screen pieces, and the app itself (controller, screen, exports, lab and learning editions)
+- `docs/app/BACKEND.md`; `apps/api/` (back end and database migrations); `apps/tester/src/Shell.tsx`, `lab-api.ts`, `pages/` (sign-in, History, Admin, View as user)
 - `docs/app/SETUP.md`, `docs/app/GUIDE-pico.md`, `docs/app/GUIDE-raspberry-pi-service.md`
 - `firmware/esp32-ads1115/`: reference ESP32 + ADS1115 firmware; board facts only in `include/board_config.h`; `test/host/` runs its portable code on a computer
 - `docs/app/PROTOCOL.md` (the acquisition protocol; the code in `packages/protocol/` is the reference)
@@ -32,6 +33,9 @@ The React and TypeScript app for running tests, the packages it shares with the 
 - Graph, calculation, and recording code never import a device adapter, a transport, or the wire protocol (a test checks this)
 - A calibration is used only when its whole signal path matches; without one, values stay in volts and no stress or strain is calculated
 - Board pins, the I2C address, and channel wiring live only in the firmware's `board_config.h`, all marked as examples; the firmware sends raw counts only and understands only the six acquisition requests
+- Recording never depends on the back end; the website never needs it
+- Roles are checked on the server; View as user changes only the screen
+- Calibrations are stored only for real equipment, are never overwritten, and are used only once approved; migrations only add
 - The serial speed is 921600 in both `board_config.h` and `apps/tester/src/real.ts`
 - The USB serial transport is untested with real hardware, and the docs say so until it has been tried
 - The saved reference numbers change only when a website calculation is changed on purpose (`npm run reference:update`)

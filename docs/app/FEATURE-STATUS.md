@@ -14,6 +14,12 @@ Updated with each stage. "Checked" means tried in Chrome's engine (Chromium on L
 - Light and dark theme. Laptop, tablet, and phone widths (1366, 1280, 1024, 768, 390 px) without sideways scrolling.
 - Learning edition build: simulation and replay only; the USB serial and machine-control code are not in its files.
 
+## Back end and database
+
+- Implemented and tested against a real PostgreSQL 16: sign-in with argon2id passwords, admin and user roles enforced on the server, saved tests with their full session files, device profiles, calibrations (draft, approved, retired; real equipment only; never overwritten), and a record of changes. See [BACKEND.md](BACKEND.md).
+- In the app (lab edition only): Sign in, History (own tests; admins see everyone's), Save to lab database, loading a profile and its approved calibrations in the Calibration step, an Admin page, and View as user.
+- Not yet run in containers or on the lab computer. No HTTPS set up. No scheduled backups.
+
 ## Reference firmware (ESP32 + ADS1115)
 
 - Implemented: `firmware/esp32-ads1115/`. Protocol v1, the six acquisition requests, ADS1115 single-shot conversions one channel after another, raw counts with a microsecond timestamp each, a new boot id per start and a new settings reference per change, lost-sample counting, achieved rate, ADC faults.
@@ -33,7 +39,6 @@ Updated with each stage. "Checked" means tried in Chrome's engine (Chromium on L
 ## Not built yet
 
 - Pico firmware and a Raspberry Pi service (guides only: [GUIDE-pico.md](GUIDE-pico.md), [GUIDE-raspberry-pi-service.md](GUIDE-raspberry-pi-service.md)).
-- Back end, database, login, admin and user views, saved history, calibration records kept in the database.
 - Containers.
 - Electron desktop version; a network connection to a Raspberry Pi.
 - Printable report, comparison of several files, and tangent line and region guides on the graph (the website has these).

@@ -1,6 +1,6 @@
 import { StrictMode } from 'react';
 import { createRoot } from 'react-dom/client';
-import { App } from './App';
+import { Shell } from './Shell';
 import { TestController } from './controller';
 import type { Edition } from './controller';
 import './app.css';
@@ -17,6 +17,6 @@ async function start() {
     serialAvailable = real.usbSerialAvailable();
   }
   const controller = new TestController({ edition: __EDITION__, ...(openReal ? { openReal } : {}) });
-  createRoot(document.getElementById('root') as HTMLElement).render(<StrictMode><App controller={controller} serialAvailable={serialAvailable} /></StrictMode>);
+  createRoot(document.getElementById('root') as HTMLElement).render(<StrictMode><Shell controller={controller} serialAvailable={serialAvailable} /></StrictMode>);
 }
 void start();
