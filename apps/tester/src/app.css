@@ -278,3 +278,14 @@ input[type="password"] { width: 100%; background: var(--panel); border: 1px soli
   body.printing-check .check-screen { display: none !important; }
   body.printing-check .check-section .check-actions, body.printing-check .check-section .print-only + .hint { display: none !important; }
 }
+
+/* Skip link: hidden until it gets keyboard focus. */
+.skip-link { position: absolute; left: 8px; top: -60px; z-index: 100; padding: 8px 12px; background: var(--surface, #fff); color: var(--ink, #000); border: 2px solid currentColor; border-radius: 6px; }
+.skip-link:focus { top: 8px; }
+/* The main part of a screen takes focus when the screen changes; no outline box around the whole screen. */
+#main-content:focus { outline: none; }
+
+/* People who ask their system for less motion get no animation or smooth scrolling anywhere. */
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after { animation-duration: 0.01ms !important; animation-iteration-count: 1 !important; transition-duration: 0.01ms !important; scroll-behavior: auto !important; }
+}

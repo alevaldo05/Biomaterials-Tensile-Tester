@@ -27,6 +27,16 @@ import { Methods } from './pages/Methods';
 import { Settings } from './pages/Settings';
 
 type Page = 'home' | 'test' | 'load' | 'methods' | 'device' | 'history' | 'help' | 'settings' | 'admin';
+export const PAGE_TITLES: Record<Page, string> = { home: 'Home', test: 'Test', load: 'Load test', methods: 'Test methods', device: 'Device and calibration',
+  history: 'History', help: 'Help', settings: 'Settings', admin: 'Admin' };
+
+/** Moves keyboard focus to the main part of the current screen (every screen has one with id main-content). */
+export function focusMain(): void {
+  const m = document.getElementById('main-content');
+  if (!m) return;
+  if (!m.hasAttribute('tabindex')) m.setAttribute('tabindex', '-1');
+  m.focus({ preventScroll: false });
+}
 
 function Dialog(p: { open: boolean; title: string; onClose?: () => void; children: React.ReactNode }) {
   const ref = useRef<HTMLDialogElement | null>(null);
@@ -137,6 +147,17 @@ export function Shell({ controller: c, serialAvailable, journal, methods }: Shel
     async (id) => ({ name: 'test-' + id + '.session.json', text: await api.sessionFileText(id) }));
   const go = (d: Destination | Page) => setPage(d);
 
+  /* When the screen changes: name it in the tab title and move focus to it, so a keyboard or screen-reader user
+     lands on the new screen instead of staying on the menu button they pressed. Not on first load. The test screen
+     sets its own title (it also shows Recording / Stopped). */
+  const shownPage = useRef(page);
+  useEffect(() => {
+    if (shownPage.current === page) return;   /* nothing changed (also on first load, even when React runs the effect twice) */
+    shownPage.current = page;
+    if (page !== 'test') document.title = PAGE_TITLES[page] + ' · Biomaterials Tensile Tester';
+    focusMain();
+  }, [page]);
+
   const signOut = () => { void api.logout().catch(() => undefined); setUser(null); setViewAsUser(false); setDialog(null); if (page === 'history' || page === 'admin') setPage('home'); };
   const nav = (id: Page, label: string) => (
     <button type="button" className={'nav' + (page === id ? ' nav-on' : '')} aria-current={page === id ? 'page' : undefined} disabled={recording && id !== 'test' && id !== 'help'} onClick={() => setPage(id)}>{label}</button>
@@ -145,6 +166,7 @@ export function Shell({ controller: c, serialAvailable, journal, methods }: Shel
 
   return (
     <div className="app">
+      <a className="skip-link" href="#main-content" onClick={(e) => { e.preventDefault(); focusMain(); }}>Skip to main content</a>
       <header className="top">
         <span className="brand">Biomaterials Tensile Tester</span>
         <nav className="navs" aria-label="Main">

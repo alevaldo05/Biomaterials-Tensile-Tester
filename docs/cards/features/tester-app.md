@@ -28,6 +28,7 @@ The React and TypeScript app for running tests, the packages it shares with the 
 ## What the user sees
 - On the website: New Test says "Download not yet available" until the owner publishes a Windows release
 - In the app (`npm run app`): menu Home · Test · History (signed in) · Device · Help · Settings (· Admin for admins), and a status bar with six separate indicators (Device, Data, Calibration, Recording, Local storage, Lab server), never one "Ready"
+- Keyboard: the first Tab stop is a "Skip to main content" link; changing screens sets the tab title (for example "Help · Biomaterials Tensile Tester") and moves focus to the screen's main part; below 1100 px the closed Setup drawer cannot be reached with Tab and Esc closes the open one (it sends nothing to any device); with reduced motion set on the computer, animation and smooth scrolling are off everywhere. Tried with Tab in Chromium at 1366 and 768 px only.
 - Home ("Split with tiles"): a New test tile, then Load test, Test methods, Recent tests, Device and calibration, Reports and exports; on the right, interrupted recordings to recover (Open it, Download, Mark as handled) and Recent tests (this computer and the lab server)
 - Print report (Draft, white paper, nothing saved) is in Save data after a test, on Load test, and on Compare tests
 - After a test: Show regions and Tangent line at cursor under the graph (display only; the tangent's slope is fitted over nearby points)
