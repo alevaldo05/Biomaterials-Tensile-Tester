@@ -4,6 +4,7 @@ import crypto from 'node:crypto';
 import type { FastifyInstance } from 'fastify';
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 import { parseSetupFile } from '../../tester/src/controller';
+import { measuredSetup, move, ready, rig } from '../../tester/test/helpers';
 import { buildApp } from '../src/app';
 import { hashPassword, LoginLimiter } from '../src/auth';
 import type { Config } from '../src/config';
@@ -581,6 +582,26 @@ describe.skipIf(!PG_BIN)('API against a real PostgreSQL', () => {
         deviceId: 'sim-01', deviceType: 'esp32', deviceSoftware: 'sim-1.0.0', appVersion: '0.1.0', sampleCount: 10, notes: 'first run', summary: { peakForce_N: 12.5, uts_MPa: null },
       });
       expect(Math.abs(Date.parse(list[0]?.startedAt as string) - (T0 + 30))).toBeLessThan(2);   /* arrival time of the first sample line */
+    });
+
+    it('saves a session file made by the app\'s own controller, unchanged', async () => {
+      /* the recording is a test stand-in from the test simulator, not data from a real tester */
+      const { dev, c } = rig();
+      ready(c);
+      await c.connect();
+      c.useSetup(measuredSetup(c));
+      await c.startRecording();
+      move(dev, c);
+      dev.step(2400);
+      c.stopRecording();
+      const file = c.sessionFile()!;
+      const u = await mkSignedIn();
+      const r = await upload(u.cookie, file);
+      expect(r.statusCode).toBe(201);
+      const back = await call(app, 'GET', '/test-sessions/' + r.json().id + '/file', u.cookie);
+      expect(back.statusCode).toBe(200);
+      expect(sha(back.rawPayload)).toBe(r.json().sha256);
+      expect(JSON.parse(back.body).lines).toEqual(file.lines);
     });
 
     it('refuses simulated data and keeps nothing', async () => {
