@@ -101,6 +101,7 @@ Every page except `404.html` starts with a "Skip to main content" link (`.skip-l
 | `docs/REPO-SETTINGS.md` | Checklist of repository settings only the owner can change on GitHub. |
 | `.github/workflows/deploy.yml` | The workflow that publishes the site when `main` changes. Not part of the published site. |
 | `docs/app/FEATURE-STATUS.md` | What in the tester app is implemented, simulated, untested, not built, and unsupported. |
+| `docs/app/BACKEND.md` | The back end: what the database stores, roles, the API, settings, running it, moving it to the lab computer. |
 | `docs/app/SETUP.md` | From the board to a recorded test: what is not yet verified, electrical restrictions, where pins, drivers, settings, and calibration are configured, building the firmware, and what the app's messages mean. |
 | `docs/app/GUIDE-pico.md`, `docs/app/GUIDE-raspberry-pi-service.md` | How a Raspberry Pi Pico or a Raspberry Pi service would speak the same protocol (planned; nothing built). |
 | `docs/app/PROTOCOL.md` | The acquisition protocol (the project's own; not a manufacturer protocol): messages, requests, and what the app does when data is bad. |
@@ -126,6 +127,8 @@ Every page except `404.html` starts with a "Skip to main content" link (`.skip-l
 | `packages/recording/` | The recorder, the conversion from ADC counts to physical values, calibration compatibility, and the acceptance tests (`test/acceptance.test.ts`). |
 | `packages/ui/` | Shared React pieces: the graph (`src/Graph.tsx`, with its arithmetic in `src/graph-math.ts`), the measurement strip, status bar, panels, and form fields. |
 | `apps/tester/` | The app. `src/controller.ts` wires a source to the recorder; `src/App.tsx` is the screen; `src/exports.ts` builds the saved files; `src/real.ts` is the only file that reaches for hardware (lab edition only); `src/app.css` holds the look (the website's green light and dark colors). Run with `npm run app`, build with `npm run app:build`. |
+| `apps/api/` | The back end (Fastify, PostgreSQL). `src/app.ts` holds every route; `src/auth.ts` passwords and sign-in; `src/schemas.ts` the checks on what browsers send; `src/db.ts` the connection and migrations; `migrations/` the numbered database changes; `src/server.ts` starts it; `src/cli.ts` creates the first admin. `test/` runs it against a throwaway PostgreSQL. |
+| `apps/tester/src/Shell.tsx`, `lab-api.ts`, `pages/` | The app's header, sign-in, and page switching; its client for the back end; the History and Admin pages. |
 | `tsconfig.web.json` | TypeScript settings for the parts that run in a browser page. |
 | `firmware/esp32-ads1115/` | Reference acquisition firmware for an ESP32 with an ADS1115 (PlatformIO). `include/board_config.h` is the only file with pins, the I2C address, and channel wiring (all example values); `src/ads1115_driver.*` holds the ADS1115 register work; `src/protocol.*` and `src/acquisition_core.*` are plain C++ with no Arduino calls; `src/main.cpp` connects them to the board. `test/host/` builds the portable code for a computer with a pretend ADS1115 and runs its unit tests (`build-and-test.sh`). |
 | `packages/`, `apps/`, `firmware/`, `deploy/` | The app, its packages, the back end, device-side software, and container files. `scripts/check-site.js` and `scripts/build-site.sh` leave them alone and out of the published site. |

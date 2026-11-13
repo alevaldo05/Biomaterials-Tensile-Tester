@@ -10,6 +10,8 @@
     "packages/machine-control/src",
     "packages/machine-control/test",
     "packages/recording/src",
-    "packages/recording/test"
+    "packages/recording/test",
+    "apps/api/src",
+    "apps/api/test"
   ]
 }

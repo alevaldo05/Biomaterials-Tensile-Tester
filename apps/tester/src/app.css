@@ -43,7 +43,17 @@ input[type="text"], select, input[type="file"] { width: 100%; background: var(--
 .badge { background: var(--accent); color: var(--accent-ink); border-radius: 999px; padding: 1px 10px; font-size: 0.78rem; font-weight: 650; letter-spacing: 0.02em; }
 .badge-soft { background: none; color: var(--muted); border: 1px solid var(--line); }
 .top-space { flex: 1; }
+.navs { display: flex; gap: 2px; margin-left: 10px; }
+.nav { border-color: transparent; background: none; padding: 5px 12px; min-height: 32px; }
+.nav-on { background: var(--panel); border-color: var(--line); font-weight: 650; }
+.account { display: inline-flex; flex-wrap: wrap; align-items: center; gap: 4px 8px; }
+.who { display: inline-flex; align-items: center; gap: 6px; font-weight: 600; }
+.view-as { margin: 0; padding: 8px 20px; background: var(--surface); border-bottom: 1px solid var(--line); color: var(--warn); font-size: 0.9rem; }
+.page { padding: 16px 20px 28px; display: grid; gap: var(--gap); align-content: start; min-width: 0; }
+.form { display: grid; gap: var(--gap); min-width: min(22rem, calc(100vw - 80px)); }
+input[type="password"] { width: 100%; background: var(--panel); border: 1px solid var(--line); border-radius: 6px; padding: 7px 9px; min-height: 36px; }
 
+.test-page { flex: 1; display: flex; flex-direction: column; }
 .body { flex: 1; display: grid; grid-template-columns: 320px minmax(0, 1fr); align-items: stretch; }
 .setup { background: var(--surface); border-right: 1px solid var(--line); padding: 16px; display: flex; flex-direction: column; gap: var(--gap); }
 .setup-head { display: flex; justify-content: space-between; align-items: center; }

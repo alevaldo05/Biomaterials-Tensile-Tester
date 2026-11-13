@@ -17,5 +17,7 @@ export default defineConfig(({ mode }) => ({
   plugins: [react(), csp()],
   define: { __EDITION__: JSON.stringify(mode === 'learning' ? 'learning' : 'lab') },
   build: { outDir: mode === 'learning' ? 'dist-learning' : 'dist', sourcemap: false },
-  server: { port: 5173, strictPort: false },
+  /* In development the API runs on its own port; the app reaches it at the same /api address it uses behind the gateway. */
+  server: { port: 5173, strictPort: false, proxy: { '/api': process.env.API_URL || 'http://localhost:3000' } },
+  preview: { proxy: { '/api': process.env.API_URL || 'http://localhost:3000' } },
 }));

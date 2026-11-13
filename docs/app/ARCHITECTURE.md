@@ -73,7 +73,9 @@ Rules that hold everywhere:
 | Pico firmware, Raspberry Pi service | Planned; guides only |
 | Electron, a network transport to a Raspberry Pi | Planned |
 | `packages/ui` and `apps/tester`: the app screen, graph, exports, lab and learning editions | Implemented; details in [FEATURE-STATUS](FEATURE-STATUS.md) |
-| Back end, database, containers | Planned |
+| `apps/api`: back end and PostgreSQL database, sign-in, admin and user roles, saved tests, device profiles, calibrations, record of changes | Implemented; tested against a real PostgreSQL ([BACKEND](BACKEND.md)) |
+| Signing in, History, Admin, and View as user in the app | Implemented |
+| Containers | Planned |
 
 Two things `packages/core` does differently from the website on purpose (the website pages are unchanged):
 
