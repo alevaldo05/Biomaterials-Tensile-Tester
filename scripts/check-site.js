@@ -13,6 +13,11 @@ var cp = require('child_process');
 
 var ROOT = path.resolve(__dirname, '..');
 var SKIP_DIRS = { '.git': 1, '_site': 1, 'node_modules': 1 };
+/* The tester app, its shared packages, the back end, the controller code, and the container files are not part of the
+   published website. They have their own checks (npm test), so these checks leave them alone, together with the
+   workspace files at the top of the project. scripts/build-site.sh leaves the same names out of the published folder. */
+var APP_DIRS = { 'packages': 1, 'apps': 1, 'firmware': 1, 'deploy': 1 };
+var APP_FILES = /^(package(-lock)?\.json|tsconfig(\.[a-z]+)?\.json|vitest\.config\.mjs)$/;
 var failures = 0;
 
 function begin(name) { console.log('\n' + name); }
@@ -23,6 +28,7 @@ function note(msg) { console.log('  note  ' + msg); }
 function walk(dir, rel, out) {
   fs.readdirSync(dir, { withFileTypes: true }).forEach(function (e) {
     if (SKIP_DIRS[e.name]) return;
+    if (!rel && (e.isDirectory() ? APP_DIRS[e.name] : APP_FILES.test(e.name))) return;
     var r = rel ? rel + '/' + e.name : e.name;
     if (e.isDirectory()) walk(path.join(dir, e.name), r, out);
     else if (e.isFile()) out.push(r);

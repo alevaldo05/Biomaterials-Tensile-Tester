@@ -11,10 +11,14 @@ short="${sha:0:7}"
 rm -rf "$out"
 mkdir -p "$out"
 
-# Copy the site, leaving out Git files, the workflow, scripts, and documents (*.md and docs/).
+# Copy the site, leaving out Git files, the workflow, scripts, and documents (*.md and docs/),
+# and the tester app's folders and workspace files (the same names scripts/check-site.js leaves alone).
 tar -cf - \
   --exclude='./.git' --exclude='./.github' --exclude='./scripts' --exclude='./docs' \
   --exclude='*.md' --exclude='./_site' --exclude='./.gitignore' \
+  --exclude='./node_modules' --exclude='./packages' --exclude='./apps' --exclude='./firmware' --exclude='./deploy' \
+  --exclude='./package.json' --exclude='./package-lock.json' --exclude='./tsconfig.json' --exclude='./tsconfig.*.json' \
+  --exclude='./vitest.config.mjs' \
   . | tar -xf - -C "$out"
 
 # Add ?v=<commit> to local .css and .js links so browsers fetch new files after each deploy.
