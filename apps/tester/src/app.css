@@ -1,7 +1,7 @@
 /* The app's look. Colors are the website's own (green light and green dark in styles.css), so the two feel like one
    product; the layout is one quiet instrument screen. */
 :root {
-  --bg: #f6f2e9; --surface: #fbf8f1; --ink: #1f2a24; --muted: #4a5a50; --line: #d6d2c4;
+  --bg: #f6f2e9; --surface: #fbf8f1; --ink: #1f2a24; --muted: #4a5a50; --line: #d6d2c4; --control-line: #6b7a70;
   --accent: #3f6b52; --accent-ink: #ffffff; --accent-hover: #335841; --link: #2f5a43; --mark: #b45309;
   --focus: #1f4d36; --danger: #9a3a3a; --danger-ink: #ffffff;
   --panel: #ffffff; --ok: #2f6b45; --warn: #8a5a00; --live: #a3321f;
@@ -10,7 +10,7 @@
   color-scheme: light;
 }
 :root[data-theme="dark"] {
-  --bg: #1b2420; --surface: #222d28; --ink: #e8efe9; --muted: #b0bfb5; --line: #36443d;
+  --bg: #1b2420; --surface: #222d28; --ink: #e8efe9; --muted: #b0bfb5; --line: #36443d; --control-line: #7a8c81;
   --accent: #7fb08f; --accent-ink: #14201a; --accent-hover: #93c0a1; --link: #94c6a5; --mark: #f0a24b;
   --focus: #b6dcc2; --danger: #f0a3a3; --danger-ink: #2a1414;
   --panel: #1f2925; --ok: #8fd0a4; --warn: #f0c36b; --live: #ff9d8a;
@@ -23,7 +23,7 @@ h2, h3 { margin: 0; font-size: 1rem; font-weight: 650; }
 p { margin: 0 0 var(--gap); }
 a { color: var(--link); }
 button, input, select { font: inherit; color: inherit; }
-button { background: var(--panel); border: 1px solid var(--line); border-radius: 6px; padding: 7px 14px; cursor: pointer; min-height: 36px; }
+button { background: var(--panel); border: 1px solid var(--control-line); border-radius: 6px; padding: 7px 14px; cursor: pointer; min-height: 36px; }
 button:hover:not(:disabled) { border-color: var(--accent); }
 button:disabled { opacity: 0.5; cursor: not-allowed; }
 button.primary { background: var(--accent); color: var(--accent-ink); border-color: var(--accent); font-weight: 600; }
@@ -31,7 +31,7 @@ button.primary:hover:not(:disabled) { background: var(--accent-hover); }
 button.quiet, button.link { background: none; border-color: transparent; padding: 4px 8px; min-height: 0; }
 button.link { color: var(--link); text-decoration: underline; padding: 0; }
 :focus-visible { outline: 3px solid var(--focus); outline-offset: 2px; }
-input[type="text"], select, input[type="file"], textarea { width: 100%; background: var(--panel); border: 1px solid var(--line); border-radius: 6px; padding: 7px 9px; min-height: 36px; }
+input[type="text"], select, input[type="file"], textarea { width: 100%; background: var(--panel); border: 1px solid var(--control-line); border-radius: 6px; padding: 7px 9px; min-height: 36px; }
 .hint { color: var(--muted); font-size: 0.87rem; }
 .error { color: var(--danger); font-size: 0.9rem; }
 .num, .strip-value { font-variant-numeric: tabular-nums; }
@@ -51,7 +51,7 @@ input[type="text"], select, input[type="file"], textarea { width: 100%; backgrou
 .view-as { margin: 0; padding: 8px 20px; background: var(--surface); border-bottom: 1px solid var(--line); color: var(--warn); font-size: 0.9rem; }
 .page { padding: 16px 20px 28px; display: grid; gap: var(--gap); align-content: start; min-width: 0; }
 .form { display: grid; gap: var(--gap); min-width: min(22rem, calc(100vw - 80px)); }
-input[type="password"] { width: 100%; background: var(--panel); border: 1px solid var(--line); border-radius: 6px; padding: 7px 9px; min-height: 36px; }
+input[type="password"] { width: 100%; background: var(--panel); border: 1px solid var(--control-line); border-radius: 6px; padding: 7px 9px; min-height: 36px; }
 
 .test-page { flex: 1; display: flex; flex-direction: column; }
 .body { flex: 1; display: grid; grid-template-columns: 320px minmax(0, 1fr); align-items: stretch; }
@@ -232,9 +232,9 @@ input[type="password"] { width: 100%; background: var(--panel); border: 1px soli
 }
 
 /* Load test: one test or a comparison */
-.seg { display: inline-flex; border: 1px solid var(--line); border-radius: 8px; overflow: hidden; width: fit-content; }
+.seg { display: inline-flex; border: 1px solid var(--control-line); border-radius: 8px; overflow: hidden; width: fit-content; }
 .seg button { border: 0; border-radius: 0; background: var(--panel); }
-.seg button + button { border-left: 1px solid var(--line); }
+.seg button + button { border-left: 1px solid var(--control-line); }
 .seg button[aria-pressed="true"] { background: var(--accent); color: var(--accent-ink); font-weight: 600; }
 .compare-add { gap: 10px; }
 .compare-warnings { margin: 0; padding-left: 1.6rem; border-left: 3px solid var(--warn); display: grid; gap: 4px; }

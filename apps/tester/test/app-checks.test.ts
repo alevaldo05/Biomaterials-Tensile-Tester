@@ -171,3 +171,25 @@ describe('keyboard and focus (source checks; the Tab walk-through was done in Ch
     expect(css).toMatch(/@media \(prefers-reduced-motion: reduce\) \{\s*\*, \*::before, \*::after \{[^}]*animation-duration: 0\.01ms !important[^}]*transition-duration: 0\.01ms !important/);
   });
 });
+
+describe('control borders', () => {
+  const css = readFileSync(path.join(here, '../src/app.css'), 'utf8');
+  const channel = (c: number) => { const v = c / 255; return v <= 0.03928 ? v / 12.92 : ((v + 0.055) / 1.055) ** 2.4; };
+  const lum = (hex: string) => { const n = parseInt(hex.slice(1), 16); return 0.2126 * channel((n >> 16) & 255) + 0.7152 * channel((n >> 8) & 255) + 0.0722 * channel(n & 255); };
+  const ratio = (a: string, b: string) => { const [hi, lo] = [lum(a), lum(b)].sort((x, y) => y - x) as [number, number]; return (hi + 0.05) / (lo + 0.05); };
+  const tokens = (block: string) => Object.fromEntries([...block.matchAll(/--([a-z-]+):\s*(#[0-9a-fA-F]{6})/g)].map((m) => [m[1], m[2]])) as Record<string, string>;
+  const light = tokens(css.slice(css.indexOf(':root {'), css.indexOf(':root[data-theme="dark"]')));
+  const dark = tokens(css.slice(css.indexOf(':root[data-theme="dark"]'), css.indexOf('* { box-sizing')));
+  it('draws the borders of buttons, boxes and dropdowns at least 3:1 against the page, surface, and panel in both themes', () => {
+    for (const [name, t] of [['light', light], ['dark', dark]] as const) {
+      expect(t['control-line'], name).toBeDefined();
+      for (const bg of ['bg', 'surface', 'panel'] as const) expect(ratio(t['control-line'] as string, t[bg] as string), name + ' vs ' + bg).toBeGreaterThanOrEqual(3);
+    }
+  });
+  it('uses that border on buttons, text boxes, selects, and the password box', () => {
+    for (const sel of ['button {', 'input[type="text"], select, input[type="file"], textarea {', 'input[type="password"] {']) {
+      const line = css.split('\n').find((l) => l.startsWith(sel)) ?? '';
+      expect(line, sel).toContain('border: 1px solid var(--control-line)');
+    }
+  });
+});
