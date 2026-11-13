@@ -115,7 +115,7 @@ Every page except `404.html` starts with a "Skip to main content" link (`.skip-l
 | `package.json`, `package-lock.json` | The workspace for the tester app and its packages, and the tools they use (TypeScript, Vitest). Run `npm install` once, then `npm test`. The website pages need none of it. |
 | `tsconfig.json`, `tsconfig.base.json`, `vitest.config.mjs` | Settings for TypeScript and the test runner. |
 | `.gitignore` | Keeps `node_modules/` and build output out of the repository. |
-| `packages/core/` | Shared calculations and file formats (the TypeScript port arrives in the next stage). `reference/` runs the website's own `graph-core.js`, `live-csv.js`, and the maths in `calibration.js` and `compare.js` on fixed inputs and compares the results with `reference/fixtures/reference.json`. |
+| `packages/core/` | Shared calculations and file formats in TypeScript (`src/`): key results, data checks, the CSV reader and writer, the Excel writer, the calibration fit, and comparison statistics, ported from the website's scripts. `test/` checks them against the website's results. `reference/` runs the website's own `graph-core.js`, `live-csv.js`, and the maths in `calibration.js` and `compare.js` on fixed inputs and compares the results with `reference/fixtures/reference.json` (and `xlsx-reference.json` for the Excel bytes). |
 | `packages/`, `apps/`, `firmware/`, `deploy/` | The app, its packages, the back end, device-side software, and container files. `scripts/check-site.js` and `scripts/build-site.sh` leave them alone and out of the published site. |
 
 ## To change…

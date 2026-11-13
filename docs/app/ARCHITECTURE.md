@@ -61,6 +61,12 @@ Rules that hold everywhere:
 |---|---|
 | Workspace, TypeScript, test runner | Implemented |
 | Reference tests of the website's calculations (`packages/core/reference`) | Implemented |
+| `packages/core`: stress, strain, modulus fit, offset yield, relaxation results, data checks, CSV reader and writer, Excel writer, calibration fit, comparison statistics | Implemented; every result is compared with the website's own scripts on the same inputs (CSV and Excel files byte for byte) |
 | Everything else in this file | Planned |
+
+Two things `packages/core` does differently from the website on purpose (the website pages are unchanged):
+
+- The comparison numbers can include the opt-in offset yield (`keyNumbers(..., { includeOffsetYield: true })`). On the website, Compare leaves it out.
+- A loaded CSV with no known material no longer turns the 0.2% yield on; only steel does. The website's rule is still available (`websiteYieldRule`).
 
 Not verified by anyone yet: the tester's analog output pins, signal scaling, grounding, and any computer-control protocol. Nothing in this repository assumes them.
