@@ -54,7 +54,7 @@ pio run -e esp32dev
 pio run -e esp32dev -t upload
 ```
 
-The first build downloads the ESP32 toolchain from the PlatformIO registry. (In the cloud session used to write this, that download was blocked, so the ESP32 build itself has not been run yet.)
+The first build downloads the ESP32 toolchain from the PlatformIO registry. (In the cloud session used to write this, that download was blocked, so the ESP32 build was not run there. The `firmware-build` job in `.github/workflows/app.yml` compiles it on GitHub; that checks only that it builds, not that it works on a board.)
 
 To build and test the firmware's portable code on a computer, with a pretend ADS1115 (needs a C++ compiler):
 
