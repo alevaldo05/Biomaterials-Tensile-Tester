@@ -21,9 +21,10 @@ jobs:
         run: docker build -f deploy/test/Dockerfile .
 
   firmware-build:
-    # Compile only: proves src/main.cpp builds and links for the ESP32. Nothing is flashed or published,
-    # and it says nothing about the board, the wiring, or the tester's signal. The platform version is not
-    # pinned yet: the step below prints what was used, and the pin is added from a run that passed.
+    # Compile only, for every board folder: each firmware/*/platformio.ini is built (all its environments).
+    # No board or chip is named here; a new folder with its own platformio.ini is picked up by itself. Nothing is
+    # flashed or published, and it says nothing about a board, the wiring, or the tester's signal. Each
+    # platformio.ini pins its own platform version; the step prints what was resolved.
     runs-on: ubuntu-24.04
     steps:
       - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
@@ -32,11 +33,25 @@ jobs:
           python3 -m venv "$RUNNER_TEMP/pio"
           "$RUNNER_TEMP/pio/bin/pip" install --quiet platformio==6.1.19
           echo "$RUNNER_TEMP/pio/bin" >> "$GITHUB_PATH"
-      - name: Compile the firmware for the ESP32 (no upload)
-        working-directory: firmware/esp32-ads1115
+      - name: Compile every firmware folder (no upload)
         run: |
-          pio run -e esp32dev
-          pio pkg list -e esp32dev
+          set -euo pipefail
+          found=0
+          for ini in firmware/*/platformio.ini; do
+            [ -e "$ini" ] || continue
+            dir=$(dirname "$ini")
+            found=$((found + 1))
+            echo "::group::Build $dir"
+            (
+              cd "$dir"
+              pio run
+              pio project config --json-output | python3 -c 'import json,sys; [print(s[4:]) for s, _ in json.load(sys.stdin) if s.startswith("env:")]' |
+                while read -r env; do pio pkg list -e "$env"; done
+            )
+            echo "::endgroup::"
+          done
+          if [ "$found" -eq 0 ]; then echo "No firmware/*/platformio.ini found: nothing was built."; exit 1; fi
+          echo "Built $found firmware folder(s)."
 
   containers:
     runs-on: ubuntu-24.04

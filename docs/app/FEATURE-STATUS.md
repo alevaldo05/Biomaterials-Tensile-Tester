@@ -39,7 +39,7 @@ Updated with each stage. "Checked" means tried in Chrome's engine (Chromium on L
 - Implemented: `firmware/esp32-ads1115/`. Protocol v1, the six acquisition requests, ADS1115 single-shot conversions one channel after another, raw counts with a microsecond timestamp each, a new boot id per start and a new settings reference per change, lost-sample counting, achieved rate, ADC faults.
 - Checked on a computer only: its protocol, acquisition loop, and ADS1115 driver are compiled with a C++ compiler and run against a pretend ADS1115, both in their own unit tests and with the app's real connection and recorder (`packages/recording/test/firmware.test.ts`).
 - A bench record sheet for the first board connection (tester disconnected) is written in [SETUP.md](SETUP.md); it has not been filled in.
-- **Not built for the ESP32 yet** in this environment (the PlatformIO toolchain download was blocked); the `firmware-build` job in `.github/workflows/app.yml` compiles it on GitHub (compile only, no upload; its first result is not yet seen, and the platform version is not pinned until a run passes), **never run on a board**, the ADS1115 wiring is untried, and the Windows USB drivers are unchecked.
+- Compiled on GitHub, not in this environment (the PlatformIO toolchain download was blocked here): the `firmware-build` job in `.github/workflows/app.yml` builds every `firmware/*/platformio.ini` (compile only, no upload, no board named in the workflow, so another board needs no workflow change; see "Adding another board" in [SETUP.md](SETUP.md)). The ESP32 build passed with `espressif32` 8.0.0, now pinned in its `platformio.ini`. It is **never run on a board**, the ADS1115 wiring is untried, and the Windows USB drivers are unchecked.
 
 ## Simulated
 

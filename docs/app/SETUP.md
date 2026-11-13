@@ -54,7 +54,7 @@ pio run -e esp32dev
 pio run -e esp32dev -t upload
 ```
 
-The first build downloads the ESP32 toolchain from the PlatformIO registry. (In the cloud session used to write this, that download was blocked, so the ESP32 build was not run there. The `firmware-build` job in `.github/workflows/app.yml` compiles it on GitHub; that checks only that it builds, not that it works on a board.)
+The first build downloads the ESP32 toolchain from the PlatformIO registry. (In the cloud session used to write this, that download was blocked. The `firmware-build` job in `.github/workflows/app.yml` compiled it on GitHub with `espressif32` 8.0.0, which is now pinned in `platformio.ini`; that shows only that it builds and links, not that it works on a board.)
 
 To build and test the firmware's portable code on a computer, with a pretend ADS1115 (needs a C++ compiler):
 
@@ -63,6 +63,15 @@ bash firmware/esp32-ads1115/test/host/build-and-test.sh
 ```
 
 `npm test` also runs the app's connection and recorder against this host build (`packages/recording/test/firmware.test.ts`).
+
+## Adding another board
+
+The checks do not name a board. Every `firmware/<name>/platformio.ini` is built by the `firmware-build` job (all its environments, compile only), so a new board needs no change to the workflow.
+
+1. Make a folder `firmware/<name>/` with its own `platformio.ini`. Pin the `platform` there (for example `platform = <platform>@<version>`), using a version that has actually built; each board owns its own pin.
+2. Keep the board facts (pins, bus address, channel assignment) in one file, as `include/board_config.h` does for the ESP32 build, and mark them as examples until checked against the real wiring.
+3. The firmware must speak protocol v1 ([PROTOCOL.md](PROTOCOL.md)) and only read: it sends raw counts and no command to the tester. The ESP32 binary does not run on another chip.
+4. A new folder is picked up by the next run of the checks. A green build proves only that it compiles and links. The Pico plan is in [GUIDE-pico.md](GUIDE-pico.md); nothing there has been built.
 
 ## Throughput
 
