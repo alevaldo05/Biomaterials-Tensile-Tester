@@ -110,7 +110,7 @@ export function Graph(p: GraphProps) {
       </div>
       <svg
         ref={setSvg} viewBox={`0 0 ${W} ${H}`} xmlns="http://www.w3.org/2000/svg" role="img" tabIndex={0} className="graph-svg"
-        aria-label={`${p.yLabel} against ${p.xLabel}. ${p.sourceTag}. ${n} points.`}
+        aria-label={`${p.yLabel} against ${p.xLabel}. ${p.sourceTag ? p.sourceTag + ". " : ""}${n} points.`}
         style={{ background: pal.background, cursor: p.live || n < 2 ? 'default' : zoom ? 'grab' : 'crosshair' }}
         onKeyDown={onKey}
         onMouseMove={(e) => {

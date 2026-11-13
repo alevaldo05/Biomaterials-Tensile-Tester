@@ -1,0 +1,129 @@
+/* The app's help, one entry per screen and setup step, kept here so it is available offline and edited in one place.
+   Each entry says what the screen is for, what to do next, unfamiliar terms, common problems, and when to get help
+   from a technician or the laboratory. Links go to the learning website. */
+
+export interface HelpTopic {
+  title: string;
+  what: string;
+  next: string[];
+  terms?: [string, string][];
+  problems?: [string, string][];
+  assistance?: string;
+  links?: { label: string; page: string }[];
+}
+
+const TECH = 'Ask a technician or the laboratory before connecting anything to the tester, or if the tester behaves unexpectedly. This app does not move or stop the machine.';
+
+export const HELP: Record<string, HelpTopic> = {
+  home: {
+    title: 'Home',
+    what: 'The starting point: begin a new test, open a recorded one, or check the device. The status bar shows each part separately: the device, the data, calibration, recording, saving on this computer, and the lab server.',
+    next: ['New test to record a specimen.', 'Load test to open a recorded test.', 'Device and calibration before the first test of the day.'],
+    terms: [['Interrupted recording', 'A recording that did not finish (for example the app closed). What was saved before that point can be recovered; nothing after it.']],
+    problems: [['A recovery notice appears', 'Open the recording to see what was saved, or download its session file. Then mark it handled.']],
+    links: [{ label: 'Help and troubleshooting on the website', page: 'help.html' }],
+  },
+  'test.test': {
+    title: 'Test and method',
+    what: 'Choose the test type and, if you have one, a saved method. A method fills in the usual settings; the specimen’s own details stay blank.',
+    next: ['Pick Uniaxial tension or Stress relaxation.', 'Type the material and the crosshead speed you will set on the tester.'],
+    terms: [['Crosshead speed', 'The speed you set on the tester’s own controller. The app writes it into the record; it does not set it.'], ['Offset yield', 'Optional. Where the curve crosses the fitted line moved right by the offset; an estimate.']],
+    links: [{ label: 'Uniaxial tension protocol', page: 'protocol-uniaxial-tension.html' }, { label: 'Stress relaxation protocol', page: 'protocol-stress-relaxation.html' }],
+  },
+  'test.dimensions': {
+    title: 'Specimen',
+    what: 'Stress is force divided by the cross-section (width × thickness) and strain is stretch divided by the gauge length, so these numbers are needed for stress and strain.',
+    next: ['Measure and type the gauge length, width, and thickness in millimetres.', 'Leave a field empty rather than guessing.'],
+    terms: [['Gauge length, L₀', 'The length of specimen between the grips at the start.']],
+    links: [{ label: 'Glossary', page: 'learn.html#gloss-title' }],
+  },
+  'test.connection': {
+    title: 'Connect and identify',
+    what: 'Connect the acquisition device over USB. You choose the port yourself; the app then asks the device who it is, and only shows it as identified after it answers.',
+    next: ['Press Connect and choose the controller’s port.', 'Check the device, channels, and achieved rate shown here.'],
+    problems: [
+      ['Permission denied', 'Choose the port again and allow access.'],
+      ['Port in use', 'Close other programs or windows using the port (for example a serial monitor).'],
+      ['No identification', 'Wrong port, different firmware, or a missing USB driver for the board.'],
+      ['Incompatible protocol', 'Update the app or the device firmware so the versions match.'],
+      ['ADC not responding', 'Check the ADC power, wiring, and address. ' + TECH],
+    ],
+    assistance: TECH,
+  },
+  'test.calibration': {
+    title: 'Channels and calibration',
+    what: 'A calibration turns volts into newtons and millimetres. It is used only if the whole signal path matches the one it was made with. Without one, readings stay in volts.',
+    next: ['Load the setup for this tester (from the lab server or a setup file).', 'If a channel says it needs review, ask whoever looks after calibration.'],
+    terms: [['Software baseline', 'A force offset taken in the app and subtracted in results; the original readings are kept. It is not a machine tare and not a calibration.'], ['Machine tare', 'Zeroing on the tester itself. Separate from this app.']],
+    assistance: 'Calibrations are made and approved by the laboratory. Do not reuse one after a change to the board, ADC, conditioning circuit, or machine range.',
+  },
+  'test.review': {
+    title: 'Review and start',
+    what: 'Check everything before recording. Ready to record means the app can save calibrated readings; it says nothing about whether the machine is ready to move.',
+    next: ['Press Start recording.', 'Then start the test on the tester’s own controller.', 'Press Stop recording when the test is over.'],
+    assistance: TECH,
+  },
+  'test.recording': {
+    title: 'Recording',
+    what: 'Samples are being saved, in memory and on this computer about once a second. Stop recording only stops saving; it does not stop the machine.',
+    next: ['Stop the machine with its own controls.', 'Press Stop recording when done.'],
+    problems: [['Stale data', 'No readings for 2 seconds: check the USB cable and the device.'], ['Save error', 'The recording continues in memory; download the data as soon as it ends.']],
+    assistance: TECH,
+  },
+  'test.done': {
+    title: 'Results',
+    what: 'The graph and key results of the test just recorded. Strain is crosshead-based unless stated otherwise.',
+    next: ['Save data: CSV, Excel, graph pictures, or the session file.', 'Save to the lab server when signed in.', 'New test for the next specimen.'],
+    links: [{ label: 'What a tensile test measures', page: 'about.html#measures-title' }],
+  },
+  load: {
+    title: 'Load test',
+    what: 'Open a recorded test: a session file saved by this app, or a CSV file. Opening a file never sends anything to a device.',
+    next: ['Choose a file, or pick a recent test.', 'Export or print from the opened test.'],
+    problems: [['File marked as simulated', 'The app opens recorded tests only; practice files open on the website’s Load Test page.'], ['No dimensions', 'Stress and strain need the specimen dimensions stored in the file.']],
+  },
+  methods: {
+    title: 'Test methods',
+    what: 'Saved setups to start a test from. Changing a method makes a new revision; tests keep the revision they used.',
+    next: ['Save the current setup as a method from the Test screen.', 'Start a new test from a method here.'],
+  },
+  history: {
+    title: 'History',
+    what: 'Tests saved on the lab server. You see your own; an admin sees everyone’s.',
+    next: ['Download a session file, or open it in Load test.'],
+  },
+  device: {
+    title: 'Device and calibration',
+    what: 'The connection to the acquisition device and the calibration in use, with a summary you can copy when asking for help.',
+    next: ['Connect, then load the setup for this tester.', 'Copy the diagnostic summary if something is wrong.'],
+    assistance: TECH,
+  },
+  settings: {
+    title: 'Settings',
+    what: 'Display choices and what is stored on this computer.',
+    next: ['Change the theme.', 'Remove recordings you have already downloaded or saved to the lab server.'],
+  },
+  admin: {
+    title: 'Admin',
+    what: 'People, device profiles, calibrations, and the record of changes. Only admins see this.',
+    next: ['Approve a calibration only after it has been checked.'],
+  },
+  help: {
+    title: 'Help',
+    what: 'All the help in the app, searchable. More background is on the website.',
+    next: ['Type a word to search.'],
+  },
+};
+
+/** The help topic for a screen and, on the Test screen, its current step or phase. */
+export function helpFor(page: string, sub?: string): HelpTopic {
+  return HELP[sub ? page + '.' + sub : page] ?? HELP[page] ?? (HELP.home as HelpTopic);
+}
+
+export function searchHelp(q: string): { key: string; topic: HelpTopic }[] {
+  const words = q.toLowerCase().split(/\s+/).filter(Boolean);
+  return Object.entries(HELP).filter(([, t]) => {
+    const hay = [t.title, t.what, ...t.next, ...(t.terms ?? []).flat(), ...(t.problems ?? []).flat(), t.assistance ?? ''].join(' ').toLowerCase();
+    return words.every((w) => hay.includes(w));
+  }).map(([key, topic]) => ({ key, topic }));
+}

@@ -7,7 +7,6 @@
   "scripts": {
     "dev": "vite",
     "build": "vite build",
-    "build:learning": "vite build --mode learning",
     "preview": "vite preview"
   },
   "dependencies": {

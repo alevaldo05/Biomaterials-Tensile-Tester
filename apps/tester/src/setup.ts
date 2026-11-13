@@ -1,5 +1,5 @@
 /* What the person enters before a test, and the checks on it. Nothing is prefilled. */
-import type { TestType } from '@tensile/core';
+import type { Specimen, TestParams, TestType } from '@tensile/core';
 
 export interface Setup {
   material: string; specimenId: string; temperature: string; environment: string; notes: string;
@@ -38,3 +38,13 @@ export function setupProblems(s: Setup, test: TestType): Problems {
 export const STEP_FIELDS: Record<'specimen' | 'dimensions' | 'settings', (keyof Setup)[]> = {
   specimen: ['material'], dimensions: ['L0', 'width', 'thickness'], settings: ['speed', 'holdMm', 'holdS', 'offsetPct'],
 };
+
+/** The specimen and test parameters the calculations use, from what was typed. */
+export function paramsFrom(s: Setup, test: TestType): { specimen: Specimen; params: Partial<TestParams> } {
+  return {
+    specimen: { L0_mm: num(s.L0) ?? 0, width_mm: num(s.width) ?? 0, thickness_mm: num(s.thickness) ?? 0 },
+    params: { speed_mm_min: num(s.speed) ?? '', yield: false,
+      ...(test === 'relaxation' ? { hold_mm: num(s.holdMm) ?? 0, hold_s: num(s.holdS) ?? 0, holdSource: 'typed' as const } : {}),
+      ...(test === 'uniaxial' && s.offsetOn && num(s.offsetPct) ? { offsetPct: num(s.offsetPct) as number } : {}) },
+  };
+}

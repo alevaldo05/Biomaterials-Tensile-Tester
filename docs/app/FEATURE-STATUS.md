@@ -4,27 +4,29 @@ Updated with each stage. "Checked" means tried in Chrome's engine (Chromium on L
 
 ## Implemented and checked
 
-- The app screen: setup steps (Source, Connection, Device, Calibration, Test and specimen, Dimensions, Review), status bar with the eight states, recording toolbar, measurement strip, graph, key results, session details.
-- Simulation source, posing as an ESP32, a Pico, or a Raspberry Pi service. Uniaxial tension and stress relaxation.
-- Recorded-data replay from a session file saved by the app (checked in the automated tests, not yet by hand in a browser).
+- Home ("Split with tiles"), menu, six separate status indicators, Need help on every screen (help words in `apps/tester/src/help-text.ts`, offline), searchable Help.
+- The Test screen: five setup steps (Test and method, Specimen, Connect and identify, Channels and calibration, Review and start), recording toolbar, measurement strip, graph, key results, session details.
+- Real acquisition only. The simulator is used only by the automated tests, as a stand-in device; a test checks that the app's source does not import it, and the built app does not contain it.
+- Recordings kept on this computer (the browser's IndexedDB) while recording, committed about once a second; an interrupted recording is offered for recovery on Home. Checked in the automated tests (commits, a failed write, recovery) with an in-memory store; the IndexedDB store itself has not been tried with a real recording.
+- Load test: session files (rebuilt from their lines, sending nothing to any device) and CSV files; files marked simulated or sample are refused; imports are labeled as unverified.
+- Test methods: saved setups with revisions, kept on this computer (not yet shared through the lab server).
 - Recording: every sample with counts, device time, computer time, settings, volts, and the calibrated value; gaps, faults, restarts, and disconnects are written into the session.
 - Key results from the shared calculations (the same numbers the website gives for the same data).
 - Save data: test CSV (opens on the website's Load Test page), Excel (.xlsx, checked with openpyxl, not Microsoft Excel), graph PNG and SVG, every raw sample as CSV, and a session file for replay.
 - Graph: three views, Autoscale, Reset view, Expand, scroll and drag zoom, pan, arrow-key readout, key-result markers with snapping.
 - Light and dark theme. Laptop, tablet, and phone widths (1366, 1280, 1024, 768, 390 px) without sideways scrolling.
-- App preview (the learning edition build, published with the website): the pretend board connects by itself; only the Test and specimen, Dimensions, and Review steps are shown, each with a one-line explanation and a link to the website; an "About this preview" panel; a "Reading the curve" note after the test; replay of a saved session from Review. The USB serial and machine-control code are not in its files. Its words are in `apps/tester/src/preview-text.ts`.
 
 ## Back end and database
 
 - Implemented and tested against a real PostgreSQL 16: sign-in with argon2id passwords, admin and user roles enforced on the server, saved tests with their full session files, device profiles, calibrations (draft, approved, retired; real equipment only; never overwritten), and a record of changes. See [BACKEND.md](BACKEND.md).
-- In the app (lab edition only): Sign in, History (own tests; admins see everyone's), Save to lab database, loading a profile and its approved calibrations in the Calibration step, an Admin page, and View as user.
+- In the app: Sign in, History (own tests; admins see everyone's), Save to lab database, loading a profile and its approved calibrations in the Calibration step, an Admin page, and View as user.
 - Runs in containers ([CONTAINERS.md](CONTAINERS.md)): built and run with Docker here; each service was stopped, restarted, or replaced while the others kept working, and a backup was restored. Not yet tried on your computer, the lab computer, or Docker Desktop on Windows. No HTTPS set up. Backups are by hand (`deploy/backup.sh`), not on a schedule.
 - The test image (`deploy/test/Dockerfile`, used by GitHub) could not be built here because this environment cannot reach the Debian package mirror; its steps were run outside a container instead.
 
 ## Website and app together
 
 - The website's own live test pages are retired. New Test on the website points to the tester app, the practice page, and Load Test. The website has no USB connection any more.
-- GitHub Pages also publishes the app's learning edition at `app/` (simulation and replay only; no USB; no sign-in). Built and checked here under a GitHub Pages–style address; the publish workflow itself first runs when the branch is merged into `main`.
+- The app is not published on GitHub Pages. New Test on the website says "Download not yet available"; the Windows installer is not built yet.
 - The app uses the website's definitions and materials (read at build time from `data/terms.js` and `data/materials.js`).
 
 ## Reference firmware (ESP32 + ADS1115)
@@ -35,7 +37,7 @@ Updated with each stage. "Checked" means tried in Chrome's engine (Chromium on L
 
 ## Simulated
 
-- Everything from the Simulation source. Its signal scaling and curves are made up, and its data is always labeled "Simulated data, not measured" on the screen, in the graph picture, and in every saved file.
+- The app has no simulation source. The website's practice page keeps its own labeled simulator.
 
 ## Implemented but untested with real equipment
 

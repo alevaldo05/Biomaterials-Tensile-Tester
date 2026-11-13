@@ -12,11 +12,11 @@ The page after the **New Test** button on Home. The website no longer has live t
 
 ## What the user sees
 - Heading **New Test** and a sentence: tests on the tester are now run in the tester app; this website is for learning, protocols, materials, and reopening saved files
-- A primary link **Open the app preview** to `app/` (the tester app on simulated data, with an explanation at each step), and, under it, a plain sentence: on this public website the app runs simulations and replays only; connecting to the tester over USB is done in the app installed on the lab computer
+- The plain line **Download not yet available.** (no button, since there is nothing to download yet), and a sentence: real tests are run in the tester app installed on the lab computer, which connects over USB; a Windows download will be offered here once a release is ready; the hardware connection is untested
 - A link **Practice with a simulated test** to `practice.html` and a link to **Load Test** (`load-test.html`, which also opens CSV files saved by the tester app); links to the two draft protocols
 
 ## Behavior to keep
-- `app/` is a relative link to a folder that does not exist in this repository: `scripts/build-site.sh` adds it only when the site is built for publishing (on GitHub Pages it is the app's learning edition with simulated data only; on the lab computer it is the full app behind the gateway). Locally, with `python3 -m http.server`, the link shows "not found" until the app is built. `scripts/check-site.js` accepts exactly `app/` and `app/index.html` as such links
+- The tester app is not published on GitHub Pages. Replace the line with a real download link only when the owner has published a release
 - Do not link to `.md` files from this page (they are not published); describe `docs/app/CONTAINERS.md` and `docs/app/SETUP.md` in words only
 - Never present simulated data as measured; nothing on this page is called an emergency stop
 
