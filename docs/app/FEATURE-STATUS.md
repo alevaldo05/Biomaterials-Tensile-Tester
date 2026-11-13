@@ -38,7 +38,7 @@ Updated with each stage. "Checked" means tried in Chrome's engine (Chromium on L
 
 - Implemented: `firmware/esp32-ads1115/`. Protocol v1, the six acquisition requests, ADS1115 single-shot conversions one channel after another, raw counts with a microsecond timestamp each, a new boot id per start and a new settings reference per change, lost-sample counting, achieved rate, ADC faults.
 - Checked on a computer only: its protocol, acquisition loop, and ADS1115 driver are compiled with a C++ compiler and run against a pretend ADS1115, both in their own unit tests and with the app's real connection and recorder (`packages/recording/test/firmware.test.ts`).
-- **Not built for the ESP32 yet** in this environment (the PlatformIO toolchain download was blocked), **never run on a board**, the ADS1115 wiring is untried, and the Windows USB drivers are unchecked.
+- **Not built for the ESP32 yet** in this environment (the PlatformIO toolchain download was blocked); the `firmware-build` job in `.github/workflows/app.yml` compiles it on GitHub (compile only, no upload; its first result is not yet seen, and the platform version is not pinned until a run passes), **never run on a board**, the ADS1115 wiring is untried, and the Windows USB drivers are unchecked.
 
 ## Simulated
 
