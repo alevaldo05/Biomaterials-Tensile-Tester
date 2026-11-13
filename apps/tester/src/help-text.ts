@@ -73,7 +73,7 @@ export const HELP: Record<string, HelpTopic> = {
   'test.done': {
     title: 'Results',
     what: 'The graph and key results of the test just recorded. Strain is crosshead-based unless stated otherwise.',
-    next: ['Save data: CSV, Excel, graph pictures, or the session file.', 'Save to the lab server when signed in.', 'New test for the next specimen.'],
+    next: ['Save data: CSV, Excel, graph pictures, the session file, or a Draft printed report (save it as a PDF from the print window).', 'Save to the lab server when signed in.', 'New test for the next specimen.'],
     links: [{ label: 'What a tensile test measures', page: 'about.html#measures-title' }],
   },
   load: {

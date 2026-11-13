@@ -15,6 +15,7 @@ import { EXAMPLE_DIMENSIONS, EXAMPLE_SETTINGS, MATERIAL_CHOICES, setupProblems, 
 import type { Setup } from './setup';
 import { CalibrationPanel, DeviceFacts } from './components/DevicePanels';
 import { RecordGraph } from './components/RecordGraph';
+import { usePrintReport } from './components/usePrintReport';
 import { ResultsTable } from './components/ResultsTable';
 
 const STATE_TEXT: Record<SessionState, { tone: Tone; name: string; detail: string }> = {
@@ -62,6 +63,7 @@ export function App({ controller: c, serialAvailable, theme, account, onHelpSub 
   const [ask, setAsk] = useState<null | 'new' | 'disconnect'>(null);
   const [saveOpen, setSaveOpen] = useState(false);
   const svg = useRef<SVGSVGElement | null>(null);
+  const report = usePrintReport<HTMLElement>();
   const dialog = useRef<HTMLDialogElement | null>(null);
 
   const isRelax = c.test === 'relaxation', state = c.state, st = STATE_TEXT[state], recording = c.phase === 'recording';
@@ -230,7 +232,12 @@ export function App({ controller: c, serialAvailable, theme, account, onHelpSub 
         </aside>
         {drawer ? <button type="button" className="scrim" aria-label="Close setup" onClick={() => setDrawer(false)} /> : null}
 
-        <main className="work" id="main-content">
+        <main className="work" id="main-content" ref={report.ref}>
+          {c.phase === 'done' ? (
+            <div className="print-only print-head">
+              <p><strong>Test report · Draft</strong> · printed {new Date().toLocaleString()}</p>
+              <p>Data: measured, recorded from the acquisition device by this app{c.startedAt ? ' on ' + c.startedAt.toLocaleString() : ''}. {c.setup.material ? 'Material: ' + c.setup.material + '. ' : ''}{c.setup.specimenId ? 'Specimen: ' + c.setup.specimenId + '. ' : ''}The hardware connection is untested.</p>
+            </div>) : null}
           <StatusBar tone={st.tone} state={st.name} detail={(state === 'fault' || state === 'disconnected') && c.message ? c.message : st.detail}>
             <button type="button" className="setup-button" onClick={() => setDrawer(true)}>Setup</button>
           </StatusBar>
@@ -251,6 +258,7 @@ export function App({ controller: c, serialAvailable, theme, account, onHelpSub 
                     <button type="button" role="menuitem" onClick={() => void doSave('svg')}>Graph picture (SVG)</button>
                     <button type="button" role="menuitem" onClick={() => void doSave('samples')}>Every raw sample (CSV)</button>
                     <button type="button" role="menuitem" onClick={() => void doSave('session')}>Session file (full record)</button>
+                    <button type="button" role="menuitem" onClick={() => { setSaveOpen(false); report.print(); }}>Print report (save as PDF from the print window)</button>
                     {account?.user ? <button type="button" role="menuitem" onClick={() => void saveToLab()}>Save to the lab server</button> : null}
                   </span>) : null}
               </span>
@@ -264,7 +272,7 @@ export function App({ controller: c, serialAvailable, theme, account, onHelpSub 
 
           <MeasurementStrip readings={readings} />
 
-          <RecordGraph record={rec} test={c.test} theme={theme} live={recording} showResults={c.phase === 'done'} sourceTag={rec ? c.dataLabel : ''}
+          <RecordGraph record={rec} test={c.test} theme={report.printing ? 'light' : theme} live={recording} showResults={c.phase === 'done'} sourceTag={rec ? c.dataLabel : ''}
             emptyText={c.phase === 'done' ? (c.recordProblem || 'No data was recorded.') : recording ? 'Waiting for readings…' : 'The curve appears here when recording starts.'}
             onSvg={(el) => { svg.current = el; }} />
 

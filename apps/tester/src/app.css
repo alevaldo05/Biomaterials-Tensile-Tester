@@ -231,12 +231,14 @@ input[type="password"] { width: 100%; background: var(--panel); border: 1px soli
   .facts div, .facts.wide div { grid-template-columns: minmax(0, 1fr); gap: 0; }
 }
 
-/* Print report (Load test): only the report, on white paper. */
+/* Print report (Load test and the Test screen after a test): only the report, on white paper. */
 .print-only { display: none; }
 @media print {
   :root, :root[data-theme="dark"] { --bg: #fff; --surface: #fff; --panel: #fff; --ink: #000; --muted: #333; --line: #999; color-scheme: light; }
   body { background: #fff; color: #000; font-size: 11pt; }
-  .top, .statusbar, .view-as, .help-button, .help-panel, .toolbar, .graph-tools, .views, .defs-switch, .graph-readout, main > .row button { display: none !important; }
+  .top, .statusbar, .view-as, .help-button, .help-panel, .toolbar, .graph-tools, .views, .defs-switch, .graph-readout, main > .row button, .setup, .scrim, .work > .status, .notice-bad { display: none !important; }
+  .body { display: block; }
+  .work { padding: 0; }
   .print-only { display: block; }
   .print-head p { margin: 0 0 4px; }
   .page { padding: 0; }
