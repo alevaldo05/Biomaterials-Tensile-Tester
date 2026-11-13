@@ -46,6 +46,26 @@ export interface GraphProps {
   onSvg?: (svg: SVGSVGElement | null) => void;
   /** Several curves instead of x and y (comparing tests). Markers and the fit line are not drawn then. */
   series?: readonly Series[];
+  /** Textbook-style region guides along the top, in x data units. Display only. */
+  regions?: readonly GuideRegion[];
+  /** A short tangent line at the cursor point, and the local slope in the readout. Display only. */
+  tangent?: { slopeName: string; slopeUnit: string } | null;
+}
+export interface GuideRegion { name: string; from: number; to: number; approx?: boolean }
+
+/** Least-squares slope through the points within about 1% of the record (at least 2, at most 50) on each side of i. */
+export function localSlope(x: readonly number[], y: readonly number[], i: number): number | null {
+  const n = Math.min(x.length, y.length);
+  if (n < 3 || i < 0 || i >= n) return null;
+  const k = Math.max(2, Math.min(50, Math.round(n / 100)));
+  let sx = 0, sy = 0, m = 0;
+  const a = Math.max(0, i - k), b = Math.min(n - 1, i + k);
+  for (let j = a; j <= b; j++) { const xj = x[j] as number, yj = y[j] as number; if (Number.isFinite(xj) && Number.isFinite(yj)) { sx += xj; sy += yj; m++; } }
+  if (m < 3) return null;
+  const mx = sx / m, my = sy / m;
+  let sxx = 0, sxy = 0;
+  for (let j = a; j <= b; j++) { const xj = x[j] as number, yj = y[j] as number; if (Number.isFinite(xj) && Number.isFinite(yj)) { sxx += (xj - mx) ** 2; sxy += (xj - mx) * (yj - my); } }
+  return sxx > 0 ? sxy / sxx : null;
 }
 
 const W = 720, H = 420;
@@ -123,6 +143,32 @@ export function Graph(p: GraphProps) {
     : shownIndex >= 0 && shownIndex < n ? { x: p.x[shownIndex] as number, y: p.y[shownIndex] as number } : null;
   const shownPx = shown ? toPx(shown, view, BOX) : null;
   const pal = p.palette;
+  /* Local slope at the shown point: a least-squares line through the nearby points (about 1% of the record on each
+     side), so measurement noise between neighbouring samples does not swing it. Display only. */
+  const tangentAt = (() => {
+    if (!p.tangent || many || p.live || snapped || shownIndex < 0 || n < 3) return null;
+    const slope = localSlope(p.x, p.y, shownIndex);
+    if (slope === null) return null;
+    const x0 = p.x[shownIndex] as number, y0 = p.y[shownIndex] as number, hw = (view.x1 - view.x0) * 0.1;
+    return { slope, from: toPx({ x: x0 - hw, y: y0 - slope * hw }, view, BOX), to: toPx({ x: x0 + hw, y: y0 + slope * hw }, view, BOX) };
+  })();
+  /* Region guides: a dashed line at each inner boundary, and a labelled arrow across each region, in up to three rows. */
+  const guides = (() => {
+    if (!p.regions?.length || many || p.live || n < 10) return null;
+    const xPx = (v: number) => toPx({ x: v, y: view.y0 }, view, BOX).x, lo = BOX.left, hi = BOX.left + BOX.width;
+    const lines: number[] = [], bands: { a: number; b: number; cx: number; row: number; name: string }[] = [], rows = [-1e9, -1e9, -1e9];
+    p.regions.forEach((r, i) => {
+      const at = xPx(r.from);
+      if (i > 0 && at > lo + 1 && at <= hi) lines.push(at);
+      const a = Math.max(at, lo), b = Math.min(xPx(r.to), hi);
+      if (!(b - a > 4)) return;
+      const w = r.name.length * 6.2 + 8, cx = Math.min(Math.max((a + b) / 2, lo + w / 2), hi - w / 2);
+      let row = 0; while (row < 2 && cx - w / 2 < (rows[row] as number) + 3) row++;
+      rows[row] = cx + w / 2;
+      bands.push({ a, b, cx, row, name: r.name });
+    });
+    return { lines, bands };
+  })();
 
   const onKey = (e: React.KeyboardEvent) => {
     if (p.live || n < 2) return;
@@ -185,11 +231,22 @@ export function Graph(p: GraphProps) {
         <rect x={BOX.left} y={BOX.top} width={BOX.width} height={BOX.height} fill="none" stroke={pal.ink} strokeWidth="1" />
         <text x={BOX.left + BOX.width / 2} y={H - 10} textAnchor="middle" fontSize="13" fill={pal.ink} fontFamily="system-ui, sans-serif">{p.xLabel}</text>
         <text x={16} y={BOX.top + BOX.height / 2} textAnchor="middle" fontSize="13" fill={pal.ink} fontFamily="system-ui, sans-serif" transform={`rotate(-90 16 ${BOX.top + BOX.height / 2})`}>{p.yLabel}</text>
+        <defs><marker id="guide-arrow" viewBox="0 0 10 10" refX="5" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path d="M0 1L9 5L0 9" fill="none" stroke={pal.muted} strokeWidth="1.5" /></marker></defs>
+        {guides ? (
+          <g aria-hidden="true">
+            {guides.lines.map((x, i) => <line key={'gl' + i} x1={x} x2={x} y1={BOX.top} y2={BOX.top + BOX.height} stroke={pal.muted} strokeWidth="1.25" strokeDasharray="5 4" />)}
+            {guides.bands.map((g, i) => (
+              <g key={'gb' + i}>
+                <line x1={g.a + 2} x2={g.b - 2} y1={BOX.top + 30} y2={BOX.top + 30} stroke={pal.muted} strokeWidth="1.25" markerStart="url(#guide-arrow)" markerEnd="url(#guide-arrow)" />
+                <text x={g.cx} y={BOX.top + 44 + g.row * 13} textAnchor="middle" fontSize="11" fontStyle="italic" fill={pal.ink} stroke={pal.background} strokeWidth="3" paintOrder="stroke" fontFamily="system-ui, sans-serif">{g.name}</text>
+              </g>))}
+          </g>) : null}
         <g clipPath="url(#plot-area)">
           {p.fitLine && !p.live ? (() => { const a = toPx(p.fitLine.from, view, BOX), b = toPx(p.fitLine.to, view, BOX); return <line x1={a.x} y1={a.y} x2={b.x} y2={b.y} stroke={pal.accent} strokeWidth="2" strokeDasharray="6 4" />; })() : null}
           {path ? <path d={path} fill="none" stroke={pal.curve} strokeWidth="2" strokeLinejoin="round" /> : null}
           {paths.map((d, i) => (d ? <path key={'s' + i} d={d} fill="none" stroke={(p.series as readonly Series[])[i]!.color} strokeWidth="2" strokeLinejoin="round" strokeLinecap="round" {...((p.series as readonly Series[])[i]!.dash ? { strokeDasharray: (p.series as readonly Series[])[i]!.dash } : {})} /> : null))}
           {!p.live ? markers.map((m) => { const q = toPx(m, view, BOX); return <circle key={m.id} cx={q.x} cy={q.y} r={snapped && snapped.id === m.id ? 6 : 4} fill={pal.mark} stroke={pal.background} strokeWidth="1.5" />; }) : null}
+          {tangentAt ? <line x1={tangentAt.from.x} y1={tangentAt.from.y} x2={tangentAt.to.x} y2={tangentAt.to.y} stroke={pal.accent} strokeWidth="2" /> : null}
           {shownPx && !p.live ? <circle cx={shownPx.x} cy={shownPx.y} r="4" fill="none" stroke={pal.accent} strokeWidth="2" /> : null}
           {drag && drag.mode === 'box' ? <rect x={Math.min(drag.from.x, drag.to.x)} y={Math.min(drag.from.y, drag.to.y)} width={Math.abs(drag.to.x - drag.from.x)} height={Math.abs(drag.to.y - drag.from.y)} fill={pal.accent} fillOpacity="0.12" stroke={pal.accent} /> : null}
         </g>
@@ -210,7 +267,7 @@ export function Graph(p: GraphProps) {
         })() : null}
       </svg>
       <p className="graph-readout" aria-live="off">
-        {shown ? <>{shown.name ? <strong>{shown.name}: </strong> : null}{p.xName} = {sig(shown.x, 4)} {p.xUnit}, {p.yName} = {sig(shown.y, 4)} {p.yUnit}</>
+        {shown ? <>{shown.name ? <strong>{shown.name}: </strong> : null}{p.xName} = {sig(shown.x, 4)} {p.xUnit}, {p.yName} = {sig(shown.y, 4)} {p.yUnit}{tangentAt && p.tangent ? <>, local slope {p.tangent.slopeName} ≈ {sig(tangentAt.slope, 3)} {p.tangent.slopeUnit} (fitted over nearby points)</> : null}</>
           : n < 2 ? ' ' : p.live ? 'Recording. Zoom and the readout are available when recording stops.' : many ? 'Move over a curve to read a point and see which test it is. Scroll or drag to zoom; double-click to reset.' : 'Move over the curve, or use the arrow keys, to read a point. Scroll or drag to zoom; double-click to reset.'}
         {zoom && !p.live ? <span className="graph-range"> · Showing {p.xName} {sig(view.x0, 3)} to {sig(view.x1, 3)}</span> : null}
       </p>

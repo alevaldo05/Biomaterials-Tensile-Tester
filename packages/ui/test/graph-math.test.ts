@@ -58,3 +58,17 @@ describe('overlay curve styles', () => {
     expect(seriesStyle(0, false)).toEqual({ color: SERIES_LIGHT[0], dash: '' });
   });
 });
+
+describe('local slope for the tangent line', () => {
+  it('finds the slope of a straight line exactly, and ignores noise between neighbours', async () => {
+    const { localSlope } = await import('../src/Graph');
+    const x = Array.from({ length: 1000 }, (_, i) => i / 1000), y = x.map((v) => 3 * v + 1);
+    expect(localSlope(x, y, 500)).toBeCloseTo(3, 10);
+    const noisy = y.map((v, i) => v + (i % 2 ? 0.002 : -0.002));   /* neighbour-to-neighbour slope would be about 3 ± 4 */
+    expect(localSlope(x, noisy, 500)!).toBeCloseTo(3, 0);
+    expect(Math.abs(localSlope(x, noisy, 500)! - 3)).toBeLessThan(0.5);
+    expect(localSlope(x, y, 0)).toBeCloseTo(3, 10);
+    expect(localSlope([0, 1], [0, 1], 0)).toBeNull();
+    expect(localSlope([1, 1, 1, 1], [0, 1, 2, 3], 1)).toBeNull();
+  });
+});
