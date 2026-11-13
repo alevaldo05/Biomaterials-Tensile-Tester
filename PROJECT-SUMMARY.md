@@ -14,7 +14,7 @@ Read this file, then only the cards for the page or feature being changed. Updat
 | Learn | [learn](docs/cards/pages/learn.md) |
 | About | [about](docs/cards/pages/about.md) |
 | Help | [help](docs/cards/pages/help.md) |
-| New Test (sends people to the tester app, the practice page, and Load Test) | [choose-test](docs/cards/pages/choose-test.md) |
+| Get the App (`choose-test.html`: download not yet available; links to the practice page and Load Test) | [choose-test](docs/cards/pages/choose-test.md) |
 | Practice test (simulator) | [practice](docs/cards/pages/practice.md) |
 | Load Test | [load-test](docs/cards/pages/load-test.md) |
 | Calibration | [calibration](docs/cards/pages/calibration.md) |
@@ -56,7 +56,7 @@ Preview in Chrome at 1280 px and 1024 px, run both kinds of practice test on the
 | Words on Home, Learn, About, Help | [page-text](docs/cards/features/page-text.md), then the page card |
 | Graph, key results, CSV reading | [graph-engine](docs/cards/features/graph-engine.md) |
 | Practice page setup, Start/STOP/Tare, recording | [live-test](docs/cards/features/live-test.md), [guided-steps](docs/cards/features/guided-steps.md) |
-| Where New Test sends people (tester app, practice, Load Test) | [choose-test](docs/cards/pages/choose-test.md) |
+| Where Get the App sends people (tester app, practice, Load Test) | [choose-test](docs/cards/pages/choose-test.md) |
 | The simulator's line format | [simulator](docs/cards/features/simulator.md) (`data/device.js`; the app's protocol is in `docs/app/PROTOCOL.md`) |
 | Material values or sample curves | [materials](docs/cards/features/materials.md) |
 | Protocol text | [protocols](docs/cards/features/protocols.md) |

@@ -3,7 +3,7 @@
 Page card. Update it in the same change as the page.
 
 ## Purpose
-Homepage: title, the New Test and Load Test actions, the About the tester paragraph, How it works (three steps), and Protocols and procedures.
+Homepage: title, the Get the app and Learn and practice actions, the About the tester paragraph, How it works (three steps), and Protocols and procedures.
 
 ## Files
 - HTML: `index.html` (headings, layout, ids `hero-title`, `about-title`, `how-title`, `proto-title`)
@@ -13,7 +13,8 @@ Homepage: title, the New Test and Load Test actions, the About the tester paragr
 
 ## What the user sees
 - Header with logo, main menu (Home, Learn, Protocols, Materials, Calibration, About, Help, Settings) and the search button
-- Heading **Biomaterials Tensile Tester**, "Start a test in the tester app, practice with a simulation, or open a saved file.", primary **New Test** (opens the New Test page, which points to the tester app, the practice page, and Load Test), **Load Test**
+- Heading **Biomaterials Tensile Tester**, "Tests are run in the tester app on the lab computer. Learn, practice, and review saved data here.", primary **Get the app** (opens the Get the App page: "Download not yet available", plus links to the practice page and Load Test) and **Learn and practice** (opens Learn). Practice and Load Test are not on the homepage
+- **Need help?** at the bottom right (words in `data/page-help.js`)
 - Protocols and procedures links, marked Draft (a card in the Start screen layout)
 
 ## Behavior to keep
