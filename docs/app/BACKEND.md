@@ -1,6 +1,6 @@
 # Back end and database
 
-Status: implemented and tested against a real PostgreSQL 16 (throwaway servers started by the tests). Not yet run in containers (that is the next stage) and not yet used on the lab computer.
+Status: implemented and tested against a real PostgreSQL 16 (throwaway servers started by the tests), and run in containers ([CONTAINERS.md](CONTAINERS.md)). Not yet used on the lab computer.
 
 One back end serves both front ends. The tester app uses it for signing in, saved tests, device profiles, and calibrations. The website stays a static site on GitHub Pages and works without it; a public page cannot reach a back end on a lab or home computer.
 
@@ -89,11 +89,10 @@ Then start the app (`npm run app`); its development server passes `/api` to `htt
 
 ## Moving to the lab computer
 
-Copy the database with `pg_dump` and restore it there with `pg_restore`, set the same environment variables, and start the API. Nothing in the code names a computer. The container setup (next stage) makes this a copy of two files and a backup.
+See [CONTAINERS.md](CONTAINERS.md): copy `deploy/.env` and a backup, start the containers, restore. Nothing in the code names a computer.
 
 ## Not done yet
 
-- Containers and the gateway (next stage).
 - HTTPS on the lab network. Web Serial needs `localhost` or HTTPS, so until HTTPS is set up the app is opened on the computer the tester is plugged into.
 - The website reading from the back end (planned).
 - Backups on a schedule.

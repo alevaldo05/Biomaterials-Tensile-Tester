@@ -17,7 +17,7 @@ var SKIP_DIRS = { '.git': 1, '_site': 1, 'node_modules': 1 };
    published website. They have their own checks (npm test), so these checks leave them alone, together with the
    workspace files at the top of the project. scripts/build-site.sh leaves the same names out of the published folder. */
 var APP_DIRS = { 'packages': 1, 'apps': 1, 'firmware': 1, 'deploy': 1 };
-var APP_FILES = /^(package(-lock)?\.json|tsconfig(\.[a-z]+)?\.json|vitest\.config\.mjs)$/;
+var APP_FILES = /^(package(-lock)?\.json|tsconfig(\.[a-z]+)?\.json|vitest\.config\.mjs|\.dockerignore)$/;
 var failures = 0;
 
 function begin(name) { console.log('\n' + name); }
