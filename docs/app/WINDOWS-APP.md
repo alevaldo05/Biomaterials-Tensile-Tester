@@ -32,6 +32,15 @@ The installer is built on GitHub, on Windows, by `.github/workflows/desktop.yml`
 The installer is **unsigned**: Windows SmartScreen warns before running it ("More info" > "Run anyway").
 Code signing is not planned (a possible idea for later only), so Windows will keep warning.
 
+### Start-up check in the build
+After the installer is built, the workflow runs `apps/desktop/smoke.cjs` on the unpacked program: it starts it, waits for
+the window, and confirms the only open page is the app's own bundled screen (`app://tester/`), then closes it. It uses the
+browser engine's local debugging port (127.0.0.1, opened only by this check; `smoke.cjs` is not part of the installer).
+Its logic is tested with a stand-in program (`apps/desktop/test/smoke.test.ts`); **it has not yet been seen to run on
+Windows**, so for the first runs a failure is shown in the run but does not stop the draft release
+(`continue-on-error` in `desktop.yml`). Once it has passed on GitHub, remove that line so a broken package stops the build.
+It does not replace the first-install checklist below.
+
 ## Building by hand (on a Windows computer)
 ```
 npm ci
