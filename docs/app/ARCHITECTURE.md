@@ -51,6 +51,7 @@ Rules that hold everywhere:
 | `packages/machine-control` | The machine-control interface and its only implementation, "unsupported" |
 | `packages/recording` | The recorder, the conversion chain, calibration compatibility |
 | `packages/ui` | Shared React components |
+| `apps/desktop` | The Windows app (Electron): the tester screens bundled in a locked-down window, with USB serial. Its own lockfile, outside the shared workspace |
 | `apps/tester` | The app (real acquisition and saved-session replay; the simulator appears only in its tests) |
 | `apps/api` | The back end |
 | `firmware/` | Reference device-side software and guides |

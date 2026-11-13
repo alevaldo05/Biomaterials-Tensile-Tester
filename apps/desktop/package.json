@@ -1,0 +1,59 @@
+{
+  "name": "biomaterials-tensile-tester-desktop",
+  "productName": "Biomaterials Tensile Tester",
+  "version": "0.2.0",
+  "private": true,
+  "description": "The Windows app: the tester app's screens in their own window, with USB serial. Not part of the shared workspace; installed on its own.",
+  "main": "main.cjs",
+  "scripts": {
+    "prepare-ui": "node copy-ui.cjs",
+    "start": "electron .",
+    "dist:win": "electron-builder --win --publish never"
+  },
+  "devDependencies": {
+    "electron": "45.1.0",
+    "electron-builder": "26.18.1"
+  },
+  "build": {
+    "appId": "org.biomaterials.tensiletester",
+    "productName": "Biomaterials Tensile Tester",
+    "directories": {
+      "output": "release"
+    },
+    "files": [
+      "main.cjs",
+      "preload.cjs",
+      "ui-files.cjs",
+      "ui/**/*",
+      "package.json"
+    ],
+    "asar": true,
+    "publish": null,
+    "win": {
+      "target": [
+        {
+          "target": "nsis",
+          "arch": [
+            "x64"
+          ]
+        }
+      ]
+    },
+    "nsis": {
+      "oneClick": false,
+      "perMachine": false,
+      "allowToChangeInstallationDirectory": true,
+      "createDesktopShortcut": true,
+      "artifactName": "Biomaterials-Tensile-Tester-${version}-beta-unsigned-setup.${ext}"
+    },
+    "electronFuses": {
+      "runAsNode": false,
+      "enableNodeOptionsEnvironmentVariable": false,
+      "enableNodeCliInspectArguments": false,
+      "enableCookieEncryption": true,
+      "enableEmbeddedAsarIntegrityValidation": true,
+      "onlyLoadAppFromAsar": true,
+      "grantFileProtocolExtraPrivileges": false
+    }
+  }
+}

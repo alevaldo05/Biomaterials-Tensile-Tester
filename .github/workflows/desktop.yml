@@ -1,0 +1,71 @@
+# Builds the Windows installer of the tester app and attaches it to a DRAFT release. Nothing is published:
+# a draft release is visible only to people who can change the repository, and only the owner publishes it.
+# The installer is unsigned (a beta): Windows will warn before running it. Runs only when started by hand
+# (Actions > Windows app > Run workflow) or when a tag starting with app-v is pushed.
+name: Windows app
+
+on:
+  workflow_dispatch:
+  push:
+    tags: ['app-v*']
+
+permissions:
+  contents: read
+
+concurrency:
+  group: windows-app
+  cancel-in-progress: false
+
+jobs:
+  installer:
+    runs-on: windows-2025
+    permissions:
+      contents: write   # only for the last step, which creates the draft release; no earlier step is given the token
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
+        with:
+          persist-credentials: false
+
+      - name: Checks before building (all tests, type checks, website checks)
+        shell: bash
+        run: |
+          npm ci --no-audit --no-fund
+          npm run typecheck
+          npx vitest run --exclude "apps/api/**" --exclude "packages/recording/test/firmware.test.ts"   # these two run on Linux in app.yml
+          node scripts/check-site.js
+
+      - name: Build the app's screens
+        shell: bash
+        run: npm run app:build
+
+      - name: Build the Windows installer (unsigned beta)
+        shell: bash
+        working-directory: apps/desktop
+        run: |
+          npm ci --no-audit --no-fund
+          npm run prepare-ui
+          npm run dist:win
+          cd release
+          ls -l
+          sha256sum *.exe > SHA256SUMS.txt
+          cat SHA256SUMS.txt
+
+      - name: Create a draft release (not published)
+        shell: bash
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          version=$(node -p "require('./apps/desktop/package.json').version")
+          if [ "${GITHUB_REF_TYPE}" = "tag" ]; then tag="${GITHUB_REF_NAME}"; else tag="app-v${version}-beta.${GITHUB_RUN_NUMBER}"; fi
+          cat > notes.md <<NOTES
+          Windows installer of the tester app, version ${version} (beta), built from ${GITHUB_SHA}.
+
+          - Unsigned: Windows SmartScreen will warn before running it.
+          - Records from the acquisition device over USB serial. It sends no Start, STOP, Tare, speed, or position command to the tester.
+          - The hardware connection is untested.
+          - Check the download against SHA256SUMS.txt.
+
+          This is a draft. It is published only by the owner.
+          NOTES
+          gh release create "$tag" --draft --prerelease --target "${GITHUB_SHA}" --title "Tester app ${version} (Windows, beta)" --notes-file notes.md \
+            apps/desktop/release/*.exe apps/desktop/release/SHA256SUMS.txt

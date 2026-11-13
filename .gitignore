@@ -5,3 +5,5 @@ coverage/
 *.tsbuildinfo
 .pio/
 .host-build/
+apps/desktop/ui/
+apps/desktop/release/
