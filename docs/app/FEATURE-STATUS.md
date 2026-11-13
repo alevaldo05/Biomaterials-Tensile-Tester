@@ -25,6 +25,7 @@ Updated with each stage. "Checked" means tried in Chrome's engine (Chromium on L
 - In the app: Sign in, History (own tests; admins see everyone's), Save to lab database, loading a profile and its approved calibrations in the Calibration step, an Admin page, and View as user.
 - Runs in containers ([CONTAINERS.md](CONTAINERS.md)): built and run with Docker here; each service was stopped, restarted, or replaced while the others kept working, and a backup was restored. Not yet tried on your computer, the lab computer, or Docker Desktop on Windows. A backup service writes a database dump every 24 hours (14 kept), and the gateway serves HTTPS when a certificate is in `deploy/certs` (`deploy/make-cert.sh` makes a self-signed one). Both were run here with Docker and curl; not yet in a browser over HTTPS or on Windows.
 - The test image (`deploy/test/Dockerfile`, used by GitHub) could not be built here because this environment cannot reach the Debian package mirror; its steps were run outside a container instead.
+- Replay rehearsal: a stand-in recording is taken through a session file, Load test, the CSV and Excel exports, the report numbers, and a save to the lab server, with a simulated copy refused at each end (`apps/tester/test/rehearsal.test.ts`, `apps/api/test/api.test.ts`). The recording is from the test simulator, so it shows the path works, not that any real tester or board does. The browser's print window is not tested.
 
 ## Website and app together
 
