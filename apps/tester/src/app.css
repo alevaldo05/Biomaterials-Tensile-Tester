@@ -179,7 +179,7 @@ input[type="password"] { width: 100%; background: var(--panel); border: 1px soli
 .slot { margin: 0; border: 1px dashed var(--line); border-radius: var(--radius); padding: 10px 14px; color: var(--muted); font-size: 0.9rem; }
 .recover { border: 1px solid var(--warn); border-left-width: 4px; border-radius: var(--radius); background: var(--panel); padding: 12px 14px; display: grid; gap: 6px; }
 .recover p { margin: 0; }
-.tablebox { overflow-x: auto; border: 1px solid var(--line); border-radius: var(--radius); background: var(--panel); }
+.tablebox { position: relative; overflow-x: auto; border: 1px solid var(--line); border-radius: var(--radius); background: var(--panel); }
 .list-table { width: 100%; border-collapse: collapse; font-size: 0.9rem; }
 .list-table th, .list-table td { text-align: left; padding: 9px 12px; border-top: 1px solid var(--line); white-space: nowrap; }
 .list-table thead th { border-top: 0; font-size: 0.75rem; letter-spacing: 0.05em; text-transform: uppercase; color: var(--muted); }
@@ -231,13 +231,31 @@ input[type="password"] { width: 100%; background: var(--panel); border: 1px soli
   .facts div, .facts.wide div { grid-template-columns: minmax(0, 1fr); gap: 0; }
 }
 
-/* Print report (Load test and the Test screen after a test): only the report, on white paper. */
+/* Load test: one test or a comparison */
+.seg { display: inline-flex; border: 1px solid var(--line); border-radius: 8px; overflow: hidden; width: fit-content; }
+.seg button { border: 0; border-radius: 0; background: var(--panel); }
+.seg button + button { border-left: 1px solid var(--line); }
+.seg button[aria-pressed="true"] { background: var(--accent); color: var(--accent-ink); font-weight: 600; }
+.compare-add { gap: 10px; }
+.compare-warnings { margin: 0; padding-left: 1.6rem; border-left: 3px solid var(--warn); display: grid; gap: 4px; }
+.compare-table th[scope="row"] { font-weight: 600; white-space: normal; min-width: 10rem; }
+.compare-table thead th { white-space: normal; vertical-align: bottom; min-width: 6.5rem; max-width: 9rem; text-transform: none; letter-spacing: 0; font-size: 0.78rem; }
+.graph-card-plain .graph-tools { margin-top: 0; }
+.page { padding-bottom: 88px; }
+.compare-table td.num { font-variant-numeric: tabular-nums; }
+.compare-stat th, .compare-stat td { background: var(--surface); }
+.compare-key { display: inline-block; vertical-align: middle; margin-right: 6px; }
+
+/* Print report (Load test, the Test screen after a test, and a comparison): only the report, on white paper. */
 .print-only { display: none; }
 @media print {
   :root, :root[data-theme="dark"] { --bg: #fff; --surface: #fff; --panel: #fff; --ink: #000; --muted: #333; --line: #999; color-scheme: light; }
   body { background: #fff; color: #000; font-size: 11pt; }
-  .top, .statusbar, .view-as, .help-button, .help-panel, .toolbar, .graph-tools, .views, .defs-switch, .graph-readout, main > .row button, .setup, .scrim, .work > .status, .notice-bad { display: none !important; }
+  .top, .statusbar, .view-as, .help-button, .help-panel, .toolbar, .graph-tools, .views, .defs-switch, .graph-readout, main > .row button, .setup, .scrim, .work > .status, .notice-bad, .seg, .compare-add, .compare-table td:last-child, .compare-table th:last-child { display: none !important; }
   .body { display: block; }
+  .tablebox { overflow: visible; }
+  .compare-table { font-size: 8.5pt; }
+  .compare-table th, .compare-table td { white-space: normal; padding: 4px 5px; min-width: 0; max-width: none; }
   .work { padding: 0; }
   .print-only { display: block; }
   .print-head p { margin: 0 0 4px; }
@@ -245,4 +263,18 @@ input[type="password"] { width: 100%; background: var(--panel); border: 1px soli
   .graph-svg { max-height: none; }
   .panel, .graph-card { break-inside: avoid; border-color: #999; }
   .panel summary { list-style: none; }
+}
+
+/* Calibration check (Device screen) */
+.check-section, .check-screen { min-width: 0; }
+.check-section .tablebox { max-width: 100%; }
+.check-settings { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(12rem, 100%), 1fr)); gap: var(--gap); }
+.check-table input[type="text"] { min-width: 6rem; width: 7rem; }
+.check-table td, .check-table th[scope="row"] { vertical-align: middle; }
+.check-actions { flex-wrap: wrap; }
+@media print {
+  body.printing-check .page > :not(.check-section) { display: none !important; }
+  body.printing-check .check-section > :not(.print-only):not(h2):not(h3):not(.notice):not(.hint) { display: none; }
+  body.printing-check .check-screen { display: none !important; }
+  body.printing-check .check-section .check-actions, body.printing-check .check-section .print-only + .hint { display: none !important; }
 }

@@ -107,6 +107,10 @@ export interface CalibrationCsvInput {
   example: boolean;
   /* the time shown in the record (local time) */
   date: Date;
+  /* Where the readings came from, when not typed on the website (the tester app's check). Omitted: the website's wording. */
+  source?: string;
+  /* The record's name in its first line. Omitted: "calibration record". */
+  title?: string;
 }
 
 /* The CSV record text (with a leading byte-order mark, as the page downloads it). */
@@ -114,8 +118,8 @@ export function calibrationCsv(input: CalibrationCsvInput): string {
   const { settings: s, points: pts, fit: f, example } = input;
   const used = pts.filter((q) => q.m !== null || q.r !== null);
   const meta: [string, CellValue][] = [
-    ['Biomaterials Tensile Tester', 'calibration record'],
-    ['Source', example ? 'example numbers (not measured)' : 'entered by hand (not measured by this site)'],
+    ['Biomaterials Tensile Tester', input.title ?? 'calibration record'],
+    ['Source', example ? 'example numbers (not measured)' : input.source ?? 'entered by hand (not measured by this site)'],
     ['Status', 'draft; no claim of traceability or of meeting a standard'],
     ['Date', stamp(input.date, false)],
     ['Load cell', s.cell],

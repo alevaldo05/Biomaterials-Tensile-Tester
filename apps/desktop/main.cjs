@@ -3,11 +3,18 @@
    served from app://tester/. It never loads screens from a server or another site.
    Security: the screens run with context isolation and the sandbox, without Node, and the preload gives them nothing
    but a fixed label. Navigation away is blocked; links to the public website open in the computer's browser.
-   Only USB serial is allowed, and the person chooses the port each time. The app sends no machine commands. */
-const { app, BrowserWindow, dialog, Menu, net, protocol, session, shell } = require('electron');
+   Only USB serial is allowed, and the person chooses the port each time. The app sends no machine commands.
+   The lab server (optional, set in Settings) is a data connection only: requests to /api/v1/ are sent on to it by
+   lab-proxy.cjs, which keeps the sign-in here and never gives it to the screens.
+   Recordings are kept as files in the app's data folder ("recordings") by journal-files.cjs, which checks
+   everything the screens send. */
+const { app, BrowserWindow, dialog, ipcMain, Menu, net, protocol, session, shell } = require('electron');
+const fs = require('node:fs');
 const path = require('node:path');
 const { pathToFileURL } = require('node:url');
 const { uiFile } = require('./ui-files.cjs');
+const { checkLabUrl, createLabProxy, API_PREFIX } = require('./lab-proxy.cjs');
+const { createJournalFiles } = require('./journal-files.cjs');
 
 const SCHEME = 'app', ORIGIN = 'app://tester';
 const UI_DIR = path.join(__dirname, 'ui');
@@ -20,12 +27,27 @@ protocol.registerSchemesAsPrivileged([{ scheme: SCHEME, privileges: { standard: 
 const firstCopy = app.requestSingleInstanceLock();
 if (!firstCopy) app.quit();
 
+/* Settings kept by the Windows app on this computer: only the lab server address. */
+const settingsFile = () => path.join(app.getPath('userData'), 'desktop-settings.json');
+let labUrl = '';
+function loadSettings() {
+  try { const s = JSON.parse(fs.readFileSync(settingsFile(), 'utf8')); const c = checkLabUrl(s.labUrl); labUrl = c.url ?? ''; } catch { labUrl = ''; }
+}
+function saveLabUrl(url) {
+  fs.mkdirSync(path.dirname(settingsFile()), { recursive: true });
+  fs.writeFileSync(settingsFile(), JSON.stringify({ labUrl: url }, null, 2));
+  labUrl = url;
+}
+const lab = createLabProxy({ fetch: (url, init) => net.fetch(url, init), labUrl: () => labUrl });
+
 const fromApp = (url) => typeof url === 'string' && (url === ORIGIN || url.startsWith(ORIGIN + '/'));
 
 function serveUi() {
   protocol.handle(SCHEME, async (req) => {
     const u = new URL(req.url);
-    if (u.host !== 'tester' || req.method !== 'GET') return new Response('Not found', { status: 404 });
+    if (u.host !== 'tester') return new Response('Not found', { status: 404 });
+    if (u.pathname.startsWith(API_PREFIX)) return lab.handle(req);
+    if (req.method !== 'GET') return new Response('Not found', { status: 404 });
     const f = uiFile(UI_DIR, u.pathname);
     if (!f) return new Response('Not found', { status: 404 });
     const res = await net.fetch(pathToFileURL(f.file).toString()).catch(() => null);
@@ -59,7 +81,7 @@ function lockDown() {
 }
 
 app.on('web-contents-created', (_e, wc) => {
-  wc.on('will-navigate', (e, url) => { if (!fromApp(url)) e.preventDefault(); });
+  wc.on('will-navigate', (e, url) => { if (!fromApp(url) || new URL(url).pathname.startsWith(API_PREFIX)) e.preventDefault(); });
   wc.on('will-redirect', (e, url) => { if (!fromApp(url)) e.preventDefault(); });
   wc.on('will-attach-webview', (e) => e.preventDefault());
   wc.setWindowOpenHandler(({ url }) => {
@@ -76,6 +98,29 @@ app.on('web-contents-created', (_e, wc) => {
     if (leave === 1) e.preventDefault();
   });
 });
+
+/* The bridge: read and set the lab server address, and the recording journal. Only the app's own screens may use them;
+   every argument is checked again in lab-proxy.cjs and journal-files.cjs. */
+const JOURNAL_CALLS = ['begin', 'append', 'finish', 'list', 'lines', 'remove', 'estimate'];
+function bridge() {
+  const own = (e) => fromApp(e.senderFrame && e.senderFrame.url);
+  const journal = createJournalFiles(path.join(app.getPath('userData'), 'recordings'));
+  for (const name of JOURNAL_CALLS) {
+    ipcMain.handle('journal:' + name, async (e, ...args) => {
+      if (!own(e)) throw new Error('Not allowed.');
+      return journal[name](...args.slice(0, 3));
+    });
+  }
+  ipcMain.handle('lab-server:get', (e) => (own(e) ? labUrl : ''));
+  ipcMain.handle('lab-server:set', (e, input) => {
+    if (!own(e)) return { error: 'Not allowed.' };
+    const c = checkLabUrl(typeof input === 'string' ? input.slice(0, 300) : '');
+    if (c.error) return { error: c.error };
+    try { saveLabUrl(c.url); } catch { return { error: 'The address could not be saved on this computer.' }; }
+    lab.forget();
+    return { url: c.url };
+  });
+}
 
 function createWindow() {
   const win = new BrowserWindow({
@@ -103,7 +148,9 @@ app.whenReady().then(() => {
     { label: 'View', submenu: [{ role: 'resetZoom' }, { role: 'zoomIn' }, { role: 'zoomOut' }, { type: 'separator' }, { role: 'togglefullscreen' }] },
     { label: 'Help', submenu: [{ label: 'Learning website', click: () => void shell.openExternal(SITE) }, { label: 'Troubleshooting', click: () => void shell.openExternal(SITE + 'help.html#trouble-title') }] },
   ]));
+  loadSettings();
   serveUi();
   lockDown();
+  bridge();
   createWindow();
 });

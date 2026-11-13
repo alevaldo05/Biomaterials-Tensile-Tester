@@ -1,12 +1,13 @@
 /* The graph with its view buttons, used for a live test and for an opened one. Views appear only when their data exists. */
 import { useMemo, useState } from 'react';
+import { keyPoints, regionsFor } from '@tensile/core';
 import type { TestRecord, TestType } from '@tensile/core';
 import { DARK_GRAPH, Graph, LIGHT_GRAPH } from '@tensile/ui';
 import { resultsFor } from '../results';
 
 type ViewId = 'stress' | 'force-disp' | 'force-time' | 'disp-time';
 
-function viewData(rec: TestRecord | null, view: ViewId, isRelax: boolean) {
+export function viewData(rec: TestRecord | null, view: ViewId, isRelax: boolean) {
   const raw = rec?.raw;
   if (view === 'force-disp') return { x: raw?.d ?? [], y: raw?.F ?? [], xLabel: 'Crosshead displacement (mm)', yLabel: 'Force (N)', xName: 'd', yName: 'F', xUnit: 'mm', yUnit: 'N' };
   if (view === 'force-time') return { x: raw?.t ?? [], y: raw?.F ?? [], xLabel: 'Time (s)', yLabel: 'Force (N)', xName: 't', yName: 'F', xUnit: 's', yUnit: 'N' };
@@ -39,6 +40,14 @@ export function RecordGraph(p: RecordGraphProps) {
   const [view, setView] = useState<ViewId>('stress');
   const current = views.some((v) => v[0] === view) ? view : 'stress';
   const results = useMemo(() => (p.showResults ? resultsFor(p.record) : { rows: [], markers: [], fitLine: null }), [p.record, p.showResults]);
+  /* Display-only guides after a test: region guides on the stress view, and a tangent line on stress-strain. */
+  const [showRegions, setShowRegions] = useState(false), [showTangent, setShowTangent] = useState(false);
+  const canGuide = !!p.showResults && !p.live && !!p.record && p.record.x.length >= 10 && current === 'stress';
+  const regions = useMemo(() => {
+    if (!canGuide || !showRegions || !p.record) return [];
+    try { return regionsFor(p.record, keyPoints(p.record, isRelax), isRelax).map(([name, from, to, approx]) => ({ name, from, to, ...(approx ? { approx } : {}) })); } catch { return []; }
+  }, [canGuide, showRegions, p.record, isRelax]);
+  const tangent = canGuide && !isRelax && showTangent ? { slopeName: 'dσ/dε', slopeUnit: 'MPa' } : null;
   return (
     <section className="graph-card" aria-label="Graph">
       <div className="views" role="group" aria-label="Graph view">
@@ -48,7 +57,14 @@ export function RecordGraph(p: RecordGraphProps) {
       </div>
       <Graph {...viewData(p.record, current, isRelax)} palette={p.theme === 'dark' ? DARK_GRAPH : LIGHT_GRAPH} live={!!p.live} sourceTag={p.sourceTag}
         markers={current === 'stress' ? results.markers : []} fitLine={current === 'stress' ? results.fitLine : null} emptyText={p.emptyText}
+        regions={regions} tangent={tangent}
         {...(p.onSvg ? { onSvg: p.onSvg } : {})} />
+      {canGuide ? (
+        <p className="row graph-guides">
+          <label className="check"><input type="checkbox" checked={showRegions} onChange={(e) => setShowRegions(e.target.checked)} /> Show regions</label>
+          {!isRelax ? <label className="check"><input type="checkbox" checked={showTangent} onChange={(e) => setShowTangent(e.target.checked)} /> Tangent line at cursor</label> : null}
+          <span className="hint">Guides only: they change the picture, never the results. Region boundaries are estimates.</span>
+        </p>) : null}
     </section>
   );
 }

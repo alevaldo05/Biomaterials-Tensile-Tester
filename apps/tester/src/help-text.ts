@@ -79,8 +79,9 @@ export const HELP: Record<string, HelpTopic> = {
   load: {
     title: 'Load test',
     what: 'Open a recorded test: a session file saved by this app, or a CSV file. Opening a file never sends anything to a device.',
-    next: ['Choose a file, or pick a recent test.', 'Export the opened test, or press Print report and save it as a PDF from the print window. The report is marked Draft and is not saved by the app.'],
-    problems: [['File marked as simulated', 'The app opens recorded tests only; practice files open on the website’s Load Test page.'], ['No dimensions', 'Stress and strain need the specimen dimensions stored in the file.']],
+    next: ['Choose a file, or pick a recent test.', 'Export the opened test, or press Print report and save it as a PDF from the print window. The report is marked Draft and is not saved by the app.', 'To compare specimens, choose Compare tests and add up to 12 tests of one test type: the curves are overlaid, and the key results are listed with the mean and sample standard deviation.'],
+    terms: [['Sample standard deviation', 'The spread of the values, divided by n − 1. It needs at least two values; a dash means it is not available.']],
+    problems: [['File marked as simulated', 'The app opens recorded tests only; practice files open on the website’s Load Test page.'], ['No dimensions', 'Stress and strain need the specimen dimensions stored in the file.'], ['Cannot add a test to a comparison', 'A comparison holds one test type and at most 12 tests. Start a new comparison with Clear all for another test type.']],
   },
   methods: {
     title: 'Test methods',
@@ -95,13 +96,15 @@ export const HELP: Record<string, HelpTopic> = {
   device: {
     title: 'Device and calibration',
     what: 'The connection to the acquisition device and the calibration in use, with a summary you can copy when asking for help.',
-    next: ['Connect, then load the setup for this tester.', 'Copy the diagnostic summary if something is wrong.'],
+    next: ['Connect, then load the setup for this tester.', 'Check the calibration with known weights: type each mass and the force shown (or press Read force), then download or print the check.', 'Copy the diagnostic summary if something is wrong.'],
+    terms: [['Calibration check', 'Compares the force the app shows with the force expected from known weights (F = m g). It changes no reading and no calibration, saves nothing, and makes no claim of traceability. A software baseline or a tare is not a calibration.']],
     assistance: TECH,
   },
   settings: {
     title: 'Settings',
-    what: 'Display choices and what is stored on this computer.',
-    next: ['Change the theme.', 'Remove recordings you have already downloaded or saved to the lab server.'],
+    what: 'Display choices, what is stored on this computer, and (in the Windows app) the lab server address.',
+    next: ['Change the theme.', 'Remove recordings you have already downloaded or saved to the lab server.', 'In the Windows app: type the lab server address (for example http://lab-pc:8080) and save it, then sign in from the top of the screen.'],
+    problems: [['Lab server: Not set up', 'No address has been saved in this Windows app. Ask the lab for the address.'], ['Lab server: Not connected', 'The address is saved but the lab server does not answer from this computer. Check the address and the network; recording still works.']],
   },
   admin: {
     title: 'Admin',

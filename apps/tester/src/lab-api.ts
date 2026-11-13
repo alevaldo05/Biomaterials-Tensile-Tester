@@ -92,6 +92,8 @@ export interface Account {
   api: LabApi;
   /** null while checking. */
   reachable: boolean | null;
+  /** True in the Windows app when no lab server address is set. */
+  notSetUp?: boolean;
   user: LabUser | null;
   /** An admin looking at the user screens. Changes what this screen shows, never what the server allows. */
   viewAsUser: boolean;

@@ -30,13 +30,28 @@ describe('Windows app', () => {
     expect(main).not.toMatch(/'(media|geolocation|notifications|hid|usb|bluetooth)'/);
   });
   it('sends no machine commands and has no other way to reach the device', () => {
-    expect(main).not.toMatch(/start_stream|stop_stream|set_settings|serialport|child_process|ipcMain/);
+    expect(main).not.toMatch(/start_stream|stop_stream|set_settings|serialport|child_process/);
   });
-  it('the preload gives the screens one fixed label and nothing else', () => {
+  it('answers only the lab-address and journal calls, and only from its own screens', () => {
+    expect([...main.matchAll(/ipcMain\.(\w+)\('([^']+)'/g)].map((m) => m[1] + ' ' + m[2])).toEqual(['handle journal:', 'handle lab-server:get', 'handle lab-server:set']);
+    expect(main).toContain("const JOURNAL_CALLS = ['begin', 'append', 'finish', 'list', 'lines', 'remove', 'estimate'];");
+    expect(main).toContain("if (!own(e)) throw new Error('Not allowed.');");
+    expect(main).not.toMatch(/ipcMain\.on\(|webContents\.send|\.send\(/);
+    expect(main).toContain('const own = (e) => fromApp(e.senderFrame && e.senderFrame.url);');
+    expect(main).toContain('checkLabUrl(');
+  });
+  it('the preload gives the screens a fixed label, the lab-address calls, and the journal calls, nothing else', () => {
     const pre = read('preload.cjs');
     expect(pre.match(/exposeInMainWorld/g)).toHaveLength(1);
-    expect(pre).toContain("Object.freeze({ kind: 'windows-app' })");
-    expect(pre).not.toMatch(/ipcRenderer|require\(['"](fs|node:|child_process|path)/);
+    expect(pre).toContain("kind: 'windows-app'");
+    expect([...pre.matchAll(/ipcRenderer\.(\w+)\('([^']+)'/g)].map((m) => m[1] + ' ' + m[2])).toEqual(['invoke lab-server:get', 'invoke lab-server:set',
+      ...['begin', 'append', 'finish', 'list', 'lines', 'remove', 'estimate'].map((n) => 'invoke journal:' + n)]);
+    expect(pre.match(/ipcRenderer\./g)).toHaveLength(9);
+    expect(pre).not.toMatch(/require\(['"](fs|node:|child_process|path)/);
+  });
+  it('sends only /api/v1/ requests to the lab server, never screens', () => {
+    expect(main).toContain('if (u.pathname.startsWith(API_PREFIX)) return lab.handle(req);');
+    expect(main).toContain("win.loadURL(ORIGIN + '/index.html')");
   });
   it('serves files from the ui folder only', () => {
     const ui = path.join(dir, 'ui');
@@ -58,5 +73,6 @@ describe('Windows app', () => {
     expect(pkg.build.publish).toBeNull();
     expect(pkg.build.nsis.artifactName).toContain('beta-unsigned');
     expect(pkg.build.files).not.toContain('node_modules/**/*');
+    expect(pkg.build.files).toEqual(expect.arrayContaining(['main.cjs', 'preload.cjs', 'ui-files.cjs', 'lab-proxy.cjs', 'journal-files.cjs', 'ui/**/*']));
   });
 });

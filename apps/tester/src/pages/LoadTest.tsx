@@ -10,6 +10,7 @@ import { ResultsTable } from '../components/ResultsTable';
 import { save, svgText, svgToPng, xlsxForRecord } from '../exports';
 import type { LoadedTest } from '../load';
 import type { RecentRow } from './Home';
+import { Compare } from './Compare';
 
 export function LoadTest(p: {
   loaded: LoadedTest | null;
@@ -20,6 +21,7 @@ export function LoadTest(p: {
   clear: () => void;
 }) {
   const [hint, setHint] = useState<'' | TestType>('');
+  const [mode, setMode] = useState<'one' | 'compare'>('one');
   const { ref: mainRef, printing, print } = usePrintReport<HTMLElement>();
   const svg = useRef<SVGSVGElement | null>(null);
   const l = p.loaded, base = l ? l.name.replace(/\.(session\.json|json|csv)$/i, '') : 'test';
@@ -36,8 +38,12 @@ export function LoadTest(p: {
   };
   return (
     <main className="page" id="main-content" ref={mainRef}>
-      <div className="row"><h1>Load test</h1>{l ? <button type="button" onClick={p.clear}>Open another</button> : null}</div>
-      {!l ? (<>
+      <div className="row"><h1>Load test</h1>{l && mode === 'one' ? <button type="button" onClick={p.clear}>Open another</button> : null}</div>
+      <div className="seg" role="group" aria-label="Mode">
+        <button type="button" aria-pressed={mode === 'one'} onClick={() => setMode('one')}>One test</button>
+        <button type="button" aria-pressed={mode === 'compare'} onClick={() => setMode('compare')}>Compare tests</button>
+      </div>
+      {mode === 'compare' ? <Compare theme={p.theme} recent={p.recent} /> : !l ? (<>
         <section className="card-plain" aria-labelledby="open-title">
           <h2 id="open-title">Open a file</h2>
           <div className="row" style={{ alignItems: 'flex-end' }}>
