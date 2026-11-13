@@ -4,6 +4,8 @@ WORKDIR /src
 COPY package.json package-lock.json tsconfig.base.json ./
 COPY packages ./packages
 COPY apps ./apps
+# The app reads the website's definitions and materials (data/terms.js, data/materials.js) while it is built.
+COPY data ./data
 # The optional "npm_ca" build secret is only for networks that inspect HTTPS with their own certificate; normally absent.
 RUN --mount=type=secret,id=npm_ca,required=false sh -c '[ -f /run/secrets/npm_ca ] && export NODE_EXTRA_CA_CERTS=/run/secrets/npm_ca; npm ci --no-audit --no-fund' && npm run build -w @tensile/tester
 
