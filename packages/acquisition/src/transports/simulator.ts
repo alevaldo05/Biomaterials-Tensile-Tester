@@ -53,6 +53,8 @@ export interface SimulatorOptions {
   noise_V?: number;
   /** Run by itself on a timer. When false, call step() to produce conversions. */
   auto?: boolean;
+  /** When true the pretend crosshead waits for beginMotion(); otherwise it starts 1 s after the stream starts. */
+  manualMotion?: boolean;
   /* The rest are for tests of how the app handles trouble. */
   protocolVersion?: number;
   adcMissing?: boolean;
@@ -81,7 +83,7 @@ export class SimulatedDevice implements Transport {
   private seq = 0;
   private conv = 0;
   private uptime_s = 5.25;
-  private streamStart_s = 0;
+  private motionStart_s: number | null = null;
   private drop = 0;
   private timer: ReturnType<typeof setInterval> | null = null;
   private rnd: () => number;
@@ -93,7 +95,7 @@ export class SimulatedDevice implements Transport {
       deviceType: options.deviceType ?? 'simulator', deviceId: options.deviceId ?? 'sim-0001', timeUnit: options.timeUnit ?? 'us',
       motion: options.motion ?? simulatedUniaxial(), signal: options.signal ?? SIMULATED_SIGNAL,
       dataRate_sps: options.dataRate_sps ?? 128, fullScale_mV: options.fullScale_mV ?? 4096, chunkSize: options.chunkSize ?? 0,
-      seed: options.seed ?? 1, noise_V: options.noise_V ?? 0.0004, auto: options.auto ?? true,
+      seed: options.seed ?? 1, noise_V: options.noise_V ?? 0.0004, auto: options.auto ?? true, manualMotion: options.manualMotion ?? false,
       protocolVersion: options.protocolVersion ?? PROTOCOL_VERSION, adcMissing: options.adcMissing ?? false,
       omitDisplacement: options.omitDisplacement ?? false, silent: options.silent ?? false,
     };
@@ -167,7 +169,7 @@ export class SimulatedDevice implements Transport {
         break;
       }
       case 'start_stream':
-        this.streaming = true; this.seq = 0; this.conv = 0; this.streamStart_s = this.uptime_s;
+        this.streaming = true; this.seq = 0; this.conv = 0; this.motionStart_s = this.o.manualMotion ? null : this.uptime_s + 1;
         this.say({ type: 'ack', id: id ?? 'r' }, { type: 'status', state: 'streaming' });
         if (this.o.auto) this.startTimer();
         break;
@@ -196,7 +198,7 @@ export class SimulatedDevice implements Transport {
       const ch = this.order[this.conv % this.order.length] as string;
       this.conv++;
       this.uptime_s += 1 / this.rate;
-      const m = this.o.motion(Math.max(0, this.uptime_s - this.streamStart_s - 1));   /* the pretend crosshead starts 1 s after the stream */
+      const m = this.o.motion(this.motionStart_s === null ? 0 : Math.max(0, this.uptime_s - this.motionStart_s));
       const vMachine = ch === 'force' ? m.force_N * sig.volts_per_N : m.displacement_mm * sig.volts_per_mm;
       const vAdc = vMachine * sig.conditioningGain + (this.rnd() + this.rnd() + this.rnd() - 1.5) * this.o.noise_V * 2;
       let raw = Math.round(vAdc / (this.range / 1000) * 32768);
@@ -209,11 +211,16 @@ export class SimulatedDevice implements Transport {
     if (text) this.emitText(text);
   }
 
+  /** Starts the pretend crosshead now (the simulator's stand-in for the tester's own controller). Sends nothing. */
+  beginMotion(motion?: Motion): void { if (motion) this.o.motion = motion; this.motionStart_s = this.uptime_s; }
+  /** Returns the pretend crosshead to the start. */
+  resetMotion(): void { this.motionStart_s = null; }
+
   /* ---------- trouble on demand, for tests and for trying the app's messages ---------- */
   /** The next n samples are lost on the way (their sequence numbers are skipped). */
   dropNext(n: number): void { this.drop += n; }
   /** The device restarts: new boot id, stream stopped, and it announces itself again. */
-  restart(): void { this.boot++; this.streaming = false; this.stopTimer(); this.uptime_s = 0.4; this.say(this.hello()); }
+  restart(): void { this.boot++; this.streaming = false; this.stopTimer(); this.uptime_s = 0.4; this.motionStart_s = null; this.say(this.hello()); }
   /** Sends arbitrary text, as a faulty device or a noisy line would. */
   injectText(text: string): void { this.emitText(text); }
   /** The cable is pulled. */

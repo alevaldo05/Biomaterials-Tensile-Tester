@@ -1,0 +1,22 @@
+{
+  "name": "@tensile/tester",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "The tester app: connect an acquisition source, record a test, see the graph and key results, and save the data.",
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build",
+    "build:learning": "vite build --mode learning",
+    "preview": "vite preview"
+  },
+  "dependencies": {
+    "@tensile/acquisition": "0.1.0",
+    "@tensile/core": "0.1.0",
+    "@tensile/machine-control": "0.1.0",
+    "@tensile/recording": "0.1.0",
+    "@tensile/ui": "0.1.0",
+    "react": "19.3.1",
+    "react-dom": "19.3.1"
+  }
+}

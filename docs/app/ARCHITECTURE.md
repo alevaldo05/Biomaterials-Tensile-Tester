@@ -71,7 +71,8 @@ Rules that hold everywhere:
 | `packages/machine-control`: "unsupported", transmits nothing | Implemented (as a stub, on purpose) |
 | Device firmware (ESP32, Pico), Raspberry Pi service | Planned; none exists yet |
 | Electron, a network transport to a Raspberry Pi | Planned |
-| App screens, back end, database, containers | Planned |
+| `packages/ui` and `apps/tester`: the app screen, graph, exports, lab and learning editions | Implemented; details in [FEATURE-STATUS](FEATURE-STATUS.md) |
+| Back end, database, containers | Planned |
 
 Two things `packages/core` does differently from the website on purpose (the website pages are unchanged):
 
