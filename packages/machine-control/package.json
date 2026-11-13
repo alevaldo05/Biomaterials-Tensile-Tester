@@ -1,0 +1,9 @@
+{
+  "name": "@tensile/machine-control",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "The machine-control interface. Its only implementation reports every request as unsupported and transmits nothing.",
+  "main": "src/index.ts",
+  "types": "src/index.ts"
+}

@@ -100,6 +100,7 @@ Every page except `404.html` starts with a "Skip to main content" link (`.skip-l
 | `docs/BRANCHES.md` | Backups (tags), `main`, branch rules, and how to go back to a backup. |
 | `docs/REPO-SETTINGS.md` | Checklist of repository settings only the owner can change on GitHub. |
 | `.github/workflows/deploy.yml` | The workflow that publishes the site when `main` changes. Not part of the published site. |
+| `docs/app/PROTOCOL.md` | The acquisition protocol (the project's own; not a manufacturer protocol): messages, requests, and what the app does when data is bad. |
 | `docs/app/ARCHITECTURE.md` | The design of the tester app, shared packages, back end, and containers, and what works today. |
 | `.github/dependabot.yml` | Update checker for the Actions in the workflow, switched off (limit 0). Change the 0 to 2 to receive weekly update pull requests. Not part of the published site. |
 | `scripts/build-site.sh` | Used by the workflow: copies the site, adds `?v=<commit>` to script and style links, writes `version.json`. Does not change the repository files. |
@@ -116,6 +117,10 @@ Every page except `404.html` starts with a "Skip to main content" link (`.skip-l
 | `tsconfig.json`, `tsconfig.base.json`, `vitest.config.mjs` | Settings for TypeScript and the test runner. |
 | `.gitignore` | Keeps `node_modules/` and build output out of the repository. |
 | `packages/core/` | Shared calculations and file formats in TypeScript (`src/`): key results, data checks, the CSV reader and writer, the Excel writer, the calibration fit, and comparison statistics, ported from the website's scripts. `test/` checks them against the website's results. `reference/` runs the website's own `graph-core.js`, `live-csv.js`, and the maths in `calibration.js` and `compare.js` on fixed inputs and compares the results with `reference/fixtures/reference.json` (and `xlsx-reference.json` for the Excel bytes). |
+| `packages/protocol/` | The acquisition protocol between the app and the project's own devices: message shapes, run-time checks, and the line framer. Described in `docs/app/PROTOCOL.md`. |
+| `packages/acquisition/` | The common acquisition interface (`src/types.ts`), the connection logic (`src/source.ts`), the protocol adapter (`src/adapters/`), and the transports (`src/transports/`: simulator, recorded-data replay, USB serial). |
+| `packages/machine-control/` | The machine-control interface. Its only implementation answers "unsupported" and transmits nothing. |
+| `packages/recording/` | The recorder, the conversion from ADC counts to physical values, calibration compatibility, and the acceptance tests (`test/acceptance.test.ts`). |
 | `packages/`, `apps/`, `firmware/`, `deploy/` | The app, its packages, the back end, device-side software, and container files. `scripts/check-site.js` and `scripts/build-site.sh` leave them alone and out of the published site. |
 
 ## To change…

@@ -1,0 +1,10 @@
+{
+  "name": "@tensile/recording",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "The recorder, the conversion chain from ADC counts to physical values, and calibration compatibility.",
+  "main": "src/index.ts",
+  "types": "src/index.ts",
+  "dependencies": { "@tensile/acquisition": "0.1.0", "@tensile/core": "0.1.0" }
+}
