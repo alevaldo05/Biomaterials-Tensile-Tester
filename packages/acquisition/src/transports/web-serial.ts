@@ -45,7 +45,7 @@ export class WebSerialTransport implements Transport {
       const n = nameOf(e);
       throw new TransportError(n === 'NotFoundError' ? 'no-port-selected' : n === 'SecurityError' || n === 'NotAllowedError' ? 'permission-denied' : 'port-unavailable', String(e));
     }
-    try { await port.open({ baudRate: this.o.baudRate ?? 115200 }); }
+    try { await port.open({ baudRate: this.o.baudRate ?? 921600 }); }
     catch (e) {
       const n = nameOf(e);
       /* Chrome reports a port held by another program as NetworkError, and one already open in this tab as InvalidStateError. */
