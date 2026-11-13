@@ -6,7 +6,7 @@ import { csvVariants, SPEC, STARTED, syntheticRelaxation, syntheticUniaxial } fr
 import { loadLegacy } from '../reference/legacy.mjs';
 import {
   buildTestCsv, clone, csvFileBase, csvMetaRows, dataChecks, dimSourceText, holdStartText, initSample, keyNumbers, keyPoints,
-  loadingFit, modulusFitText, niceTicks, offsetYield, recompute, recordFromCsv, regionsFor, sig, sourceTag,
+  loadingFit, modulusFitText, niceTicks, offsetYield, recompute, recordFromCsv, regionsFor, skippedRowsText, sig, sourceTag,
 } from '../src/index';
 import type { CsvContext, DimSource, TestParams, TestRecord, TestType } from '../src/index';
 
@@ -108,6 +108,25 @@ describe('CSV files in other shapes', () => {
       expect(plain(dataChecks(r, isRelax))).toEqual(want.checks);
     });
   }
+});
+
+describe('rows the CSV reader leaves out', () => {
+  const head = '# Material,Rabbit tissue\n# L0 (mm),20\n# Width (mm),5\n# Thickness (mm),1\nDisplacement (mm),Force (N)\n';
+  const rows = (n: number) => Array.from({ length: n }, (_, i) => (i / 10) + ',' + (i * 0.2)).join('\n');
+  it('counts rows that are empty, text, or hex-style, and says nothing for a clean file', () => {
+    const clean = recordFromCsv('c.csv', head + rows(20) + '\n', 'uniaxial', { defaults });
+    expect(clean.skippedRows).toBeUndefined();
+    expect(skippedRowsText(clean)).toBe('');
+    const messy = recordFromCsv('m.csv', head + rows(20) + '\n5,abc\n6,\n0x10,3\n7,0b11\n', 'uniaxial', { defaults });
+    expect(messy.skippedRows).toBe(4);
+    expect(messy.x.length).toBe(clean.x.length);
+    expect(skippedRowsText(messy)).toBe('4 rows of the file could not be read as numbers and were left out.');
+    expect(dataChecks(messy, false).items.join(' ')).not.toContain('could not be read');   /* the website-matching checks are unchanged */
+  });
+  it('says "row" for exactly one', () => {
+    const one = recordFromCsv('o.csv', head + rows(20) + '\n9,xyz\n', 'uniaxial', { defaults });
+    expect(skippedRowsText(one)).toBe('1 row of the file could not be read as numbers and was left out.');
+  });
 });
 
 describe('helpers', () => {

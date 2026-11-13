@@ -48,6 +48,13 @@ describe('Load test', () => {
     await expect(openTestFile('q.csv', '# Source,sample data\nTime (s),Force (N)\n0,0\n')).rejects.toThrow(REJECT_SIMULATED);
   });
 
+  it('keeps the count of rows it could not read, for the Load test notice', async () => {
+    const head = '# Gauge length L0 (mm),20\n# Width (mm),5\n# Thickness (mm),1\nDisplacement (mm),Force (N)\n';
+    const rows = Array.from({ length: 20 }, (_, i) => (i / 10) + ',' + (i * 0.2)).join('\n');
+    const loaded = await openTestFile('r.csv', head + rows + '\n3,oops\n0x1F,2\n');
+    expect(loaded.record!.skippedRows).toBe(2);
+  });
+
   it('refuses a CSV without dimensions, and text that is not a test file', async () => {
     const rows = Array.from({ length: 20 }, (_, i) => i + ',' + i + ',' + (i / 10)).join('\n');
     await expect(openTestFile('x.csv', 'Time (s),Force (N),Displacement (mm)\n' + rows + '\n')).rejects.toThrow('no specimen dimensions');

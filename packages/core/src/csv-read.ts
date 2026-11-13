@@ -75,6 +75,8 @@ export interface ParsedCsv {
   meta: CsvMeta;
   dims: Specimen | null;
   t: number[];
+  /** Data rows left out because a needed cell was empty or not a plain number. */
+  skipped: number;
 }
 
 /** Throws an Error with a plain-language message when the file cannot be used. */
@@ -108,12 +110,13 @@ export function parseCsv(text: string, isRelax: boolean): ParsedCsv {
   else if (cols.strain && cols.stress) { mode = 'direct'; need = ['strain', 'stress']; }
   else throw new Error('Uniaxial tension needs strain + stress, or displacement + force, columns. Found: ' + heads.join(', ') + '.');
   const holdQ = isRelax ? (cols.disp ? 'disp' : (cols.strain ? 'strain' : null)) : null;
-  const out: ParsedCsv = { mode, a: [], b: [], hold: [], holdQ, meta, dims, t: [] };
+  const out: ParsedCsv = { mode, a: [], b: [], hold: [], holdQ, meta, dims, t: [], skipped: 0 };
   const col = (q: Quantity) => cols[q] as { i: number; f: number };
   for (let r = 1; r < lines.length; r++) {
     const cells = (lines[r] as string).split(delim).map((c) => { c = c.trim().replace(/^"|"$/g, ''); return delim === ';' ? c.replace(',', '.') : c; });
-    const vals = need.map((q) => { const c = cells[col(q).i]; return c === undefined || c === '' ? NaN : Number(c) * col(q).f; });
-    if (vals.some((v) => !Number.isFinite(v))) continue;
+    /* a cell must be a plain decimal number: 0x10, 0b1, and 0o7 are not read as numbers */
+    const vals = need.map((q) => { const c = cells[col(q).i]; return c === undefined || c === '' || /^[+-]?0[xbo]/i.test(c) ? NaN : Number(c) * col(q).f; });
+    if (vals.some((v) => !Number.isFinite(v))) { out.skipped++; continue; }
     out.a.push(vals[0] as number); out.b.push(vals[1] as number);
     if (cols.time && !isRelax) { const c = cells[cols.time.i]; out.t.push(c === undefined || c === '' ? NaN : Number(c) * cols.time.f); } /* kept only for the data checks */
     if (holdQ) out.hold.push(Number(cells[col(holdQ).i]) * col(holdQ).f);
@@ -121,6 +124,12 @@ export function parseCsv(text: string, isRelax: boolean): ParsedCsv {
   if (out.a.length < 10) throw new Error('Fewer than 10 rows contain valid numbers in the ' + need.join(' and ') + ' columns.');
   if (isRelax) { const t0 = out.a[0] as number; out.a = out.a.map((v) => v - t0); }
   return out;
+}
+
+/** Plain-words note for a loaded CSV that had rows left out; empty when none. Kept apart from dataChecks, which matches the website. */
+export function skippedRowsText(r: { skippedRows?: number } | null | undefined): string {
+  const n = r && r.skippedRows ? r.skippedRows : 0;
+  return n > 0 ? n + (n === 1 ? ' row of the file could not be read as numbers and was left out.' : ' rows of the file could not be read as numbers and were left out.') : '';
 }
 
 /** 'biomaterial', 'steel', or 'concrete' when the material name says so; null for anything else. */
@@ -177,6 +186,7 @@ export function recordFromCsv(name: string, text: string, test: TestType, opts: 
   } else if (d.mode === 'direct') { r.x = d.a; r.y = d.b; }
   else r.raw = { d: d.a, F: d.b };
   if (d.t.length && d.t.length === d.a.length) r.checkT = d.t;
+  if (d.skipped > 0) r.skippedRows = d.skipped;
   r.dimSource = r.direct ? 'not-needed' : !d.dims ? 'assumed' : /example/i.test(meta.dimsrc || '') ? 'file-example' : 'file';
   r.dimSourceBase = r.dimSource;
   r.base = clone(p);

@@ -3,7 +3,7 @@
 import { useRef, useState } from 'react';
 import { usePrintReport } from '../components/usePrintReport';
 import type { TestType } from '@tensile/core';
-import { buildTestCsv, sig } from '@tensile/core';
+import { buildTestCsv, sig, skippedRowsText } from '@tensile/core';
 import { Panel } from '@tensile/ui';
 import { RecordGraph } from '../components/RecordGraph';
 import { ResultsTable } from '../components/ResultsTable';
@@ -76,6 +76,7 @@ export function LoadTest(p: {
           <p>Data: loaded from a file. {l.kind === 'session' ? 'Rebuilt from the readings in the session file.' : 'Imported CSV file.'} The hardware connection is untested.</p>
         </div>
         <p className="notice">{l.provenance}</p>
+        {skippedRowsText(l.record) ? <p className="notice" role="status">{skippedRowsText(l.record)} Check the file before relying on these results.</p> : null}
         <div className="toolbar" role="toolbar" aria-label="Export">
           {l.record && l.setup ? <button type="button" onClick={() => void exportAs('csv')}>Test data (CSV)</button> : null}
           {l.record ? <button type="button" onClick={() => void exportAs('xlsx')}>Excel (.xlsx)</button> : null}
