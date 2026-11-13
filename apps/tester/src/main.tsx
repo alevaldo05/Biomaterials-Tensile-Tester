@@ -17,6 +17,7 @@ async function start() {
     serialAvailable = real.usbSerialAvailable();
   }
   const controller = new TestController({ edition: __EDITION__, ...(openReal ? { openReal } : {}) });
+  void controller.startPreview();
   createRoot(document.getElementById('root') as HTMLElement).render(<StrictMode><Shell controller={controller} serialAvailable={serialAvailable} /></StrictMode>);
 }
 void start();

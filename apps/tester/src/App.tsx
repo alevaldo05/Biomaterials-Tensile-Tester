@@ -12,6 +12,7 @@ import { parseSetupFile } from './controller';
 import type { Account, ProfileRow } from './lab-api';
 import { fileBase, samplesCsv, save, sessionDetails, svgText, svgToPng, testCsv, testXlsx } from './exports';
 import { resultsFor, TERM_FOR } from './results';
+import { PREVIEW } from './preview-text';
 import site from 'virtual:site-data';
 import { EXAMPLE_DIMENSIONS, EXAMPLE_SETTINGS, MATERIAL_CHOICES, setupProblems, STEP_FIELDS } from './setup';
 import type { Setup } from './setup';
@@ -38,6 +39,8 @@ const STEPS: { id: StepId; name: string }[] = [
   { id: 'test', name: 'Test and specimen' }, { id: 'dimensions', name: 'Dimensions' }, { id: 'review', name: 'Review' },
 ];
 type ViewId = 'stress' | 'force-disp' | 'force-time';
+/* The app preview published with the website shows only the steps that mean something without a tester. */
+const PREVIEW_STEPS: StepId[] = ['test', 'dimensions', 'review'];
 
 export function useTheme(): [string, () => void] {
   const [theme, setTheme] = useState(() => { try { return localStorage.getItem('app-theme') || 'light'; } catch { return 'light'; } });
@@ -59,14 +62,16 @@ export interface TestScreenProps { controller: TestController; serialAvailable: 
 /** The test screen: setup steps beside the workspace. */
 export function App({ controller: c, serialAvailable, theme, account }: TestScreenProps) {
   useSyncExternalStore(c.subscribe, c.snapshot);
-  const [step, setStep] = useState<StepId>('source');
+  const preview = c.edition === 'learning';
+  const stepList = preview ? STEPS.filter((s) => PREVIEW_STEPS.includes(s.id)) : STEPS;
+  const [step, setStep] = useState<StepId>(preview ? 'test' : 'source');
   const [drawer, setDrawer] = useState(false);
   const [view, setView] = useState<ViewId>('stress');
   const [touched, setTouched] = useState<Partial<Record<keyof Setup, boolean>>>({});
   const [ask, setAsk] = useState<null | 'new' | 'disconnect'>(null);
   const [saveOpen, setSaveOpen] = useState(false);
   const [fileError, setFileError] = useState('');
-  const [showDefs, setShowDefs] = useState(false);
+  const [showDefs, setShowDefs] = useState(preview);
   const svg = useRef<SVGSVGElement | null>(null);
   const [labProfiles, setLabProfiles] = useState<ProfileRow[] | null>(null);
   useEffect(() => {
@@ -86,7 +91,7 @@ export function App({ controller: c, serialAvailable, theme, account }: TestScre
   const touch = (k: keyof Setup) => () => setTouched((t) => ({ ...t, [k]: true }));
 
   useEffect(() => { if (recording) setDrawer(false); }, [recording]);
-  useEffect(() => { document.title = (recording ? 'Recording · ' : c.phase === 'done' ? 'Stopped · ' : '') + 'Biomaterials Tensile Tester · App'; }, [recording, c.phase]);
+  useEffect(() => { document.title = (recording ? 'Recording · ' : c.phase === 'done' ? 'Stopped · ' : '') + (preview ? 'App preview – Biomaterials Tensile Tester' : 'Biomaterials Tensile Tester · App'); }, [recording, c.phase, preview]);
   useEffect(() => { const d = dialog.current; if (!d) return; if (ask && !d.open) d.showModal(); if (!ask && d.open) d.close(); }, [ask]);
   /* The browser's own box when the tab is closed with data that was not saved. */
   useEffect(() => {
@@ -140,6 +145,19 @@ export function App({ controller: c, serialAvailable, theme, account }: TestScre
       c.update((x) => { x.message = 'Not saved to the lab database: ' + (e instanceof Error ? e.message : String(e)) + ' The data is still in this tab; download it to keep it.'; });
     }
   };
+  /* Preview only: swap the pretend board for a saved session, and back. */
+  const openReplayHere = async (text: string) => {
+    try { JSON.parse(text); } catch { setFileError('This is not a session file saved by this app.'); return; }
+    await c.disconnect();
+    try { c.loadReplay(text); } catch (e) { setFileError(e instanceof Error ? e.message : String(e)); c.update((x) => { x.choice = 'simulated'; }); await c.connect(); return; }
+    setFileError('');
+    await c.connect();
+  };
+  const backToSimulator = async () => {
+    await c.disconnect();
+    c.update((x) => { x.choice = 'simulated'; x.replayFile = null; });
+    await c.connect();
+  };
   const startNew = () => { c.newTest(); setTouched({}); setView('stress'); };
   const proceed = (how: 'save' | 'discard') => {
     const what = ask;
@@ -157,7 +175,7 @@ export function App({ controller: c, serialAvailable, theme, account }: TestScre
   };
 
   /* ---------- setup steps ---------- */
-  const stepIndex = STEPS.findIndex((s) => s.id === step);
+  const stepIndex = stepList.findIndex((s) => s.id === step);
   const stepBlock: Partial<Record<StepId, string>> = {
     source: c.choice === 'replay' && !c.replayFile ? 'Choose a session file.' : undefined,
     connection: c.connected ? undefined : 'Connect to continue.',
@@ -183,7 +201,7 @@ export function App({ controller: c, serialAvailable, theme, account }: TestScre
           </label>
         ))}
       </fieldset>
-      {c.edition === 'learning' ? <p className="hint">Learning edition: this build cannot connect to hardware.</p> : null}
+      {c.edition === 'learning' ? <p className="hint">App preview: this build cannot connect to hardware.</p> : null}
       {c.choice === 'simulated' ? (
         <Field label="Pretend device" hint="The same screens and checks run for every device type.">
           <select value={c.simulatedDeviceType} disabled={c.connected} onChange={(e) => c.update((x) => { x.simulatedDeviceType = e.target.value; })}>
@@ -280,6 +298,12 @@ export function App({ controller: c, serialAvailable, theme, account }: TestScre
         {!isRelax && c.setup.offsetOn ? <div><dt>Offset yield</dt><dd>{c.setup.offsetPct || '—'} % strain</dd></div> : null}
       </dl>
       {c.startProblem ? <p className="hint" role="status">Start recording is not available: {c.startProblem}</p> : c.phase === 'setup' ? <p className="hint">Ready. Press Start recording, then start the test on the tester’s own controller.</p> : null}
+      {preview && !c.locked ? (c.choice === 'replay'
+        ? <p><button type="button" className="link" onClick={() => void backToSimulator()}>{PREVIEW.backToSimulator}</button></p>
+        : <Field label={PREVIEW.replay} hint="A .session.json file saved with Save data.">
+            <input type="file" accept=".json,application/json" onChange={(e) => readFile(e, (t) => { void openReplayHere(t); })} />
+          </Field>) : null}
+      {fileError && step === 'review' ? <p className="error" role="alert">{fileError}</p> : null}
     </>),
   };
 
@@ -291,27 +315,29 @@ export function App({ controller: c, serialAvailable, theme, account }: TestScre
         <aside className="setup" aria-label="Setup">
           <div className="setup-head"><h2>Setup</h2><button type="button" className="quiet drawer-close" onClick={() => setDrawer(false)}>Close</button></div>
           <ol className="steps">
-            {STEPS.map((s, i) => (
+            {stepList.map((s, i) => (
               <li key={s.id}><button type="button" className={'step' + (s.id === step ? ' step-on' : '')} aria-current={s.id === step ? 'step' : undefined} onClick={() => setStep(s.id)}>
                 <span className="step-n">{i + 1}</span>{s.name}{!stepBlock[s.id] && (s.id !== 'review') && (s.id !== 'device' || identity) && (s.id !== 'calibration' || readiness?.ready) ? <span className="step-done" aria-label="done">✓</span> : null}
               </button></li>
             ))}
           </ol>
           <section className="step-body" aria-labelledby="step-title">
-            <h3 id="step-title">{stepIndex + 1}. {STEPS[stepIndex]?.name}</h3>
+            <h3 id="step-title">{stepIndex + 1}. {stepList[stepIndex]?.name}</h3>
+            {preview && (step === 'test' || step === 'dimensions' || step === 'review') ? (() => { const n = PREVIEW.steps[step], l = n.link(c.test); return <p className="step-note">{n.why(c.test)} <a href={l.href}>{l.label}</a></p>; })() : null}
             {steps[step]}
           </section>
           <div className="step-nav">
-            <button type="button" disabled={stepIndex === 0} onClick={() => setStep((STEPS[stepIndex - 1] as { id: StepId }).id)}>Back</button>
-            {stepIndex < STEPS.length - 1 ? <button type="button" className="primary" disabled={!!stepBlock[step]} onClick={() => setStep((STEPS[stepIndex + 1] as { id: StepId }).id)}>Next</button> : null}
-            {stepBlock[step] && stepIndex < STEPS.length - 1 ? <span className="hint step-why">{stepBlock[step]}</span> : null}
+            <button type="button" disabled={stepIndex === 0} onClick={() => setStep((stepList[stepIndex - 1] as { id: StepId }).id)}>Back</button>
+            {stepIndex < stepList.length - 1 ? <button type="button" className="primary" disabled={!!stepBlock[step]} onClick={() => setStep((stepList[stepIndex + 1] as { id: StepId }).id)}>Next</button> : null}
+            {stepBlock[step] && stepIndex < stepList.length - 1 ? <span className="hint step-why">{stepBlock[step]}</span> : null}
           </div>
         </aside>
         {drawer ? <button type="button" className="scrim" aria-label="Close setup" onClick={() => setDrawer(false)} /> : null}
 
         <main className="work" id="main-content">
-          <StatusBar tone={st.tone} state={st.name} detail={(state === 'fault' || state === 'disconnected') && c.message ? c.message : st.detail}>
+          <StatusBar tone={st.tone} state={st.name} detail={(state === 'fault' || state === 'disconnected') && c.message ? c.message : preview && state === 'ready' ? 'The pretend board is sending made-up readings.' : st.detail}>
             {identity && c.connected ? <span className="status-device">{SOURCE_TEXT[c.choice].name} · {identity.deviceId}</span> : null}
+            {preview && !c.connected && c.phase === 'setup' && state !== 'connecting' && state !== 'identifying' ? <button type="button" onClick={() => void c.connect()}>Connect the simulator</button> : null}
             <button type="button" className="setup-button" onClick={() => setDrawer(true)}>Setup</button>
           </StatusBar>
 
@@ -354,6 +380,9 @@ export function App({ controller: c, serialAvailable, theme, account }: TestScre
               emptyText={c.phase === 'done' ? (c.recordProblem || 'No data was recorded.') : recording ? 'Waiting for readings…' : 'The curve appears here when recording starts.'}
               onSvg={(el) => { svg.current = el; }} />
           </section>
+
+          {preview && c.phase === 'done' ? (() => { const n = PREVIEW.curve[c.test]; return (
+            <aside className="curve-note" aria-label={n.title}><strong>{n.title}.</strong> {n.text} <a href={n.link.href}>{n.link.label}</a></aside>); })() : null}
 
           {c.phase === 'done' ? (<>
             <Panel title="Key results" open>

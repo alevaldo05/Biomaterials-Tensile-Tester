@@ -9,6 +9,7 @@ The React and TypeScript app for running tests, the packages it shares with the 
 - `docs/app/ARCHITECTURE.md`
 - `docs/app/FEATURE-STATUS.md` (what is implemented, simulated, untested, unsupported; update it with every stage)
 - `packages/ui/` and `apps/tester/`: the graph and screen pieces, and the app itself (controller, screen, exports, lab and learning editions)
+- `apps/tester/src/preview-text.ts`: the words and website links of the app preview published at `app/`
 - `apps/tester/site-data.ts` (the app reads the website's `data/terms.js` and `data/materials.js` at build time); `.github/workflows/deploy.yml` also publishes the learning edition at `app/` (`scripts/build-site.sh` with `APP_DIST`)
 - `docs/app/CONTAINERS.md`; `deploy/` (compose file, Dockerfiles, gateway, backups, test image); `.github/workflows/app.yml` (checks; publishes nothing); `.dockerignore`
 - `docs/app/BACKEND.md`; `apps/api/` (back end and database migrations); `apps/tester/src/Shell.tsx`, `lab-api.ts`, `pages/` (sign-in, History, Admin, View as user)
