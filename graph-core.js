@@ -243,7 +243,7 @@
     var m = r.mk || r.region || r.material;
     return m === 'biomaterial' || m === 'steel' || m === 'concrete' || m === 'plain' ? m : null;
   }
-  /* Which region naming a sample material uses (see data/materials.js); used by the test pages. */
+  /* Which region naming a sample material uses (see data/materials.js); used by the practice page. */
   function sampleRegion(test, material) {
     var all = (window.SAMPLE_DATA || []).filter(function (r) { return r.test === test; });
     var r = all.filter(function (q) { return q.material === material; })[0];
@@ -421,7 +421,7 @@
     }
     return null;
   }
-  /* Lines starting with "#" are notes. Files saved by this site's test pages use "# Key,Value" lines
+  /* Lines starting with "#" are notes. Files saved by this site's practice page use "# Key,Value" lines
      (test, material, dimensions, ...); those values are read back so old tests reopen correctly. */
   var META_KEYS = [
     ['test', 'test'], ['source', 'source'], ['material', 'material'], ['specimen id', 'id'], ['date', 'date'],
@@ -493,7 +493,7 @@
     p.yield = !isRelax && mk !== 'biomaterial';
     p.rate_per_s = ''; p.preload_N = '';
     p.temperature_C = meta.temp || ''; p.environment = meta.env || '';
-    if (!isRelax && numMeta(meta.offsetPct) > 0) p.offsetPct = numMeta(meta.offsetPct);   /* the optional offset yield line a test page writes when it was used */
+    if (!isRelax && numMeta(meta.offsetPct) > 0) p.offsetPct = numMeta(meta.offsetPct);   /* the optional offset yield line the practice page writes when it was used */
     var simulated = /simul/i.test(meta.source || '');
     var bits = ['Loaded from "' + name + '" in this browser tab only (not uploaded or saved)'];
     if (meta.material) bits.push('material: ' + meta.material);

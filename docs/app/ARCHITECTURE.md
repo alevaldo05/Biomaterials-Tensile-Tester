@@ -10,7 +10,12 @@ One repository holds two front ends and one back end:
 - the **tester app** (`apps/tester`, React and TypeScript): running and recording tests.
 - the **back end** (`apps/api`) with a PostgreSQL database: logins, admin and user roles, saved sessions, calibrations, device profiles.
 
-Shared code lives in `packages/` so a change to a calculation or a file format reaches both front ends.
+Shared code lives in `packages/` so a change to a calculation or a file format reaches both front ends. How the two stay the same:
+
+- **Calculations and files.** `packages/core` is checked on every run against the website's own scripts (`packages/core/reference`). If one side's numbers or CSV change without the other, `npm test` fails.
+- **Words.** The app reads the website's definitions (`data/terms.js`) and materials (`data/materials.js`) when it is built (`apps/tester/site-data.ts`), so editing those files changes both.
+- **Places.** On GitHub Pages the website carries the app's learning edition at `app/`; on the lab computer the gateway serves the website at `/` and the full app at `/app/`. The app's Learn and Help links point one folder up, so they reach whichever website it is served with.
+- **Tests.** Live tests run only in the app. The website's own test pages were retired; its practice page (simulator) and Load Test remain, and CSV files from the app open in Load Test.
 
 The app is built so that changing the acquisition board, the ADC, or the connection changes only the device-side software, a device adapter, and settings. The graph, forms, recording, and exports do not change.
 
@@ -75,6 +80,7 @@ Rules that hold everywhere:
 | `packages/ui` and `apps/tester`: the app screen, graph, exports, lab and learning editions | Implemented; details in [FEATURE-STATUS](FEATURE-STATUS.md) |
 | `apps/api`: back end and PostgreSQL database, sign-in, admin and user roles, saved tests, device profiles, calibrations, record of changes | Implemented; tested against a real PostgreSQL ([BACKEND](BACKEND.md)) |
 | Signing in, History, Admin, and View as user in the app | Implemented |
+| The learning edition published with the website on GitHub Pages (`app/`), and the website's definitions and materials used by the app | Implemented; the publish step is untried until it runs on GitHub |
 | Containers (`deploy/`): gateway, website, app, API, database, each replaceable on its own | Implemented; built and run with Docker here ([CONTAINERS](CONTAINERS.md)) |
 
 Two things `packages/core` does differently from the website on purpose (the website pages are unchanged):

@@ -1,7 +1,8 @@
-/* Live test page: connects to the tester over USB (Web Serial); the practice page (data-practice="true") uses the labeled simulator instead and has no USB. Sends
-   commands, records readings, plots them while the test runs, and downloads the data as a CSV file that
-   opens in Excel. Data stays in this browser tab until you download it; nothing is uploaded or saved.
-   The message format lives in data/device.js. The graph comes from graph.js (window.TensileGraph). */
+/* The practice page's test screen (practice.html). It is connected only to the labeled simulator (live-sim.js); the website has no USB
+   (Web Serial) connection and never talks to a real tester. Real tests are run in the separate tester app.
+   It sends Start, STOP, and Tare to the simulator, records its readings, plots them while the test runs, and downloads the data as a CSV
+   file that opens in Excel. Data stays in this browser tab until you download it; nothing is uploaded or saved.
+   The simulator's line format lives in data/device.js. The graph comes from graph.js (window.TensileGraph). */
 (function () {
   'use strict';
 
@@ -9,12 +10,9 @@
   var TG = window.TensileGraph, DEV = window.DEVICE;
   if (!app || !TG || !DEV) return;
   var test = app.getAttribute('data-test'), isRelax = test === 'relaxation', CFG = TG.configs[test];
-  /* Practice page: only the simulator, no USB. The real test pages have no simulator (live-sim.js is not loaded there). */
-  var PRACTICE = app.getAttribute('data-practice') === 'true';
   var sig = TG.sig;
   /* The material is a name the user types (optional). Simulated readings always use one default sample curve, and say so. */
   var SIM_CURVE = 'biomaterial';
-  var hasSerial = 'serial' in navigator;
 
   function esc(s) {
     return String(s).replace(/[&<>"']/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]; });
@@ -30,7 +28,7 @@
   /* ---------- page layout ---------- */
   app.innerHTML =
     '<div class="gs-switch"><label class="check"><input type="checkbox" id="steps-all"> Show all steps</label></div>' +
-    (PRACTICE ? '<div class="tut-slot" data-tutorial="run-simulated"></div>' : '') +
+    '<div class="tut-slot" data-tutorial="run-simulated"></div>' +
     '<div class="live-layout">' +
       '<form class="panel" id="spec" novalidate aria-labelledby="spec-title">' +
         '<h2 id="spec-title">Specimen and settings</h2>' +
@@ -69,12 +67,10 @@
           '<h3 class="step-h">4. Connection</h3>' +
           '<p class="conn"><span class="dot" id="c-dot" aria-hidden="true"></span><strong id="c-text">Not connected</strong> <span class="muted" id="c-now"></span></p>' +
           '<div class="graph-actions">' +
-            (PRACTICE ? '<button type="button" class="btn-secondary" id="c-sim">Use simulator</button>' : '<button type="button" class="btn-secondary" id="c-usb">Connect to tester (USB)</button>') +
+            '<button type="button" class="btn-secondary" id="c-sim">Use simulator</button>' +
             '<button type="button" class="btn-secondary" id="c-off" hidden>Disconnect</button>' +
           '</div>' +
           '</div>' +
-          (PRACTICE || hasSerial ? '' : '<p class="small muted">USB serial requires a supporting desktop browser, a secure context, permission for the selected port, and compatible controller software. In this project, USB works in Chrome only; this browser does not offer it here. The practice page has a simulator that works in any browser.</p>') +
-          '<div class="tut-slot" data-tutorial="connect-usb" data-step="4"></div>' +
           '<div class="run-bar">' +
             '<button type="button" class="btn-secondary" id="r-tare">Tare</button>' +
             '<button type="button" class="btn btn-start" id="r-start">Start recording</button>' +
@@ -85,7 +81,7 @@
           '<section class="review" aria-labelledby="rv-title"><h3 class="step-h" id="rv-title">5. Review before starting</h3><p class="rv-sum" id="rv-sum"></p></section>' +
           '<p class="small muted esc-line">Esc also sends STOP while connected. <a href="help.html">Help and keyboard keys</a></p>' +
           '<p class="csv-msg" id="r-msg" role="status"></p>' +
-          '<details class="rv-det" id="rv-det"><summary>Show every value to review</summary><p class="small muted" id="c-explain">' + (PRACTICE ? 'Simulator readings are labeled “Simulated data, not measured”. Nothing on this page connects to a tester.' : 'A USB tester is draft and unvalidated.') + '</p><div id="rv-body"></div></details>' +
+          '<details class="rv-det" id="rv-det"><summary>Show every value to review</summary><p class="small muted" id="c-explain">Simulator readings are labeled “Simulated data, not measured”. Nothing on this page connects to a tester.</p><div id="rv-body"></div></details>' +
           '<p class="small muted" id="r-info"></p>' +
         '</div>' +
         '<div id="graph-app"></div>' +
@@ -204,9 +200,8 @@
 
   /* ---------- review before starting (read-only; it never starts anything) ---------- */
   function modeRow() {
-    if (!link) return [PRACTICE ? 'Not connected. Choose “Use simulator”.' : 'Not connected. Choose “Connect to tester (USB)”.', true];
-    return link.kind === 'sim' ? ['Simulator. Its readings are simulated and labeled “Simulated data, not measured”.', false]
-      : ['USB tester. The hardware connection is draft and has not been validated.', false];
+    if (!link) return ['Not connected. Choose “Use simulator”.', true];
+    return ['Simulator. Its readings are simulated and labeled “Simulated data, not measured”.', false];
   }
   var lastReview = '';
   function renderReview() {
@@ -238,7 +233,7 @@
     row('Connection', md[0], md[1]);
     row('Pre-test checklist', checklistOn() ? 'On: a checklist pop-up opens when you press Start' : 'Off (it can be turned on in Settings)');
     var probs = problemList(), warns = ['s-hold', 's-temp'].map(function (id) { return { id: id, text: warnText(id) }; }).filter(function (w) { return w.text; });
-    var short = !link ? 'Not connected.' : link.kind === 'sim' ? 'Simulator (readings are simulated).' : 'USB tester (unvalidated).';
+    var short = !link ? 'Not connected.' : 'Simulator (readings are simulated).';
     $('rv-sum').textContent = (probs.length ? (probs.length === 1 ? '1 entry needs attention. ' : probs.length + ' entries need attention. ') : 'Every required entry is filled in. ') +
       (warns.length ? (warns.length === 1 ? '1 to check. ' : warns.length + ' to check. ') : '') + (dimSourceNow() === 'example' ? 'Example dimensions (not measured). ' : '') + short;
     function items(list) {
@@ -266,7 +261,7 @@
   function stepFields(n) { return n === 1 ? ['s-mat'] : n === 2 ? ['s-L0', 's-W', 's-T'] : n === 3 ? ['s-speed'].concat(isRelax ? ['s-hold', 's-holds'] : ['s-off']) : []; }
   function stepValid(n) { return n === 4 ? !!link : stepFields(n).every(function (id) { return !problemText(id); }); }
   function stepWhy(n) {
-    if (n === 4) return link ? '' : (PRACTICE ? 'Use the simulator to continue.' : 'Connect to the tester to continue.');
+    if (n === 4) return link ? '' : 'Use the simulator to continue.';
     var bad = stepFields(n).filter(function (id) { return problemText(id); })[0];
     return bad ? problemText(bad) : '';
   }
@@ -275,14 +270,13 @@
     if (n === 1) return [s.matLabel, s.id].filter(Boolean).join(' · ') || 'Nothing typed';
     if (n === 2) return s.L0 && s.W && s.T ? sig(s.L0, 4) + ' × ' + sig(s.W, 4) + ' × ' + sig(s.T, 4) + ' mm' : 'Needs entries';
     if (n === 3) return s.speed && (!isRelax || (s.hold_mm && s.hold_s)) ? sig(s.speed, 4) + ' mm/min' + (isRelax ? ' · hold ' + sig(s.hold_mm, 4) + ' mm, ' + sig(s.hold_s, 4) + ' s' : '') : 'Needs entries';
-    if (n === 4) return !link ? 'Not connected' : link.kind === 'sim' ? 'Simulator' : 'USB tester';
+    if (n === 4) return !link ? 'Not connected' : 'Simulator';
     var p = problemList().length;
     return running ? 'Recording' : hasData ? 'Test finished' : p ? p + (p === 1 ? ' entry to fix' : ' entries to fix') : 'Ready to start';
   }
   /* Tag each step's markup, add the step bar and the Back/Next rows. */
   setupCols[0].setAttribute('data-step', '1'); setupCols[1].setAttribute('data-step', '2'); setupCols[2].setAttribute('data-step', '3');
   connRow.setAttribute('data-step', '4');
-  if (connRow.nextElementSibling && !connRow.nextElementSibling.classList.contains('run-bar')) connRow.nextElementSibling.setAttribute('data-step', '4');  /* the USB-unavailable note */
   reviewSec.setAttribute('data-step', '5'); $('rv-det').setAttribute('data-step', '5');   /* #r-why (why Start is unavailable) stays in the workspace, always shown */
   var bar = document.createElement('ol');
   bar.className = 'gs-bar'; bar.setAttribute('aria-label', 'Test setup steps');
@@ -296,7 +290,7 @@
     return d;
   }
   [1, 2, 3].forEach(function (n) { setupCols[n - 1].appendChild(navFor(n)); });
-  var nav4 = navFor(4); nav4.setAttribute('data-step', '4'); connRow.parentNode.insertBefore(nav4, (connRow.nextElementSibling && connRow.nextElementSibling.getAttribute('data-step') === '4') ? connRow.nextElementSibling.nextSibling : connRow.nextSibling);
+  var nav4 = navFor(4); nav4.setAttribute('data-step', '4'); connRow.parentNode.insertBefore(nav4, connRow.nextSibling);
   var nav5 = navFor(5); nav5.setAttribute('data-step', '5'); $('rv-det').parentNode.insertBefore(nav5, $('rv-det').nextSibling);
   /* The workspace layout (live-shell.js): moves the markup built above into a Setup sidebar and a workspace with a toolbar, a measurement strip, and the graph. */
   reviewSec.insertAdjacentHTML('beforeend', '<p class="small muted ws-start-hint">Press Start recording in the toolbar above the graph.</p>');
@@ -305,12 +299,12 @@
   var shell = window.LiveShell.build({ app: app, layout: layoutEl, main: app.querySelector('.live-main'), form: $('spec'), bar: bar, controlBar: app.querySelector('.control-bar') });
   /* "?" help on each step heading (both views). The text is existing wording; the tip copies it from the hidden element named here. */
   /* Which tutorial each step's "?" opens and "Watch how" offers: each plays inline on this page (tutorials.js; not offered while a test is recording). */
-  var TUT_OF = PRACTICE ? { 1: 'run-simulated', 2: 'dimensions', 3: 'run-simulated', 4: 'run-simulated', 5: 'run-simulated' } : { 2: 'dimensions', 4: 'connect-usb' };
+  var TUT_OF = { 1: 'run-simulated', 2: 'dimensions', 3: 'run-simulated', 4: 'run-simulated', 5: 'run-simulated' };
   var HELP = {
     1: ['s-mat-hint', null],
     2: ['help-step2', 'Example values come from the labeled sample data. Replace them with your specimen’s measured dimensions.'],
     3: ['help-step3', ['speed'].concat(isRelax ? ['holdmm', 'holdstrain'] : []).map(function (k) { var t = window.TERMS && window.TERMS[k]; return t ? t.name + ': ' + t.def : ''; }).filter(Boolean).join(' ')],
-    4: ['help-step4', PRACTICE ? 'Simulator readings are labeled “Simulated data, not measured”. Nothing on this page connects to a tester.' : 'The USB tester is draft and unvalidated.'],
+    4: ['help-step4', 'Simulator readings are labeled “Simulated data, not measured”. Nothing on this page connects to a tester.'],
     5: ['help-step5', 'Check the values against your specimen.']
   };
   [1, 2, 3, 4, 5].forEach(function (n) {
@@ -450,24 +444,18 @@
   });
 
   /* ---------- connections ---------- */
-  /* USB serial and the simulator are in live-links.js */
-  var Links = window.LiveLinks.create(DEV, isRelax), SerialLink = Links.SerialLink, SimLink = PRACTICE ? Links.SimLink : null;
+  /* The simulator link is made in live-links.js (the only link; there is no USB) */
+  var SimLink = window.LiveLinks.create(DEV, isRelax).SimLink;
 
   /* ---------- state ---------- */
   var link = null, running = false, hasData = false, downloaded = true;
   var baseTitle = document.title; /* the browser-tab title, with the run status in front while a test runs or has just stopped */
-  var t0 = null, d0 = null, peakF = 0, holdStart = null, skipped = 0, startedAt = null, endReason = '', heartbeat = null;
-  /* a link such as test-uniaxial-tension.html#al-6061 (from the Materials page) fills in that material's name */
-  (function () {
-    var h = (location.hash || '').replace('#', ''), sel = document.getElementById('s-mat');
-    var m = window.MATERIAL_BY_ID && Object.prototype.hasOwnProperty.call(window.MATERIAL_BY_ID, h) ? window.MATERIAL_BY_ID[h] : null;
-    if (sel && m) sel.value = m.name;
-  })();
+  var t0 = null, d0 = null, peakF = 0, holdStart = null, skipped = 0, startedAt = null, endReason = '';
   var rec = newRecord('none');
   var graphRoot = $('graph-app');
   var api = TG.mount(graphRoot, {
     test: test, mode: 'live', record: rec,
-    emptyText: 'Waiting for data – connect to the tester and press Start',
+    emptyText: 'Waiting for data – use the simulator and press Start',
     fileBase: function () { return csv.fileBase(rec, startedAt); },
     details: function () { return csv.metaRows(rec, startedAt, endReason); }
   });
@@ -481,14 +469,13 @@
       f: lastF, d: lastD, t: (running || hasData) && n ? rec.raw.t[n - 1] : null, s: lastF !== null && A ? lastF / A : null,
       state: !link ? 'Not connected' : running ? 'Recording' : hasData ? 'Ended' : 'Connected \u00b7 ready',
       dot: running ? 'run' : link ? 'on' : '',
-      src: PRACTICE ? (link || hasData ? 'Simulated data, not measured' : 'No data yet') : (running || hasData ? 'Measured (tester not validated)' : link ? 'Live from the tester (not validated)' : 'No data yet')
+      src: link || hasData ? 'Simulated data, not measured' : 'No data yet'
     });
   }
 
   function ui() {
     var on = !!link;
-    if ($('c-usb')) { $('c-usb').hidden = on; $('c-usb').disabled = !hasSerial; }
-    if ($('c-sim')) $('c-sim').hidden = on;
+    $('c-sim').hidden = on;
     $('c-off').hidden = !on; $('c-off').disabled = running;
     $('r-tare').disabled = !on || running || hasData;
     $('r-start').disabled = !on || running || hasData;
@@ -505,10 +492,10 @@
     shell.lockNote(running ? 'Locked while recording.' : hasData ? 'Locked: this test\u2019s data cannot be changed. Download it, or choose New test.' : '');
     shell.showEnded(!running && hasData);
     if (api && api.panels && lastPanels !== (!running && hasData)) { lastPanels = !running && hasData; api.panels(lastPanels); }
-    $('r-why').textContent = on || running ? '' : (PRACTICE ? 'Start is available after you connect: press “Use simulator”.' : 'Start is available after you connect: press “Connect to tester (USB)”.');
+    $('r-why').textContent = on || running ? '' : 'Start is available after you connect: press “Use simulator”.';
     $('c-dot').className = 'dot' + (running ? ' run' : on ? ' on' : '');
     document.title = running ? 'Recording · ' + baseTitle : (on && hasData ? 'Stopped · ' + baseTitle : baseTitle);
-    $('c-text').textContent = !on ? 'Not connected' : (running ? 'Recording · ' : 'Connected · ') + (link.kind === 'sim' ? 'simulator (not measured)' : 'tester (USB)');
+    $('c-text').textContent = !on ? 'Not connected' : (running ? 'Recording · ' : 'Connected · ') + 'simulator (not measured)';
     if (!on) $('c-now').textContent = '';
     stripNow();
     renderReview();
@@ -530,7 +517,7 @@
     var parts = s.split(/[,;\t]/), c = DEV.columns, sc = DEV.scale;
     var t = toNum(parts[c.time]) * sc.time, F = toNum(parts[c.force]) * sc.force, d = toNum(parts[c.displacement]) * sc.displacement;
     if (!isFinite(t) || !isFinite(F) || !isFinite(d)) {
-      if (running) { skipped++; if (skipped === 1 && window.HelpCoach) window.HelpCoach.report('skippedLines'); }
+      if (running) skipped++;
       infoEl.textContent = 'Message from tester: ' + s.slice(0, 160);
       return;
     }
@@ -541,7 +528,7 @@
     if (t0 === null) { t0 = t; d0 = d; }
     var raw = rec.raw;
     raw.t.push(t - t0); raw.d.push(d - d0); raw.F.push(F);
-    if (!hasData) { hasData = true; downloaded = false; if (window.HelpCoach) window.HelpCoach.resolve('noReadings'); }
+    if (!hasData) { hasData = true; downloaded = false; }
     var n = raw.t.length;
     if (!isRelax) {
       if (F > peakF) peakF = F;
@@ -589,9 +576,9 @@
   /* (the checklist pop-up is built by live-checklist.js; see `Checklist` near the top) */
 
   function begin() {
-    if (!link) { msg(PRACTICE ? 'Not connected. Use the simulator, then press Start.' : 'Not connected. Connect to the tester, then press Start.', true); return; }
+    if (!link) { msg('Not connected. Use the simulator, then press Start.', true); return; }
     var s = spec();
-    rec = newRecord(link.kind === 'sim' ? 'simulated' : 'measured');
+    rec = newRecord('simulated');
     api.setRecord(rec);
     t0 = d0 = null; peakF = 0; holdStart = null; skipped = 0; hasData = false; downloaded = true;
     startedAt = new Date(); endReason = ''; infoEl.textContent = '';
@@ -599,16 +586,10 @@
     shell.collapse(true);   /* the setup folds away so the graph has the room; Setup reopens it */
     ui();
     sendCmd(isRelax ? fill(DEV.commands.startRelaxation, { speed: s.speed, hold_mm: s.hold_mm, hold_s: s.hold_s }) : fill(DEV.commands.startUniaxial, { speed: s.speed }));
-    if (DEV.commands.heartbeat && DEV.heartbeatMs) heartbeat = setInterval(function () { sendCmd(DEV.commands.heartbeat); }, DEV.heartbeatMs);
-    msg('Test running' + (link.kind === 'sim' ? ' (simulated)' : '') + '. Press STOP or Esc to stop.');
-    if (window.HelpCoach && window.HELP_TIPS && link.kind !== 'sim') {
-      var started = rec;
-      setTimeout(function () { if (running && rec === started && !hasData) window.HelpCoach.report('noReadings'); }, window.HELP_TIPS.noReadingsMs);
-    }
+    msg('Test running (simulated). Press STOP or Esc to stop.');
   }
-  function finish(reason, isError, keepHeartbeat) {
+  function finish(reason, isError) {
     running = false;
-    if (!keepHeartbeat) { clearInterval(heartbeat); heartbeat = null; }   /* End recording keeps the heartbeat: it does not tell the tester to stop */
     endReason = reason;
     rec.skippedLines = skipped;
     api.refresh(false);
@@ -625,36 +606,21 @@
   /* End recording: stop saving readings on this page. NO stop command is sent, so the tester is not told to stop; STOP tester does that. */
   function endRecording() {
     if (!running) return;
-    finish('Recording ended. No stop command was sent; the tester may still be moving. Press STOP tester to stop it.', false, true);
+    finish('Recording ended. No stop command was sent; the tester may still be moving. Press STOP tester to stop it.', false);
   }
 
   function attach(l) {
     link = l;
     l.onLine = onLine;
     l.onClose = function (why) {
-      link = null; clearInterval(heartbeat); heartbeat = null; lastF = lastD = null;
+      link = null; lastF = lastD = null;
       if (running) finish(why + ' Recording stopped; the data so far is kept.', true);
       else msg(why, true);
       ui();
     };
     ui();
   }
-  if ($('c-usb')) $('c-usb').addEventListener('click', function () {
-    var l = new SerialLink();
-    l.open().then(function () {
-      attach(l);
-      msg('Connected to the tester over USB. Press Tare with no load on the specimen, then Start.');
-    }).catch(function (e) {
-      if (e && e.name === 'NotFoundError') msg('No port was selected.');
-      else msg('Could not connect: ' + (e && e.message ? e.message : e), true);
-      /* a hint with the matching Troubleshooting row (help-coach.js); it says what could be wrong, not what is */
-      if (window.HelpCoach && e) {
-        if (e.name === 'NotFoundError' || e.name === 'SecurityError' || e.name === 'NotAllowedError') window.HelpCoach.report('permission');
-        else if (e.name === 'NetworkError' || e.name === 'InvalidStateError') window.HelpCoach.report('port');
-      }
-    });
-  });
-  if ($('c-sim')) $('c-sim').addEventListener('click', function () {
+  $('c-sim').addEventListener('click', function () {
     var l = new SimLink(spec);
     l.open().then(function () {
       attach(l);
@@ -664,7 +630,7 @@
   function disconnectNow() {   /* after a finished test, disconnecting clears the test (like New test); before a test, only the connection ends */
     var l = link;
     if (!l) return;
-    link = null; clearInterval(heartbeat); heartbeat = null; lastF = lastD = null;
+    link = null; lastF = lastD = null;
     if (hasData) resetTest();
     ui();
     l.close().then(function () { msg('Disconnected.'); });

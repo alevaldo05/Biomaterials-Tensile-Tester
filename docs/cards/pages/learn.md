@@ -3,7 +3,7 @@
 Page card. Update it in the same change as the page.
 
 ## Purpose
-Before you test (checklist), Practice with a simulated test (a link to the practice page), Background (biomechanics, why tensile testing matters for skin), and the Glossary.
+Before you test (checklist), Practice with a simulated test (a link to the practice page; it says the website does not connect to the tester and real tests are run in the tester app), Background (biomechanics, why tensile testing matters for skin), and the Glossary.
 
 ## Files
 - HTML: `learn.html` (ids `before-title`, `practice-title`, `bg-title`, `gloss-title`)

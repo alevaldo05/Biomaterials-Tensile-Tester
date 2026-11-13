@@ -18,7 +18,7 @@ Saved display choices and the seven color themes (green light, green dark, purpl
 - The MU colors theme is colors only (no logo, seal, or wordmark; not called official). Its values (Manhattan Green `#046A38`, gold `#F5A800` as a header underline accent) come from the project plan and are UNVERIFIED; compare with the official guidelines before relying on them
 - Saved in this browser only; appearance only
 - Help prompts (key `helpprompts`: `on` default, `off`) turn the automatic hints off; see [help-coach](help-coach.md)
-- Also saved by the test pages (not on the Settings page): key `steps` (`guided`, `all`), see [guided-steps](guided-steps.md); Reset clears it
+- Also saved by the practice page (not on the Settings page): key `steps` (`guided`, `all`), see [guided-steps](guided-steps.md); Reset clears it
 - Reset clears them
 
 ## Labels that must stay

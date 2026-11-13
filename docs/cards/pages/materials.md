@@ -11,7 +11,7 @@ Typical property tables, a two-material comparison, a Young's modulus vs density
 - CSS: `css/materials.css`, `css/extras.css` (source and review rows)
 
 ## What the user sees
-- Material box you can type into, details with the Test parameters card under them, tables, chart with filters, "Where these values come from"
+- Material box you can type into, details (ending with links: Run a test in the tester app (the New Test page), Practice with a simulated test, Open its protocol) with the Test parameters card under them, tables, chart with filters, "Where these values come from"
 
 ## Behavior to keep
 - Values are typical, approximate ranges; never presented as measured

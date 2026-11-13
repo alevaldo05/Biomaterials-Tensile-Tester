@@ -18,7 +18,7 @@ Three shared pieces in `window.SiteUI`: a Tip (floating text on hover or focus),
 
 ## Behavior to keep
 - Tip: opens on hover and keyboard focus, closes on mouse-out, blur, or Esc; stays inside the window; never moves other content
-- Esc closes a tip but is NOT stopped, so Esc still sends STOP on a test page
+- Esc closes a tip but is NOT stopped, so Esc still sends STOP on the practice page
 - Pop-up: Esc closes it and does not reach the page (Esc does not send STOP)
 - Note: not modal, never takes focus, X closes it; its stack sits above the pinned STOP bar
 - Fades follow the Motion setting; colors only from theme variables

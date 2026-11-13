@@ -141,6 +141,8 @@ input[type="password"] { width: 100%; background: var(--panel); border: 1px soli
 .results th, .results td { text-align: left; vertical-align: top; padding: 7px 10px 7px 0; border-top: 1px solid var(--line); }
 .results th { font-weight: 600; width: 30%; }
 .results .num { white-space: nowrap; font-weight: 650; width: 22%; }
+.results .def { display: block; font-weight: 400; color: var(--muted); font-size: 0.85rem; margin-top: 2px; }
+.defs-switch { margin-left: auto; }
 
 .ask { border: 1px solid var(--line); border-radius: var(--radius); background: var(--panel); color: var(--ink); max-width: min(30rem, calc(100vw - 32px)); padding: 20px; }
 .ask::backdrop { background: rgb(0 0 0 / 0.45); }

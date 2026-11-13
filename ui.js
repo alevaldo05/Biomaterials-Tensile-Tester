@@ -3,7 +3,7 @@
 
    SiteUI.tip(target, content)   target: an element. content: text, or a function that returns text (called each time it opens).
                                  Opens on hover and on keyboard focus; closes on mouse-out, blur, or Esc.
-                                 Esc closes the tip but is NOT stopped, so Esc still sends STOP on a test page.
+                                 Esc closes the tip but is NOT stopped, so Esc still sends STOP on the practice page.
                                  Returns { open(), close(), destroy() }.
    Terms (no call needed): any element with data-term="key" shows that entry of window.TERMS (data/terms.js): name,
                                  one-line definition, equation, unit. An element with data-tip-id="id" shows the text of the element with that id
@@ -139,7 +139,7 @@
   document.addEventListener('focusin', function (e) { var el = termTarget(e); if (el && el !== tipFor) showTip(el, termContent(el)); });
   document.addEventListener('focusout', function (e) { var el = termTarget(e); if (el && el === tipFor) hideTip(); });
 
-  /* Esc closes an open tip only. The event is left alone so a test page still sends STOP. */
+  /* Esc closes an open tip only. The event is left alone so the practice page still sends STOP. */
   document.addEventListener('keydown', function (e) { if (e.key === 'Escape') hideTip(); });
   /* Scrolling keeps the tip with its word; it closes only when the word has scrolled out of the window. (Tab can scroll a word into view, so closing on every scroll would hide the tip it just opened.) */
   window.addEventListener('scroll', function () {

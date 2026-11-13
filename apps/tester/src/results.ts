@@ -4,6 +4,8 @@ import type { TestRecord } from '@tensile/core';
 import type { Marker, Pt } from '@tensile/ui';
 
 export interface ResultRow { id: string; name: string; value: string; note: string }
+/** The website's definition (data/terms.js) for each key result. */
+export const TERM_FOR: Record<string, string> = { E: 'modulus', yield: 'yield', uts: 'uts', fail: 'failstrain', tough: 'energy', s0: 's0', hs: 'holdstart', send: 'sfinal', relaxed: 'relaxed', E0: 'apparent', tau: 'tau' };
 const mpa = (v: number | null | undefined) => (v === null || v === undefined || !Number.isFinite(v) ? '—' : Math.abs(v) >= 1000 ? sig(v / 1000, 4) + ' GPa' : sig(v, 4) + ' MPa');
 
 export interface Results { rows: ResultRow[]; markers: Marker[]; fitLine: { from: Pt; to: Pt } | null }

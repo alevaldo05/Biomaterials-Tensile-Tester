@@ -1,4 +1,4 @@
-/* Pre-test checklist: the pop-up that appears when you press Start on a test page, only if the
+/* Pre-test checklist: the pop-up that appears when you press Start on the practice page, only if the
    "Pre-test checklist" option on the Settings page is On. The wording is the same as "Before you test" on
    the Learn page. It is a reminder, NOT a safety certification, and the wording is a draft for your
    advisor to review. Items with tissue: true are shown only for biological materials. Ticks are never

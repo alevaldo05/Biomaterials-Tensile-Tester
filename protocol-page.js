@@ -9,7 +9,6 @@
   if (!box || !window.PROTOCOLS) return;
   var test = box.getAttribute('data-test');
   var data = window.PROTOCOLS[test] || {};
-  var TEST_PAGE = test === 'relaxation' ? 'test-stress-relaxation.html' : 'test-uniaxial-tension.html';
   /* Only the General procedure is written (data/protocols.js). The second choice is a placeholder for material-specific
      procedures that will be added later; until then it shows the General text with a note. */
   var TABS = [['general', 'General (no specific material)', null], ['later', 'To be added at a later date', null]];
@@ -117,7 +116,7 @@
     var links = [['setup', 'Specimen and equipment'], ['graph', 'Example graph']];
     if (/download|report|record|note /i.test(text)) links.push(['report', 'Report and notes']);
     var out = links.map(function (l) { return '<a href="#" data-go="' + l[0] + '">' + l[1] + '</a>'; });
-    if (/New Test|Connect|Press Start|Tare/i.test(text)) out.push('<a href="' + TEST_PAGE + '">Open the test page</a>');
+    if (/New Test|Connect|Press Start|Tare/i.test(text)) out.push('<a href="choose-test.html">Open New Test</a>');
     return out.join('');
   }
   function copyText(text, done) {

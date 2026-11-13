@@ -5,10 +5,10 @@
   <meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' blob:; font-src 'self'; connect-src 'none'; form-action 'none'; base-uri 'none'; object-src 'none'">
   <meta name="referrer" content="no-referrer">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <meta name="description" content="Choose a test to get started: Uniaxial Tension or Stress Relaxation.">
+  <meta name="description" content="Tests on the tester are run in the tester app. This website is for learning, practice with a simulator, protocols, materials, and reopening saved files.">
   <link rel="icon" href="favicon.svg" type="image/svg+xml">
   <link rel="icon" href="favicon.png" type="image/png" sizes="64x64">
-  <title>Choose a test – Biomaterials Tensile Tester</title>
+  <title>New Test – Biomaterials Tensile Tester</title>
   <link rel="stylesheet" href="styles.css">
   <link rel="stylesheet" href="css/graph.css">
   <link rel="stylesheet" href="css/test-setup.css">
@@ -50,24 +50,20 @@
 
   <main id="main-content" tabindex="-1">
     <a class="back" href="index.html">&larr; Back to Home</a>
-    <h1>Choose a test</h1>
-    <p class="sub">Select a test to set up the specimen and run it on the tester.</p>
+    <h1>New Test</h1>
+    <p class="sub">Tests on the tester are now run in the <strong>tester app</strong>. This website is for learning, protocols, materials, and reopening saved files.</p>
 
-    <ul class="choices">
-      <li>
-        <a class="choice" href="test-uniaxial-tension.html">
-          <h2>Uniaxial Tension</h2>
-          <p>Extend a specimen at a commanded crosshead speed while recording force and displacement. Review the engineering stress&ndash;strain curve and method-dependent estimates of modulus, strength, and endpoint strain.</p>
-        </a>
-      </li>
-      <li>
-        <a class="choice" href="test-stress-relaxation.html">
-          <h2>Stress Relaxation</h2>
-          <p>Ramp to a target displacement, then hold while recording force. Review stress change during the hold. Crosshead position does not establish constant specimen strain.</p>
-        </a>
-      </li>
-    </ul>
-    <p class="small muted">Not sure how to run it? Read the <a href="protocol-uniaxial-tension.html">Uniaxial Tension</a> or <a href="protocol-stress-relaxation.html">Stress Relaxation</a> protocol. To open an earlier test, use <a href="load-test.html">Load Test</a>.</p>
+    <section class="section" aria-labelledby="app-title">
+      <h2 id="app-title">Run a test in the tester app</h2>
+      <p class="actions"><a class="btn" href="app/">Open the tester app</a></p>
+      <p>On this public website, the app runs simulations and replays only. Connecting to the tester over USB is done in the app installed on the lab computer.</p>
+    </section>
+
+    <section class="section" aria-labelledby="here-title">
+      <h2 id="here-title">Learn or reopen data on this website</h2>
+      <p class="practice-pick"><a class="btn-secondary" href="practice.html">Practice with a simulated test</a> <a class="btn-secondary" href="load-test.html">Load Test</a></p>
+      <p class="small muted">The practice page uses a labeled simulator: its data is always <em>Simulated data, not measured</em>. Load Test opens a saved CSV file in this browser, including files saved by the tester app. Not sure how to run a test? Read the <a href="protocol-uniaxial-tension.html">Uniaxial Tension</a> or <a href="protocol-stress-relaxation.html">Stress Relaxation</a> protocol (drafts).</p>
+    </section>
   </main>
   <script src="layouts.js"></script>
   <script src="data/search-index.js"></script>

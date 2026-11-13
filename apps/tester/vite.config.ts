@@ -1,6 +1,9 @@
 import react from '@vitejs/plugin-react';
 import { defineConfig } from 'vite';
 import type { Plugin } from 'vite';
+import path from 'node:path';
+import { fileURLToPath } from 'node:url';
+import { siteData } from './site-data';
 
 /* "vite build --mode learning" builds the learning edition: simulator and replay only.
    The base path is "./" so the built app works under any address (for example /app/ behind the gateway). */
@@ -14,7 +17,7 @@ const csp = (): Plugin => ({
 
 export default defineConfig(({ mode }) => ({
   base: './',
-  plugins: [react(), csp()],
+  plugins: [react(), csp(), siteData(path.resolve(path.dirname(fileURLToPath(import.meta.url)), '../..'))],
   define: { __EDITION__: JSON.stringify(mode === 'learning' ? 'learning' : 'lab') },
   build: { outDir: mode === 'learning' ? 'dist-learning' : 'dist', sourcemap: false },
   /* In development the API runs on its own port; the app reaches it at the same /api address it uses behind the gateway. */

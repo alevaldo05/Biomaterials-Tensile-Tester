@@ -1,4 +1,4 @@
-/* The Material box on the test pages (window.LiveMaterial): a text box you can type in, with a small drop-down of ready choices.
+/* The Material box on the practice page (window.LiveMaterial): a text box you can type in, with a small drop-down of ready choices.
    A choice fills the box; anything else you type is kept as typed. live.js owns the value, the validation, and the red outline (aria-invalid).
    Keyboard: Down opens the list and moves through it, Enter picks, Esc closes the list (and does not reach the page's Esc-sends-STOP shortcut). */
 (function () {

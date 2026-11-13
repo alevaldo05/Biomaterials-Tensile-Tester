@@ -1,5 +1,5 @@
-/* The labeled simulator (window.LiveSim), used ONLY by the practice page (practice.html). The real test pages do not load this file and have no
-   simulator. It behaves like the controller described in data/device.js (same commands, same reading lines), using the shape of the labeled
+/* The labeled simulator (window.LiveSim), used ONLY by the practice page (practice.html). The website has no other connection to a tester.
+   It answers the commands and sends the reading lines described in data/device.js (a format that now serves only this simulator), using the shape of the labeled
    sample curves. Everything it produces is marked simulated. live-links.js asks for it with LiveSim.create(DEVICE, isRelax). */
 (function () {
   'use strict';

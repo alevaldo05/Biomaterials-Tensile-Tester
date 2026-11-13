@@ -12,7 +12,7 @@ window.SITE_TEXT.home = {
 
   /* Short descriptions on the cards in the "Start screen" layout. */
   cards: {
-    newTest: "Uniaxial Tension or Stress Relaxation: connect, run, and watch the graph live.",
+    newTest: "Start a test in the tester app, or practice with a simulated test.",
     loadTest: "Reopen an earlier CSV file in this browser.",
     protocols: "Procedures for each test and material.",
     materials: "Properties, a stiffness chart, and sample graphs for many materials.",
@@ -39,7 +39,7 @@ window.SITE_TEXT.home = {
       blocks: [
         { steps: [
           { title: "Prepare the specimen", text: "Follow the protocol for your test and material, then measure gauge length, width, and thickness." },
-          { title: "Connect and run", text: "Choose [New Test](choose-test.html), enter the specimen values, connect to the tester, and press Start. The graph draws live as the specimen stretches." },
+          { title: "Run the test", text: "Choose [New Test](choose-test.html) to open the tester app and run the test there. To learn the screen first, try the [practice page](practice.html), which uses a labeled simulator." },
           { title: "Review and download", text: "Read the key results, then download the data as a CSV file for Excel and the graph as an image. Reopen old files with [Load Test](load-test.html)." }
         ] }
       ]

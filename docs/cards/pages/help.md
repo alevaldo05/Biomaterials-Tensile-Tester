@@ -3,7 +3,7 @@
 Page card. Update it in the same change as the page.
 
 ## Purpose
-Troubleshooting (problem and action table), Keyboard (only keys that work), Tutorials (a list of links to short animated illustrations that play on the page where you do the thing, see [tutorials](../features/tutorials.md)), and the numbered References list.
+Troubleshooting (problem and action table; USB connection is done in the tester app, so the website's USB rows were replaced by one row that says so), Keyboard (only keys that work), Tutorials (a list of links to short animated illustrations that play on the page where you do the thing, see [tutorials](../features/tutorials.md)), and the numbered References list.
 
 ## Files
 - HTML: `help.html` (ids `trouble-title`, `keys-title`, `tutorials-title`, `helprefs-title`)
@@ -20,7 +20,7 @@ Troubleshooting (problem and action table), Keyboard (only keys that work), Tuto
 
 ## Labels that must stay
 - "The on-screen STOP button and the Esc key ... are not an emergency stop"
-- Hardware connection draft and untested
+- Hardware connection draft and untested; the website has no USB connection and Help says so
 
 ## Depends on
 - Feature: page text files, site search

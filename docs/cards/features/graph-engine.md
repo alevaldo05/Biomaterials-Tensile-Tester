@@ -12,7 +12,7 @@ Feature card. Update it in the same change as the feature.
 - CSS: `css/graph.css` (Graph pages, graph tools, Key results)
 - Used by the test, protocol, Load Test, and Materials pages
 
-## Workspace graph (test pages, practice page, Load Test)
+## Workspace graph (practice page, Load Test)
 - A view choice (Force-displacement, Stress-strain, Force-time; relaxation: Stress-time, Force-time) with Autoscale, Reset view, Expand graph. Stress-strain needs valid dimensions and says so when it cannot be drawn. The views only change which recorded arrays are plotted; key points are mapped with exact conversions (displacement = strain x L0, force = stress x A0)
 - Starts white with a black curve (dark when the page theme is dark); Customize graph adds a Background choice; exports use the same colors
 - While a test records the axis maximum grows in steps of about 20%

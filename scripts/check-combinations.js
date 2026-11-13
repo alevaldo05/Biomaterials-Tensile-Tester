@@ -11,9 +11,9 @@
    Phase B: pairwise coverage of all 16 display choices (every pair of values of any two choices appears together at least once).
    For every page load it checks: no console error, failed request, or "Refused to" policy message; no sideways scroll; the title is
    shown and not clipped; the header logo, title, and menu do not overlap; and the contrast of the text actually drawn on the page
-   (4.5 to 1, or 3 to 1 for large text). It also runs each page's main feature (a simulated test with STOP and the CSV download on both
-   test pages, Load Test with one file and with several, Calibration, Materials, both protocol pages, Settings, the inline tutorials (Watch how) and the Help list of tutorial links,
-   the header search, and the text checker). On the test pages it also tabs through the controls and checks a focus ring is drawn.
+   (4.5 to 1, or 3 to 1 for large text). It also runs each page's main feature (a simulated test with STOP and the CSV download on the practice page, both kinds,
+   Load Test with one file and with several, Calibration, Materials, both protocol pages, Settings, the inline tutorials (Watch how) and the Help list of tutorial links,
+   the header search, and the text checker). On the practice page it also tabs through the controls and checks a focus ring is drawn.
    Findings are "FAIL" (a bug) or "WARN" (contrast of text; review it). Exit code 1 if any FAIL, or any WARN with --strict. */
 'use strict';
 var http = require('http'), fs = require('fs'), path = require('path');
@@ -134,17 +134,17 @@ function inPage() {
 }
 
 /* ---------- the work for one page ---------- */
-var PAGES = ['index', 'learn', 'about', 'help', 'choose-test', 'test-uniaxial-tension', 'test-stress-relaxation', 'practice', 'practice-relaxation', 'load-test', 'calibration', 'materials', 'protocol-uniaxial-tension', 'protocol-stress-relaxation', 'settings', 'check-text'];
+var PAGES = ['index', 'learn', 'about', 'help', 'choose-test', 'practice', 'practice-relaxation', 'load-test', 'calibration', 'materials', 'protocol-uniaxial-tension', 'protocol-stress-relaxation', 'settings', 'check-text'];
 async function visible(page, sel) { var e = await page.$(sel); return e ? page.isVisible(sel) : false; }
 
 async function runTest(page, issues) {
   var guided = await page.evaluate(function () { return document.documentElement.getAttribute('data-steps') !== 'all'; });
-  /* inline tutorial at the top of the page: opens, fits, hides */
-  await page.click('#tut-run-simulated .tut-toggle', { timeout: 4000 }).catch(function () { issues.push({ k: 'tutorial', m: 'the Watch how button at the top of the test page could not be clicked' }); });
+  /* inline tutorial at the top of the practice page: opens, fits, hides */
+  await page.click('#tut-run-simulated .tut-toggle', { timeout: 4000 }).catch(function () { issues.push({ k: 'tutorial', m: 'the Watch how button at the top of the practice page could not be clicked' }); });
   if (await visible(page, '#tut-panel-run-simulated')) {
     var tp = await page.evaluate(inPage); tp.issues.forEach(function (x) { x.m = '(tutorial open) ' + x.m; issues.push(x); });
     await page.click('#tut-panel-run-simulated .tut-hide');
-  } else issues.push({ k: 'tutorial', m: 'the inline tutorial panel did not open on the test page' });
+  } else issues.push({ k: 'tutorial', m: 'the inline tutorial panel did not open on the practice page' });
   /* At 1100 px and narrower the Setup sidebar is a drawer: open it to use the setup, close it to use the toolbar. */
   async function side(open) {
     if (!(await visible(page, '#ws-setup-open'))) return;
@@ -197,7 +197,12 @@ async function focusRings(page, issues) {
 }
 async function feature(page, name, port, issues) {
   var base = 'http://127.0.0.1:' + port + '/';
-  if (name === 'practice' || name === 'practice-relaxation') { await runTest(page, issues); return; }   /* the simulator exists only on the practice page; the real test pages cannot run without a tester */
+  if (name === 'practice' || name === 'practice-relaxation') { await runTest(page, issues); return; }   /* the simulator exists only on the practice page; the website has no real test pages */
+  if (name === 'choose-test') {   /* the New Test page only sends people elsewhere: the app (a folder made when the site is published), the practice page, and Load Test */
+    var hs = await page.$$eval('main a', function (e) { return e.map(function (x) { return x.getAttribute('href'); }); });
+    ['app/', 'practice.html', 'load-test.html'].forEach(function (h) { if (hs.indexOf(h) < 0) issues.push({ k: 'newtest', m: 'the New Test page has no link to ' + h }); });
+    return;
+  }
   if (name === 'load-test') {
     async function loadSide(open) {
       if (!(await visible(page, '#ws-setup-open'))) return;
@@ -246,7 +251,7 @@ async function feature(page, name, port, issues) {
       var tab = await page.$('[role="tab"]:has-text("Tutorials")'); if (tab) await tab.click();
     }
     var hrefs = await page.$$eval('#tutorials-list a', function (e) { return e.map(function (a) { return a.getAttribute('href'); }); });
-    if (hrefs.length !== 7 || hrefs.some(function (h) { return !/#tut-/.test(h); })) issues.push({ k: 'tutorial', m: 'the Help Tutorials list should hold 7 links to page#tut-ID (found ' + hrefs.length + ')' });
+    if (hrefs.length !== 6 || hrefs.some(function (h) { return !/#tut-/.test(h); })) issues.push({ k: 'tutorial', m: 'the Help Tutorials list should hold 6 links to page#tut-ID (found ' + hrefs.length + ')' });
     await page.click('#tutorials-list a:has-text("Enter a calibration")', { timeout: 5000 }).catch(function () { issues.push({ k: 'tutorial', m: 'the Tutorials list link could not be clicked' }); });
     await page.waitForSelector('#tut-panel-calibration:not([hidden])', { timeout: 4000 }).catch(function () { issues.push({ k: 'tutorial', m: 'a Help Tutorials link did not open its tutorial on the page' }); });
     return;
@@ -300,7 +305,7 @@ async function task(browser, port, combo, name, width, withFeature, withFocus) {
         var full = Object.assign({ motion: 'reduced' }, combo);   /* Phase A leaves the other choices at their defaults; motion reduced keeps pages still */
         PAGES.forEach(function (name) {
           [1280, 1024].forEach(function (w) {
-            var feat = w === 1280 || ph[0] === 'B', focus = w === 1280 && /^test-/.test(name);
+            var feat = w === 1280 || ph[0] === 'B', focus = w === 1280 && /^practice/.test(name);
             jobs.push({ ph: ph[0], combo: ph[0] === 'A' ? full : combo, name: name, w: w, feat: feat, focus: focus });
           });
         });

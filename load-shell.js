@@ -1,4 +1,4 @@
-/* The Load Test workspace (window.LoadShell). Like the test pages (live-shell.js), it only MOVES the markup the page already has:
+/* The Load Test workspace (window.LoadShell). Like the practice page (live-shell.js), it only MOVES the markup the page already has:
      a File sidebar (mode, test type, the tutorial spot, and the CSV format help) beside a workspace with a toolbar (the Choose file buttons and their
      messages), a strip of facts read from the loaded file, and the graph with its panels (graph.js). Compare mode shows its overlay graph and table in
      the same workspace. The strip shows only what the file holds (a dash when something is missing); nothing is invented, saved, or sent.
@@ -12,7 +12,7 @@
   if (!main || !form || !graph) { window.LoadShell = { setRecord: function () {}, clear: function () {} }; return; }
   var mq = window.matchMedia ? window.matchMedia('(max-width: 68.75rem)') : null, narrow = { matches: false };
 
-  /* The layout takes the classes the test pages use, so the sidebar, the panels, and the graph rules in css/workspace.css apply here too.
+  /* The layout takes the classes the practice page uses, so the sidebar, the panels, and the graph rules in css/workspace.css apply here too.
      A loaded file is already a finished test, so "ended" and "has-run" are always set. */
   var layout = el('div', 'live-layout load-layout ended has-run');
   form.parentNode.insertBefore(layout, form);

@@ -11,7 +11,8 @@ import type { SourceChoice, TestController } from './controller';
 import { parseSetupFile } from './controller';
 import type { Account, ProfileRow } from './lab-api';
 import { fileBase, samplesCsv, save, sessionDetails, svgText, svgToPng, testCsv, testXlsx } from './exports';
-import { resultsFor } from './results';
+import { resultsFor, TERM_FOR } from './results';
+import site from 'virtual:site-data';
 import { EXAMPLE_DIMENSIONS, EXAMPLE_SETTINGS, MATERIAL_CHOICES, setupProblems, STEP_FIELDS } from './setup';
 import type { Setup } from './setup';
 
@@ -65,6 +66,7 @@ export function App({ controller: c, serialAvailable, theme, account }: TestScre
   const [ask, setAsk] = useState<null | 'new' | 'disconnect'>(null);
   const [saveOpen, setSaveOpen] = useState(false);
   const [fileError, setFileError] = useState('');
+  const [showDefs, setShowDefs] = useState(false);
   const svg = useRef<SVGSVGElement | null>(null);
   const [labProfiles, setLabProfiles] = useState<ProfileRow[] | null>(null);
   useEffect(() => {
@@ -248,7 +250,7 @@ export function App({ controller: c, serialAvailable, theme, account }: TestScre
       <Field label="Material" required {...(show('material') ? { error: show('material') as string } : {})}>
         <input type="text" list="materials" value={c.setup.material} disabled={c.locked} onChange={(e) => set({ material: e.target.value })} onBlur={touch('material')} aria-invalid={!!show('material')} />
       </Field>
-      <datalist id="materials">{MATERIAL_CHOICES.map((m) => <option key={m} value={m} />)}</datalist>
+      <datalist id="materials">{MATERIAL_CHOICES.concat(site.materials.map((m: { name: string }) => m.name)).map((m) => <option key={m} value={m} />)}</datalist>
       {text('specimenId', 'Specimen ID')}
       {text('speed', 'Crosshead speed set on the tester', { unit: 'mm/min', required: true, numeric: true, hint: 'Written into the record. The app does not set it.' })}
       {isRelax ? <>{text('holdMm', 'Hold displacement', { unit: 'mm', required: true, numeric: true })}{text('holdS', 'Hold duration', { unit: 's', required: true, numeric: true })}</> : (<>
@@ -355,10 +357,11 @@ export function App({ controller: c, serialAvailable, theme, account }: TestScre
 
           {c.phase === 'done' ? (<>
             <Panel title="Key results" open>
-              {c.session ? <p className="hint">{c.session.endReason}</p> : null}
+              <p className="row">{c.session ? <span className="hint">{c.session.endReason}</span> : null}<label className="check defs-switch"><input type="checkbox" checked={showDefs} onChange={(e) => setShowDefs(e.target.checked)} /> Show definitions</label></p>
               {results.rows.length ? (
                 <table className="results"><tbody>
-                  {results.rows.map((r) => <tr key={r.id}><th scope="row">{r.name}</th><td className="num">{r.value}</td><td className="hint">{r.note}</td></tr>)}
+                  {results.rows.map((r) => { const t = site.terms[TERM_FOR[r.id] ?? '']; return (
+                    <tr key={r.id}><th scope="row">{r.name}{showDefs && t ? <span className="def">{t.def}{t.eq ? ' ' + t.eq + '.' : ''}</span> : null}</th><td className="num">{r.value}</td><td className="hint">{r.note}</td></tr>); })}
                 </tbody></table>) : <p>{c.recordProblem || 'Too few points for key results.'}</p>}
               {results.rows.length ? <p className="hint">Strain is crosshead-based (crosshead displacement divided by the gauge length), not measured on the specimen. {c.dataLabel}.</p> : null}
             </Panel>
