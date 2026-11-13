@@ -50,10 +50,10 @@ jobs:
           sha256sum *.exe > SHA256SUMS.txt
           cat SHA256SUMS.txt
 
-      - name: Start-up check of the built program (first runs - a failure is shown but does not stop the draft)
+      - name: Start-up check of the built program
         # Starts the unpacked program, waits for its window, and confirms only the app's own screens (app://tester/)
-        # are open. Not yet seen to run on Windows: once it has passed, remove continue-on-error.
-        continue-on-error: true
+        # are open. A failure stops the build before the draft release is made. It passed on a Windows runner
+        # (run 2); it does not test USB, recording, or an installed copy.
         shell: bash
         working-directory: apps/desktop
         run: |
