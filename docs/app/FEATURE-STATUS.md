@@ -50,8 +50,9 @@ Updated with each stage. "Checked" means tried in Chrome's engine (Chromium on L
 ## Not built yet
 
 - Pico firmware and a Raspberry Pi service (guides only: [GUIDE-pico.md](GUIDE-pico.md), [GUIDE-raspberry-pi-service.md](GUIDE-raspberry-pi-service.md)).
-- Electron desktop version; a network connection to a Raspberry Pi.
-- Printable report, comparison of several files, and tangent line and region guides on the graph (the website has these).
+- A network connection to a Raspberry Pi.
+- Tangent line and region guides on the app's graph (the website has these).
+- Recordings kept as files on disk by the Windows app (it uses the same browser storage as Chrome for now).
 
 ## Unsupported on purpose
 
