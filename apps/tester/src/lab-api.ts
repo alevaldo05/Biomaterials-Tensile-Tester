@@ -17,7 +17,7 @@ export interface CalibrationRow {
 export interface SessionRow {
   id: string; owner: string; testType: 'uniaxial' | 'relaxation'; recordedFrom: 'real' | 'simulated'; data: string;
   material: string; specimenId: string; deviceId: string; deviceType: string; deviceSoftware: string; appVersion: string;
-  calibrationIds: string[]; sampleCount: number; startedAt: string | null; savedAt: string; summary: Record<string, number | null>; notes: string;
+  calibrationIds: string[]; calibrationSource?: 'lab' | 'not-from-lab' | 'none' | 'unchecked'; calibrationLabel?: string; sampleCount: number; startedAt: string | null; savedAt: string; summary: Record<string, number | null>; notes: string;
 }
 export interface AuditRow { id: string; at: string; action: string; detail: Record<string, unknown>; username: string | null }
 

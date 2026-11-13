@@ -21,6 +21,8 @@ Publishing with GitHub Pages and the pre-publish checks.
 - Check runs on every pull request and before every publish
 - `*.md` and `docs/` are not published
 - The owner opens pull requests and merges
+- `check-site.js` also checks that every page loading `page-help.js` has its own words in `data/page-help.js` and loads the help scripts in order, and that no page links to the retired `app/` folder
+- The tester app is not published; `deploy.yml` builds only the website
 
 ## Labels that must stay
 - None specific

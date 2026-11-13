@@ -80,7 +80,7 @@ export function History(p: { account: Account; onReplay: (sessionFileText: strin
             <thead>
               <tr>
                 <th scope="col">Saved</th><th scope="col">Test</th><th scope="col">Material</th><th scope="col">Specimen ID</th>
-                <th scope="col">Data</th><th scope="col">Samples</th><th scope="col">Device</th>
+                <th scope="col">Data</th><th scope="col">Calibration</th><th scope="col">Samples</th><th scope="col">Device</th>
                 {isAdmin ? <th scope="col">Owner</th> : null}
                 <th scope="col">Key results</th><th scope="col">Actions</th>
               </tr>
@@ -93,6 +93,7 @@ export function History(p: { account: Account; onReplay: (sessionFileText: strin
                   <td>{s.material || '—'}</td>
                   <td>{s.specimenId || '—'}</td>
                   <td>{s.data}</td>
+                  <td>{s.calibrationLabel || '—'}</td>
                   <td className="num">{s.sampleCount}</td>
                   <td>{(s.deviceType || '—') + ' · ' + (s.deviceId || '—')}</td>
                   {isAdmin ? <td>{s.owner}</td> : null}
