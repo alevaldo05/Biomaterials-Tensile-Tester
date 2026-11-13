@@ -9,6 +9,8 @@ The React and TypeScript app for running tests, the packages it shares with the 
 - `docs/app/ARCHITECTURE.md`
 - `docs/app/FEATURE-STATUS.md` (what is implemented, simulated, untested, unsupported; update it with every stage)
 - `packages/ui/` and `apps/tester/`: the graph and screen pieces, and the app itself (controller, screen, exports, lab and learning editions)
+- `docs/app/SETUP.md`, `docs/app/GUIDE-pico.md`, `docs/app/GUIDE-raspberry-pi-service.md`
+- `firmware/esp32-ads1115/`: reference ESP32 + ADS1115 firmware; board facts only in `include/board_config.h`; `test/host/` runs its portable code on a computer
 - `docs/app/PROTOCOL.md` (the acquisition protocol; the code in `packages/protocol/` is the reference)
 - `packages/acquisition/`, `packages/recording/`, `packages/machine-control/`: sources and transports (simulator, replay, USB serial), the recorder and conversion chain, and the machine-control stub; `packages/recording/test/` holds the acceptance tests
 - `scripts/check-site.js` (leaves the app folders and workspace files alone)
@@ -29,6 +31,8 @@ The React and TypeScript app for running tests, the packages it shares with the 
 - `packages/core` gives the same results as the website's scripts (same CSV header lines, so files open on either side); a calculation changed on one side is changed on the other in the same change
 - Graph, calculation, and recording code never import a device adapter, a transport, or the wire protocol (a test checks this)
 - A calibration is used only when its whole signal path matches; without one, values stay in volts and no stress or strain is calculated
+- Board pins, the I2C address, and channel wiring live only in the firmware's `board_config.h`, all marked as examples; the firmware sends raw counts only and understands only the six acquisition requests
+- The serial speed is 921600 in both `board_config.h` and `apps/tester/src/real.ts`
 - The USB serial transport is untested with real hardware, and the docs say so until it has been tried
 - The saved reference numbers change only when a website calculation is changed on purpose (`npm run reference:update`)
 
@@ -40,6 +44,7 @@ The React and TypeScript app for running tests, the packages it shares with the 
 - [graph-engine](graph-engine.md), [downloads](downloads.md), [calibration](calibration.md), [compare](compare.md) (the scripts the reference tests run)
 
 ## How to check
+- `bash firmware/esp32-ads1115/test/host/build-and-test.sh` (needs a C++ compiler); `pio run -e esp32dev` in `firmware/esp32-ads1115` (needs PlatformIO and its download hosts)
 - `npm run app:build`, then run a simulated uniaxial and relaxation test in Chrome at 1366, 1280, 1024, 768, and 390 px, and open the saved CSV on the website's Load Test page
 - `npm install` once, then `npm test` and `npm run typecheck`
 - `node scripts/check-site.js`

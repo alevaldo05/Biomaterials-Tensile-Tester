@@ -9,7 +9,7 @@ The code that defines and checks it is `packages/protocol/src/messages.ts`. If t
 - Text, UTF-8. One JSON object per line, ending in `\n` (a `\r\n` ending is accepted).
 - Every message has `"v": 1` and a `"type"`.
 - A line may be at most 2048 characters. A longer line is dropped and counted.
-- Over USB serial the reference setting is 115200 baud (a native USB port ignores it).
+- Over USB serial the reference setting is 921600 baud (a native USB port ignores it). A sample line is about 110 characters, so 115200 baud (about 11,500 characters per second) is too slow for even 128 conversions per second. The app and the firmware's `board_config.h` must use the same rate.
 - Every line the app receives is checked at run time. A line that is not JSON, is the wrong version, or has a wrong or missing field is skipped and counted; it never becomes a reading.
 
 ## Messages from the device

@@ -174,7 +174,7 @@ export function App({ controller: c, serialAvailable }: { controller: TestContro
     </>),
     connection: (<>
       <dl className="facts">
-        <div><dt>Method</dt><dd>{c.choice === 'real' ? 'USB serial (Web Serial), 115200 baud' : c.choice === 'simulated' ? 'In this tab (no port is opened)' : 'From the chosen file'}</dd></div>
+        <div><dt>Method</dt><dd>{c.choice === 'real' ? 'USB serial (Web Serial), 921600 baud' : c.choice === 'simulated' ? 'In this tab (no port is opened)' : 'From the chosen file'}</dd></div>
         <div><dt>State</dt><dd>{st.name}</dd></div>
       </dl>
       {c.choice === 'real' ? <p className="hint">You pick the port in the browser’s own box; the app never opens one by itself. {serialAvailable ? '' : 'This browser has no Web Serial: use Chrome on a computer. '}The hardware connection is untested.</p> : null}
