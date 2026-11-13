@@ -94,6 +94,7 @@ export function buildApp(o: { db: Db; config: Config; logger?: boolean; limiter?
         return fail(401, 'wrong_login', 'Wrong username or password.');
       }
       limiter.succeeded(keys);
+      await db.query('delete from login_sessions where expires_at < now()');   /* sign-ins that ran out are cleared as people sign in */
       const t = newToken();
       await db.query("insert into login_sessions (token_hash, user_id, expires_at) values ($1, $2, now() + make_interval(hours => $3))", [t.hash, row.id, config.sessionHours]);
       await audit(String(row.id), 'login');
@@ -230,8 +231,14 @@ export function buildApp(o: { db: Db; config: Config; logger?: boolean; limiter?
     });
 
     /* ---------- recorded tests ---------- */
+    /* at most 30 saves a minute for each person: a save compresses a large file on the server */
+    const uploadLimiter = new LoginLimiter(30, 60_000);
     api.post('/test-sessions', async (req, reply) => {
-      const u = signedIn(req), b = parse(UploadBody, req.body), f = b.file;
+      const u = signedIn(req);
+      const wait = uploadLimiter.blocked(['up:' + u.id]);
+      if (wait) return fail(429, 'too_many_saves', 'Too many saves in a short time. Try again in ' + Math.ceil(wait / 1000) + ' seconds.');
+      uploadLimiter.failed(['up:' + u.id]);   /* counts this save (the limiter's "failed" is just its counter) */
+      const b = parse(UploadBody, req.body), f = b.file;
       if (f.recordedFrom !== 'real') fail(400, 'simulated', 'The lab server keeps recorded tests only. Simulated data stays on the website.');
       type Hello = { device_id?: string; device_type?: string; sw_version?: string };
       let hello: Hello | null = null, samples = 0, firstSample: number | null = null;
@@ -255,6 +262,8 @@ export function buildApp(o: { db: Db; config: Config; logger?: boolean; limiter?
         calSource = f.calibrations.every(same) ? 'lab' : 'not-from-lab';
       }
       const raw = JSON.stringify((req.body as { file: unknown }).file), gz = zlib.gzipSync(raw), sha = crypto.createHash('sha256').update(raw).digest('hex');
+      const dup = await db.query('select s.id from session_files sf join test_sessions s on s.id = sf.session_id where sf.sha256 = $1 and s.owner_id = $2 limit 1', [sha, u.id]);
+      if (dup.rows[0]) fail(409, 'duplicate', 'This test is already saved (test number ' + String(dup.rows[0].id) + ').');
       const setup = f.setup as Record<string, string | boolean>;
       const client = await db.connect();
       try {

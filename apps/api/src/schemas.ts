@@ -59,7 +59,8 @@ export const SessionFileBody = z.object({
   profile: z.unknown().nullable(),
   calibrations: z.array(z.object({ id: z.string().max(64), quantity: z.string().max(32).optional(), slope: z.number().optional(), offset: z.number().optional() }).passthrough()).max(16),
   lines: z.array(z.string().max(2048)).min(1).max(2_000_000),
-  receivedAt_ms: z.array(z.number().finite()).max(2_000_000),
+  /* arrival times in milliseconds since 1970, kept between the years 2000 and 2100 */
+  receivedAt_ms: z.array(z.number().finite().min(946_684_800_000).max(4_102_444_800_000)).max(2_000_000),
 }).refine((f) => f.receivedAt_ms.length === f.lines.length, 'receivedAt_ms: there must be one arrival time for each line.');
 
 /* What a device may send (packages/protocol/src/messages.ts). A saved line of any other type was not sent by a device. */
