@@ -59,6 +59,20 @@ export function App({ controller: c, serialAvailable, theme, account, onHelpSub 
   useSyncExternalStore(c.subscribe, c.snapshot);
   const [step, setStep] = useState<StepId>('test');
   const [drawer, setDrawer] = useState(false);
+  /* At 1100 px and narrower the setup is a drawer. While it is closed it is off screen, so keep it out of the Tab order. */
+  const [narrow, setNarrow] = useState(() => typeof window !== 'undefined' && !!window.matchMedia && window.matchMedia('(max-width: 1100px)').matches);
+  useEffect(() => {
+    if (!window.matchMedia) return;
+    const q = window.matchMedia('(max-width: 1100px)'), on = () => setNarrow(q.matches);
+    q.addEventListener('change', on);
+    return () => q.removeEventListener('change', on);
+  }, []);
+  useEffect(() => {
+    if (!drawer) return;
+    const onKey = (e: KeyboardEvent) => { if (e.key === 'Escape') setDrawer(false); };   /* closes the drawer only; it sends nothing to any device */
+    document.addEventListener('keydown', onKey);
+    return () => document.removeEventListener('keydown', onKey);
+  }, [drawer]);
   const [touched, setTouched] = useState<Partial<Record<keyof Setup, boolean>>>({});
   const [ask, setAsk] = useState<null | 'new' | 'disconnect'>(null);
   const [saveOpen, setSaveOpen] = useState(false);
@@ -211,7 +225,7 @@ export function App({ controller: c, serialAvailable, theme, account, onHelpSub 
   return (
     <div className={'test-page' + (recording ? ' is-recording' : '') + (drawer ? ' drawer-open' : '')}>
       <div className="body">
-        <aside className="setup" aria-label="Setup">
+        <aside className="setup" aria-label="Setup" inert={narrow && !drawer}>
           <div className="setup-head"><h2>Setup</h2><button type="button" className="quiet drawer-close" onClick={() => setDrawer(false)}>Close</button></div>
           <ol className="steps">
             {STEPS.map((s, i) => (

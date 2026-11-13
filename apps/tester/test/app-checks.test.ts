@@ -151,3 +151,23 @@ describe('exports', () => {
     expect(text).toContain('xl/worksheets/');
   });
 });
+
+describe('keyboard and focus (source checks; the Tab walk-through was done in Chromium)', () => {
+  const src = (f: string) => readFileSync(path.join(here, '../src', f), 'utf8');
+  it('has a skip link that goes to the main part, and moves focus there when the screen changes', () => {
+    const shell = src('Shell.tsx');
+    expect(shell).toContain('className="skip-link" href="#main-content"');
+    expect(shell).toContain('export function focusMain');
+    expect(shell).toMatch(/PAGE_TITLES\[page\] \+ ' · Biomaterials Tensile Tester'/);
+  });
+  it('keeps a closed Setup drawer out of the Tab order and closes it with Esc, sending nothing to any device', () => {
+    const app = src('App.tsx');
+    expect(app).toContain('inert={narrow && !drawer}');
+    expect(app).toMatch(/e\.key === 'Escape'\) setDrawer\(false\)/);
+    expect(app).not.toMatch(/Escape[^\n]*(stop|Stop)/);
+  });
+  it('turns animation and smooth scrolling off for everyone who asks for reduced motion', () => {
+    const css = src('app.css');
+    expect(css).toMatch(/@media \(prefers-reduced-motion: reduce\) \{\s*\*, \*::before, \*::after \{[^}]*animation-duration: 0\.01ms !important[^}]*transition-duration: 0\.01ms !important/);
+  });
+});
