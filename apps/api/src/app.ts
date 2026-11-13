@@ -114,6 +114,7 @@ export function buildApp(o: { db: Db; config: Config; logger?: boolean; limiter?
       if (!row || !(await verifyPassword(row.password_hash, b.current))) fail(400, 'wrong_password', 'The current password is not right.');
       const why = passwordProblem(b.next);
       if (why) fail(400, 'weak_password', why);
+      if (b.next === b.current) fail(400, 'weak_password', 'Choose a password different from the current one.');   /* a temporary password must really be replaced */
       await db.query('update users set password_hash = $1, must_change_password = false where id = $2', [await hashPassword(b.next), u.id]);
       const keep = tokenHash(readCookie(req.headers.cookie, COOKIE) ?? '');
       await db.query('delete from login_sessions where user_id = $1 and token_hash <> $2', [u.id, keep]);   /* sign out other browsers */
