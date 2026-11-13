@@ -75,7 +75,7 @@ Rules that hold everywhere:
 | `packages/ui` and `apps/tester`: the app screen, graph, exports, lab and learning editions | Implemented; details in [FEATURE-STATUS](FEATURE-STATUS.md) |
 | `apps/api`: back end and PostgreSQL database, sign-in, admin and user roles, saved tests, device profiles, calibrations, record of changes | Implemented; tested against a real PostgreSQL ([BACKEND](BACKEND.md)) |
 | Signing in, History, Admin, and View as user in the app | Implemented |
-| Containers | Planned |
+| Containers (`deploy/`): gateway, website, app, API, database, each replaceable on its own | Implemented; built and run with Docker here ([CONTAINERS](CONTAINERS.md)) |
 
 Two things `packages/core` does differently from the website on purpose (the website pages are unchanged):
 

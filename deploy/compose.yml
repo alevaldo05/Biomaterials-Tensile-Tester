@@ -1,0 +1,51 @@
+# The whole system on one computer: docker compose --env-file .env up -d   (run in this folder; see docs/app/CONTAINERS.md)
+# Five services, each its own image and version. Any one can be rebuilt or replaced while the others keep running:
+#   docker compose up -d --no-deps --build api
+# Nothing here talks to the tensile tester: USB stays in the browser on the computer the tester is plugged into.
+name: tensile
+
+services:
+  gateway:
+    build: { context: .., dockerfile: deploy/gateway/Dockerfile, args: { VERSION: "${GATEWAY_VERSION:-local}" } }
+    image: ${IMAGE_PREFIX:-tensile}/gateway:${GATEWAY_VERSION:-local}
+    ports: ["${BIND_ADDRESS:-127.0.0.1}:${HTTP_PORT:-8080}:80"]
+    restart: unless-stopped
+
+  web:
+    build: { context: .., dockerfile: deploy/web/Dockerfile, args: { VERSION: "${WEB_VERSION:-local}" } }
+    image: ${IMAGE_PREFIX:-tensile}/web:${WEB_VERSION:-local}
+    restart: unless-stopped
+
+  app:
+    build: { context: .., dockerfile: deploy/app/Dockerfile, args: { VERSION: "${APP_VERSION:-local}" } }
+    image: ${IMAGE_PREFIX:-tensile}/app:${APP_VERSION:-local}
+    restart: unless-stopped
+
+  api:
+    build: { context: .., dockerfile: deploy/api/Dockerfile, args: { VERSION: "${API_VERSION:-local}" } }
+    image: ${IMAGE_PREFIX:-tensile}/api:${API_VERSION:-local}
+    environment:
+      DATABASE_URL: postgres://tester:${POSTGRES_PASSWORD:?Set POSTGRES_PASSWORD in .env}@db:5432/tester
+      COOKIE_SECURE: ${COOKIE_SECURE:-false}
+      TRUST_PROXY: "true"
+      SESSION_HOURS: ${SESSION_HOURS:-12}
+    restart: unless-stopped
+    # No depends_on: the API starts on its own and keeps trying the database until it answers.
+
+  db:
+    image: postgres:${POSTGRES_VERSION:-16-alpine}
+    environment:
+      POSTGRES_USER: tester
+      POSTGRES_DB: tester
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?Set POSTGRES_PASSWORD in .env}
+    volumes: ["db-data:/var/lib/postgresql/data"]
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U tester -d tester"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    restart: unless-stopped
+
+volumes:
+  # The saved tests, people, profiles, and calibrations. Removing the containers keeps it; "down -v" deletes it.
+  db-data:

@@ -18,7 +18,8 @@ Updated with each stage. "Checked" means tried in Chrome's engine (Chromium on L
 
 - Implemented and tested against a real PostgreSQL 16: sign-in with argon2id passwords, admin and user roles enforced on the server, saved tests with their full session files, device profiles, calibrations (draft, approved, retired; real equipment only; never overwritten), and a record of changes. See [BACKEND.md](BACKEND.md).
 - In the app (lab edition only): Sign in, History (own tests; admins see everyone's), Save to lab database, loading a profile and its approved calibrations in the Calibration step, an Admin page, and View as user.
-- Not yet run in containers or on the lab computer. No HTTPS set up. No scheduled backups.
+- Runs in containers ([CONTAINERS.md](CONTAINERS.md)): built and run with Docker here; each service was stopped, restarted, or replaced while the others kept working, and a backup was restored. Not yet tried on your computer, the lab computer, or Docker Desktop on Windows. No HTTPS set up. Backups are by hand (`deploy/backup.sh`), not on a schedule.
+- The test image (`deploy/test/Dockerfile`, used by GitHub) could not be built here because this environment cannot reach the Debian package mirror; its steps were run outside a container instead.
 
 ## Reference firmware (ESP32 + ADS1115)
 
@@ -39,7 +40,6 @@ Updated with each stage. "Checked" means tried in Chrome's engine (Chromium on L
 ## Not built yet
 
 - Pico firmware and a Raspberry Pi service (guides only: [GUIDE-pico.md](GUIDE-pico.md), [GUIDE-raspberry-pi-service.md](GUIDE-raspberry-pi-service.md)).
-- Containers.
 - Electron desktop version; a network connection to a Raspberry Pi.
 - Printable report, comparison of several files, and tangent line and region guides on the graph (the website has these).
 

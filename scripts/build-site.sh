@@ -18,7 +18,7 @@ tar -cf - \
   --exclude='*.md' --exclude='./_site' --exclude='./.gitignore' \
   --exclude='./node_modules' --exclude='./packages' --exclude='./apps' --exclude='./firmware' --exclude='./deploy' \
   --exclude='./package.json' --exclude='./package-lock.json' --exclude='./tsconfig.json' --exclude='./tsconfig.*.json' \
-  --exclude='./vitest.config.mjs' \
+  --exclude='./vitest.config.mjs' --exclude='./.dockerignore' \
   . | tar -xf - -C "$out"
 
 # Add ?v=<commit> to local .css and .js links so browsers fetch new files after each deploy.

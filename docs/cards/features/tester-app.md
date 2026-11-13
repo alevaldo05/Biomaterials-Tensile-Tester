@@ -9,6 +9,7 @@ The React and TypeScript app for running tests, the packages it shares with the 
 - `docs/app/ARCHITECTURE.md`
 - `docs/app/FEATURE-STATUS.md` (what is implemented, simulated, untested, unsupported; update it with every stage)
 - `packages/ui/` and `apps/tester/`: the graph and screen pieces, and the app itself (controller, screen, exports, lab and learning editions)
+- `docs/app/CONTAINERS.md`; `deploy/` (compose file, Dockerfiles, gateway, backups, test image); `.github/workflows/app.yml` (checks; publishes nothing); `.dockerignore`
 - `docs/app/BACKEND.md`; `apps/api/` (back end and database migrations); `apps/tester/src/Shell.tsx`, `lab-api.ts`, `pages/` (sign-in, History, Admin, View as user)
 - `docs/app/SETUP.md`, `docs/app/GUIDE-pico.md`, `docs/app/GUIDE-raspberry-pi-service.md`
 - `firmware/esp32-ads1115/`: reference ESP32 + ADS1115 firmware; board facts only in `include/board_config.h`; `test/host/` runs its portable code on a computer
@@ -34,6 +35,8 @@ The React and TypeScript app for running tests, the packages it shares with the 
 - A calibration is used only when its whole signal path matches; without one, values stay in volts and no stress or strain is calculated
 - Board pins, the I2C address, and channel wiring live only in the firmware's `board_config.h`, all marked as examples; the firmware sends raw counts only and understands only the six acquisition requests
 - Recording never depends on the back end; the website never needs it
+- Each container is replaceable on its own: no service waits for another, and the gateway looks addresses up per request
+- `.env` and backups are never committed; images are not published without the owner's okay
 - Roles are checked on the server; View as user changes only the screen
 - Calibrations are stored only for real equipment, are never overwritten, and are used only once approved; migrations only add
 - The serial speed is 921600 in both `board_config.h` and `apps/tester/src/real.ts`
