@@ -76,6 +76,24 @@ export function App({ controller: c, serialAvailable, theme, account, onHelpSub 
   const [touched, setTouched] = useState<Partial<Record<keyof Setup, boolean>>>({});
   const [ask, setAsk] = useState<null | 'new' | 'disconnect'>(null);
   const [saveOpen, setSaveOpen] = useState(false);
+  const saveButton = useRef<HTMLButtonElement | null>(null);
+  const saveMenu = useRef<HTMLSpanElement | null>(null);
+  const wasOpen = useRef(false);
+  /* Save data menu: focus moves to the first item when it opens, Up/Down/Home/End move between items, Esc closes it,
+     and focus goes back to the button when it closes (also after choosing an item). Esc here closes the menu only. */
+  useEffect(() => {
+    if (saveOpen) { saveMenu.current?.querySelector<HTMLElement>('[role="menuitem"]')?.focus(); wasOpen.current = true; }
+    else if (wasOpen.current) { wasOpen.current = false; if (!document.activeElement || document.activeElement === document.body) saveButton.current?.focus(); }
+  }, [saveOpen]);
+  const onMenuKey = (e: React.KeyboardEvent) => {
+    const items = [...(saveMenu.current?.querySelectorAll<HTMLElement>('[role="menuitem"]') ?? [])];
+    const i = items.indexOf(document.activeElement as HTMLElement);
+    if (e.key === 'Escape') { e.preventDefault(); e.stopPropagation(); setSaveOpen(false); saveButton.current?.focus(); }
+    else if (e.key === 'ArrowDown') { e.preventDefault(); items[(i + 1) % items.length]?.focus(); }
+    else if (e.key === 'ArrowUp') { e.preventDefault(); items[(i - 1 + items.length) % items.length]?.focus(); }
+    else if (e.key === 'Home') { e.preventDefault(); items[0]?.focus(); }
+    else if (e.key === 'End') { e.preventDefault(); items[items.length - 1]?.focus(); }
+  };
   const svg = useRef<SVGSVGElement | null>(null);
   const report = usePrintReport<HTMLElement>();
   const dialog = useRef<HTMLDialogElement | null>(null);
@@ -263,9 +281,9 @@ export function App({ controller: c, serialAvailable, theme, account, onHelpSub 
               <button type="button" onClick={() => c.stopRecording()} disabled={!recording}>Stop recording</button>
             </>) : (<>
               <span className="menu">
-                <button type="button" className="primary" aria-expanded={saveOpen} aria-haspopup="true" onClick={() => setSaveOpen((v) => !v)}>Save data</button>
+                <button type="button" className="primary" ref={saveButton} aria-expanded={saveOpen} aria-haspopup="menu" onClick={() => setSaveOpen((v) => !v)}>Save data</button>
                 {saveOpen ? (
-                  <span className="menu-list" role="menu">
+                  <span className="menu-list" role="menu" ref={saveMenu} onKeyDown={onMenuKey}>
                     {c.record ? <button type="button" role="menuitem" onClick={() => void doSave('csv')}>Test data (CSV, opens in Excel)</button> : null}
                     {c.record ? <button type="button" role="menuitem" onClick={() => void doSave('xlsx')}>Test data with chart (Excel .xlsx)</button> : null}
                     <button type="button" role="menuitem" onClick={() => void doSave('png')}>Graph picture (PNG)</button>

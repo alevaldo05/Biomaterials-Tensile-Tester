@@ -45,7 +45,7 @@ export function Panel(p: { title: string; open?: boolean; children: ReactNode })
 export function Field(p: { label: string; unit?: string; required?: boolean; error?: string; hint?: string; children: ReactNode }) {
   return (
     <label className={'field' + (p.error ? ' field-bad' : '')}>
-      <span className="field-label">{p.label}{p.unit ? <span className="field-unit"> ({p.unit})</span> : null}{p.required ? <span className="req" aria-hidden="true"> *</span> : null}</span>
+      <span className="field-label">{p.label}{p.unit ? <span className="field-unit"> ({p.unit})</span> : null}{p.required ? <span className="req"><span aria-hidden="true"> *</span><span className="sr-only"> (required)</span></span> : null}</span>
       {p.children}
       {p.error ? <span className="field-error">{p.error}</span> : p.hint ? <span className="field-hint">{p.hint}</span> : null}
     </label>
