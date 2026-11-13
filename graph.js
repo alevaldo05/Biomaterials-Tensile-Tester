@@ -3,7 +3,7 @@
    graph customization, and PNG/SVG download. Three modes:
      example – labeled sample curves from window.SAMPLE_DATA (protocol pages)
      load    – one CSV file opened in the browser (Load Test page; nothing is uploaded or saved)
-     live    – readings appended while a test runs (test pages, driven by live.js)
+     live    – readings appended while a test runs (the practice page, driven by live.js)
    Units: strain dimensionless, stress MPa, force N, displacement mm, time s. */
 (function () {
   'use strict';
@@ -454,8 +454,8 @@
     var swatches = [['#3f6b52', 'Forest green'], ['#2f6f8f', 'Blue'], ['#b4691f', 'Orange'], ['#7a4f9a', 'Purple'], ['#a63d40', 'Red'], ['#1f2a24', 'Charcoal']]
       .map(function (c) { return '<button type="button" class="swatch" data-color="' + c[0] + '" style="background:' + c[0] + '" aria-label="Line color: ' + c[1] + '"></button>'; }).join('');
 
-    /* Load Test and New Test put the toolbar (regions, tangent, downloads) directly under the graph, with Readout and Key results
-       in a column on the right. Load Test also shows the editable test parameters under the toolbar; New Test has its own setup card. */
+    /* Load Test and the practice page put the toolbar (regions, tangent, downloads) directly under the graph, with Readout and Key results
+       in a column on the right. Load Test also shows the editable test parameters under the toolbar; the practice page has its own setup card. */
     var stacked = (mode === 'load' || mode === 'live');
     /* The Materials page can pass paramsHost: an element elsewhere on the page where the Test parameters block is built, instead of at the
        bottom of the graph. All the lookups of that block go through pRoot. */

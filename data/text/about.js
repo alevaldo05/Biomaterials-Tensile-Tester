@@ -136,15 +136,14 @@ window.SITE_TEXT.about = {
         { columns: [
           { heading: "Works now", blocks: [
             { list: [
-              "New Test pages with live graphing, Start/STOP/Tare commands, and CSV and image downloads. A practice page has a labeled simulator for learning the screen.",
-              "USB connection code, not yet tested with the real machine.",
+              "A practice page with a labeled simulator, live graphing, and CSV and image downloads, for learning the screen. Real tests are run in the tester app, not on this website.",
               "Load Test for opening earlier CSV files.",
               "Draft protocols with example graphs from labeled sample data."
             ] }
           ] },
           { heading: "Planned", blocks: [
             { list: [
-              "Controller code that matches the website’s message format.",
+              "Controller code that matches the tester app’s protocol.",
               "Testing with the real machine and measured data.",
               "Final, approved protocols.",
               "Possible Wi-Fi connection option."

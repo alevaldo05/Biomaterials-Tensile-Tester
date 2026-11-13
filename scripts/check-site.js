@@ -41,6 +41,9 @@ function read(rel) { return fs.readFileSync(path.join(ROOT, rel), 'utf8'); }
 function exists(rel) { return FILES.indexOf(rel) >= 0; }
 
 var SITE_PATH = '/Biomaterials-Tensile-Tester/';  /* the folder name GitHub Pages serves the site under */
+/* The tester app is not in this repository's website files. The folder app/ is created only when the site is built for publishing
+   (scripts/build-site.sh adds it), so the link "app/" (and "app/index.html") on the New Test page cannot be found here. These two exact links are accepted. */
+var PUBLISH_TIME_LINKS = { 'app/': 1, 'app/index.html': 1 };
 
 /* The relative file a link points to, or null for web addresses, anchors, and mail links.
    A link that starts with SITE_PATH (used only by 404.html) is read from the project root. */
@@ -70,6 +73,7 @@ begin('1. Page links');
       var target = localPath(page, m[1]);
       if (target === null) continue;
       count++;
+      if (PUBLISH_TIME_LINKS[target]) continue;
       if (!exists(target)) fail(page + ' links to "' + m[1] + '", but that file is not in the project. Check the name and the folder.');
     }
   });
@@ -152,8 +156,8 @@ begin('3. Data files');
     },
     'data/search-index.js': function (g) {
       if (!isArr(g.SEARCH_INDEX)) return 'SEARCH_INDEX should be a list of places to search';
-      /* Parts that the page builds itself (the New Test form, the address #general/graph, the numbered references) cannot be found in the HTML. */
-      var built = { 'materials.html': /^(properties|chart|material)$/, 'protocol-uniaxial-tension.html': /^general\/(setup|report|graph)$/, 'protocol-stress-relaxation.html': /^general\/(setup|report|graph)$/, 'help.html': /^ref-([1-9]|[12][0-9]|3[0-7])$/, 'test-uniaxial-tension.html': /^(spec-title|rv-title)$/, 'test-stress-relaxation.html': /^(spec-title|rv-title)$/ };
+      /* Parts that the page builds itself (the practice page's setup form, the address #general/graph, the numbered references) cannot be found in the HTML. */
+      var built = { 'materials.html': /^(properties|chart|material)$/, 'protocol-uniaxial-tension.html': /^general\/(setup|report|graph)$/, 'protocol-stress-relaxation.html': /^general\/(setup|report|graph)$/, 'help.html': /^ref-([1-9]|[12][0-9]|3[0-7])$/, 'practice.html': /^(spec-title|rv-title)$/ };
       for (var i = 0; i < g.SEARCH_INDEX.length; i++) {
         var e = g.SEARCH_INDEX[i], at = 'SEARCH_INDEX entry ' + (i + 1) + ' (' + (e && e.t) + ')';
         if (!isStr(e.t) || !isStr(e.p) || typeof e.a !== 'string' || typeof e.w !== 'string' || typeof e.k !== 'string') return at + ' needs t, p, a, w, and k as text (a may be blank)';
@@ -173,8 +177,8 @@ begin('3. Data files');
         seen[t.id] = 1;
         if (!isStr(t.page) || !exists(t.page)) return where + ' needs "page" (the page file it plays on)';
         if (!isStr(t.where)) return where + ' needs "where" (words for the Help list)';
-        var spot = 'data-tutorial="' + t.id + '"', onPage = read(t.page).indexOf(spot) >= 0 || (/^(test-|practice)/.test(t.page) && read('live.js').indexOf(spot) >= 0);
-        if (!onPage) return where + ': no tut-slot with ' + spot + ' on ' + t.page + (/^(test-|practice)/.test(t.page) ? ' or in live.js' : '') + ' (add <div class="tut-slot" ' + spot + '></div> where it should play)';
+        var spot = 'data-tutorial="' + t.id + '"', onPage = read(t.page).indexOf(spot) >= 0 || (/^practice/.test(t.page) && read('live.js').indexOf(spot) >= 0);
+        if (!onPage) return where + ': no tut-slot with ' + spot + ' on ' + t.page + (/^practice/.test(t.page) ? ' or in live.js' : '') + ' (add <div class="tut-slot" ' + spot + '></div> where it should play)';
         if (!Array.isArray(t.captions) || t.captions.length < 2 || t.captions.length > 4) return where + ' needs 2 to 4 captions';
         if (!Array.isArray(t.boxes) || !t.boxes.length || !Array.isArray(t.frames) || t.frames.length < 2) return where + ' needs boxes and at least 2 frames';
         var ids = {}, b, f, j, m;
@@ -197,7 +201,7 @@ begin('3. Data files');
     },
     'data/help-tips.js': function (g) {
       var T = g.HELP_TIPS;
-      if (!T || typeof T.stuckMs !== 'number' || typeof T.noReadingsMs !== 'number' || typeof T.fieldErrorMs !== 'number' || !T.problems) return 'HELP_TIPS needs stuckMs, noReadingsMs, fieldErrorMs, troubleshooting, and problems';
+      if (!T || typeof T.stuckMs !== 'number' || typeof T.fieldErrorMs !== 'number' || !T.problems) return 'HELP_TIPS needs stuckMs, fieldErrorMs, troubleshooting, and problems';
       var rows = [], h = g.SITE_TEXT && g.SITE_TEXT.help && g.SITE_TEXT.help.sections && g.SITE_TEXT.help.sections['trouble-title'];
       ((h && h.blocks) || []).forEach(function (b) { if (b && b.table && b.table.rows) rows = rows.concat(b.table.rows); });
       for (var k in T.problems) {

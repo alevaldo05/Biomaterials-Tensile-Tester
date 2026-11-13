@@ -1,5 +1,7 @@
 # Implementation plan: Biomaterials Tensile Tester
 
+> Note (later change): the website's own live test pages (`test-uniaxial-tension.html`, `test-stress-relaxation.html`) and its USB connection were retired. Real tests are now run in the separate tester app; this plan is kept as written and is no longer current for those pages.
+
 Planning only: this file describes the work in stages. No code was changed to write it.
 
 ## Context

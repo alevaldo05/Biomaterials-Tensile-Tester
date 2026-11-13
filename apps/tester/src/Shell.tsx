@@ -8,7 +8,8 @@ import type { Account, LabUser } from './lab-api';
 import { Admin } from './pages/Admin';
 import { History } from './pages/History';
 
-const SITE_URL = 'https://alevaldo05.github.io/Biomaterials-Tensile-Tester/';
+/* The app is served at <site>/app/ (on GitHub Pages and behind the gateway), so the website is one folder up. */
+const SITE_URL = '../';
 type Page = 'test' | 'history' | 'admin';
 
 function Dialog(p: { open: boolean; title: string; onClose?: () => void; children: React.ReactNode }) {
@@ -120,6 +121,7 @@ export function Shell({ controller: c, serialAvailable }: { controller: TestCont
       {page === 'history' && account ? <main className="page" id="main-content"><History account={account} onReplay={openReplay} /></main> : null}
       {page === 'admin' && account && effectiveRole === 'admin' ? <main className="page" id="main-content"><Admin account={account} controller={c} /></main> : null}
 
+      {lab ? (<>
       <Dialog open={dialog === 'sign-in'} title="Sign in to the lab database" onClose={() => setDialog(null)}>
         <SignIn api={api} onDone={(u) => { setUser(u); setDialog(u.mustChangePassword ? 'password' : null); }} onCancel={() => setDialog(null)} />
       </Dialog>
@@ -128,6 +130,7 @@ export function Shell({ controller: c, serialAvailable }: { controller: TestCont
           onDone={() => { setDialog(null); api.me().then(setUser, (e: unknown) => { if (e instanceof ApiError && e.status === 401) setUser(null); }); }}
           onCancel={() => (user?.mustChangePassword ? signOut() : setDialog(null))} />
       </Dialog>
+      </>) : null}
     </div>
   );
 }

@@ -21,6 +21,12 @@ Updated with each stage. "Checked" means tried in Chrome's engine (Chromium on L
 - Runs in containers ([CONTAINERS.md](CONTAINERS.md)): built and run with Docker here; each service was stopped, restarted, or replaced while the others kept working, and a backup was restored. Not yet tried on your computer, the lab computer, or Docker Desktop on Windows. No HTTPS set up. Backups are by hand (`deploy/backup.sh`), not on a schedule.
 - The test image (`deploy/test/Dockerfile`, used by GitHub) could not be built here because this environment cannot reach the Debian package mirror; its steps were run outside a container instead.
 
+## Website and app together
+
+- The website's own live test pages are retired. New Test on the website points to the tester app, the practice page, and Load Test. The website has no USB connection any more.
+- GitHub Pages also publishes the app's learning edition at `app/` (simulation and replay only; no USB; no sign-in). Built and checked here under a GitHub Pages–style address; the publish workflow itself first runs when the branch is merged into `main`.
+- The app uses the website's definitions and materials (read at build time from `data/terms.js` and `data/materials.js`).
+
 ## Reference firmware (ESP32 + ADS1115)
 
 - Implemented: `firmware/esp32-ads1115/`. Protocol v1, the six acquisition requests, ADS1115 single-shot conversions one channel after another, raw counts with a microsecond timestamp each, a new boot id per start and a new settings reference per change, lost-sample counting, achieved rate, ADC faults.

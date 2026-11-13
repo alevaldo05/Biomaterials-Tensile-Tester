@@ -17,6 +17,7 @@
     "packages/ui/test",
     "apps/tester/src",
     "apps/tester/test",
-    "apps/tester/vite.config.ts"
+    "apps/tester/vite.config.ts",
+    "apps/tester/site-data.ts"
   ]
 }

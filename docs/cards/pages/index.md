@@ -13,7 +13,7 @@ Homepage: title, the New Test and Load Test actions, the About the tester paragr
 
 ## What the user sees
 - Header with logo, main menu (Home, Learn, Protocols, Materials, Calibration, About, Help, Settings) and the search button
-- Heading **Biomaterials Tensile Tester**, "Choose a test to get started.", primary **New Test**, **Load Test**
+- Heading **Biomaterials Tensile Tester**, "Start a test in the tester app, practice with a simulation, or open a saved file.", primary **New Test** (opens the New Test page, which points to the tester app, the practice page, and Load Test), **Load Test**
 - Protocols and procedures links, marked Draft (a card in the Start screen layout)
 
 ## Behavior to keep

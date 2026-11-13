@@ -1,4 +1,4 @@
-/* The test workspace shell (window.LiveShell), used by live.js on the test pages and the practice page.
+/* The test workspace shell (window.LiveShell), used by live.js on the practice page (the website's test screen).
    It only MOVES the markup live.js has already built (so every id and listener stays valid) into the workspace layout:
      a Setup sidebar (the step bar, the setup steps, the Connection note and the Review), and a workspace beside it
      (a toolbar for Connection, Recording and the Tester, a line saying why Start is unavailable, a measurement strip, and the graph).

@@ -23,6 +23,11 @@ jobs:
       - name: Check the site
         run: node scripts/check-site.js
 
+      # The tester app's learning edition (published at app/). Built in a Node container, so this
+      # workflow needs no extra Action. Fails the check if the app does not build.
+      - name: Build the app's learning edition
+        run: docker run --rm -v "$PWD":/src -w /src node:22-bookworm-slim sh -c "npm ci --no-audit --no-fund && npm run build:learning -w @tensile/tester"
+
   deploy:
     needs: checks
     if: github.event_name != 'pull_request'
@@ -42,10 +47,13 @@ jobs:
     steps:
       - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
 
-      # Copies the site into _site/, adds ?v=<commit> to CSS/JS links, and writes version.json.
-      # The files in the repository are never changed. See scripts/build-site.sh.
+      - name: Build the app's learning edition
+        run: docker run --rm -v "$PWD":/src -w /src node:22-bookworm-slim sh -c "npm ci --no-audit --no-fund && npm run build:learning -w @tensile/tester"
+
+      # Copies the site into _site/, adds ?v=<commit> to CSS/JS links, writes version.json, and puts the
+      # app's learning edition in _site/app/. The files in the repository are never changed. See scripts/build-site.sh.
       - name: Build site folder
-        run: bash scripts/build-site.sh _site "${{ github.sha }}" "${{ github.run_id }}"
+        run: APP_DIST=apps/tester/dist-learning bash scripts/build-site.sh _site "${{ github.sha }}" "${{ github.run_id }}"
 
       - uses: actions/configure-pages@983d7736d9b0ae728b81ab479565c72886d7745b # v5.0.0
 

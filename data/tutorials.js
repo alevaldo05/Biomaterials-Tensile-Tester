@@ -5,7 +5,7 @@
    Each tutorial: id, page (the page it lives on) and where (words for the Help list), title, note (optional extra line, shown under the label), captions (2 to 4 short lines),
    boxes (the simplified screen), frames (the steps the pointer takes).
    The drawing area is 400 wide and 250 tall (under a header bar drawn for you, so start at y = 30); it is drawn about 1.6 times larger.
-   The page marks where each one plays with <div class="tut-slot" data-tutorial="ID"></div> (in its HTML, or in live.js for the test pages).
+   The page marks where each one plays with <div class="tut-slot" data-tutorial="ID"></div> (in its HTML, or in live.js for the practice page).
    A box: id, kind, x, y, w, h, text (optional), and optional lists of frame numbers:
      in   frames where the box is drawn (leave out for every frame)       cur  frames where it is highlighted as the current one
    kind: panel, tab, btn, primary, stop, field, label, link, graph, zoombox, table
@@ -50,7 +50,7 @@
         { caption: 3, point: 'end', mark: ['end', 'stop'], set: { strip: 'Force 3.20 N · Disp 4.10 mm · 6 s · Recording' } },
         { caption: 3, point: 'save', mark: ['save'], set: { strip: 'Force 3.20 N · Disp 4.10 mm · 8 s · Test ended' } }] },
 
-    { id: 'dimensions', page: 'test-uniaxial-tension.html', where: 'at the Dimensions step of each test page', title: 'Enter specimen dimensions',
+    { id: 'dimensions', page: 'practice.html', where: 'at the Dimensions step of the practice page', title: 'Enter specimen dimensions',
       captions: ['Type the gauge length L0 in mm.', 'Type the width and the thickness in mm.', 'The area A0 is calculated for you.', 'Press Next.'],
       boxes: sidebar('Dimensions', [[], all(4)]).concat([
         { id: 'l1', kind: 'label', x: 20, y: 82, w: 124, h: 12, text: 'Gauge length L0 (mm)' }, { id: 'f1', kind: 'field', x: 20, y: 96, w: 124, h: 22, text: '' },
@@ -62,18 +62,7 @@
       ]),
       frames: [{ caption: 0, point: 'f1', mark: ['f1'], set: { f1: '10' } }, { caption: 1, point: 'f3', mark: ['f2', 'f3'], set: { f2: '5', f3: '1.5' } }, { caption: 2, point: 'area', mark: ['area'] }, { caption: 3, point: 'next', mark: ['next'] }] },
 
-    { id: 'connect-usb', page: 'test-uniaxial-tension.html', where: 'at the Connection step of each test page', title: 'Connect over USB', note: 'The hardware connection is untested.',
-      captions: ['Use Chrome on a computer; USB does not work in Safari.', 'On Connection, press Connect to tester (USB) in the toolbar and choose the port in the browser’s box.', 'The status line changes to Connected.'],
-      boxes: sidebar('Connection', [[], [], [], all(3)]).concat([
-        { id: 'chrome', kind: 'label', x: 20, y: 90, w: 124, h: 14, text: 'Chrome on a computer' },
-        { id: 'usb', kind: 'btn', x: 160, y: 34, w: 150, h: 24, text: 'Connect to tester (USB)' },
-        { id: 'perm', kind: 'panel', x: 180, y: 66, w: 200, h: 70, in: [1] }, { id: 'permt', kind: 'label', x: 190, y: 90, w: 180, h: 14, text: 'Choose a port to connect', in: [1] }, { id: 'permb', kind: 'btn', x: 300, y: 104, w: 70, h: 24, text: 'Connect', in: [1] },
-        { id: 'st', kind: 'label', x: 160, y: 150, w: 228, h: 16, text: 'Status: Not connected' },
-        { id: 'ws', kind: 'panel', x: 160, y: 172, w: 228, h: 72 }, { id: 'wst', kind: 'label', x: 170, y: 204, w: 208, h: 14, text: 'Graph starts empty' }
-      ]),
-      frames: [{ caption: 0, point: 'chrome', mark: ['chrome'] }, { caption: 1, point: 'permb', mark: ['usb', 'permb'] }, { caption: 2, point: 'st', mark: ['st'], set: { st: 'Status: Connected · tester (USB)' } }] },
-
-    { id: 'graph-zoom', page: 'test-uniaxial-tension.html', where: 'under the graph on each test page', title: 'Read and zoom the graph',
+    { id: 'graph-zoom', page: 'practice.html', where: 'under the graph on the practice page', title: 'Read and zoom the graph',
       captions: ['Click the graph, then use the left and right arrow keys to move the Readout along the curve. With key results shown, it snaps to one and names it.', 'Choose a view: Force-displacement, Stress-strain, or Force-time.', 'Press + to zoom in, Autoscale to fit the height, or Reset view to see the whole curve.', 'Press Expand graph to fill the window; its Close expanded graph button brings it back (Esc is not used).'],
       boxes: [
         { id: 'vw', kind: 'btn', x: 12, y: 34, w: 130, h: 22, text: 'View: Stress-strain' }, { id: 'au', kind: 'btn', x: 148, y: 34, w: 66, h: 22, text: 'Autoscale' },
@@ -86,7 +75,7 @@
       ],
       frames: [{ caption: 0, point: 'g', mark: ['g', 'rp'], set: { r1: 'Strain 0.108 · Stress 0.241 MPa' } }, { caption: 1, point: 'vw', mark: ['vw'], set: { vw: 'View: Force-time' } }, { caption: 2, point: 'zp', mark: ['zp'] }, { caption: 2, point: 'au', mark: ['au', 'zr'] }, { caption: 3, point: 'ex2', mark: ['ex2'] }] },
 
-    { id: 'download', page: 'test-uniaxial-tension.html', where: 'under the graph on each test page', title: 'Download the data',
+    { id: 'download', page: 'practice.html', where: 'under the graph on the practice page', title: 'Download the data',
       captions: ['When the test has ended, the toolbar shows Save data and New test.', 'Press Save data to download the readings as a CSV file for Excel. PNG, SVG, and Print report are under the graph.', 'Open the file in Excel, or reopen it later with Load Test.'],
       boxes: [
         { id: 'save', kind: 'btn', x: 12, y: 34, w: 90, h: 24, text: 'Save data' }, { id: 'new', kind: 'primary', x: 108, y: 34, w: 70, h: 24, text: 'New test' },

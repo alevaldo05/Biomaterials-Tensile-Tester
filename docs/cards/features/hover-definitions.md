@@ -20,7 +20,7 @@ Terms with a dotted underline show a small box (name, one-line definition, equat
 
 ## Behavior to keep
 - Tips open on hover and on Tab (the term needs `tabindex="0"` unless it is a button)
-- Esc closes a tip and is not stopped, so Esc still sends STOP on test pages
+- Esc closes a tip and is not stopped, so Esc still sends STOP on the practice page
 - The "Show definitions" switch (off by default), the `.def` text, CSV, Excel, and the printed report are unchanged
 - The Readout updates values in place so a focused label keeps focus while recording
 - Terms with no wording already in the project (density, elongation, Poisson's ratio, time, displacement) have no tip; add the entry in `data/terms.js` once the owner has approved wording

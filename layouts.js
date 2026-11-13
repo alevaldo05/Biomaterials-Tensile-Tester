@@ -52,7 +52,7 @@
     if (heroActions) heroActions.remove();
     var start = el('div', { 'class': 'start-actions' },
       '<a class="action-card primary" href="choose-test.html">' + icon('M5 12h14M13 6l6 6-6 6') +
-        '<span class="ac-title">New Test</span><span class="ac-text">' + cardText('newTest', 'Uniaxial Tension or Stress Relaxation: connect, run, and watch the graph live.') + '</span></a>' +
+        '<span class="ac-title">New Test</span><span class="ac-text">' + cardText('newTest', 'Start a test in the tester app, or practice with a simulated test.') + '</span></a>' +
       '<a class="action-card" href="load-test.html">' + icon('M4 4h10l6 6v10H4zM14 4v6h6') +
         '<span class="ac-title">Load Test</span><span class="ac-text">' + cardText('loadTest', 'Reopen an earlier CSV file in this browser.') + '</span></a>');
     main.insertBefore(start, main.firstChild);
@@ -75,7 +75,7 @@
     var brand = header ? header.querySelector('.brand') : null;
     var items = [['Home', 'index.html'], ['New Test', 'choose-test.html'], ['Load Test', 'load-test.html'], ['Learn', 'learn.html'],
       ['Protocols', 'protocol-uniaxial-tension.html'], ['Materials', 'materials.html'], ['Calibration', 'calibration.html'], ['About', 'about.html'], ['Help', 'help.html'], ['Settings', 'settings.html']];
-    var current = /^test-/.test(page) ? 'choose-test.html' : /^protocol-/.test(page) ? 'protocol-uniaxial-tension.html' : page;
+    var current = /^protocol-/.test(page) ? 'protocol-uniaxial-tension.html' : page;
     var nav = el('nav', { 'aria-label': 'Main' });
     items.forEach(function (it) {
       var a = el('a', { href: it[1] }, it[0]);

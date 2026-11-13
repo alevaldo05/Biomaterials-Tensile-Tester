@@ -14,7 +14,7 @@ window.TERMS = {
   ws_disp:     { name: 'Displacement', def: 'Crosshead movement since the start of the recording. This is not the specimen\u2019s own strain.', eq: '', unit: 'mm' },
   ws_elapsed:  { name: 'Elapsed time', def: 'Time from the first reading of this recording to the latest one.', eq: '', unit: 's' },
   ws_state:    { name: 'Recording status', def: 'Whether readings are being saved on this page. Ending the recording does not stop the tester; STOP tester sends the stop command and is not an emergency stop.', eq: '', unit: '' },
-  ws_src:      { name: 'Data source', def: 'Says where the numbers come from: the practice simulator (simulated, not measured) or the tester over USB (the hardware connection is still untested).', eq: '', unit: '' },
+  ws_src:      { name: 'Data source', def: 'Says where the numbers come from: the practice simulator (simulated, not measured).', eq: '', unit: '' },
   stress:      { name: 'Engineering stress, σ', def: 'Force divided by original area.', eq: 'σ = F / A₀', unit: 'MPa (1 N/mm² = 1 MPa)' },
   strain:      { name: 'Engineering strain, ε', def: 'Specimen extension divided by reference length. It is dimensionless; multiply by 100 for percent.', eq: 'ε = (L − L₀) / L₀', unit: 'mm/mm (dimensionless)' },
   force:       { name: 'Force, F', def: 'Axial force.', eq: '', unit: 'N' },
