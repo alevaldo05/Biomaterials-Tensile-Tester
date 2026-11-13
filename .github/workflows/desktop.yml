@@ -50,6 +50,17 @@ jobs:
           sha256sum *.exe > SHA256SUMS.txt
           cat SHA256SUMS.txt
 
+      - name: Start-up check of the built program (first runs - a failure is shown but does not stop the draft)
+        # Starts the unpacked program, waits for its window, and confirms only the app's own screens (app://tester/)
+        # are open. Not yet seen to run on Windows: once it has passed, remove continue-on-error.
+        continue-on-error: true
+        shell: bash
+        working-directory: apps/desktop
+        run: |
+          exe=$(ls release/win-unpacked/*.exe | grep -v -i uninstall | head -1)
+          echo "Checking: $exe"
+          node smoke.cjs "$exe" 9333 90
+
       - name: Create a draft release (not published)
         shell: bash
         env:
