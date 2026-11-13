@@ -30,7 +30,7 @@ The installer is built on GitHub, on Windows, by `.github/workflows/desktop.yml`
    "Download not yet available").
 
 The installer is **unsigned**: Windows SmartScreen warns before running it ("More info" > "Run anyway").
-Signing needs a code-signing certificate, which is the owner's decision.
+Code signing is not planned (a possible idea for later only), so Windows will keep warning.
 
 ## Building by hand (on a Windows computer)
 ```
@@ -43,6 +43,22 @@ npm start            (runs it without installing)
 npm run dist:win     (makes the installer in apps/desktop/release/)
 ```
 
+## First install checklist
+Fill this in on the Windows computer after downloading the installer from the draft release. Write Pass, Fail, or the
+note for each row. Anything not tried stays blank; nothing here is assumed to work.
+
+| # | Check | Result / notes |
+|---|---|---|
+| 1 | The downloaded installer's hash matches `SHA256SUMS.txt` (`certutil -hashfile <file> SHA256`) | |
+| 2 | SmartScreen warns; "More info" then "Run anyway" starts the installer | |
+| 3 | Installs and starts; the window opens on the app's own Home screen | |
+| 4 | Settings saves a lab server address and the status bar shows it; with the box empty it says "Lab server: Not set up" | |
+| 5 | Connect lists the USB serial ports and lets you choose one; nothing is sent to a tester | |
+| 6 | A recording makes one `.meta.json` and one `.lines.ndjson` file in the app's data folder (`recordings`) | |
+| 7 | A second copy of the app does not start while one is running | |
+| 8 | Help opens and is searchable with the network off | |
+| 9 | Uninstalling removes the program; note whether the data folder stays | |
+
 ## Status
-Not yet built or run: Electron's own files could not be downloaded in the environment where this was written, so
-the first build is the GitHub workflow's. The USB connection is untested with real hardware.
+Built once by GitHub (`.github/workflows/desktop.yml`, run 1, succeeded; draft release `app-v0.2.0-beta.1`). It has not
+been installed or run on a Windows computer, and the USB connection is untested with real hardware.
