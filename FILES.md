@@ -100,12 +100,23 @@ Every page except `404.html` starts with a "Skip to main content" link (`.skip-l
 | `docs/BRANCHES.md` | Backups (tags), `main`, branch rules, and how to go back to a backup. |
 | `docs/REPO-SETTINGS.md` | Checklist of repository settings only the owner can change on GitHub. |
 | `.github/workflows/deploy.yml` | The workflow that publishes the site when `main` changes. Not part of the published site. |
+| `docs/app/ARCHITECTURE.md` | The design of the tester app, shared packages, back end, and containers, and what works today. |
 | `.github/dependabot.yml` | Update checker for the Actions in the workflow, switched off (limit 0). Change the 0 to 2 to receive weekly update pull requests. Not part of the published site. |
 | `scripts/build-site.sh` | Used by the workflow: copies the site, adds `?v=<commit>` to script and style links, writes `version.json`. Does not change the repository files. |
 | `scripts/check-combinations.js` | An optional, slower check you run by hand (`node scripts/check-combinations.js`, or `--quick` for a sample). It needs Playwright installed on your computer (`npm install playwright`), which this project does not install, so it is **not** part of `check-site.js` and the publish workflow does not run it. It starts its own small web server for this folder and, in a real browser, loads every page under every color theme × layout × style (175), plus a pairwise set that covers every pair of values of all 16 display choices, at 1280 px and 1024 px. It looks for console errors, failed requests, sideways scroll, a clipped title, an overlapping header, low text contrast, a missing focus ring, and runs each page's main feature (a simulated test with STOP and the CSV download, Load Test with one file and several, Calibration, Materials, the protocols, Settings, a Help tutorial, search, the text checker). Prints FAIL (a bug) and WARN (contrast to review). Changes nothing. |
 | `scripts/check-site.js` | Run by the workflow before every publish (and on pull requests): checks links, script syntax, data files, duplicates, the build output, that no email address or key is in any file, that every workflow Action is pinned to a full commit ID, that every page has the Content Security Policy tag and no inline scripts or handlers, that every page has a description and an icon, that every page except the 404 page starts with the skip link, and that every page has a card in `docs/cards/pages/` and every file or link a card names exists. Changes nothing. Run locally with `node scripts/check-site.js`. |
 | `AGENTS.md` | Workflow rules for AI assistants. |
 | `CLAUDE.md` | One line that loads `AGENTS.md` in Claude Code (name required by Claude Code). |
+
+## Tester app workspace (not part of the published website)
+
+| File or folder | Purpose |
+|---|---|
+| `package.json`, `package-lock.json` | The workspace for the tester app and its packages, and the tools they use (TypeScript, Vitest). Run `npm install` once, then `npm test`. The website pages need none of it. |
+| `tsconfig.json`, `tsconfig.base.json`, `vitest.config.mjs` | Settings for TypeScript and the test runner. |
+| `.gitignore` | Keeps `node_modules/` and build output out of the repository. |
+| `packages/core/` | Shared calculations and file formats (the TypeScript port arrives in the next stage). `reference/` runs the website's own `graph-core.js`, `live-csv.js`, and the maths in `calibration.js` and `compare.js` on fixed inputs and compares the results with `reference/fixtures/reference.json`. |
+| `packages/`, `apps/`, `firmware/`, `deploy/` | The app, its packages, the back end, device-side software, and container files. `scripts/check-site.js` and `scripts/build-site.sh` leave them alone and out of the published site. |
 
 ## To change…
 

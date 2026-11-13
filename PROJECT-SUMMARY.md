@@ -2,6 +2,8 @@
 
 Biomaterials Tensile Tester: a website (plain HTML, CSS, and JavaScript; no framework, no dependencies, no build step) that runs and records tensile tests on a lab tester over USB (Web Serial, Chrome only), plots them live, and offers learning pages, protocols, materials, and calibration. Hardware connection is a draft and untested. Test data is never saved or uploaded by the site.
 
+A separate tester app (React and TypeScript, with shared packages, a back end, and containers) is being built in `packages/`, `apps/`, `firmware/`, and `deploy/`; it is not part of the published website. See the [tester-app](docs/cards/features/tester-app.md) card and `docs/app/ARCHITECTURE.md`.
+
 Read this file, then only the cards for the page or feature being changed. Update the card in the same change.
 
 ## Pages (one card each)
@@ -27,7 +29,7 @@ Read this file, then only the cards for the page or feature being changed. Updat
 
 ## Features (one card each, in `docs/cards/features/`)
 
-[graph-engine](docs/cards/features/graph-engine.md), [live-test](docs/cards/features/live-test.md), [workspace](docs/cards/features/workspace.md) (the graph-first layout), [guided-steps](docs/cards/features/guided-steps.md), [help-coach](docs/cards/features/help-coach.md), [tutorials](docs/cards/features/tutorials.md), [simulator](docs/cards/features/simulator.md) (practice page only), [usb-link](docs/cards/features/usb-link.md), [downloads](docs/cards/features/downloads.md) (CSV and Excel), [print-report](docs/cards/features/print-report.md), [compare](docs/cards/features/compare.md), [calibration](docs/cards/features/calibration.md), [materials](docs/cards/features/materials.md), [protocols](docs/cards/features/protocols.md), [display-settings](docs/cards/features/display-settings.md) (and themes), [layouts](docs/cards/features/layouts.md), [styles](docs/cards/features/styles.md), [site-search](docs/cards/features/site-search.md), [shared-popups](docs/cards/features/shared-popups.md), [leave-popup](docs/cards/features/leave-popup.md), [hover-definitions](docs/cards/features/hover-definitions.md), [page-text](docs/cards/features/page-text.md), [deploy-checks](docs/cards/features/deploy-checks.md), [site-footer](docs/cards/features/site-footer.md) (the "Version 2.0" line).
+[graph-engine](docs/cards/features/graph-engine.md), [live-test](docs/cards/features/live-test.md), [workspace](docs/cards/features/workspace.md) (the graph-first layout), [guided-steps](docs/cards/features/guided-steps.md), [help-coach](docs/cards/features/help-coach.md), [tutorials](docs/cards/features/tutorials.md), [simulator](docs/cards/features/simulator.md) (practice page only), [usb-link](docs/cards/features/usb-link.md), [downloads](docs/cards/features/downloads.md) (CSV and Excel), [print-report](docs/cards/features/print-report.md), [compare](docs/cards/features/compare.md), [calibration](docs/cards/features/calibration.md), [materials](docs/cards/features/materials.md), [protocols](docs/cards/features/protocols.md), [display-settings](docs/cards/features/display-settings.md) (and themes), [layouts](docs/cards/features/layouts.md), [styles](docs/cards/features/styles.md), [site-search](docs/cards/features/site-search.md), [shared-popups](docs/cards/features/shared-popups.md), [leave-popup](docs/cards/features/leave-popup.md), [hover-definitions](docs/cards/features/hover-definitions.md), [page-text](docs/cards/features/page-text.md), [deploy-checks](docs/cards/features/deploy-checks.md), [site-footer](docs/cards/features/site-footer.md) (the "Version 2.0" line), [tester-app](docs/cards/features/tester-app.md) (the app, shared packages, back end, containers).
 
 ## Fixed rules (short form; full rules in `AGENTS.md`)
 
@@ -44,6 +46,7 @@ Read this file, then only the cards for the page or feature being changed. Updat
 python3 -m http.server 8000     # then open http://localhost:8000/
 node scripts/check-site.js      # must pass before any pull request
 node scripts/check-combinations.js --quick   # optional, by hand: many display combinations in a real browser (needs Playwright)
+npm install && npm test         # tester app and shared packages only; the website does not need it
 ```
 
 Preview in Chrome at 1280 px and 1024 px, run both kinds of practice test on the practice page (the simulator exists only there), and look for "Refused to" in the console. Safari and Windows are targets but usually cannot be tried by an assistant.
@@ -65,5 +68,6 @@ Preview in Chrome at 1280 px and 1024 px, run both kinds of practice test on the
 | Definitions shown on hover | [hover-definitions](docs/cards/features/hover-definitions.md) (`data/terms.js`) |
 | What search finds | [site-search](docs/cards/features/site-search.md) |
 | Publishing and checks | [deploy-checks](docs/cards/features/deploy-checks.md) |
+| Tester app, shared packages, back end, containers | [tester-app](docs/cards/features/tester-app.md) |
 
 Longer guides: `README.md`, `FILES.md`, `EDITING-TEXT.md`, `docs/`.
