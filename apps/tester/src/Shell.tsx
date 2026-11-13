@@ -14,6 +14,7 @@ import { helpFor } from './help-text';
 import { HelpButton } from './components/HelpButton';
 import { StatusIndicators } from './components/StatusIndicators';
 import type { JournalMeta, SessionJournal } from './storage/journal';
+import { LabMethods } from './storage/methods';
 import type { MethodStore } from './storage/methods';
 import { Admin } from './pages/Admin';
 import { Device } from './pages/Device';
@@ -92,6 +93,7 @@ export function Shell({ controller: c, serialAvailable, journal, methods }: Shel
   const effectiveRole = user ? (user.role === 'admin' && !viewAsUser ? 'admin' : 'user') : null;
   const account: Account = { api, reachable, user, viewAsUser, effectiveRole };
   const recording = c.phase === 'recording';
+  const labMethods = useMemo(() => (user && !user.mustChangePassword ? new LabMethods(api) : null), [user, api]);
 
   /* Lists for Home and Load test: recordings on this computer, and the lab server's when signed in. */
   const refresh = useCallback(() => {
@@ -159,7 +161,7 @@ export function Shell({ controller: c, serialAvailable, journal, methods }: Shel
       {page === 'home' ? <Home go={go} recent={recent} interrupted={interrupted} recover={(m, how) => void recover(m, how)} recording={recording} /> : null}
       {page === 'test' ? <App controller={c} serialAvailable={serialAvailable} theme={theme} account={account} onHelpSub={onHelpSub} /> : null}
       {page === 'load' ? <LoadTest loaded={loaded} error={loadError} theme={theme} recent={recent} openFile={(n, t, h) => void open(n, t, h)} clear={() => { setLoaded(null); setLoadError(''); }} /> : null}
-      {page === 'methods' ? <Methods store={methods} controller={c} start={() => setPage('test')} /> : null}
+      {page === 'methods' ? <Methods store={methods} lab={labMethods} labAdmin={effectiveRole === 'admin'} controller={c} start={() => setPage('test')} /> : null}
       {page === 'device' ? <Device controller={c} account={account} serialAvailable={serialAvailable} /> : null}
       {page === 'history' && user ? <main className="page" id="main-content"><History account={account} onReplay={(text) => void open('lab-test.session.json', text)} /></main> : null}
       {page === 'help' ? <HelpPage /> : null}

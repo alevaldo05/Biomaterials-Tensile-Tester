@@ -2,6 +2,7 @@
    reachable, tests still record and download; only signing in, history, saving to the lab, and admin wait for it.
    Nothing is sent until the person signs in, except a health check. */
 import type { CalibrationRecord, DeviceProfile, SignalPath } from '@tensile/recording';
+import type { TestMethod } from './storage/methods';
 import type { SessionFile, SetupFile } from './controller';
 import { parseSetupFile } from './controller';
 
@@ -63,6 +64,12 @@ export class LabApi {
   };
   saveSession = (file: SessionFile, summary: Record<string, number | null>, notes: string) =>
     this.call<{ id: string; sampleCount: number }>('POST', '/test-sessions', { file, summary, notes });
+
+  methods = () => this.call<{ methods: TestMethod[] }>('GET', '/methods').then((r) => r.methods);
+  saveMethod = (m: Omit<TestMethod, 'id' | 'revision' | 'createdAt' | 'archived'>, replaces?: TestMethod) =>
+    this.call<{ method: TestMethod }>('POST', '/methods', { name: m.name, test: m.test, fields: m.fields, instructions: m.instructions,
+      ...(replaces ? { replaces: { key: replaces.id, revision: replaces.revision } } : {}) }).then((r) => r.method);
+  archiveMethod = (key: string) => this.call<{ ok: true }>('POST', '/methods/' + encodeURIComponent(key) + '/archive', {}).then(() => undefined);
 
   profiles = () => this.call<{ profiles: ProfileRow[] }>('GET', '/device-profiles').then((r) => r.profiles);
   createProfile = (p: { id: string; name: string; channels: DeviceProfile['channels']; notes: string }) => this.call<{ profile: ProfileRow }>('POST', '/device-profiles', p);

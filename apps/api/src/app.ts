@@ -9,7 +9,7 @@ import type { z } from 'zod';
 import { COOKIE, dummyHash, hashPassword, LoginLimiter, newToken, passwordProblem, readCookie, sessionCookie, tokenHash, verifyPassword } from './auth';
 import type { Config } from './config';
 import type { Db } from './db';
-import { CalibrationBody, LoginBody, NewUserBody, PasswordBody, problem, ProfileBody, UploadBody, UserPatch } from './schemas';
+import { CalibrationBody, LoginBody, MethodBody, NewUserBody, PasswordBody, problem, ProfileBody, UploadBody, UserPatch } from './schemas';
 
 export const API_VERSION = '0.1.0';
 
@@ -293,6 +293,52 @@ export function buildApp(o: { db: Db; config: Config; logger?: boolean; limiter?
       reply.header('content-type', 'application/json; charset=utf-8');
       reply.header('content-disposition', `attachment; filename="test-${s.id}.session.json"`);
       return reply.send(zlib.gunzipSync(f.gzip));
+    });
+
+    /* ---------- test methods (shared setups; admins change them, everyone signed in uses them) ---------- */
+    const methodOut = (r: Record<string, unknown>) => ({
+      id: r.method_key, name: r.name, revision: r.revision, test: r.test_type, fields: r.fields, instructions: r.instructions,
+      archived: r.archived, createdAt: r.created_at, createdBy: r.created_by_name ?? null,
+    });
+    const methodSelect = `select distinct on (m.method_key) m.*, u.username as created_by_name from test_methods m left join users u on u.id = m.created_by`;
+    api.get('/methods', async (req) => {
+      signedIn(req);
+      const r = await db.query(`select * from (${methodSelect} order by m.method_key, m.revision desc) cur where not archived order by lower(name)`);
+      return { methods: r.rows.map(methodOut) };
+    });
+    api.post('/methods', async (req, reply) => {
+      const a = admin(req), b = parse(MethodBody, req.body);
+      const client = await db.connect();
+      try {
+        await client.query('begin');
+        let key: string, revision: number;
+        if (b.replaces) {
+          await client.query('select pg_advisory_xact_lock(hashtext($1))', [b.replaces.key]);
+          const cur = (await client.query('select revision, archived from test_methods where method_key = $1 order by revision desc limit 1', [b.replaces.key])).rows[0];
+          if (!cur) fail(404, 'not_found', 'No such method.');
+          if (cur.archived) fail(409, 'archived', 'This method was archived.');
+          if (cur.revision !== b.replaces.revision) fail(409, 'changed', 'Someone else changed this method. Reload the list and try again.');
+          key = b.replaces.key; revision = cur.revision + 1;
+        } else {
+          key = 'lm-' + (await client.query("select nextval(pg_get_serial_sequence('test_methods', 'id')) as n")).rows[0].n; revision = 1;
+        }
+        await client.query(`insert into test_methods (method_key, revision, name, test_type, fields, instructions, created_by) values ($1, $2, $3, $4, $5, $6, $7)`,
+          [key, revision, b.name, b.test, JSON.stringify(b.fields), b.instructions, a.id]);
+        await client.query('commit');
+        await audit(a.id, 'method_saved', { key, revision });
+        const row = (await db.query(methodSelect + ' where m.method_key = $1 order by m.method_key, m.revision desc', [key])).rows[0];
+        return reply.status(201).send({ method: methodOut(row) });
+      } catch (e) { await client.query('rollback'); throw e; } finally { client.release(); }
+    });
+    api.post<{ Params: { key: string } }>('/methods/:key/archive', async (req) => {
+      const a = admin(req);
+      /* Archiving adds a row (the latest revision, marked archived): earlier rows are never changed. */
+      const r = await db.query(`insert into test_methods (method_key, revision, name, test_type, fields, instructions, archived, created_by)
+        select method_key, revision + 1, name, test_type, fields, instructions, true, $2 from test_methods
+         where method_key = $1 and revision = (select max(revision) from test_methods where method_key = $1) and not archived returning revision`, [req.params.key, a.id]);
+      if (!r.rows[0]) fail(404, 'not_found', 'No such method, or it is already archived.');
+      await audit(a.id, 'method_archived', { key: req.params.key });
+      return { ok: true };
     });
 
     /* ---------- record of changes (admin) ---------- */

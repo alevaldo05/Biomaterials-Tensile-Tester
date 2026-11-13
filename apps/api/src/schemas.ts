@@ -28,6 +28,17 @@ export const CalibrationBody = z.strictObject({
   signalPath: SignalPath, note: shortText(2000).default(''),
 }).refine((c) => (c.quantity === 'force') === (c.unit === 'N'), 'Force is calibrated in N and displacement in mm.');
 
+/* A test method shared through the lab server (apps/tester/src/storage/methods.ts). Fields are the setup's text boxes and switches. */
+export const MethodBody = z.strictObject({
+  name: shortText(120).trim().min(1, 'Give the method a name.'),
+  test: z.enum(['uniaxial', 'relaxation']),
+  fields: z.record(z.string().max(40), z.union([z.string().max(200), z.boolean()])).refine((f) => Object.keys(f).length <= 40, 'Too many fields.')
+    .refine((f) => !('specimenId' in f) && !('notes' in f), 'A method does not hold a specimen ID or notes.'),
+  instructions: shortText(4000).default(''),
+  /** The method key this is a new revision of, and the revision it was made from (so two people changing it at once do not both win). */
+  replaces: z.strictObject({ key: z.string().regex(/^lm-\d+$/), revision: z.number().int().min(1) }).optional(),
+});
+
 /* The session file the app saves (apps/tester/src/controller.ts, SessionFile). */
 export const SessionFileBody = z.object({
   format: z.literal('tensile-tester-session'),

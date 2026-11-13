@@ -32,6 +32,17 @@ export interface MethodStore {
   archive(id: string): Promise<void>;
 }
 
+/** Methods shared through the lab server. Only admins can save or archive; the server checks. */
+export class LabMethods implements MethodStore {
+  constructor(private readonly api: { methods: () => Promise<TestMethod[]>; saveMethod: MethodStore['save']; archiveMethod: (key: string) => Promise<void> }) {}
+  list(): Promise<TestMethod[]> { return this.api.methods(); }
+  save(m: Omit<TestMethod, 'id' | 'revision' | 'createdAt' | 'archived'>, replaces?: TestMethod): Promise<TestMethod> {
+    if (!m.name) return Promise.reject(new Error('Give the method a name.'));
+    return this.api.saveMethod(m, replaces);
+  }
+  archive(id: string): Promise<void> { return this.api.archiveMethod(id); }
+}
+
 const newId = () => 'm-' + Date.now().toString(36) + '-' + Math.random().toString(36).slice(2, 7);
 
 export class MemoryMethods implements MethodStore {

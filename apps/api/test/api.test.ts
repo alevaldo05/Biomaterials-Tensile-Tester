@@ -738,10 +738,55 @@ describe.skipIf(!PG_BIN)('API against a real PostgreSQL', () => {
     });
   });
 
+  /* ---------- 11. test methods ---------- */
+  describe('test methods', () => {
+    const body = (name: string, extra: object = {}) => ({ name, test: 'uniaxial', fields: { material: 'Skin', L0: '25', width: '5', thickness: '1.2', speed: '30', offsetOn: false }, instructions: 'Clamp gently.', ...extra });
+    it('admins save methods and new revisions; signed-in users list the current revision only', async () => {
+      const r1 = await call(app, 'POST', '/methods', adminCookie, body('Skin strip'));
+      expect(r1.statusCode).toBe(201);
+      const m1 = r1.json().method;
+      expect(m1).toMatchObject({ name: 'Skin strip', revision: 1, test: 'uniaxial', archived: false, createdBy: 'root-admin' });
+      expect(m1.id).toMatch(/^lm-\d+$/);
+      const r2 = await call(app, 'POST', '/methods', adminCookie, body('Skin strip', { fields: { speed: '10' }, replaces: { key: m1.id, revision: 1 } }));
+      expect(r2.statusCode).toBe(201);
+      expect(r2.json().method).toMatchObject({ id: m1.id, revision: 2 });
+      const u = await mkSignedIn();
+      const list = (await call(app, 'GET', '/methods', u.cookie)).json().methods.filter((m: { id: string }) => m.id === m1.id);
+      expect(list).toHaveLength(1);
+      expect(list[0]).toMatchObject({ revision: 2, fields: { speed: '10' } });
+      /* both revisions are kept */
+      expect((await db.query('select revision from test_methods where method_key = $1 order by revision', [m1.id])).rows.map((r) => r.revision)).toEqual([1, 2]);
+    });
+    it('refuses a change made from an old revision, users changing methods, and a specimen ID in a method', async () => {
+      const m = (await call(app, 'POST', '/methods', adminCookie, body('Relax hold'))).json().method;
+      await call(app, 'POST', '/methods', adminCookie, body('Relax hold', { replaces: { key: m.id, revision: 1 } }));
+      const stale = await call(app, 'POST', '/methods', adminCookie, body('Relax hold', { replaces: { key: m.id, revision: 1 } }));
+      expect(stale.statusCode).toBe(409);
+      expect(stale.json().error.code).toBe('changed');
+      const u = await mkSignedIn();
+      expect((await call(app, 'POST', '/methods', u.cookie, body('Mine'))).statusCode).toBe(403);
+      expect((await call(app, 'POST', `/methods/${m.id}/archive`, u.cookie, {})).statusCode).toBe(403);
+      expect((await call(app, 'GET', '/methods', null)).statusCode).toBe(401);
+      const bad = await call(app, 'POST', '/methods', adminCookie, body('Bad', { fields: { specimenId: 'S-1' } }));
+      expect(bad.statusCode).toBe(400);
+      expect((await call(app, 'POST', '/methods', adminCookie, body('  '))).statusCode).toBe(400);
+    });
+    it('archiving hides a method without changing earlier rows', async () => {
+      const m = (await call(app, 'POST', '/methods', adminCookie, body('Old method'))).json().method;
+      expect((await call(app, 'POST', `/methods/${m.id}/archive`, adminCookie, {})).statusCode).toBe(200);
+      expect((await call(app, 'POST', `/methods/${m.id}/archive`, adminCookie, {})).statusCode).toBe(404);
+      expect((await call(app, 'GET', '/methods', adminCookie)).json().methods.some((x: { id: string }) => x.id === m.id)).toBe(false);
+      const rows = (await db.query('select revision, archived from test_methods where method_key = $1 order by revision', [m.id])).rows;
+      expect(rows).toEqual([{ revision: 1, archived: false }, { revision: 2, archived: true }]);
+      const again = await call(app, 'POST', '/methods', adminCookie, body('Old method', { replaces: { key: m.id, revision: 2 } }));
+      expect(again.json().error.code).toBe('archived');
+    });
+  });
+
   /* ---------- 10. migrations ---------- */
   describe('migrations', () => {
     it('applied 001_initial.sql the first time, and applies nothing the second time', async () => {
-      expect(migratedFirst).toContain('001_initial.sql');
+      expect(migratedFirst).toEqual(['001_initial.sql', '002_test_methods.sql']);
       expect(await migrate(db)).toEqual([]);
       const rows = (await db.query('select version, applied_at from schema_migrations order by version')).rows;
       expect(rows.map((r) => r.version)).toContain('001_initial.sql');
