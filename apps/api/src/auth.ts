@@ -29,7 +29,10 @@ export function readCookie(header: string | undefined, name: string): string | n
   if (!header) return null;
   for (const part of header.split(';')) {
     const i = part.indexOf('=');
-    if (i > 0 && part.slice(0, i).trim() === name) return decodeURIComponent(part.slice(i + 1).trim());
+    if (i > 0 && part.slice(0, i).trim() === name) {
+      /* a cookie that cannot be decoded is treated as no cookie (signed out), not as a server error */
+      try { return decodeURIComponent(part.slice(i + 1).trim()); } catch { return null; }
+    }
   }
   return null;
 }

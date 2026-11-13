@@ -604,6 +604,51 @@ describe.skipIf(!PG_BIN)('API against a real PostgreSQL', () => {
       expect(JSON.parse(back.body).lines).toEqual(file.lines);
     });
 
+    it('treats a cookie that cannot be decoded as signed out, not as a server error', async () => {
+      const r = await app.inject({ method: 'GET', url: '/api/v1/auth/me', headers: { ...APP, cookie: 'tt_session=%E0%A4%A' } });
+      expect(r.statusCode).toBe(401);
+    });
+
+    it('refuses arrival times outside the years 2000 to 2100', async () => {
+      const u = await mkSignedIn();
+      for (const bad of [-5, 1e300, 9_999_999_999_999_999]) {
+        const f = sessionFile({ samples: 2 }) as { receivedAt_ms: number[] };
+        f.receivedAt_ms[0] = bad;
+        expect((await upload(u.cookie, f)).statusCode).toBe(400);
+      }
+      expect((await call(app, 'GET', '/test-sessions', u.cookie)).json().sessions).toEqual([]);
+    });
+
+    it('answers 409 when the same person saves the same file twice, and lets another person save it', async () => {
+      const a = await mkSignedIn(), b = await mkSignedIn();
+      const f = sessionFile({ samples: 3, material: 'Duplicate check' });
+      const first = await upload(a.cookie, f);
+      expect(first.statusCode).toBe(201);
+      const again = await upload(a.cookie, f);
+      expect(again.statusCode).toBe(409);
+      expect(again.json().error.code).toBe('duplicate');
+      expect(again.json().error.message).toContain(first.json().id);
+      expect((await call(app, 'GET', '/test-sessions', a.cookie)).json().sessions).toHaveLength(1);
+      expect((await upload(b.cookie, f)).statusCode).toBe(201);
+    });
+
+    it('limits saves to 30 a minute for each person', async () => {
+      const a = await mkSignedIn(), other = await mkSignedIn();
+      let last = 0;
+      for (let i = 0; i < 31; i++) last = (await upload(a.cookie, sessionFile({ samples: 1, material: 'Rate ' + i }))).statusCode;
+      expect(last).toBe(429);
+      expect((await upload(other.cookie, sessionFile({ samples: 1, material: 'Rate other' }))).statusCode).toBe(201);
+    }, 60_000);
+
+    it('clears sign-ins that ran out when someone signs in', async () => {
+      const u = await mkUser(uname('purge'));
+      await db.query("insert into login_sessions (token_hash, user_id, expires_at) values ($1, $2, now() - interval '1 hour')", [Buffer.from('expired-' + u.id), u.id]);
+      const before = (await db.query('select count(*)::int as n from login_sessions where expires_at < now()')).rows[0].n;
+      expect(before).toBeGreaterThan(0);
+      await login(app, u.username);
+      expect((await db.query('select count(*)::int as n from login_sessions where expires_at < now()')).rows[0].n).toBe(0);
+    });
+
     it('refuses simulated data and keeps nothing', async () => {
       const u = await mkSignedIn();
       const r = await upload(u.cookie, sessionFile({ recordedFrom: 'simulated' }));

@@ -55,6 +55,13 @@ All under `/api/v1`, JSON. Changes (POST, PATCH) must carry the header `x-tensil
 | `POST /test-sessions`, `GET /test-sessions`, `GET /test-sessions/:id`, `GET /test-sessions/:id/file` | signed in | Save a test, list (own; admins all, `?owner=`), details, the session file. Someone else's test answers "not found". A save is refused when the file is marked simulated, a line is not a protocol-1 message a device sends, or there is not one arrival time per line. The calibration is labeled, never refused: lab-approved (every calibration in the file is approved here with the same numbers), not from the lab, or none |
 | `GET /audit` | admin | The last 200 entries |
 
+
+### Limits and refusals when saving
+- Saving a test: at most 30 saves a minute for each person (429, `too_many_saves`); the same file saved twice by the same person answers 409 (`duplicate`, with the number of the saved test); arrival times must fall between the years 2000 and 2100 (400).
+- A cookie that cannot be decoded counts as signed out (401), not as a server error.
+- Signing in also clears sign-ins that have run out. Sign-in attempts keep their own limit.
+- These counters are kept in the API's memory, so they reset when it restarts and are per copy of the API.
+
 ## Settings (environment variables)
 
 | Variable | Default | Meaning |
