@@ -1,6 +1,7 @@
 /* Load test: open a recorded test (a session file saved by this app, or a CSV file), see its graph and key results,
    and export it. Opening never sends anything to a device. Also the place for recent tests and exports. */
-import { useEffect, useRef, useState } from 'react';
+import { useRef, useState } from 'react';
+import { usePrintReport } from '../components/usePrintReport';
 import type { TestType } from '@tensile/core';
 import { buildTestCsv, sig } from '@tensile/core';
 import { Panel } from '@tensile/ui';
@@ -19,18 +20,7 @@ export function LoadTest(p: {
   clear: () => void;
 }) {
   const [hint, setHint] = useState<'' | TestType>('');
-  /* Print report: every panel opens and the graph is drawn light for paper, then the browser's print window opens
-     (where the report can be saved as a PDF). Nothing is saved or sent by the app. */
-  const [printing, setPrinting] = useState(false);
-  const mainRef = useRef<HTMLElement | null>(null);
-  useEffect(() => {
-    if (!printing) return;
-    mainRef.current?.querySelectorAll('details').forEach((d) => { d.open = true; });
-    const done = () => setPrinting(false);
-    window.addEventListener('afterprint', done, { once: true });
-    const t = setTimeout(() => window.print(), 50);
-    return () => { clearTimeout(t); window.removeEventListener('afterprint', done); };
-  }, [printing]);
+  const { ref: mainRef, printing, print } = usePrintReport<HTMLElement>();
   const svg = useRef<SVGSVGElement | null>(null);
   const l = p.loaded, base = l ? l.name.replace(/\.(session\.json|json|csv)$/i, '') : 'test';
   const exportAs = async (what: 'original' | 'csv' | 'xlsx' | 'png' | 'svg') => {
@@ -86,7 +76,7 @@ export function LoadTest(p: {
           <button type="button" onClick={() => void exportAs('png')}>Graph (PNG)</button>
           <button type="button" onClick={() => void exportAs('svg')}>Graph (SVG)</button>
           <button type="button" onClick={() => void exportAs('original')}>Original file</button>
-          <button type="button" onClick={() => setPrinting(true)}>Print report</button>
+          <button type="button" onClick={print}>Print report</button>
         </div>
         <RecordGraph record={l.record} test={l.test} theme={printing ? 'light' : p.theme} showResults sourceTag={'Loaded: ' + l.name} emptyText={l.problem || 'No data.'} onSvg={(el) => { svg.current = el; }} />
         <Panel title="Key results" open><ResultsTable record={l.record} problem={l.problem} note={l.session?.endReason ?? ''} /></Panel>
