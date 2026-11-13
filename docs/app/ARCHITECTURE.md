@@ -14,7 +14,7 @@ Shared code lives in `packages/` so a change to a calculation or a file format r
 
 - **Calculations and files.** `packages/core` is checked on every run against the website's own scripts (`packages/core/reference`). If one side's numbers or CSV change without the other, `npm test` fails.
 - **Words.** The app reads the website's definitions (`data/terms.js`) and materials (`data/materials.js`) when it is built (`apps/tester/site-data.ts`), so editing those files changes both.
-- **Places.** On GitHub Pages the website carries the app preview (the learning edition: three steps, an explanation and website link at each, simulated data only) at `app/`; on the lab computer the gateway serves the website at `/` and the full app at `/app/`. The app's Learn and Help links point one folder up, so they reach whichever website it is served with.
+- **Places.** GitHub Pages carries the website only (New Test says "Download not yet available" until a Windows release exists); on the lab computer the gateway serves the website at `/` and the full app at `/app/`. The app's help links point one folder up when it is served at `/app/`, and to the public website otherwise.
 - **Tests.** Live tests run only in the app. The website's own test pages were retired; its practice page (simulator) and Load Test remain, and CSV files from the app open in Load Test.
 
 The app is built so that changing the acquisition board, the ADC, or the connection changes only the device-side software, a device adapter, and settings. The graph, forms, recording, and exports do not change.
@@ -51,7 +51,8 @@ Rules that hold everywhere:
 | `packages/machine-control` | The machine-control interface and its only implementation, "unsupported" |
 | `packages/recording` | The recorder, the conversion chain, calibration compatibility |
 | `packages/ui` | Shared React components |
-| `apps/tester` | The app (lab edition and learning edition) |
+| `apps/desktop` | The Windows app (Electron): the tester screens bundled in a locked-down window, with USB serial. Its own lockfile, outside the shared workspace |
+| `apps/tester` | The app (real acquisition and saved-session replay; the simulator appears only in its tests) |
 | `apps/api` | The back end |
 | `firmware/` | Reference device-side software and guides |
 | `deploy/` | Container files |
@@ -77,10 +78,10 @@ Rules that hold everywhere:
 | ESP32 reference firmware (`firmware/esp32-ads1115`) | Implemented; tested on a computer with a pretend ADS1115 only, never on a board ([SETUP](SETUP.md)) |
 | Pico firmware, Raspberry Pi service | Planned; guides only |
 | Electron, a network transport to a Raspberry Pi | Planned |
-| `packages/ui` and `apps/tester`: the app screen, graph, exports, lab and learning editions | Implemented; details in [FEATURE-STATUS](FEATURE-STATUS.md) |
+| `packages/ui` and `apps/tester`: the app screens, graph, exports, local recording and recovery | Implemented; details in [FEATURE-STATUS](FEATURE-STATUS.md) |
 | `apps/api`: back end and PostgreSQL database, sign-in, admin and user roles, saved tests, device profiles, calibrations, record of changes | Implemented; tested against a real PostgreSQL ([BACKEND](BACKEND.md)) |
 | Signing in, History, Admin, and View as user in the app | Implemented |
-| The learning edition published with the website on GitHub Pages (`app/`), and the website's definitions and materials used by the app | Implemented; the publish step is untried until it runs on GitHub |
+| The website's definitions and materials used by the app (read at build time) | Implemented |
 | Containers (`deploy/`): gateway, website, app, API, database, each replaceable on its own | Implemented; built and run with Docker here ([CONTAINERS](CONTAINERS.md)) |
 
 Two things `packages/core` does differently from the website on purpose (the website pages are unchanged):

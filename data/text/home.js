@@ -8,16 +8,15 @@ window.SITE_TEXT = window.SITE_TEXT || {};
 window.SITE_TEXT.home = {
 
   /* The line under the big title at the top of the page. */
-  sub: "Choose a test to get started.",
+  sub: "Tests are run in the tester app on the lab computer. Learn, practice, and review saved data here.",
 
   /* Short descriptions on the cards in the "Start screen" layout. */
   cards: {
-    newTest: "Start a test in the tester app, or practice with a simulated test.",
-    loadTest: "Reopen an earlier CSV file in this browser.",
+    getApp: "The Windows app that connects to the tester and records tests. Download not yet available.",
+    learnStart: "Before you test, practice with a simulated test, reopen saved files, and the glossary.",
     protocols: "Procedures for each test and material.",
     materials: "Properties, a stiffness chart, and sample graphs for many materials.",
     calibration: "Compare force readings with known weights and record the result.",
-    learn: "Before you test, background, and glossary.",
     about: "Tensile testing, project status, and references.",
     help: "Troubleshooting, keyboard keys, and references.",
     settings: "Color theme, style, and layout."
@@ -39,7 +38,7 @@ window.SITE_TEXT.home = {
       blocks: [
         { steps: [
           { title: "Prepare the specimen", text: "Follow the protocol for your test and material, then measure gauge length, width, and thickness." },
-          { title: "Run the test", text: "Choose [New Test](choose-test.html) to open the tester app and run the test there. To learn the screen first, try the [practice page](practice.html), which uses a labeled simulator." },
+          { title: "Run the test", text: "Run the test in the [tester app](choose-test.html) on the lab computer. To learn the steps first, try the [practice page](practice.html), which uses a labeled simulator." },
           { title: "Review and download", text: "Read the key results, then download the data as a CSV file for Excel and the graph as an image. Reopen old files with [Load Test](load-test.html)." }
         ] }
       ]

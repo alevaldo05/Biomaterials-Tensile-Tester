@@ -41,9 +41,6 @@ function read(rel) { return fs.readFileSync(path.join(ROOT, rel), 'utf8'); }
 function exists(rel) { return FILES.indexOf(rel) >= 0; }
 
 var SITE_PATH = '/Biomaterials-Tensile-Tester/';  /* the folder name GitHub Pages serves the site under */
-/* The tester app is not in this repository's website files. The folder app/ is created only when the site is built for publishing
-   (scripts/build-site.sh adds it), so the link "app/" (and "app/index.html") on the New Test page cannot be found here. These two exact links are accepted. */
-var PUBLISH_TIME_LINKS = { 'app/': 1, 'app/index.html': 1 };
 
 /* The relative file a link points to, or null for web addresses, anchors, and mail links.
    A link that starts with SITE_PATH (used only by 404.html) is read from the project root. */
@@ -73,7 +70,6 @@ begin('1. Page links');
       var target = localPath(page, m[1]);
       if (target === null) continue;
       count++;
-      if (PUBLISH_TIME_LINKS[target]) continue;
       if (!exists(target)) fail(page + ' links to "' + m[1] + '", but that file is not in the project. Check the name and the folder.');
     }
   });
@@ -475,6 +471,43 @@ begin('13. Split script order');
     });
   });
   if (failures === before) ok(count + ' page/script pairs list the split pieces before the file that uses them');
+})();
+
+begin('14. Need help on the reading pages');
+(function () {
+  /* Every page that loads page-help.js has its own entry in data/page-help.js (title and at least one line),
+     loads help-coach.js and data/help-tips.js before it, and data/text/help.js before data/help-tips.js. */
+  var before = failures, sandbox = { window: {} }, count = 0;
+  vm.createContext(sandbox);
+  try { vm.runInContext(read('data/page-help.js'), sandbox, { filename: 'data/page-help.js' }); } catch (e) { fail('data/page-help.js: ' + e.message); return; }
+  var help = sandbox.window.PAGE_HELP || {};
+  PAGES.forEach(function (page) {
+    var list = scriptsOf(read(page)).map(function (s) { return localPath(page, s); }), at = list.indexOf('page-help.js');
+    if (at < 0) return;
+    count++;
+    var h = help[page];
+    if (!h || typeof h.title !== 'string' || !h.title.trim() || !Array.isArray(h.lines) || !h.lines.length || !h.lines.every(function (l) { return typeof l === 'string' && l.trim(); })) {
+      fail(page + ' loads page-help.js but data/page-help.js has no title and lines for it.');
+    }
+    ['data/text/help.js', 'data/help-tips.js', 'data/page-help.js', 'help-coach.js'].forEach(function (need, i, all) {
+      var pos = list.indexOf(need);
+      if (pos < 0 || pos > at) fail(page + ' must load ' + need + ' before page-help.js.');
+      if (i > 0 && pos >= 0 && list.indexOf(all[i - 1]) > pos) fail(page + ' must load ' + all[i - 1] + ' before ' + need + '.');
+    });
+  });
+  Object.keys(help).forEach(function (k) { if (!exists(k)) fail('data/page-help.js has an entry for ' + k + ', which does not exist.'); });
+  if (failures === before) ok(count + ' pages have their own Need help words and load the scripts in order');
+})();
+
+begin('15. No link to the retired app folder');
+(function () {
+  /* The app is no longer published with the website. A link to app/ would be a dead link on GitHub Pages. */
+  var before = failures;
+  PAGES.forEach(function (page) {
+    var html = read(page), re = /\b(?:href|src)\s*=\s*["']([^"']*)["']/gi, m;
+    while ((m = re.exec(html))) if (/^(\.\/)?app(\/|$)/.test(m[1])) fail(page + ' links to ' + m[1] + ', which is not published.');
+  });
+  if (failures === before) ok('no page links to app/');
 })();
 
 console.log('\n' + (failures ? failures + ' problem' + (failures === 1 ? '' : 's') + ' found. Fix them before merging; the site is not published while a check fails.' : 'All checks passed.'));

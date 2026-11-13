@@ -4,7 +4,8 @@
   "description": "Workspace for the tester app, its shared packages, and the back end. The website at the repository root needs none of this to run.",
   "workspaces": [
     "packages/*",
-    "apps/*"
+    "apps/tester",
+    "apps/api"
   ],
   "scripts": {
     "test": "vitest run",

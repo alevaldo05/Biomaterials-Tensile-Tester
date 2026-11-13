@@ -11,7 +11,7 @@ const config: Config = { databaseUrl: '', host: '127.0.0.1', port: 0, cookieSecu
 
 describe.skipIf(!PG_BIN)('API smoke test against a real PostgreSQL', () => {
   let tdb: TestDb, db: Db;
-  beforeAll(async () => { tdb = await startTestDb(); db = connect(tdb.url); expect(await migrate(db)).toEqual(['001_initial.sql']); }, 60_000);
+  beforeAll(async () => { tdb = await startTestDb(); db = connect(tdb.url); expect(await migrate(db)).toEqual(['001_initial.sql', '002_test_methods.sql', '003_calibration_source.sql']); }, 60_000);
   afterAll(async () => { await db?.end(); tdb?.stop(); });
 
   it('applies migrations once, signs in, and answers who is signed in', async () => {

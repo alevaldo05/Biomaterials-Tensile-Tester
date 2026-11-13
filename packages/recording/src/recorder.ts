@@ -212,6 +212,8 @@ export class Recorder {
   }
   private pendingZero = 0;
   get forceZero_N(): number { return this.pendingZero; }
+  /** Clears the software baseline (a new specimen starts without one). */
+  zeroForceReset(): void { if (!this._recording) this.pendingZero = 0; }
 
   private note(kind: SessionEvent['kind'], detail: string): void {
     if (this._session && this._recording) this._session.events.push({ at_ms: this.now(), kind, detail });

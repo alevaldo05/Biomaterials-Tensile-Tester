@@ -3,6 +3,7 @@ dist/
 _site/
 coverage/
 *.tsbuildinfo
-dist-learning/
 .pio/
 .host-build/
+apps/desktop/ui/
+apps/desktop/release/

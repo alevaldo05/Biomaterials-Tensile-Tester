@@ -1,7 +1,7 @@
 /* Files the person can save. Everything is built in the browser tab and handed to the browser's own download;
    nothing is uploaded. Numbers stay in base units (N, mm, s, MPa). */
 import { buildTestCsv, buildXlsx, csvCell, csvFileBase, dataChecks, dimSourceText, modulusFitText, sig, sourceTag } from '@tensile/core';
-import type { CsvContext, TestRecord, XlsxInfo } from '@tensile/core';
+import type { CsvContext, TestRecord, TestType, XlsxInfo } from '@tensile/core';
 import type { Session } from '@tensile/recording';
 import type { TestController } from './controller';
 import { resultsFor } from './results';
@@ -30,7 +30,7 @@ function labeled(rec: TestRecord): TestRecord {
 export function fileBase(c: TestController): string {
   const rec = c.record;
   if (rec) return csvFileBase(labeled(rec), csvContext(c));
-  return csvFileBase({ source: c.source && c.source.kind === 'real' ? 'measured' : 'simulated' }, csvContext(c));
+  return csvFileBase({ source: 'measured' }, csvContext(c));
 }
 
 export function testCsv(c: TestController): string | null {
@@ -121,4 +121,23 @@ export function svgToPng(svg: SVGSVGElement, scale = 3): Promise<Blob> {
     img.onerror = () => { URL.revokeObjectURL(url); reject(new Error('The picture could not be made.')); };
     img.src = url;
   });
+}
+
+/** Excel for a test opened in Load test. */
+export function xlsxForRecord(r: TestRecord, test: TestType, name: string, provenance: string): Uint8Array {
+  const isRelax = test === 'relaxation', sp = r.params.specimen, tag = 'Loaded from ' + name;
+  const details: XlsxInfo['details'] = [['Biomaterials Tensile Tester', 'test data'], ['Test', isRelax ? 'Stress relaxation' : 'Uniaxial tension'], ['Source', provenance],
+    ['Gauge length L0 (mm)', sp.L0_mm], ['Width (mm)', sp.width_mm], ['Thickness (mm)', sp.thickness_mm], ['Points', r.x.length]];
+  const mft = isRelax ? '' : modulusFitText(r);
+  if (mft) details.push(['Modulus fit interval', mft]);
+  const columns: XlsxInfo['columns'] = [];
+  if (r.raw?.t) columns.push({ name: 'time_s', values: r.raw.t });
+  if (r.raw?.F) columns.push({ name: 'force_N', values: r.raw.F });
+  if (r.raw?.d) columns.push({ name: 'displacement_mm', values: r.raw.d });
+  if (!isRelax) columns.push({ name: 'strain', values: r.x });
+  columns.push({ name: 'stress_MPa', values: r.y });
+  return buildXlsx({ details, results: resultsFor(r).rows.map((q) => [q.name, q.value, q.note]), columns,
+    chart: { title: (isRelax ? 'Stress relaxation' : 'Uniaxial tension') + ' (' + tag + ')', xName: isRelax ? 'time_s' : 'strain', yName: 'stress_MPa',
+      xTitle: isRelax ? 'Time (s)' : 'Crosshead-based engineering strain, Δx/L₀ (mm/mm)', yTitle: isRelax ? 'Stress (MPa)' : 'Engineering stress, F/A₀ (MPa)', seriesName: tag },
+    note: 'Stress and strain are calculated from the file. Displacement is crosshead displacement, not an extensometer measurement.' });
 }

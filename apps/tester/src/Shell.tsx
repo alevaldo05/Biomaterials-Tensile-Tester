@@ -1,17 +1,32 @@
-/* The frame around the pages: the header with navigation and the sign-in area, and which page is shown.
-   The lab database is optional. Without it (or in the learning edition) the app is the test screen alone. */
-import { useEffect, useMemo, useRef, useState, useSyncExternalStore } from 'react';
+/* The frame around the screens: the menu, the status bar, which screen is shown, recovery of interrupted recordings,
+   and the Need help button. The lab server is optional; recording never depends on it. */
+import { useCallback, useEffect, useMemo, useRef, useState, useSyncExternalStore } from 'react';
+import type { TestType } from '@tensile/core';
 import { App, useTheme } from './App';
 import type { TestController } from './controller';
+import { sessionFileFromJournal } from './controller';
 import { ApiError, LabApi } from './lab-api';
-import type { Account, LabUser } from './lab-api';
+import type { Account, LabUser, SessionRow } from './lab-api';
+import { openTestFile } from './load';
+import type { LoadedTest } from './load';
+import { save } from './exports';
+import { helpFor } from './help-text';
+import { HelpButton } from './components/HelpButton';
+import { StatusIndicators } from './components/StatusIndicators';
+import type { JournalMeta, SessionJournal } from './storage/journal';
+import { LabMethods } from './storage/methods';
+import type { MethodStore } from './storage/methods';
 import { Admin } from './pages/Admin';
+import { Device } from './pages/Device';
+import { HelpPage } from './pages/HelpPage';
 import { History } from './pages/History';
-import { PREVIEW } from './preview-text';
+import { Home, recentRows } from './pages/Home';
+import type { Destination } from './pages/Home';
+import { LoadTest } from './pages/LoadTest';
+import { Methods } from './pages/Methods';
+import { Settings } from './pages/Settings';
 
-/* The app is served at <site>/app/ (on GitHub Pages and behind the gateway), so the website is one folder up. */
-const SITE_URL = '../';
-type Page = 'test' | 'history' | 'admin';
+type Page = 'home' | 'test' | 'load' | 'methods' | 'device' | 'history' | 'help' | 'settings' | 'admin';
 
 function Dialog(p: { open: boolean; title: string; onClose?: () => void; children: React.ReactNode }) {
   const ref = useRef<HTMLDialogElement | null>(null);
@@ -55,94 +70,107 @@ function NewPassword(p: { api: LabApi; required: boolean; onDone: () => void; on
   );
 }
 
-/** The app preview's opening panel: open the first time, remembered closed in this browser. */
-function PreviewIntro() {
-  const [open, setOpen] = useState(() => { try { return localStorage.getItem('app-preview-intro') !== 'closed'; } catch { return true; } });
-  return (
-    <details className="intro" open={open} onToggle={(e) => {
-      const now = (e.currentTarget as HTMLDetailsElement).open;
-      setOpen(now);
-      try { localStorage.setItem('app-preview-intro', now ? 'open' : 'closed'); } catch { /* not remembered */ }
-    }}>
-      <summary>{PREVIEW.introTitle}</summary>
-      <div className="intro-body">
-        {PREVIEW.intro.map((t) => <p key={t}>{t}</p>)}
-        <p className="hint">{PREVIEW.simulator}</p>
-        <p className="row">{PREVIEW.introLinks.map((l) => <a key={l.href} href={l.href}>{l.label}</a>)}</p>
-      </div>
-    </details>
-  );
-}
+export interface ShellProps { controller: TestController; serialAvailable: boolean; journal: SessionJournal | null; methods: MethodStore }
 
-export function Shell({ controller: c, serialAvailable }: { controller: TestController; serialAvailable: boolean }) {
+export function Shell({ controller: c, serialAvailable, journal, methods }: ShellProps) {
   useSyncExternalStore(c.subscribe, c.snapshot);
   const [theme, toggleTheme] = useTheme();
-  const lab = c.edition === 'lab';   /* the learning edition has no lab database */
   const api = useMemo(() => new LabApi(), []);
-  const [reachable, setReachable] = useState<boolean | null>(lab ? null : false);
+  const [reachable, setReachable] = useState<boolean | null>(null);
   const [user, setUser] = useState<LabUser | null>(null);
   const [viewAsUser, setViewAsUser] = useState(false);
-  const [page, setPage] = useState<Page>('test');
+  const [page, setPage] = useState<Page>('home');
   const [dialog, setDialog] = useState<null | 'sign-in' | 'password'>(null);
+  const [local, setLocal] = useState<JournalMeta[]>([]);
+  const [lab, setLab] = useState<SessionRow[]>([]);
+  const [loaded, setLoaded] = useState<LoadedTest | null>(null);
+  const [loadError, setLoadError] = useState('');
+  const [helpSub, setHelpSub] = useState('test');
+  const onHelpSub = useCallback((s: string) => setHelpSub(s), []);
 
-  const check = () => {
-    if (!lab) return;
-    api.health().then(() => { setReachable(true); return api.me().then(setUser, () => setUser(null)); }, () => setReachable(false));
-  };
+  const check = () => { api.health().then(() => { setReachable(true); return api.me().then(setUser, () => setUser(null)); }, () => setReachable(false)); };
   useEffect(check, []);
-
   const effectiveRole = user ? (user.role === 'admin' && !viewAsUser ? 'admin' : 'user') : null;
-  const account: Account | null = lab ? { api, reachable, user, viewAsUser, effectiveRole } : null;
+  const account: Account = { api, reachable, user, viewAsUser, effectiveRole };
   const recording = c.phase === 'recording';
-  useEffect(() => { if (page === 'admin' && effectiveRole !== 'admin') setPage('test'); if (page === 'history' && !user) setPage('test'); }, [effectiveRole, user, page]);
-  useEffect(() => { if (user?.mustChangePassword) setDialog('password'); }, [user]);
+  const labMethods = useMemo(() => (user && !user.mustChangePassword ? new LabMethods(api) : null), [user, api]);
 
-  const signOut = () => { void api.logout().catch(() => undefined); setUser(null); setViewAsUser(false); setDialog(null); setPage('test'); };
-  const openReplay = (text: string) => {
-    if (c.phase === 'recording') throw new Error('Stop the recording first.');
-    if (!c.saved) throw new Error('The current test has not been saved. Save it or start a new test first.');
-    void (async () => {
-      if (c.source) await c.disconnect();
-      c.newTest();
-      c.loadReplay(text);
-      setPage('test');
-    })();
+  /* Lists for Home and Load test: recordings on this computer, and the lab server's when signed in. */
+  const refresh = useCallback(() => {
+    if (journal) void journal.list().then(setLocal, () => setLocal([]));
+    if (user) void api.sessions(effectiveRole === 'admin' ? undefined : user.id).then(setLab, () => setLab([])); else setLab([]);
+  }, [journal, user, effectiveRole, api]);
+  useEffect(refresh, [refresh, page, c.phase, c.localSave]);
+  useEffect(() => { if (page === 'admin' && effectiveRole !== 'admin') setPage('home'); if (page === 'history' && !user) setPage('home'); }, [effectiveRole, user, page]);
+  useEffect(() => { if (user?.mustChangePassword) setDialog('password'); }, [user]);
+  /* Leaving or reloading while recording or with unsaved data: the browser's own warning. */
+  useEffect(() => {
+    const h = (e: BeforeUnloadEvent) => { if (recording || (!c.saved && c.localSave !== 'saved')) e.preventDefault(); };
+    window.addEventListener('beforeunload', h);
+    return () => window.removeEventListener('beforeunload', h);
+  }, [recording, c.saved, c.localSave]);
+
+  const open = async (name: string, text: string, hint?: TestType) => {
+    setLoadError('');
+    if (!text) { setLoadError('The file is empty or too large (limit 64 MB).'); setPage('load'); return; }
+    try { setLoaded(await openTestFile(name, text, hint)); } catch (e) { setLoaded(null); setLoadError(e instanceof Error ? e.message : String(e)); }
+    setPage('load');
   };
+  const openLocal = async (id: string) => { if (!journal) return; try { const f = await sessionFileFromJournal(journal, id); await open('recording-' + id + '.session.json', JSON.stringify(f)); } catch (e) { setLoadError(e instanceof Error ? e.message : String(e)); setPage('load'); } };
+  const openLab = async (id: string) => { try { await open('test-' + id + '.session.json', await api.sessionFileText(id)); } catch (e) { setLoadError(e instanceof Error ? e.message : String(e)); setPage('load'); } };
+  const downloadLocal = async (m: JournalMeta) => { if (journal) save('recording-' + m.id + '.session.json', [JSON.stringify(await sessionFileFromJournal(journal, m.id))], 'application/json'); };
+  const interrupted = local.filter((m) => m.status === 'recording' && m.id !== c.journalId);
+  const recover = async (m: JournalMeta, how: 'open' | 'download' | 'dismiss') => {
+    if (!journal) return;
+    if (how === 'download') { await downloadLocal(m); return; }
+    await journal.finish(m.id, 'interrupted', 'The app closed before the recording ended. Samples after the last saved batch were not kept.');
+    refresh();
+    if (how === 'open') await openLocal(m.id);
+  };
+  const recent = recentRows(local, lab, (id) => void openLocal(id), (id) => void openLab(id));
+  const go = (d: Destination | Page) => setPage(d);
+
+  const signOut = () => { void api.logout().catch(() => undefined); setUser(null); setViewAsUser(false); setDialog(null); if (page === 'history' || page === 'admin') setPage('home'); };
   const nav = (id: Page, label: string) => (
-    <button type="button" className={'nav' + (page === id ? ' nav-on' : '')} aria-current={page === id ? 'page' : undefined} disabled={recording && page !== id} onClick={() => setPage(id)}>{label}</button>
+    <button type="button" className={'nav' + (page === id ? ' nav-on' : '')} aria-current={page === id ? 'page' : undefined} disabled={recording && id !== 'test' && id !== 'help'} onClick={() => setPage(id)}>{label}</button>
   );
+  const topic = helpFor(page, page === 'test' ? helpSub : undefined);
 
   return (
     <div className="app">
       <header className="top">
-        <a className="brand" href={SITE_URL}>Biomaterials Tensile Tester</a>
-        {lab ? <span className="badge">App</span> : <span className="badge">{PREVIEW.badge}</span>}
-        {user ? <nav className="navs" aria-label="Pages">{nav('test', 'Test')}{nav('history', 'History')}{effectiveRole === 'admin' ? nav('admin', 'Admin') : null}</nav> : null}
+        <span className="brand">Biomaterials Tensile Tester</span>
+        <nav className="navs" aria-label="Main">
+          {nav('home', 'Home')}{nav('test', 'Test')}{user ? nav('history', 'History') : null}{nav('device', 'Device')}{nav('help', 'Help')}{nav('settings', 'Settings')}
+          {effectiveRole === 'admin' ? nav('admin', 'Admin') : null}
+        </nav>
         <span className="top-space" />
-        <a href={SITE_URL + 'learn.html'}>Learn</a>
-        <a href={SITE_URL + 'help.html'}>Help</a>
-        <button type="button" className="quiet" onClick={toggleTheme} aria-pressed={theme === 'dark'}>{theme === 'dark' ? 'Light theme' : 'Dark theme'}</button>
-        {lab ? (
-          <span className="account">
-            {reachable === false ? <button type="button" className="quiet hint" onClick={check} title="Check again">Lab database not connected</button> : null}
-            {reachable && !user ? <button type="button" onClick={() => setDialog('sign-in')}>Sign in</button> : null}
-            {user ? (<>
-              <span className="who">{user.displayName || user.username}{user.role === 'admin' ? <span className="badge badge-soft">Admin</span> : null}</span>
-              {user.role === 'admin' ? <button type="button" className="quiet" aria-pressed={viewAsUser} disabled={recording} onClick={() => setViewAsUser((v) => !v)}>{viewAsUser ? 'Back to admin view' : 'View as user'}</button> : null}
-              <button type="button" className="quiet" onClick={() => setDialog('password')}>Password</button>
-              <button type="button" className="quiet" disabled={recording} onClick={signOut}>Sign out</button>
-            </>) : null}
-          </span>) : null}
+        <span className="account">
+          {reachable && !user ? <button type="button" onClick={() => setDialog('sign-in')}>Sign in to the lab server</button> : null}
+          {user ? (<>
+            <span className="who">{user.displayName || user.username}{user.role === 'admin' ? <span className="badge badge-soft">Admin</span> : null}</span>
+            {user.role === 'admin' ? <button type="button" className="quiet" aria-pressed={viewAsUser} disabled={recording} onClick={() => setViewAsUser((v) => !v)}>{viewAsUser ? 'Back to admin view' : 'View as user'}</button> : null}
+            <button type="button" className="quiet" onClick={() => setDialog('password')}>Password</button>
+            <button type="button" className="quiet" disabled={recording} onClick={signOut}>Sign out</button>
+          </>) : null}
+        </span>
       </header>
-      {!lab ? <PreviewIntro /> : null}
+      <StatusIndicators controller={c} account={account} />
       {viewAsUser ? <p className="view-as" role="status">Viewing as a user. This changes only what this screen shows; your admin permissions are unchanged. <button type="button" className="link" onClick={() => setViewAsUser(false)}>Back to admin view</button></p> : null}
 
-      {page === 'test' ? <App controller={c} serialAvailable={serialAvailable} theme={theme} account={account} /> : null}
-      {page === 'history' && account ? <main className="page" id="main-content"><History account={account} onReplay={openReplay} /></main> : null}
-      {page === 'admin' && account && effectiveRole === 'admin' ? <main className="page" id="main-content"><Admin account={account} controller={c} /></main> : null}
+      {page === 'home' ? <Home go={go} recent={recent} interrupted={interrupted} recover={(m, how) => void recover(m, how)} recording={recording} /> : null}
+      {page === 'test' ? <App controller={c} serialAvailable={serialAvailable} theme={theme} account={account} onHelpSub={onHelpSub} /> : null}
+      {page === 'load' ? <LoadTest loaded={loaded} error={loadError} theme={theme} recent={recent} openFile={(n, t, h) => void open(n, t, h)} clear={() => { setLoaded(null); setLoadError(''); }} /> : null}
+      {page === 'methods' ? <Methods store={methods} lab={labMethods} labAdmin={effectiveRole === 'admin'} controller={c} start={() => setPage('test')} /> : null}
+      {page === 'device' ? <Device controller={c} account={account} serialAvailable={serialAvailable} /> : null}
+      {page === 'history' && user ? <main className="page" id="main-content"><History account={account} onReplay={(text) => void open('lab-test.session.json', text)} /></main> : null}
+      {page === 'help' ? <HelpPage /> : null}
+      {page === 'settings' ? <Settings theme={theme} toggleTheme={toggleTheme} journal={journal} download={(m) => void downloadLocal(m)} /> : null}
+      {page === 'admin' && effectiveRole === 'admin' ? <main className="page" id="main-content"><Admin account={account} controller={c} /></main> : null}
 
-      {lab ? (<>
-      <Dialog open={dialog === 'sign-in'} title="Sign in to the lab database" onClose={() => setDialog(null)}>
+      <HelpButton topic={topic} onOpenHelp={() => setPage('help')} />
+
+      <Dialog open={dialog === 'sign-in'} title="Sign in to the lab server" onClose={() => setDialog(null)}>
         <SignIn api={api} onDone={(u) => { setUser(u); setDialog(u.mustChangePassword ? 'password' : null); }} onCancel={() => setDialog(null)} />
       </Dialog>
       <Dialog open={dialog === 'password'} title="Change password" onClose={() => { if (!user?.mustChangePassword) setDialog(null); }}>
@@ -150,7 +178,6 @@ export function Shell({ controller: c, serialAvailable }: { controller: TestCont
           onDone={() => { setDialog(null); api.me().then(setUser, (e: unknown) => { if (e instanceof ApiError && e.status === 401) setUser(null); }); }}
           onCancel={() => (user?.mustChangePassword ? signOut() : setDialog(null))} />
       </Dialog>
-      </>) : null}
     </div>
   );
 }

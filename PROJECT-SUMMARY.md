@@ -2,7 +2,7 @@
 
 Biomaterials Tensile Tester: a website (plain HTML, CSS, and JavaScript; no framework, no dependencies, no build step) that is the learning front end for a lab tensile tester. It has learning pages, protocols, materials, calibration, a practice page with a labeled simulator, and Load Test for reopening saved CSV files. It has no live test pages and no USB connection: real tests are run in the separate tester app, which the New Test page links to. The tester hardware connection is untested. Test data is never saved or uploaded by the site.
 
-A separate tester app (React and TypeScript, with shared packages, a back end, and containers) is being built in `packages/`, `apps/`, `firmware/`, and `deploy/`; its source is not part of the published website (the publish build adds its learning edition as `app/`). See the [tester-app](docs/cards/features/tester-app.md) card and `docs/app/ARCHITECTURE.md`.
+A separate tester app (React and TypeScript, with shared packages, a back end, and containers) is being built in `packages/`, `apps/`, `firmware/`, and `deploy/`; neither its source nor a built copy is published on GitHub Pages; it is installed on the lab computer. See the [tester-app](docs/cards/features/tester-app.md) card and `docs/app/ARCHITECTURE.md`.
 
 Read this file, then only the cards for the page or feature being changed. Update the card in the same change.
 
@@ -14,7 +14,7 @@ Read this file, then only the cards for the page or feature being changed. Updat
 | Learn | [learn](docs/cards/pages/learn.md) |
 | About | [about](docs/cards/pages/about.md) |
 | Help | [help](docs/cards/pages/help.md) |
-| New Test (sends people to the tester app, the practice page, and Load Test) | [choose-test](docs/cards/pages/choose-test.md) |
+| Get the App (`choose-test.html`: download not yet available; links to the practice page and Load Test) | [choose-test](docs/cards/pages/choose-test.md) |
 | Practice test (simulator) | [practice](docs/cards/pages/practice.md) |
 | Load Test | [load-test](docs/cards/pages/load-test.md) |
 | Calibration | [calibration](docs/cards/pages/calibration.md) |
@@ -56,7 +56,7 @@ Preview in Chrome at 1280 px and 1024 px, run both kinds of practice test on the
 | Words on Home, Learn, About, Help | [page-text](docs/cards/features/page-text.md), then the page card |
 | Graph, key results, CSV reading | [graph-engine](docs/cards/features/graph-engine.md) |
 | Practice page setup, Start/STOP/Tare, recording | [live-test](docs/cards/features/live-test.md), [guided-steps](docs/cards/features/guided-steps.md) |
-| Where New Test sends people (tester app, practice, Load Test) | [choose-test](docs/cards/pages/choose-test.md) |
+| Where Get the App sends people (tester app, practice, Load Test) | [choose-test](docs/cards/pages/choose-test.md) |
 | The simulator's line format | [simulator](docs/cards/features/simulator.md) (`data/device.js`; the app's protocol is in `docs/app/PROTOCOL.md`) |
 | Material values or sample curves | [materials](docs/cards/features/materials.md) |
 | Protocol text | [protocols](docs/cards/features/protocols.md) |

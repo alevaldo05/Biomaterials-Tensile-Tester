@@ -1,0 +1,47 @@
+# The Windows app
+
+The tester app's screens in their own window, installed on the lab computer. Source: `apps/desktop/`.
+The website stays on GitHub Pages; the app is not published there.
+
+## What it is
+- One window showing the screens built from `apps/tester` (copied into `apps/desktop/ui/` and bundled in the installer). It never loads screens from a server or another site.
+- USB serial (Web Serial). Each time you press Connect, a box lists the USB serial ports and you choose one; the device then identifies itself.
+- Recordings and methods are kept on this computer (the app's own storage), as in the browser version.
+- The lab server is not reachable from the Windows app yet: the status bar shows it as not connected. History, shared methods, and saving to the lab work when the app is opened from the lab computer's address in Chrome.
+- It sends no Start, STOP, Tare, speed, or position command to the tester. The on-screen controls are not an emergency stop.
+
+## Security settings (checked by `apps/desktop/test/desktop.test.ts`)
+- Context isolation, the sandbox, no Node in the screens, web security on, no webviews, developer tools off in the installed app.
+- The preload gives the screens one fixed label (`window.tensileDesktop.kind`) and nothing else.
+- Navigation away from the app is blocked. Links to the public website open in the computer's browser; every other new window is refused.
+- Permissions: USB serial (port chosen by the person) and copying text only.
+- One copy at a time (two would compete for the port).
+- Packaging switches (Electron fuses): no "run as Node", no `NODE_OPTIONS`, no inspector flags, the app loads only from its checked archive.
+
+## Building an installer
+The installer is built on GitHub, on Windows, by `.github/workflows/desktop.yml`. It runs only when started:
+1. GitHub > Actions > **Windows app** > Run workflow (or push a tag such as `app-v0.2.0`).
+2. It runs the checks, builds the screens and the installer, and creates a **draft** release with
+   `Biomaterials-Tensile-Tester-<version>-beta-unsigned-setup.exe` and `SHA256SUMS.txt`.
+3. A draft is visible only to people who can change the repository. Download it, try it on the lab computer, and
+   publish it (GitHub > Releases > Edit > Publish) only when you are satisfied.
+4. After publishing, the website's Get the App page can link to it (a separate change; until then it says
+   "Download not yet available").
+
+The installer is **unsigned**: Windows SmartScreen warns before running it ("More info" > "Run anyway").
+Signing needs a code-signing certificate, which is the owner's decision.
+
+## Building by hand (on a Windows computer)
+```
+npm ci
+npm run app:build
+cd apps/desktop
+npm ci
+npm run prepare-ui
+npm start            (runs it without installing)
+npm run dist:win     (makes the installer in apps/desktop/release/)
+```
+
+## Status
+Not yet built or run: Electron's own files could not be downloaded in the environment where this was written, so
+the first build is the GitHub workflow's. The USB connection is untested with real hardware.

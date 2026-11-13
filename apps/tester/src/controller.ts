@@ -1,18 +1,23 @@
-/* The session controller: it wires a source to a recorder and holds what the screens show. It is given a source
-   choice and never looks at which board, ADC, or wire format is behind it. It has no page code, so it is tested
-   by itself. It sends nothing to the tester: Start and Stop here start and stop saving samples. */
-import { DeviceSource, NdjsonAdapter, ReplayTransport, SimulatedDevice, simulatedRelaxation, simulatedUniaxial } from '@tensile/acquisition';
+/* The session controller: it wires the real acquisition device to a recorder and holds what the screens show. It
+   never looks at which board, ADC, or wire format is behind the connection. It has no page code, so it is tested by
+   itself. It sends nothing to the tester: Start and Stop here start and stop saving samples.
+
+   There is no simulator here. Recorded tests are opened in Load test (load.ts), never through this live path. */
+import { DeviceSource, NdjsonAdapter } from '@tensile/acquisition';
 import type { Transport } from '@tensile/acquisition';
 import type { TestRecord, TestType } from '@tensile/core';
-import { achievedRate, Recorder, sessionToTestRecord, simulatedCalibrations, simulatedProfile } from '@tensile/recording';
+import { achievedRate, Recorder, sessionToTestRecord } from '@tensile/recording';
 import type { CalibrationRecord, DeviceProfile, Readiness, Session, SessionState } from '@tensile/recording';
-import { EMPTY_SETUP, num, setupProblems } from './setup';
+import { EMPTY_SETUP, paramsFrom, setupProblems } from './setup';
 import type { Setup } from './setup';
+import type { SessionJournal } from './storage/journal';
+import type { TestMethod } from './storage/methods';
+import { setupFromMethod } from './storage/methods';
 
-export const APP_VERSION = '0.1.0';
-export type Edition = 'lab' | 'learning';
-export type SourceChoice = 'simulated' | 'real' | 'replay';
+export const APP_VERSION = '0.2.0';
 export type Phase = 'setup' | 'recording' | 'done';
+/** Saving on this computer: separate from the lab server. */
+export type LocalSave = 'none' | 'saving' | 'saved' | 'error' | 'off';
 
 /** A device profile and calibration records for a real setup, loaded from a file the person chooses. */
 export interface SetupFile { profile: DeviceProfile; calibrations: CalibrationRecord[] }
@@ -23,8 +28,10 @@ export interface SessionFile {
   version: 1;
   savedAt: string;
   appVersion: string;
-  /** What the session was when it was recorded. A replay of simulated data stays labeled simulated. */
+  /** 'simulated' only in files from older versions or the website's practice tools; this app refuses those. */
   recordedFrom: 'real' | 'simulated';
+  /** The test method and revision the test was started from, if any. */
+  method?: { id: string; name: string; revision: number } | null;
   test: TestType;
   setup: Setup;
   profile: DeviceProfile | null;
@@ -54,26 +61,23 @@ export function parseSetupFile(text: string): SetupFile {
 }
 
 export interface ControllerOptions {
-  edition: Edition;
-  /** Opens the real connection (USB serial). Absent in the learning edition, which has no way to reach hardware. */
-  openReal?: () => Transport;
-  /** Tests pass false and step the simulator themselves. */
-  autoRun?: boolean;
+  /** Opens the real connection (USB serial). Tests pass a stand-in device here. */
+  openReal: () => Transport;
+  /** Where recordings are committed on this computer. Without one, nothing is kept if the app closes. */
+  journal?: SessionJournal | null;
+  /** How often the journal is written while recording, ms. */
+  commitEvery_ms?: number;
 }
 
 export class TestController {
-  readonly edition: Edition;
-  choice: SourceChoice = 'simulated';
   test: TestType = 'uniaxial';
-  simulatedDeviceType = 'esp32';
   setup: Setup = { ...EMPTY_SETUP };
   setupFile: SetupFile | null = null;
-  replayFile: SessionFile | null = null;
+  method: TestMethod | null = null;
   voltagesOnly = false;
 
   source: DeviceSource | null = null;
   recorder: Recorder | null = null;
-  simulator: SimulatedDevice | null = null;
   phase: Phase = 'setup';
   session: Session | null = null;
   record: TestRecord | null = null;
@@ -82,18 +86,27 @@ export class TestController {
   message = '';
   startedAt: Date | null = null;
   saved = true;
+  /** Local save state of the current recording, and the id it is kept under. */
+  localSave: LocalSave;
+  localError = '';
+  journalId: string | null = null;
+  lastCommitAt: Date | null = null;
+  /** Computer time the latest sample arrived, for the data-freshness indicator. */
+  lastSampleAt: number | null = null;
 
   private readonly o: ControllerOptions;
   private listeners = new Set<() => void>();
   private version = 0;
   private handshake: { line: string; at: number }[] = [];
   private recorded: { line: string; at: number }[] = [];
-  private replay: ReplayTransport | null = null;
+  private committed = 0;
+  private committing: Promise<void> = Promise.resolve();
+  private lastCommitTry = 0;
   private timer: ReturnType<typeof setInterval> | null = null;
   private lastCount = -1;
   private liveCache: { count: number; record: TestRecord | null } = { count: -1, record: null };
 
-  constructor(o: ControllerOptions) { this.o = o; this.edition = o.edition; }
+  constructor(o: ControllerOptions) { this.o = o; this.localSave = o.journal ? 'none' : 'off'; }
 
   subscribe = (l: () => void): (() => void) => { this.listeners.add(l); return () => { this.listeners.delete(l); }; };
   snapshot = (): number => this.version;
@@ -101,7 +114,6 @@ export class TestController {
   /** For the screens: change a setting and redraw. */
   update(f: (c: TestController) => void): void { f(this); this.changed(); }
 
-  get choices(): SourceChoice[] { return this.edition === 'learning' || !this.o.openReal ? ['simulated', 'replay'] : ['real', 'simulated', 'replay']; }
   get state(): SessionState { return this.recorder ? this.recorder.state() : this.source ? (this.source.state === 'streaming' || this.source.state === 'connected' ? 'connected-uncalibrated' : this.source.state) : 'disconnected'; }
   get connected(): boolean { const s = this.state; return s === 'ready' || s === 'connected-uncalibrated' || s === 'recording' || s === 'stale'; }
   get readiness(): Readiness | null { return this.recorder ? this.recorder.readiness() : null; }
@@ -109,41 +121,19 @@ export class TestController {
   get sampleCount(): number { return this.session ? Object.values(this.session.columns).reduce((a, c) => a + c.raw.length, 0) : 0; }
   /** Samples per second per channel actually achieved in the recording. */
   get rate(): number | null { const f = this.session && Object.values(this.session.columns)[0]; return f ? achievedRate(f) : null; }
-  get dataLabel(): string {
-    const kind = this.source ? this.source.kind : this.choice === 'real' ? 'real' : this.choice === 'simulated' ? 'simulated' : 'replayed';
-    return kind === 'real' ? 'Measured' : kind === 'simulated' ? 'Simulated data, not measured' : 'Replayed' + (this.replayFile && this.replayFile.recordedFrom === 'simulated' ? ' (simulated data, not measured)' : ' recording');
-  }
-
-  /** The app preview (learning edition) connects its pretend board by itself; there is nothing to choose. */
-  async startPreview(): Promise<void> {
-    if (this.edition !== 'learning' || this.source) return;
-    this.choice = 'simulated';
-    await this.connect();
-  }
+  get dataLabel(): string { return 'Measured'; }
 
   /* ---------- connection ---------- */
+  /** Must be called from a click: the person chooses the port. Nothing connects by itself. */
   async connect(): Promise<void> {
     if (this.source && this.source.state !== 'disconnected' && this.source.state !== 'fault') return;
     this.message = '';
-    let transport: Transport, kind: 'real' | 'simulated' | 'replayed';
-    let profile: DeviceProfile | null = null, calibrations: CalibrationRecord[] = [];
-    this.simulator = null; this.replay = null;
-    if (this.choice === 'simulated') {
-      this.simulator = new SimulatedDevice({ deviceType: this.simulatedDeviceType, manualMotion: true, auto: this.o.autoRun !== false });
-      transport = this.simulator; kind = 'simulated';
-    } else if (this.choice === 'replay') {
-      if (!this.replayFile) { this.message = 'Choose a saved session file first.'; this.changed(); return; }
-      this.replay = new ReplayTransport({ lines: this.replayFile.lines, auto: false });
-      transport = this.replay; kind = 'replayed';
-      profile = this.replayFile.profile; calibrations = this.replayFile.calibrations;
-    } else {
-      if (!this.o.openReal) { this.message = 'This edition cannot connect to hardware.'; this.changed(); return; }
-      transport = this.o.openReal(); kind = 'real';
-      if (this.setupFile) { profile = this.setupFile.profile; calibrations = this.setupFile.calibrations; }
-    }
-    const source = new DeviceSource({ transport, adapter: new NdjsonAdapter(), kind, requiredQuantities: ['force', 'displacement'] });
+    const transport = this.o.openReal();
+    const profile = this.setupFile?.profile ?? null, calibrations = this.setupFile?.calibrations ?? [];
+    const source = new DeviceSource({ transport, adapter: new NdjsonAdapter(), kind: 'real', requiredQuantities: ['force', 'displacement'] });
     this.source = source; this.recorder = null; this.handshake = []; this.recorded = [];
-    source.on('state', (s) => this.onState(s));
+    source.on('state', (st) => this.onState(st));
+    source.on('sample', () => { this.lastSampleAt = Date.now(); });
     source.on('line', (line, at) => {
       if (line.includes('"type":"sample"')) { if (this.phase === 'recording') this.recorded.push({ line, at }); }
       else if (/"type":"(hello|channels|settings)"/.test(line)) this.handshake.push({ line, at });
@@ -156,7 +146,6 @@ export class TestController {
       this.changed();
       return;
     }
-    if (kind === 'simulated') { profile = simulatedProfile(); calibrations = simulatedCalibrations(source); }
     this.recorder = new Recorder({ source, profile, calibrations, appVersion: APP_VERSION });
     await source.startStream();
     this.startTicking();
@@ -168,13 +157,38 @@ export class TestController {
     this.stopTicking();
     await this.source?.disconnect();
     this.recorder?.dispose();
-    this.source = null; this.recorder = null; this.simulator = null; this.replay = null;
+    this.source = null; this.recorder = null;
     this.changed();
   }
 
-  private onState(s: string): void {
-    if ((s === 'fault' || s === 'disconnected') && this.phase === 'recording') this.finish();
-    if (s === 'fault' || s === 'disconnected') { const d = this.source?.diagnostics.at(-1); if (d) this.message = d.message; }
+  /** A setup file or lab profile chosen on the Device screen or in the Calibration step. */
+  useSetup(f: SetupFile): void {
+    if (this.phase === 'recording') throw new Error('The calibration cannot be changed while recording.');
+    this.setupFile = f;
+    this.recorder?.setCalibration(f.profile, f.calibrations);
+    this.changed();
+  }
+
+  /** A short text a person can copy and send when asking for help. */
+  diagnosticSummary(): string {
+    const s = this.source, id = s?.identity, st = s?.settings, r = this.readiness;
+    const lines = [
+      'Biomaterials Tensile Tester app ' + APP_VERSION,
+      'State: ' + this.state,
+      'Device: ' + (id ? id.deviceType + ' ' + id.deviceId + ', software ' + id.softwareVersion + ', protocol ' + id.protocol : 'not identified'),
+      'Channels: ' + (s?.channels.map((c) => c.id + ' (' + c.quantity + ', ' + c.input + ', ' + c.mode + ')').join('; ') || 'none'),
+      'ADC: ' + (st ? st.adc + ', ' + st.bits + ' bit, \u00b1' + st.fullScale_mV + ' mV, ' + st.dataRate_sps + ' conversions/s, ref ' + st.ref : 'unknown'),
+      'Last sample: ' + (this.lastSampleAt ? new Date(this.lastSampleAt).toISOString() : 'none'),
+      'Calibration: ' + (r ? (['force', 'displacement'] as const).map((q) => q + ' ' + (r.channels[q].calibrated ? r.channels[q].calibrationId : 'not calibrated (' + r.channels[q].reasons.join(' ') + ')')).join('; ') : 'not checked'),
+      'Setup: ' + (this.setupFile ? this.setupFile.profile.id + ' with ' + this.setupFile.calibrations.length + ' calibration records' : 'none loaded'),
+      'Recent messages: ' + ((s?.diagnostics ?? []).slice(-5).map((d) => d.code + ': ' + d.message).join(' | ') || 'none'),
+    ];
+    return lines.join('\n');
+  }
+
+  private onState(st: string): void {
+    if ((st === 'fault' || st === 'disconnected') && this.phase === 'recording') this.finish();
+    if (st === 'fault' || st === 'disconnected') { const d = this.source?.diagnostics.at(-1); if (d) this.message = d.message; }
     this.changed();
   }
   private startTicking(): void {
@@ -182,15 +196,35 @@ export class TestController {
     this.timer = setInterval(() => this.tick(), 100);
   }
   private stopTicking(): void { if (this.timer) { clearInterval(this.timer); this.timer = null; } }
-  /** Redraws at most ten times a second, however fast samples arrive. Recording does not wait for it. */
+  /** Redraws at most ten times a second and commits to the journal about once a second. Recording does not wait for either. */
   tick(): void {
-    if (this.replay && this.phase === 'recording') {
-      this.replay.play(160);
-      if (this.replay.remaining === 0) { this.stopRecording('The replay reached the end of the file.'); return; }
-    }
+    if (this.phase === 'recording' && Date.now() - this.lastCommitTry >= (this.o.commitEvery_ms ?? 1000)) void this.commit();
     const f = this.recorder?.latest.force;
     const count = this.sampleCount + (f ? f.deviceTime_s : 0);
     if (count !== this.lastCount) { this.lastCount = count; this.changed(); }
+  }
+
+  /* ---------- the journal on this computer ---------- */
+  /** Writes the sample lines not yet committed. One write at a time; a failed write is retried with the next one. */
+  commit(): Promise<void> {
+    this.lastCommitTry = Date.now();
+    const j = this.o.journal, id = this.journalId;
+    if (!j || !id) return Promise.resolve();
+    this.committing = this.committing.then(async () => {
+      const batch = this.recorded.slice(this.committed);
+      if (!batch.length) return;
+      this.localSave = 'saving';
+      try {
+        await j.append(id, { lines: batch.map((x) => x.line), receivedAt_ms: batch.map((x) => x.at) });
+        this.committed += batch.length;
+        this.localSave = 'saved'; this.localError = ''; this.lastCommitAt = new Date();
+      } catch (e) {
+        this.localSave = 'error';
+        this.localError = 'Saving on this computer failed: ' + (e instanceof Error ? e.message : String(e)) + ' The recording continues in memory; download the data when it ends.';
+      }
+      this.changed();
+    });
+    return this.committing;
   }
 
   /* ---------- recording ---------- */
@@ -198,7 +232,7 @@ export class TestController {
     if (this.phase !== 'setup') return '';
     const probs = Object.values(setupProblems(this.setup, this.test));
     if (probs.length) return probs[0] as string;
-    if (!this.recorder || !this.source || (this.source.state !== 'streaming' && this.source.state !== 'stale')) return 'Connect a source first.';
+    if (!this.recorder || !this.source || (this.source.state !== 'streaming' && this.source.state !== 'stale')) return 'Connect the acquisition device first.';
     if (this.source.state === 'stale') return 'No data is arriving.';
     const r = this.recorder.readiness();
     if (!r.ready && !this.voltagesOnly) return 'Measurements are not calibrated, so force, stress, and strain are not available. To record voltages only, tick "Record voltages only".';
@@ -207,23 +241,37 @@ export class TestController {
 
   zeroForce(): void {
     const v = this.recorder?.zeroForce();
-    this.message = v === null || v === undefined ? 'Zero force needs a calibrated force reading and is not available while recording.' : 'Force zero set from the current reading (a software zero, not a calibration).';
+    this.message = v === null || v === undefined ? 'A software baseline needs a calibrated force reading and is not available while recording.' : 'Software baseline taken from the current force reading. It is subtracted in the results and recorded with the test; the original readings are kept. It is not a machine tare and not a calibration.';
     this.changed();
   }
 
-  startRecording(): void {
-    if (this.startProblem || !this.recorder) { this.message = this.startProblem; this.changed(); return; }
-    const s = this.setup, area = (num(s.width) as number) * (num(s.thickness) as number), speed = num(s.speed) as number;
+  /** Starts saving samples. Async only because the journal entry is created first; the recorder starts at once. */
+  async startRecording(): Promise<void> {
+    if (this.startProblem || !this.recorder || !this.source) { this.message = this.startProblem; this.changed(); return; }
     this.session = this.recorder.start({ allowUncalibrated: this.voltagesOnly });
-    this.record = null; this.recordProblem = ''; this.recorded = []; this.message = ''; this.saved = false;
+    this.record = null; this.recordProblem = ''; this.recorded = []; this.committed = 0; this.message = ''; this.saved = false;
     this.startedAt = new Date();
     this.phase = 'recording';
     this.liveCache = { count: -1, record: null };
-    /* The simulator's pretend crosshead starts with the recording. A real tester is started from its own controller. */
-    this.simulator?.beginMotion(this.test === 'relaxation'
-      ? simulatedRelaxation({ speed_mm_min: speed, hold_mm: num(s.holdMm) as number, area_mm2: area })
-      : simulatedUniaxial({ speed_mm_min: speed, gauge_mm: num(s.L0) as number, area_mm2: area }));
+    this.journalId = null;
     this.changed();
+    const j = this.o.journal;
+    if (!j) return;
+    const id = 's-' + this.startedAt.getTime().toString(36) + '-' + Math.random().toString(36).slice(2, 6);
+    try {
+      const est = await j.estimate();
+      if (est && est.quota - est.usage < 50 * 1024 * 1024) this.message = 'This computer has little storage space left for recordings. Download and remove old recordings soon.';
+      await j.begin({ id, test: this.test, setup: this.setup, profile: this.setupFile?.profile ?? null, calibrations: this.fileCalibrations(), appVersion: APP_VERSION,
+        deviceId: this.source.identity?.deviceId ?? '', startedAt: this.startedAt.toISOString() },
+        { lines: this.handshake.map((x) => x.line), receivedAt_ms: this.handshake.map((x) => x.at) });
+      this.journalId = id;
+      this.localSave = 'saving';
+      await this.commit();
+    } catch (e) {
+      this.localSave = 'error';
+      this.localError = 'Saving on this computer could not start: ' + (e instanceof Error ? e.message : String(e)) + ' The recording continues in memory; download the data when it ends.';
+      this.changed();
+    }
   }
 
   stopRecording(reason = 'Recording stopped by the user.'): void {
@@ -233,27 +281,19 @@ export class TestController {
   }
   private finish(): void {
     this.phase = 'done';
-    this.simulator?.resetMotion();
     const built = this.build();
     this.record = built.record; this.recordProblem = built.problem;
+    const j = this.o.journal, id = this.journalId, interrupted = !!this.session?.interrupted, reason = this.session?.endReason ?? '';
+    if (j && id) void this.commit().then(() => j.finish(id, interrupted ? 'interrupted' : 'complete', reason)).then(() => this.changed(), () => undefined);
     this.changed();
   }
+  /** Resolves when everything recorded so far is committed (tests use it). */
+  async flushed(): Promise<void> { await this.commit(); await this.committing; }
 
-  private params() {
-    const s = this.setup;
-    return {
-      specimen: { L0_mm: num(s.L0) ?? 0, width_mm: num(s.width) ?? 0, thickness_mm: num(s.thickness) ?? 0 },
-      params: { speed_mm_min: num(s.speed) ?? '', yield: false,
-        ...(this.test === 'relaxation' ? { hold_mm: num(s.holdMm) ?? 0, hold_s: num(s.holdS) ?? 0, holdSource: 'typed' as const } : {}),
-        ...(this.test === 'uniaxial' && s.offsetOn && num(s.offsetPct) ? { offsetPct: num(s.offsetPct) as number } : {}) },
-    };
-  }
   private build(): { record: TestRecord | null; problem: string } {
     if (!this.session) return { record: null, problem: '' };
-    const p = this.params(), r = sessionToTestRecord(this.session, { test: this.test, specimen: p.specimen, params: p.params });
-    if (!r.ok) return { record: null, problem: r.reason };
-    if (this.source?.kind === 'replayed' && this.replayFile) r.record.simulated = this.replayFile.recordedFrom === 'simulated';
-    return { record: r.record, problem: '' };
+    const p = paramsFrom(this.setup, this.test), r = sessionToTestRecord(this.session, { test: this.test, specimen: p.specimen, params: p.params });
+    return r.ok ? { record: r.record, problem: '' } : { record: null, problem: r.reason };
   }
   /** The record so far, for the live graph. Rebuilt only when new samples have arrived. */
   get live(): TestRecord | null {
@@ -264,28 +304,44 @@ export class TestController {
     return this.liveCache.record;
   }
 
+  /** Another specimen: the method, test type, and connection stay; the specimen's identity, baseline, and results do not. */
   newTest(): void {
-    this.phase = 'setup'; this.session = null; this.record = null; this.recordProblem = ''; this.recorded = []; this.message = ''; this.saved = true; this.startedAt = null;
+    this.phase = 'setup'; this.session = null; this.record = null; this.recordProblem = ''; this.recorded = []; this.committed = 0;
+    this.message = ''; this.saved = true; this.startedAt = null; this.journalId = null; this.localSave = this.o.journal ? 'none' : 'off'; this.localError = '';
+    this.setup = this.method ? setupFromMethod(this.method) : { ...this.setup, specimenId: '', notes: '' };
+    this.recorder?.zeroForceReset();
+    this.changed();
+  }
+  /** Starts the setup from a saved method (Test methods). */
+  useMethod(m: TestMethod | null): void {
+    if (this.phase !== 'setup') throw new Error('Finish or clear the current test first.');
+    this.method = m;
+    if (m) { this.test = m.test; this.setup = setupFromMethod(m); }
     this.changed();
   }
 
   /* ---------- the raw session file ---------- */
+  private fileCalibrations(): CalibrationRecord[] {
+    const cal = this.session?.calibrations ?? {};
+    return (['force', 'displacement'] as const).flatMap((q) => { const c = cal[q]; return c ? [{ id: c.id, quantity: q, unit: c.unit, slope: c.slope, offset: c.offset, signalPath: c.signalPath, origin: c.origin, createdAt: '' }] : []; });
+  }
   sessionFile(): SessionFile | null {
     if (!this.session || !this.source) return null;
-    const all = [...this.handshake, ...this.recorded], cal = this.session.calibrations;
+    const all = [...this.handshake, ...this.recorded];
     return {
       format: 'tensile-tester-session', version: 1, savedAt: new Date().toISOString(), appVersion: APP_VERSION,
-      recordedFrom: this.source.kind === 'real' ? 'real' : this.source.kind === 'simulated' ? 'simulated' : (this.replayFile ? this.replayFile.recordedFrom : 'simulated'),
-      test: this.test, setup: this.setup,
-      profile: this.source.kind === 'simulated' ? simulatedProfile() : this.source.kind === 'replayed' ? (this.replayFile?.profile ?? null) : (this.setupFile?.profile ?? null),
-      calibrations: (['force', 'displacement'] as const).flatMap((q) => { const c = cal[q]; return c ? [{ id: c.id, quantity: q, unit: c.unit, slope: c.slope, offset: c.offset, signalPath: c.signalPath, origin: c.origin, createdAt: '' }] : []; }),
+      recordedFrom: 'real', test: this.test, setup: this.setup, profile: this.setupFile?.profile ?? null, calibrations: this.fileCalibrations(),
+      method: this.method ? { id: this.method.id, name: this.method.name, revision: this.method.revision } : null,
       lines: all.map((x) => x.line), receivedAt_ms: all.map((x) => x.at),
     };
   }
-  loadReplay(text: string): void {
-    const f = parseSessionFile(text);
-    this.replayFile = f; this.choice = 'replay'; this.test = f.test; this.setup = { ...EMPTY_SETUP, ...f.setup };
-    this.message = '';
-    this.changed();
-  }
+}
+
+/** A session file rebuilt from the journal (recovery, or a recent test kept on this computer). */
+export async function sessionFileFromJournal(j: SessionJournal, id: string): Promise<SessionFile> {
+  const meta = (await j.list()).find((m) => m.id === id);
+  if (!meta) throw new Error('That recording is no longer on this computer.');
+  const l = await j.lines(id);
+  return { format: 'tensile-tester-session', version: 1, savedAt: meta.lastCommitAt, appVersion: meta.appVersion, recordedFrom: 'real', test: meta.test, setup: meta.setup,
+    profile: meta.profile, calibrations: meta.calibrations, method: null, lines: l.lines, receivedAt_ms: l.receivedAt_ms };
 }

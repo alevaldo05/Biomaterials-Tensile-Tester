@@ -211,6 +211,26 @@ describe.skipIf(!PG_BIN)('API against a real PostgreSQL', () => {
       const r = await app.inject({ method: 'GET', url: '/api/v1/health' });
       expect(r.headers['cache-control']).toBe('no-store');
       expect(r.headers['x-content-type-options']).toBe('nosniff');
+      expect(r.headers['referrer-policy']).toBe('no-referrer');
+    });
+
+    it('sends the same headers on refusals and errors', async () => {
+      for (const r of [await app.inject({ method: 'GET', url: '/api/v1/auth/me' }), await app.inject({ method: 'GET', url: '/api/v1/test-sessions/1', headers: { cookie: adminCookie } }),
+        await app.inject({ method: 'POST', url: '/api/v1/methods', headers: { cookie: adminCookie }, payload: {} })]) {
+        expect(r.statusCode).toBeGreaterThanOrEqual(400);
+        expect(r.headers['cache-control']).toBe('no-store');
+        expect(r.headers['x-content-type-options']).toBe('nosniff');
+        expect(r.json().error.message).toEqual(expect.any(String));
+      }
+    });
+
+    it('needs the header for every kind of change: tests, methods, calibrations', async () => {
+      const u = await mkSignedIn();
+      for (const [url, cookie] of [['/api/v1/test-sessions', u.cookie], ['/api/v1/methods', adminCookie], ['/api/v1/methods/lm-1/archive', adminCookie], ['/api/v1/calibrations', adminCookie], ['/api/v1/device-profiles', adminCookie]] as const) {
+        const r = await app.inject({ method: 'POST', url, headers: { cookie }, payload: {} });
+        expect(r.statusCode, url).toBe(403);
+        expect(r.json().error.code).toBe('forbidden');
+      }
     });
   });
 
@@ -539,15 +559,13 @@ describe.skipIf(!PG_BIN)('API against a real PostgreSQL', () => {
       for (let i = 0; i < count; i++) for (const ch of ['force', 'displacement']) push({ v: 1, type: 'sample', boot_id: boot, seq: i, t: i * 10000, ch, raw: 1000 + i * 7, ref: ch === 'force' ? 'f1' : 'd1' });
       return {
         format: 'tensile-tester-session', version: 1, savedAt: new Date(t).toISOString(), appVersion: '0.1.0',
-        recordedFrom: o.recordedFrom ?? 'simulated', test: o.test ?? 'uniaxial',
+        recordedFrom: o.recordedFrom ?? 'real', test: o.test ?? 'uniaxial',
         setup: { material: o.material ?? 'Rabbit tissue', specimenId: 'S-01', speed: '1', preload: true },
         profile: null, calibrations: o.calibrations ?? [], lines, receivedAt_ms: at,
       };
     }
     const upload = (cookie: string, file: object, extra: object = {}) => call(app, 'POST', '/test-sessions', cookie, { file, summary: { peakForce_N: 12.5, uts_MPa: null }, notes: 'first run', ...extra });
-    const SIM = 'Simulated data, not measured';
-
-    it('saves a simulated session, counts the sample lines, and labels it', async () => {
+    it('saves a recorded session, counts the sample lines, and labels it', async () => {
       const u = await mkSignedIn();
       const file = sessionFile({ samples: 5 });
       const r = await upload(u.cookie, file);
@@ -558,10 +576,64 @@ describe.skipIf(!PG_BIN)('API against a real PostgreSQL', () => {
       const list = (await call(app, 'GET', '/test-sessions', u.cookie)).json().sessions as Record<string, unknown>[];
       expect(list).toHaveLength(1);
       expect(list[0]).toMatchObject({
-        id: r.json().id, owner: u.username, testType: 'uniaxial', recordedFrom: 'simulated', data: SIM, material: 'Rabbit tissue', specimenId: 'S-01',
+        id: r.json().id, owner: u.username, testType: 'uniaxial', recordedFrom: 'real', data: 'Measured', material: 'Rabbit tissue', specimenId: 'S-01',
+        calibrationSource: 'none', calibrationLabel: 'No calibration (voltages only)',
         deviceId: 'sim-01', deviceType: 'esp32', deviceSoftware: 'sim-1.0.0', appVersion: '0.1.0', sampleCount: 10, notes: 'first run', summary: { peakForce_N: 12.5, uts_MPa: null },
       });
       expect(Math.abs(Date.parse(list[0]?.startedAt as string) - (T0 + 30))).toBeLessThan(2);   /* arrival time of the first sample line */
+    });
+
+    it('refuses simulated data and keeps nothing', async () => {
+      const u = await mkSignedIn();
+      const r = await upload(u.cookie, sessionFile({ recordedFrom: 'simulated' }));
+      expect(r.statusCode).toBe(400);
+      expect(r.json().error.code).toBe('simulated');
+      expect((await call(app, 'GET', '/test-sessions', u.cookie)).json().sessions).toEqual([]);
+    });
+
+    it('refuses a line that is not a device message, and arrival times that do not match the lines', async () => {
+      const u = await mkSignedIn();
+      const f = sessionFile();
+      const bad = (lines: string[], why: RegExp) => async () => {
+        const r = await upload(u.cookie, { ...f, lines: [...f.lines, ...lines], receivedAt_ms: [...f.receivedAt_ms, ...lines.map(() => T0)] });
+        expect(r.statusCode).toBe(400);
+        expect(r.json().error.message).toMatch(why);
+      };
+      await bad(['not json'], /Line 14 .* not a message from the device/)();
+      await bad([JSON.stringify({ v: 1, type: 'start_stream', id: 1 })], /not a message from the device/)();   /* a request, which only the app sends */
+      await bad([JSON.stringify({ v: 2, type: 'sample' })], /not a message from the device/)();
+      await bad(['[1,2]'], /not a message from the device/)();
+      await bad(['null'], /not a message from the device/)();
+      const short = await upload(u.cookie, { ...f, receivedAt_ms: f.receivedAt_ms.slice(1) });
+      expect(short.statusCode).toBe(400);
+      expect(short.json().error.message).toContain('one arrival time for each line');
+      expect((await upload(u.cookie, { ...f, receivedAt_ms: f.receivedAt_ms.map((x, i) => (i === 3 ? null : x)) })).statusCode).toBe(400);
+      expect((await call(app, 'GET', '/test-sessions', u.cookie)).json().sessions).toEqual([]);
+    });
+
+    it('labels where the calibration came from, and saves the test either way', async () => {
+      const channels = { force: { conditioning: { id: 'amp-lab', gain: 2, offset_V: 0 } } };
+      await call(app, 'POST', '/device-profiles', adminCookie, { id: 'prof-labcal', name: 'Lab cal', channels });
+      const signalPath = { deviceType: 'esp32', adc: 'ads1115', bits: 16, fullScale_mV: 4096, mode: 'single-ended', input: 'A0', conditioningId: 'amp-lab', conditioningGain: 2, conditioningOffset_V: 0 };
+      const mkCal = (id: string) => call(app, 'POST', '/calibrations', adminCookie, { id, profileId: 'prof-labcal', quantity: 'force', unit: 'N', slope: 12.5, offset: -0.25, signalPath });
+      await mkCal('cal-lab-ok'); await call(app, 'POST', '/calibrations/cal-lab-ok/approve', adminCookie);
+      await mkCal('cal-lab-draft');
+      const u = await mkSignedIn();
+      const source = async (calibrations: object[]) => {
+        const r = await upload(u.cookie, sessionFile({ calibrations }));
+        expect(r.statusCode).toBe(201);
+        const s = (await call(app, 'GET', '/test-sessions/' + r.json().id, u.cookie)).json().session;
+        expect(s.calibrationSource).toBe(r.json().calibrationSource);
+        return [s.calibrationSource, s.calibrationLabel];
+      };
+      const ok = { id: 'cal-lab-ok', quantity: 'force', slope: 12.5, offset: -0.25 };
+      expect(await source([ok])).toEqual(['lab', 'Lab-approved calibration']);
+      expect(await source([{ ...ok, slope: 12.6 }])).toEqual(['not-from-lab', 'Calibration not from the lab']);   /* same id, other numbers */
+      expect((await source([{ ...ok, quantity: 'displacement' }]))[0]).toBe('not-from-lab');
+      expect((await source([{ ...ok, id: 'cal-lab-draft' }]))[0]).toBe('not-from-lab');   /* not approved */
+      expect((await source([{ id: 'cal-made-elsewhere', slope: 1, offset: 0 }]))[0]).toBe('not-from-lab');
+      expect((await source([ok, { id: 'cal-made-elsewhere', slope: 1 }]))[0]).toBe('not-from-lab');   /* one unknown is enough */
+      expect(await source([])).toEqual(['none', 'No calibration (voltages only)']);
     });
 
     it('records the ids of the calibrations in the file', async () => {
@@ -655,7 +727,7 @@ describe.skipIf(!PG_BIN)('API against a real PostgreSQL', () => {
       expect((await upload(u.cookie, file, { summary: { peak: 1, none: null } })).statusCode).toBe(201);
     });
 
-    it('records a real device in devices and updates it on the next upload; a simulator is not recorded', async () => {
+    it('records a real device in devices and updates it on the next upload', async () => {
       const u = await mkSignedIn();
       const id = uname('bench-esp');
       expect((await upload(u.cookie, sessionFile({ recordedFrom: 'real', deviceId: id, sw: 'fw-1.0.0' }))).statusCode).toBe(201);
@@ -668,9 +740,6 @@ describe.skipIf(!PG_BIN)('API against a real PostgreSQL', () => {
       expect(rows[0].last_software).toBe('fw-1.1.0');
       expect(rows[0].last_seen.getTime()).toBeGreaterThanOrEqual(rows[0].first_seen.getTime());
 
-      const simId = uname('sim-device');
-      await upload(u.cookie, sessionFile({ recordedFrom: 'simulated', deviceId: simId }));
-      expect((await db.query('select 1 from devices where device_id = $1', [simId])).rows).toHaveLength(0);
 
       const real = (await call(app, 'GET', '/test-sessions', u.cookie)).json().sessions.find((s: { deviceId: string }) => s.deviceId === id);
       expect(real).toMatchObject({ recordedFrom: 'real', data: 'Measured' });
@@ -710,7 +779,7 @@ describe.skipIf(!PG_BIN)('API against a real PostgreSQL', () => {
 
       const T = 1_700_000_000_000;
       const lines = [JSON.stringify({ v: 1, type: 'hello', device_id: 'aud-dev', device_type: 'esp32', sw_version: '1' }), JSON.stringify({ v: 1, type: 'sample', ch: 'force', raw: 1 })];
-      const file = { format: 'tensile-tester-session', version: 1, savedAt: 'x', appVersion: '0.1.0', recordedFrom: 'simulated', test: 'uniaxial', setup: {}, profile: null, calibrations: [], lines, receivedAt_ms: [T, T + 1] };
+      const file = { format: 'tensile-tester-session', version: 1, savedAt: 'x', appVersion: '0.1.0', recordedFrom: 'real', test: 'uniaxial', setup: {}, profile: null, calibrations: [], lines, receivedAt_ms: [T, T + 1] };
       const own = await login(app, name, patched);
       expect((await call(app, 'POST', '/test-sessions', own, { file })).statusCode).toBe(403);   /* a temporary password must be changed first */
       expect((await call(app, 'POST', '/auth/password', own, { current: patched, next: 'own-chosen-pw-77' })).statusCode).toBe(200);
@@ -726,7 +795,7 @@ describe.skipIf(!PG_BIN)('API against a real PostgreSQL', () => {
       expect(find('profile_created', (e) => e.detail.id === 'prof-audit')).toBeTruthy();
       expect(find('calibration_created', (e) => e.detail.id === 'cal-audit')).toBeTruthy();
       expect(find('calibration_approved', (e) => e.detail.id === 'cal-audit')).toMatchObject({ username: 'root-admin' });
-      expect(find('session_saved', (e) => e.detail.id === saved.json().id)).toMatchObject({ username: name, detail: { samples: 1 } });
+      expect(find('session_saved', (e) => e.detail.id === saved.json().id)).toMatchObject({ username: name, detail: { samples: 1, calibration: 'none' } });
 
       const ids = list.map((e) => BigInt(e.id));
       for (let i = 1; i < ids.length; i++) expect(ids[i - 1]).toBeGreaterThan(ids[i] as bigint);
@@ -738,10 +807,59 @@ describe.skipIf(!PG_BIN)('API against a real PostgreSQL', () => {
     });
   });
 
+  /* ---------- 11. test methods ---------- */
+  describe('test methods', () => {
+    const body = (name: string, extra: object = {}) => ({ name, test: 'uniaxial', fields: { material: 'Skin', L0: '25', width: '5', thickness: '1.2', speed: '30', offsetOn: false }, instructions: 'Clamp gently.', ...extra });
+    it('admins save methods and new revisions; signed-in users list the current revision only', async () => {
+      const r1 = await call(app, 'POST', '/methods', adminCookie, body('Skin strip'));
+      expect(r1.statusCode).toBe(201);
+      const m1 = r1.json().method;
+      expect(m1).toMatchObject({ name: 'Skin strip', revision: 1, test: 'uniaxial', archived: false, createdBy: 'root-admin' });
+      expect(m1.id).toMatch(/^lm-\d+$/);
+      const r2 = await call(app, 'POST', '/methods', adminCookie, body('Skin strip', { fields: { speed: '10' }, replaces: { key: m1.id, revision: 1 } }));
+      expect(r2.statusCode).toBe(201);
+      expect(r2.json().method).toMatchObject({ id: m1.id, revision: 2 });
+      const u = await mkSignedIn();
+      const list = (await call(app, 'GET', '/methods', u.cookie)).json().methods.filter((m: { id: string }) => m.id === m1.id);
+      expect(list).toHaveLength(1);
+      expect(list[0]).toMatchObject({ revision: 2, fields: { speed: '10' } });
+      /* both revisions are kept */
+      expect((await db.query('select revision from test_methods where method_key = $1 order by revision', [m1.id])).rows.map((r) => r.revision)).toEqual([1, 2]);
+    });
+    it('refuses a change made from an old revision, users changing methods, and a specimen ID in a method', async () => {
+      const m = (await call(app, 'POST', '/methods', adminCookie, body('Relax hold'))).json().method;
+      await call(app, 'POST', '/methods', adminCookie, body('Relax hold', { replaces: { key: m.id, revision: 1 } }));
+      const stale = await call(app, 'POST', '/methods', adminCookie, body('Relax hold', { replaces: { key: m.id, revision: 1 } }));
+      expect(stale.statusCode).toBe(409);
+      expect(stale.json().error.code).toBe('changed');
+      const u = await mkSignedIn();
+      expect((await call(app, 'POST', '/methods', u.cookie, body('Mine'))).statusCode).toBe(403);
+      expect((await call(app, 'POST', `/methods/${m.id}/archive`, u.cookie, {})).statusCode).toBe(403);
+      expect((await call(app, 'GET', '/methods', null)).statusCode).toBe(401);
+      for (const fields of [{ specimenId: 'S-1' }, { notes: 'n' }, { colour: 'red' }, { speed: 30 }, { offsetOn: 'yes' }, { material: 'x'.repeat(201) }]) {
+        expect((await call(app, 'POST', '/methods', adminCookie, body('Bad', { fields }))).statusCode, JSON.stringify(fields).slice(0, 40)).toBe(400);
+      }
+      expect((await call(app, 'POST', '/methods', adminCookie, body('Bad', { test: 'fatigue' }))).statusCode).toBe(400);
+      expect((await call(app, 'POST', '/methods', adminCookie, body('Bad', { replaces: { key: 'nope', revision: 1 } }))).statusCode).toBe(400);
+      expect((await call(app, 'POST', '/methods', adminCookie, body('Bad', { replaces: { key: 'lm-999999', revision: 1 } }))).statusCode).toBe(404);
+      expect((await call(app, 'POST', '/methods', adminCookie, body('  '))).statusCode).toBe(400);
+    });
+    it('archiving hides a method without changing earlier rows', async () => {
+      const m = (await call(app, 'POST', '/methods', adminCookie, body('Old method'))).json().method;
+      expect((await call(app, 'POST', `/methods/${m.id}/archive`, adminCookie, {})).statusCode).toBe(200);
+      expect((await call(app, 'POST', `/methods/${m.id}/archive`, adminCookie, {})).statusCode).toBe(404);
+      expect((await call(app, 'GET', '/methods', adminCookie)).json().methods.some((x: { id: string }) => x.id === m.id)).toBe(false);
+      const rows = (await db.query('select revision, archived from test_methods where method_key = $1 order by revision', [m.id])).rows;
+      expect(rows).toEqual([{ revision: 1, archived: false }, { revision: 2, archived: true }]);
+      const again = await call(app, 'POST', '/methods', adminCookie, body('Old method', { replaces: { key: m.id, revision: 2 } }));
+      expect(again.json().error.code).toBe('archived');
+    });
+  });
+
   /* ---------- 10. migrations ---------- */
   describe('migrations', () => {
     it('applied 001_initial.sql the first time, and applies nothing the second time', async () => {
-      expect(migratedFirst).toContain('001_initial.sql');
+      expect(migratedFirst).toEqual(['001_initial.sql', '002_test_methods.sql', '003_calibration_source.sql']);
       expect(await migrate(db)).toEqual([]);
       const rows = (await db.query('select version, applied_at from schema_migrations order by version')).rows;
       expect(rows.map((r) => r.version)).toContain('001_initial.sql');

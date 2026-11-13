@@ -5,8 +5,8 @@
    section is added, renamed, or removed; node scripts/check-site.js tests that every page and part exists. */
 window.SEARCH_INDEX = [
   { t: "Home", p: "index.html", a: "", w: "Page", k: "start about the tester how it works" },
-  { t: "New Test", p: "choose-test.html", a: "", w: "Page", k: "new test start run a test tester app practice load" },
-  { t: "Tester app (preview)", p: "choose-test.html", a: "app-title", w: "New Test", k: "app preview tester app run test open usb lab computer simulation replay learning edition" },
+  { t: "Get the App", p: "choose-test.html", a: "", w: "Page", k: "get the app new test start run a test tester app download windows practice load" },
+  { t: "Tester app", p: "choose-test.html", a: "app-title", w: "Get the App", k: "tester app run test download windows usb lab computer" },
   { t: "Graph views, Autoscale, and Expand graph", p: "practice.html", a: "", w: "Page", k: "graph view force displacement stress strain time autoscale expand zoom reset customize background" },
   { t: "Offset yield (optional)", p: "practice.html", a: "", w: "Page", k: "offset yield optional estimate toe checkbox key results" },
   { t: "Practice test (simulator)", p: "practice.html", a: "", w: "Page", k: "practice simulator simulated learn try demo test uniaxial relaxation no tester" },

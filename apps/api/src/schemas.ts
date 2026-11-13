@@ -28,20 +28,42 @@ export const CalibrationBody = z.strictObject({
   signalPath: SignalPath, note: shortText(2000).default(''),
 }).refine((c) => (c.quantity === 'force') === (c.unit === 'N'), 'Force is calibrated in N and displacement in mm.');
 
+/* The setup fields a method carries (apps/tester/src/setup.ts, Setup without specimenId and notes). Nothing else is accepted,
+   so a method can never carry a specimen's identity, notes, or anything the app does not know. Numbers stay text, as typed. */
+const fieldText = z.string().max(200);
+export const MethodFields = z.strictObject({
+  material: fieldText, temperature: fieldText, environment: fieldText, L0: fieldText, width: fieldText, thickness: fieldText,
+  speed: fieldText, holdMm: fieldText, holdS: fieldText, offsetOn: z.boolean(), offsetPct: fieldText,
+}).partial();
+
+/* A test method shared through the lab server (apps/tester/src/storage/methods.ts). Fields are the setup's text boxes and switches. */
+export const MethodBody = z.strictObject({
+  name: shortText(120).trim().min(1, 'Give the method a name.'),
+  test: z.enum(['uniaxial', 'relaxation']),
+  fields: MethodFields,
+  instructions: shortText(4000).default(''),
+  /** The method key this is a new revision of, and the revision it was made from (so two people changing it at once do not both win). */
+  replaces: z.strictObject({ key: z.string().regex(/^lm-\d+$/), revision: z.number().int().min(1) }).optional(),
+});
+
 /* The session file the app saves (apps/tester/src/controller.ts, SessionFile). */
 export const SessionFileBody = z.object({
   format: z.literal('tensile-tester-session'),
   version: z.literal(1),
   savedAt: z.string().max(40),
   appVersion: z.string().max(40),
+  /* Older files may say "simulated"; the route refuses them with a clear message. */
   recordedFrom: z.enum(['real', 'simulated']),
   test: z.enum(['uniaxial', 'relaxation']),
   setup: z.record(z.string().max(40), z.union([z.string().max(2000), z.boolean()])),
   profile: z.unknown().nullable(),
-  calibrations: z.array(z.object({ id: z.string().max(64) }).passthrough()).max(16),
+  calibrations: z.array(z.object({ id: z.string().max(64), quantity: z.string().max(32).optional(), slope: z.number().optional(), offset: z.number().optional() }).passthrough()).max(16),
   lines: z.array(z.string().max(2048)).min(1).max(2_000_000),
-  receivedAt_ms: z.array(z.number()).max(2_000_000),
-});
+  receivedAt_ms: z.array(z.number().finite()).max(2_000_000),
+}).refine((f) => f.receivedAt_ms.length === f.lines.length, 'receivedAt_ms: there must be one arrival time for each line.');
+
+/* What a device may send (packages/protocol/src/messages.ts). A saved line of any other type was not sent by a device. */
+export const DEVICE_MESSAGE_TYPES = new Set(['hello', 'channels', 'settings', 'sample', 'status', 'fault', 'ack', 'error']);
 export const UploadBody = z.strictObject({
   file: SessionFileBody,
   /** Key results as the app calculated them, for the list. The file itself is the record. */
