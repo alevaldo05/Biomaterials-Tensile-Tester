@@ -16,6 +16,7 @@ One back end serves both front ends. The tester app uses it for signing in, save
 | `calibrations` | Volts at the machine output to N or mm, with the whole signal path it was made with. Real equipment only. Draft → approved → retired; never overwritten |
 | `devices` | Acquisition devices that identified themselves in saved real tests |
 | `test_sessions` | One row per saved test. Its facts (device, sample count, calibrations) are read from the session file by the server |
+| `test_methods` | Shared test methods (saved setups). Every change, archiving included, adds a row with the next revision; rows are never changed (migration `002_test_methods.sql`) |
 | `session_files` | The session file itself (every protocol line as received), compressed. It can be replayed in the app |
 | `audit_log` | Sign-ins, failed sign-ins, people and calibration changes, saved tests. No passwords |
 
@@ -48,6 +49,7 @@ All under `/api/v1`, JSON. Changes (POST, PATCH) must carry the header `x-tensil
 | `GET /users`, `POST /users`, `PATCH /users/:id` | admin | People |
 | `GET /device-profiles` · `POST /device-profiles` | signed in · admin | Profiles |
 | `GET /calibrations` · `POST /calibrations`, `POST /calibrations/:id/approve`, `POST /calibrations/:id/retire` | signed in · admin | Calibrations |
+| `GET /methods` · `POST /methods`, `POST /methods/:key/archive` | signed in · admin | Shared test methods (current revisions only). A change names the revision it was made from and is refused (409) if someone changed the method since |
 | `GET /setup-files/:profileId` | signed in | A profile with its approved calibrations, in the app's setup-file shape |
 | `POST /test-sessions`, `GET /test-sessions`, `GET /test-sessions/:id`, `GET /test-sessions/:id/file` | signed in | Save a test, list (own; admins all, `?owner=`), details, the session file. Someone else's test answers "not found" |
 | `GET /audit` | admin | The last 200 entries |

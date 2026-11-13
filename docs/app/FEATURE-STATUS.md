@@ -9,7 +9,7 @@ Updated with each stage. "Checked" means tried in Chrome's engine (Chromium on L
 - Real acquisition only. The simulator is used only by the automated tests, as a stand-in device; a test checks that the app's source does not import it, and the built app does not contain it.
 - Recordings kept on this computer (the browser's IndexedDB) while recording, committed about once a second; an interrupted recording is offered for recovery on Home. Checked in the automated tests (commits, a failed write, recovery) with an in-memory store; the IndexedDB store itself has not been tried with a real recording.
 - Load test: session files (rebuilt from their lines, sending nothing to any device) and CSV files; files marked simulated or sample are refused; imports are labeled as unverified. Print report (Draft, light colors on paper) was checked with Chromium's print preview only.
-- Test methods: saved setups with revisions, kept on this computer (not yet shared through the lab server).
+- Test methods: saved setups with revisions, kept on this computer, and shared through the lab server when signed in (admins save, change, and archive; everyone signed in can start a test from one). Checked against a real PostgreSQL 16 in the API tests and in the browser with the API running.
 - Recording: every sample with counts, device time, computer time, settings, volts, and the calibrated value; gaps, faults, restarts, and disconnects are written into the session.
 - Key results from the shared calculations (the same numbers the website gives for the same data).
 - Save data: test CSV (opens on the website's Load Test page), Excel (.xlsx, checked with openpyxl, not Microsoft Excel), graph PNG and SVG, every raw sample as CSV, and a session file for replay.

@@ -31,7 +31,7 @@ button.primary:hover:not(:disabled) { background: var(--accent-hover); }
 button.quiet, button.link { background: none; border-color: transparent; padding: 4px 8px; min-height: 0; }
 button.link { color: var(--link); text-decoration: underline; padding: 0; }
 :focus-visible { outline: 3px solid var(--focus); outline-offset: 2px; }
-input[type="text"], select, input[type="file"] { width: 100%; background: var(--panel); border: 1px solid var(--line); border-radius: 6px; padding: 7px 9px; min-height: 36px; }
+input[type="text"], select, input[type="file"], textarea { width: 100%; background: var(--panel); border: 1px solid var(--line); border-radius: 6px; padding: 7px 9px; min-height: 36px; }
 .hint { color: var(--muted); font-size: 0.87rem; }
 .error { color: var(--danger); font-size: 0.9rem; }
 .num, .strip-value { font-variant-numeric: tabular-nums; }
