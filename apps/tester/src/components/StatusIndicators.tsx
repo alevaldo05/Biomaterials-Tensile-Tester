@@ -19,7 +19,7 @@ export function indicators(c: TestController, account: Account | null, now = Dat
   const local: Ind = { key: 'local', label: 'Local storage', level: ls === 'error' ? 'bad' : ls === 'saved' ? 'ok' : ls === 'off' ? 'warn' : 'unknown',
     value: ls === 'saved' ? 'Saved locally' : ls === 'saving' ? 'Saving' : ls === 'error' ? 'Save error' : ls === 'off' ? 'Not available' : 'No open session' };
   const lab: Ind = { key: 'lab', label: 'Lab server', level: !account || account.reachable === false ? 'unknown' : account.user ? 'ok' : 'unknown',
-    value: !account || account.reachable === false ? 'Not connected' : account.reachable === null ? 'Checking' : account.user ? 'Signed in' : 'Not signed in' };
+    value: account?.notSetUp ? 'Not set up' : !account || account.reachable === false ? 'Not connected' : account.reachable === null ? 'Checking' : account.user ? 'Signed in' : 'Not signed in' };
   return [device, data, calibration, recording, local, lab];
 }
 

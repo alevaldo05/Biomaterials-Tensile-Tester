@@ -100,8 +100,9 @@ export const HELP: Record<string, HelpTopic> = {
   },
   settings: {
     title: 'Settings',
-    what: 'Display choices and what is stored on this computer.',
-    next: ['Change the theme.', 'Remove recordings you have already downloaded or saved to the lab server.'],
+    what: 'Display choices, what is stored on this computer, and (in the Windows app) the lab server address.',
+    next: ['Change the theme.', 'Remove recordings you have already downloaded or saved to the lab server.', 'In the Windows app: type the lab server address (for example http://lab-pc:8080) and save it, then sign in from the top of the screen.'],
+    problems: [['Lab server: Not set up', 'No address has been saved in this Windows app. Ask the lab for the address.'], ['Lab server: Not connected', 'The address is saved but the lab server does not answer from this computer. Check the address and the network; recording still works.']],
   },
   admin: {
     title: 'Admin',

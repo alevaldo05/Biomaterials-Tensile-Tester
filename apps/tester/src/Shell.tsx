@@ -88,10 +88,15 @@ export function Shell({ controller: c, serialAvailable, journal, methods }: Shel
   const [helpSub, setHelpSub] = useState('test');
   const onHelpSub = useCallback((s: string) => setHelpSub(s), []);
 
-  const check = () => { api.health().then(() => { setReachable(true); return api.me().then(setUser, () => setUser(null)); }, () => setReachable(false)); };
+  const [notSetUp, setNotSetUp] = useState(false);
+  const check = () => {
+    setReachable(null);
+    api.health().then(() => { setReachable(true); setNotSetUp(false); return api.me().then(setUser, () => setUser(null)); },
+      (e: unknown) => { setReachable(false); setUser(null); setNotSetUp(e instanceof ApiError && e.code === 'not_set_up'); });
+  };
   useEffect(check, []);
   const effectiveRole = user ? (user.role === 'admin' && !viewAsUser ? 'admin' : 'user') : null;
-  const account: Account = { api, reachable, user, viewAsUser, effectiveRole };
+  const account: Account = { api, reachable, user, viewAsUser, effectiveRole, notSetUp };
   const recording = c.phase === 'recording';
   const labMethods = useMemo(() => (user && !user.mustChangePassword ? new LabMethods(api) : null), [user, api]);
 
@@ -165,7 +170,7 @@ export function Shell({ controller: c, serialAvailable, journal, methods }: Shel
       {page === 'device' ? <Device controller={c} account={account} serialAvailable={serialAvailable} /> : null}
       {page === 'history' && user ? <main className="page" id="main-content"><History account={account} onReplay={(text) => void open('lab-test.session.json', text)} /></main> : null}
       {page === 'help' ? <HelpPage /> : null}
-      {page === 'settings' ? <Settings theme={theme} toggleTheme={toggleTheme} journal={journal} download={(m) => void downloadLocal(m)} /> : null}
+      {page === 'settings' ? <Settings theme={theme} toggleTheme={toggleTheme} journal={journal} download={(m) => void downloadLocal(m)} recording={recording} labChanged={() => { setViewAsUser(false); check(); }} reachable={reachable} /> : null}
       {page === 'admin' && effectiveRole === 'admin' ? <main className="page" id="main-content"><Admin account={account} controller={c} /></main> : null}
 
       <HelpButton topic={topic} onOpenHelp={() => setPage('help')} />
