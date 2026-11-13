@@ -103,7 +103,7 @@ export function Compare({ theme, recent }: { theme: string; recent: RecentRow[] 
           {copied ? <span className="hint" role="status">{copied}</span> : null}
         </div>
         {summary?.warnings.length ? <ul className="notice compare-warnings" aria-label="Warnings">{summary.warnings.map((w) => <li key={w}>{w}</li>)}</ul> : null}
-        <div className="graph-card">
+        <div className="graph-card graph-card-plain">
           <Graph x={[]} y={[]} {...axes} palette={report.printing || theme !== 'dark' ? LIGHT_GRAPH : DARK_GRAPH} series={series}
             sourceTag={TEST_NAME[test] + ' · ' + entries.length + ' test' + (entries.length === 1 ? '' : 's') + ' opened in the app'} emptyText="No data in these tests." onSvg={(el) => { svg.current = el; }} />
         </div>

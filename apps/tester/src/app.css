@@ -179,7 +179,7 @@ input[type="password"] { width: 100%; background: var(--panel); border: 1px soli
 .slot { margin: 0; border: 1px dashed var(--line); border-radius: var(--radius); padding: 10px 14px; color: var(--muted); font-size: 0.9rem; }
 .recover { border: 1px solid var(--warn); border-left-width: 4px; border-radius: var(--radius); background: var(--panel); padding: 12px 14px; display: grid; gap: 6px; }
 .recover p { margin: 0; }
-.tablebox { overflow-x: auto; border: 1px solid var(--line); border-radius: var(--radius); background: var(--panel); }
+.tablebox { position: relative; overflow-x: auto; border: 1px solid var(--line); border-radius: var(--radius); background: var(--panel); }
 .list-table { width: 100%; border-collapse: collapse; font-size: 0.9rem; }
 .list-table th, .list-table td { text-align: left; padding: 9px 12px; border-top: 1px solid var(--line); white-space: nowrap; }
 .list-table thead th { border-top: 0; font-size: 0.75rem; letter-spacing: 0.05em; text-transform: uppercase; color: var(--muted); }
@@ -238,7 +238,10 @@ input[type="password"] { width: 100%; background: var(--panel); border: 1px soli
 .seg button[aria-pressed="true"] { background: var(--accent); color: var(--accent-ink); font-weight: 600; }
 .compare-add { gap: 10px; }
 .compare-warnings { margin: 0; padding-left: 1.6rem; border-left: 3px solid var(--warn); display: grid; gap: 4px; }
-.compare-table th[scope="row"] { font-weight: 600; white-space: normal; min-width: 11rem; }
+.compare-table th[scope="row"] { font-weight: 600; white-space: normal; min-width: 10rem; }
+.compare-table thead th { white-space: normal; vertical-align: bottom; min-width: 6.5rem; max-width: 9rem; text-transform: none; letter-spacing: 0; font-size: 0.78rem; }
+.graph-card-plain .graph-tools { margin-top: 0; }
+.page { padding-bottom: 88px; }
 .compare-table td.num { font-variant-numeric: tabular-nums; }
 .compare-stat th, .compare-stat td { background: var(--surface); }
 .compare-key { display: inline-block; vertical-align: middle; margin-right: 6px; }
@@ -250,6 +253,9 @@ input[type="password"] { width: 100%; background: var(--panel); border: 1px soli
   body { background: #fff; color: #000; font-size: 11pt; }
   .top, .statusbar, .view-as, .help-button, .help-panel, .toolbar, .graph-tools, .views, .defs-switch, .graph-readout, main > .row button, .setup, .scrim, .work > .status, .notice-bad, .seg, .compare-add, .compare-table td:last-child, .compare-table th:last-child { display: none !important; }
   .body { display: block; }
+  .tablebox { overflow: visible; }
+  .compare-table { font-size: 8.5pt; }
+  .compare-table th, .compare-table td { white-space: normal; padding: 4px 5px; min-width: 0; max-width: none; }
   .work { padding: 0; }
   .print-only { display: block; }
   .print-head p { margin: 0 0 4px; }
