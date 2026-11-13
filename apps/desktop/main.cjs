@@ -5,13 +5,16 @@
    but a fixed label. Navigation away is blocked; links to the public website open in the computer's browser.
    Only USB serial is allowed, and the person chooses the port each time. The app sends no machine commands.
    The lab server (optional, set in Settings) is a data connection only: requests to /api/v1/ are sent on to it by
-   lab-proxy.cjs, which keeps the sign-in here and never gives it to the screens. */
+   lab-proxy.cjs, which keeps the sign-in here and never gives it to the screens.
+   Recordings are kept as files in the app's data folder ("recordings") by journal-files.cjs, which checks
+   everything the screens send. */
 const { app, BrowserWindow, dialog, ipcMain, Menu, net, protocol, session, shell } = require('electron');
 const fs = require('node:fs');
 const path = require('node:path');
 const { pathToFileURL } = require('node:url');
 const { uiFile } = require('./ui-files.cjs');
 const { checkLabUrl, createLabProxy, API_PREFIX } = require('./lab-proxy.cjs');
+const { createJournalFiles } = require('./journal-files.cjs');
 
 const SCHEME = 'app', ORIGIN = 'app://tester';
 const UI_DIR = path.join(__dirname, 'ui');
@@ -96,9 +99,18 @@ app.on('web-contents-created', (_e, wc) => {
   });
 });
 
-/* The bridge's only two calls: read and set the lab server address. Only the app's own screens may use them. */
+/* The bridge: read and set the lab server address, and the recording journal. Only the app's own screens may use them;
+   every argument is checked again in lab-proxy.cjs and journal-files.cjs. */
+const JOURNAL_CALLS = ['begin', 'append', 'finish', 'list', 'lines', 'remove', 'estimate'];
 function bridge() {
   const own = (e) => fromApp(e.senderFrame && e.senderFrame.url);
+  const journal = createJournalFiles(path.join(app.getPath('userData'), 'recordings'));
+  for (const name of JOURNAL_CALLS) {
+    ipcMain.handle('journal:' + name, async (e, ...args) => {
+      if (!own(e)) throw new Error('Not allowed.');
+      return journal[name](...args.slice(0, 3));
+    });
+  }
   ipcMain.handle('lab-server:get', (e) => (own(e) ? labUrl : ''));
   ipcMain.handle('lab-server:set', (e, input) => {
     if (!own(e)) return { error: 'Not allowed.' };

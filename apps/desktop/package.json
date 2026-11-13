@@ -25,6 +25,7 @@
       "preload.cjs",
       "ui-files.cjs",
       "lab-proxy.cjs",
+      "journal-files.cjs",
       "ui/**/*",
       "package.json"
     ],

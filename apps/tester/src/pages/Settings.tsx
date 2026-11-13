@@ -46,6 +46,7 @@ export function Settings({ theme, toggleTheme, journal, download, recording, lab
       <section className="card-plain" aria-labelledby="store-title">
         <h2 id="store-title">Recordings on this computer</h2>
         {!journal ? <p className="hint">This browser offers no storage, so recordings are kept in memory only. Download each test when it ends.</p> : (<>
+          {desktopBridge()?.journal ? <p className="hint">Kept as files in this Windows app's data folder (recordings).</p> : null}
           <p className="hint">{items.length} recording{items.length === 1 ? '' : 's'}{space ? ' · ' + mb(space.usage) + ' used of about ' + mb(space.quota) + ' available to the app' : ''}. Remove a recording only after downloading it or saving it to the lab server.</p>
           {items.length ? (
             <div className="tablebox"><table className="list-table">
