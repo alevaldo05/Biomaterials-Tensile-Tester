@@ -54,7 +54,7 @@ pio run -e esp32dev
 pio run -e esp32dev -t upload
 ```
 
-The first build downloads the ESP32 toolchain from the PlatformIO registry. (In the cloud session used to write this, that download was blocked, so the ESP32 build itself has not been run yet.)
+The first build downloads the ESP32 toolchain from the PlatformIO registry. (In the cloud session used to write this, that download was blocked, so the ESP32 build was not run there. The `firmware-build` job in `.github/workflows/app.yml` compiles it on GitHub; that checks only that it builds, not that it works on a board.)
 
 To build and test the firmware's portable code on a computer, with a pretend ADS1115 (needs a C++ compiler):
 
@@ -76,6 +76,37 @@ A sample line is about 110 characters. At the default 128 conversions per second
 4. **Calibration:** load the setup file (device profile and calibration records). A calibration is used only if the whole signal path matches the one it was made with (device type, ADC, range, input, conditioning circuit). After any change to the hardware or the signal path, the calibration has to be reviewed; it is never carried over because a new board uses the same channel names.
 5. Without calibration you can still record voltages only (tick "Record voltages only"); such a session never shows force, stress, or strain.
 6. Enter the specimen and dimensions, press **Start recording**, then start the test on the tester's own controller.
+
+## First connection: bench record
+
+Use this sheet the first time a board is connected to the app. **The tester stays disconnected.** Use a bench voltage source (a lab supply or a battery with a divider that someone has reviewed) kept inside the ADS1115's allowed input range for your supply, and read it with a reference meter. This sheet does not say what voltages, pins, or circuits are right; those come from the reviewed interface design. It records what happened, so nothing is assumed.
+
+Fill in the top and each row; leave a row blank if it was not tried.
+
+| Item | Entry |
+|---|---|
+| Date, person | |
+| Board, ADS1115 module, firmware commit | |
+| Windows and app versions (`Help` / installer name) | |
+| Bench source and meter used (names, not settings from the tester) | |
+| Who reviewed the wiring before power-up, and when | |
+
+| # | Check | Result / notes |
+|---|---|---|
+| 1 | Board powers up; the app lists its USB serial port; Connect works | |
+| 2 | The device identifies itself (`hello`): type, protocol version, boot id shown in the app | |
+| 3 | Channels and settings shown match the firmware's `board_config.h` | |
+| 4 | Status bar shows Device connected, Data arriving; sample rate seen vs. requested | |
+| 5 | With the source at a fixed, metered value: the volts shown vs. the meter reading (write both numbers) | |
+| 6 | Two or three other metered values inside the range (write each pair); note any difference that grows with the value | |
+| 7 | Recording 1 minute: sample count, gaps or repeated numbers reported by the app | |
+| 8 | Unplug the USB cable during a recording: what the app shows; what is saved on this computer; what Recover offers | |
+| 9 | Plug back in and connect again: the app reconnects only after you press Connect; boot id changes | |
+| 10 | Software baseline taken: the app says it is not a calibration or a tare | |
+| 11 | Calibration check with known weights is **not** done here (no force sensor on the bench) | |
+| 12 | Read force: with no calibration the app shows volts only | |
+
+Afterwards: copy anything that failed into `docs/app/FEATURE-STATUS.md`, and keep this sheet with the lab's records. Connecting the tester is a separate step that needs the verified pinout and a reviewed circuit (see above); an advisor should review before that step.
 
 ## Problems and what they mean
 

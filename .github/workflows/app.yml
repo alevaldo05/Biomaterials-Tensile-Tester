@@ -20,6 +20,24 @@ jobs:
       - name: Type checks, all tests (API on PostgreSQL, firmware code with a C++ compiler), website checks
         run: docker build -f deploy/test/Dockerfile .
 
+  firmware-build:
+    # Compile only: proves src/main.cpp builds and links for the ESP32. Nothing is flashed or published,
+    # and it says nothing about the board, the wiring, or the tester's signal. The platform version is not
+    # pinned yet: the step below prints what was used, and the pin is added from a run that passed.
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
+      - name: Install the PlatformIO command line (pinned)
+        run: |
+          python3 -m venv "$RUNNER_TEMP/pio"
+          "$RUNNER_TEMP/pio/bin/pip" install --quiet platformio==6.1.19
+          echo "$RUNNER_TEMP/pio/bin" >> "$GITHUB_PATH"
+      - name: Compile the firmware for the ESP32 (no upload)
+        working-directory: firmware/esp32-ads1115
+        run: |
+          pio run -e esp32dev
+          pio pkg list -e esp32dev
+
   containers:
     runs-on: ubuntu-24.04
     needs: tests

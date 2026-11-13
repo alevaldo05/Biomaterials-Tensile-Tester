@@ -50,6 +50,24 @@ function detectTest(text: string): TestType {
   return /^﻿?#\s*Test\s*[,;\t]\s*Stress relaxation/im.test(text) || /^﻿?#\s*Test\s*[,;\t].*relax/im.test(text) ? 'relaxation' : 'uniaxial';
 }
 
+/** True when a "# Source" note line of a CSV says the data is simulated or sample data. It reads the line the way the
+ *  shared CSV reader does (optional quotes, comma, semicolon, or tab), so a differently written note cannot slip past. */
+export function markedNotRecorded(text: string): boolean {
+  for (const raw of text.split(/\r?\n/)) {
+    const t = raw.trim();
+    if (!/^["']?#/.test(t)) continue;
+    const body = t.replace(/^["']?#\s*/, '');
+    /* "Source: simulated" is not read as a note by the shared reader, but it is still refused here */
+    const colon = body.match(/^"?source"?\s*[:=]\s*(.*)$/i);
+    const m = colon ? ['', 'source', colon[1] as string] : body.match(/^([^,;\t]*)[,;\t](.*)$/);
+    if (!m) continue;
+    if ((m[1] as string).replace(/"/g, '').trim().toLowerCase().indexOf('source') !== 0) continue;
+    const val = (m[2] as string).replace(/[,;\t]+$/, '').trim().replace(/^"(.*)"$/, '$1').replace(/""/g, '"');
+    if (/simul/i.test(val) || /^sample/i.test(val)) return true;
+  }
+  return false;
+}
+
 export async function openTestFile(name: string, text: string, testHint?: TestType): Promise<LoadedTest> {
   const trimmed = text.replace(/^﻿/, '').trimStart();
   if (trimmed.startsWith('{')) {
@@ -59,9 +77,10 @@ export async function openTestFile(name: string, text: string, testHint?: TestTy
     return { name, kind: 'session', test: file.test, record: r.record, problem: r.problem, setup: { ...EMPTY_SETUP, ...file.setup }, file, session: r.session,
       provenance: 'Session file saved by this app (' + file.appVersion + '). Rebuilt from the lines the device sent; its origin is not independently verified.', original: text };
   }
-  if (/^#\s*Source\s*[,;\t]\s*(simulated|sample)/im.test(trimmed)) throw new Error(REJECT_SIMULATED);
+  if (markedNotRecorded(trimmed)) throw new Error(REJECT_SIMULATED);
   const test = testHint ?? detectTest(text);
   const rec = recordFromCsv(name, text, test, { defaults: () => ({ specimen: { L0_mm: 0, width_mm: 0, thickness_mm: 0 } }) });
+  if (rec.simulated) throw new Error(REJECT_SIMULATED);
   if (!rec.direct && !rec.dimsFromFile) {
     throw new Error('This CSV file has no specimen dimensions, so stress and strain cannot be calculated. Files saved by this app or the website’s test pages include them.');
   }
