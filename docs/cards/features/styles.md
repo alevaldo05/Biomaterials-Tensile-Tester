@@ -22,4 +22,4 @@ Standard, Lab instrument, Clinical clean, Engineering drawing, Academic report.
 - Display settings
 
 ## How to check
-- Open a test page in each style
+- Open the practice page in each style

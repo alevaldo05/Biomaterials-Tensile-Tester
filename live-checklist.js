@@ -1,4 +1,4 @@
-/* The optional pre-test checklist pop-up (window.LiveChecklist), shown before Start when Settings > Pre-test checklist is On.
+/* The optional pre-test checklist pop-up (window.LiveChecklist), shown before Start on the practice page when Settings > Pre-test checklist is On.
    The items come from data/checklist.js. It is a reminder, not a safety certification. Built on the shared site pop-up (ui.js).
    Pure move from live.js; live.js creates it with LiveChecklist.create($, esc). */
 (function () {

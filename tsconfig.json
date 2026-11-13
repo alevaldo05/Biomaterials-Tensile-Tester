@@ -1,0 +1,17 @@
+{
+  "extends": "./tsconfig.base.json",
+  "include": [
+    "packages/core/src",
+    "packages/core/test",
+    "packages/protocol/src",
+    "packages/protocol/test",
+    "packages/acquisition/src",
+    "packages/acquisition/test",
+    "packages/machine-control/src",
+    "packages/machine-control/test",
+    "packages/recording/src",
+    "packages/recording/test",
+    "apps/api/src",
+    "apps/api/test"
+  ]
+}

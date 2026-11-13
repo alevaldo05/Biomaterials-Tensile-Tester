@@ -36,7 +36,7 @@ The icon files are not stamped with the commit number, and browsers keep a site'
 
 ## What is published
 
-Everything except the Git files, the workflow, `scripts/`, `docs/`, and the `.md` documents. The copy is made by `scripts/build-site.sh`.
+Everything except the Git files, the workflow, `scripts/`, `docs/`, the `.md` documents, and the app workspace folders. The copy is made by `scripts/build-site.sh`. The workflow also builds the tester app's learning edition (simulation and replay only, no USB, no sign-in) and publishes it at `app/`; if that build fails, nothing is published.
 
 ## Checks before publishing
 
@@ -89,5 +89,5 @@ listed in [REPO-SETTINGS.md](REPO-SETTINGS.md).
 
 ## Notes
 
-- Pages serves the site over https, so USB (Web Serial) works in Chrome. The hardware connection is still untested.
+- Pages serves the site over https. The website itself has no USB (Web Serial) connection; the tester's USB connection is in the tester app, and the hardware connection is still untested.
 - Test data stays in the visitor's browser tab and is never uploaded.

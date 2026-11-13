@@ -20,11 +20,11 @@ window.SITE_TEXT.learn = {
       blocks: [ { pretest: true, printButton: "Print blank run sheet" } ]
     },
 
-    /* The simulator lives only on the practice page; the real New Test pages connect to the tester over USB. */
+    /* The simulator lives only on the practice page; this website has no USB connection (real tests are run in the tester app). */
     "practice-title": {
       heading: "Practice with a simulated test",
       blocks: [
-        { p: "The real **New Test** pages connect only to the tester over USB. To learn the screen without a tester, use the [practice page](practice.html). It has a labeled simulator, and everything it shows is *Simulated data, not measured*. Nothing on it connects to a tester." }
+        { p: "This website does not connect to the tester: real tests are run in the tester app (see [New Test](choose-test.html)). To learn the screen without a tester, use the [practice page](practice.html). It has a labeled simulator, and everything it shows is *Simulated data, not measured*. Nothing on it connects to a tester." }
       ]
     },
 

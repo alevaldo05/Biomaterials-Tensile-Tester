@@ -87,7 +87,7 @@
       </div>
       <details class="csv-help">
         <summary>CSV format</summary>
-        <p>Files downloaded from a New Test page open directly, with their dimensions and test details. Other files work too: the first row is a header, and columns are matched by keyword (any case). Put units in the name, for example <code>force_N</code>, <code>displacement_mm</code>, <code>stress_MPa</code>, <code>time_s</code>, <code>strain_%</code>.</p>
+        <p>Files downloaded from the practice page, or saved by the tester app, open directly, with their dimensions and test details. Other files work too: the first row is a header, and columns are matched by keyword (any case). Put units in the name, for example <code>force_N</code>, <code>displacement_mm</code>, <code>stress_MPa</code>, <code>time_s</code>, <code>strain_%</code>.</p>
         <p><strong>Uniaxial tension:</strong> <code>displacement</code> plus <code>force</code>, or <code>strain</code> plus <code>stress</code>.</p>
         <p><strong>Stress relaxation:</strong> <code>time</code> plus <code>force</code> or <code>stress</code> (optionally a <code>displacement</code> or <code>strain</code> column for the hold). Time is shifted to start at 0.</p>
         <p>Comma, semicolon, or tab separated; at least 10 rows; up to 20 MB. Lines starting with <code>#</code> are notes. Without saved dimensions, force and displacement are converted with example dimensions that you can edit below the graph.</p>

@@ -3,15 +3,15 @@
 Feature card. Update it in the same change as the feature.
 
 ## Purpose
-Setup, connection, Start/STOP/Tare, recording, auto-stop, and CSV on the two test pages.
+Setup, connection to the simulator, Start/STOP/Tare, recording, auto-stop, and CSV on the practice page. (The website's own live test pages and USB connection were retired; real tests are run in the tester app.)
 
 ## Files
 - `live.js` (the page: setup form, review, guided steps, run control, readings)
-- `live-links.js` (the USB link; the simulator is in `live-sim.js` and only the practice page loads it), `live-checklist.js` (pre-test checklist pop-up), `live-csv.js` (CSV text); load before `live.js`
-- `data/device.js`
+- `live-links.js` (makes the simulator link; the simulator is in `live-sim.js`), `live-checklist.js` (pre-test checklist pop-up), `live-csv.js` (CSV text); load before `live.js`
+- `data/device.js` (the simulator's line format; not the tester app's protocol)
 - `data/checklist.js`
 - `ui.js` (the checklist pop-up is the shared Site pop-up; see shared-popups card)
-- Test pages `test-uniaxial-tension.html`, `test-stress-relaxation.html`
+- Page `practice.html` (the only page that loads `live.js`)
 - CSS: `css/live.css` (Live test and Load Test pages), `css/test-setup.css` (test setup in steps), `css/checklist.css` (pre-test checklist)
 
 ## What the user sees
@@ -22,18 +22,18 @@ Setup, connection, Start/STOP/Tare, recording, auto-stop, and CSV on the two tes
 ## Behavior to keep
 - The setup is shown one step at a time by default (see [guided-steps](guided-steps.md)); every id listed here still exists
 - Setup labels (Gauge length, Area, Crosshead speed, Hold displacement, Hold strain) show a definition tip (see [hover-definitions](hover-definitions.md))
-- Start is unavailable until connected (and until the optional checklist is ticked)
-- Esc sends STOP while connected; Esc in the checklist pop-up and in the search does not
+- Start is unavailable until the simulator is used (and until the optional checklist is ticked)
+- Esc sends STOP while connected (to the simulator); Esc in the checklist pop-up and in the search does not
 - Leave warning while recording or with undownloaded data: the site pop-up for links inside the site (see [leave-popup](leave-popup.md)) and `beforeunload` for closing the tab, reload, and Back
-- Material is an optional typed name; crosshead speed is required; Temperature and Environment optional
+- Material is required (a typed name or a ready choice); crosshead speed is required; Temperature and Environment optional
 
 ## Labels that must stay
 - "Not an emergency stop."
-- Safety line on the test pages
+- Safety line on the practice page
 - "Simulated data, not measured"
 
 ## Depends on
-- Simulator, USB link, graph engine, downloads, print report
+- Simulator, graph engine, downloads, print report (the [usb-link](usb-link.md) card is retired)
 
 ## How to check
-- On the practice page, run the simulator from Connect to CSV download; STOP works; Esc sends STOP. The real test pages have no simulator
+- On the practice page, run the simulator from Use simulator to CSV download for both kinds of test; STOP works; Esc sends STOP

@@ -1,0 +1,11 @@
+# Kept out of every image build: local installs, build output, and Git data.
+.git
+node_modules
+**/node_modules
+**/dist
+**/dist-learning
+_site
+firmware/**/.pio
+firmware/**/.host-build
+deploy/.env
+deploy/backups

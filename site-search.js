@@ -1,7 +1,7 @@
 /* Site search: a magnifying-glass button in the header, to the right of Settings. Pressing it opens a small box;
    typing lists the pages and sections that match (data/search-index.js); choosing one goes there.
    Up and Down move through the results, Enter opens the highlighted one, Esc closes the box and returns to the button.
-   Esc here closes the search only; it does not send STOP on a test page. Nothing is saved. */
+   Esc here closes the search only; it does not send STOP on the practice page. Nothing is saved. */
 (function () {
   'use strict';
   var nav = document.querySelector('nav[aria-label="Main"]'); /* after layouts.js, so the Sidebar layout's own menu is found too */

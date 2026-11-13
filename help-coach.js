@@ -8,7 +8,8 @@
      HelpCoach.report(problemKey)                 something went wrong (keys are in data/help-tips.js). The hint shows the matching
                                                   Troubleshooting row from data/text/help.js.
      HelpCoach.resolve(problemKey)                the problem went away: its hint closes (and may show again if it returns).
-   Hints are one at a time, small, closable with their X, never take keyboard focus, and never use Esc (Esc is STOP on test pages).
+   Used by the practice page, Load Test, and Calibration (the website has no real test pages and no USB, so there are no hints for USB problems).
+   Hints are one at a time, small, closable with their X, never take keyboard focus, and never use Esc (Esc is STOP on the practice page).
    A hint closed with X stays closed for that problem until the page is reloaded. */
 (function () {
   'use strict';

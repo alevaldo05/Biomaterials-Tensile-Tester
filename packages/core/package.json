@@ -1,0 +1,9 @@
+{
+  "name": "@tensile/core",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "Calculations, CSV and Excel files, and calibration maths shared by the tester app and the website.",
+  "main": "src/index.ts",
+  "types": "src/index.ts"
+}

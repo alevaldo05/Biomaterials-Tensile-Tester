@@ -145,10 +145,11 @@
       '<p><span class="tag">' + esc(status(m)) + '</span>' + (m.low ? ' <span class="muted small">The literature spread is very wide.</span>' : '') + '</p>' +
       '<dl class="mat-dl">' + rows.map(function (r) { return '<dt>' + r[0] + '</dt><dd>' + esc(r[1]) + '</dd>'; }).join('') + '</dl>' +
       '<h3 class="mat-src-h">Source and review</h3><dl class="mat-dl mat-src">' + srcRows.map(function (r) { return '<dt>' + r[0] + '</dt><dd>' + esc(r[1]) + '</dd>'; }).join('') + '</dl>' +
-      '<p class="mat-links"><a class="btn" href="test-uniaxial-tension.html#' + m.id + '">Start a test with this material</a>' +
+      '<p class="mat-links"><a class="btn" href="choose-test.html">Run a test in the tester app</a>' +
+      '<a href="practice.html">Practice with a simulated test</a>' +
       '<a href="protocol-uniaxial-tension.html">Open its protocol</a>' +
       '<button type="button" class="linkbtn" id="mat-compare-btn">Compare with another material</button></p>' +
-      '<p class="muted small">Starting a test uses your tester, connected over USB. To try the screen first, use the practice page (labeled simulator). The hardware connection is untested.</p>';
+      '<p class="muted small">Real tests are run in the tester app (see New Test). The practice page uses a labeled simulator and does not use this material\u2019s values. The hardware connection is untested.</p>';
     document.getElementById('mat-compare-btn').addEventListener('click', function () {
       if (compare.indexOf(sel) < 0) { compare.push(sel); if (compare.length > 2) compare.shift(); }
       renderTables(); selectTab('properties'); setHash();
