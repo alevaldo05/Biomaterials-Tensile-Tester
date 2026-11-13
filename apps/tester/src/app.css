@@ -264,3 +264,17 @@ input[type="password"] { width: 100%; background: var(--panel); border: 1px soli
   .panel, .graph-card { break-inside: avoid; border-color: #999; }
   .panel summary { list-style: none; }
 }
+
+/* Calibration check (Device screen) */
+.check-section, .check-screen { min-width: 0; }
+.check-section .tablebox { max-width: 100%; }
+.check-settings { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(12rem, 100%), 1fr)); gap: var(--gap); }
+.check-table input[type="text"] { min-width: 6rem; width: 7rem; }
+.check-table td, .check-table th[scope="row"] { vertical-align: middle; }
+.check-actions { flex-wrap: wrap; }
+@media print {
+  body.printing-check .page > :not(.check-section) { display: none !important; }
+  body.printing-check .check-section > :not(.print-only):not(h2):not(h3):not(.notice):not(.hint) { display: none; }
+  body.printing-check .check-screen { display: none !important; }
+  body.printing-check .check-section .check-actions, body.printing-check .check-section .print-only + .hint { display: none !important; }
+}

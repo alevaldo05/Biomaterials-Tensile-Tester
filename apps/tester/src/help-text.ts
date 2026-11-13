@@ -96,7 +96,8 @@ export const HELP: Record<string, HelpTopic> = {
   device: {
     title: 'Device and calibration',
     what: 'The connection to the acquisition device and the calibration in use, with a summary you can copy when asking for help.',
-    next: ['Connect, then load the setup for this tester.', 'Copy the diagnostic summary if something is wrong.'],
+    next: ['Connect, then load the setup for this tester.', 'Check the calibration with known weights: type each mass and the force shown (or press Read force), then download or print the check.', 'Copy the diagnostic summary if something is wrong.'],
+    terms: [['Calibration check', 'Compares the force the app shows with the force expected from known weights (F = m g). It changes no reading and no calibration, saves nothing, and makes no claim of traceability. A software baseline or a tare is not a calibration.']],
     assistance: TECH,
   },
   settings: {
