@@ -6,7 +6,7 @@ import { resultsFor } from '../results';
 
 type ViewId = 'stress' | 'force-disp' | 'force-time' | 'disp-time';
 
-function viewData(rec: TestRecord | null, view: ViewId, isRelax: boolean) {
+export function viewData(rec: TestRecord | null, view: ViewId, isRelax: boolean) {
   const raw = rec?.raw;
   if (view === 'force-disp') return { x: raw?.d ?? [], y: raw?.F ?? [], xLabel: 'Crosshead displacement (mm)', yLabel: 'Force (N)', xName: 'd', yName: 'F', xUnit: 'mm', yUnit: 'N' };
   if (view === 'force-time') return { x: raw?.t ?? [], y: raw?.F ?? [], xLabel: 'Time (s)', yLabel: 'Force (N)', xName: 't', yName: 'F', xUnit: 's', yUnit: 'N' };

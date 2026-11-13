@@ -79,8 +79,9 @@ export const HELP: Record<string, HelpTopic> = {
   load: {
     title: 'Load test',
     what: 'Open a recorded test: a session file saved by this app, or a CSV file. Opening a file never sends anything to a device.',
-    next: ['Choose a file, or pick a recent test.', 'Export the opened test, or press Print report and save it as a PDF from the print window. The report is marked Draft and is not saved by the app.'],
-    problems: [['File marked as simulated', 'The app opens recorded tests only; practice files open on the website’s Load Test page.'], ['No dimensions', 'Stress and strain need the specimen dimensions stored in the file.']],
+    next: ['Choose a file, or pick a recent test.', 'Export the opened test, or press Print report and save it as a PDF from the print window. The report is marked Draft and is not saved by the app.', 'To compare specimens, choose Compare tests and add up to 12 tests of one test type: the curves are overlaid, and the key results are listed with the mean and sample standard deviation.'],
+    terms: [['Sample standard deviation', 'The spread of the values, divided by n − 1. It needs at least two values; a dash means it is not available.']],
+    problems: [['File marked as simulated', 'The app opens recorded tests only; practice files open on the website’s Load Test page.'], ['No dimensions', 'Stress and strain need the specimen dimensions stored in the file.'], ['Cannot add a test to a comparison', 'A comparison holds one test type and at most 12 tests. Start a new comparison with Clear all for another test type.']],
   },
   methods: {
     title: 'Test methods',

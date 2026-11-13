@@ -231,12 +231,24 @@ input[type="password"] { width: 100%; background: var(--panel); border: 1px soli
   .facts div, .facts.wide div { grid-template-columns: minmax(0, 1fr); gap: 0; }
 }
 
-/* Print report (Load test and the Test screen after a test): only the report, on white paper. */
+/* Load test: one test or a comparison */
+.seg { display: inline-flex; border: 1px solid var(--line); border-radius: 8px; overflow: hidden; width: fit-content; }
+.seg button { border: 0; border-radius: 0; background: var(--panel); }
+.seg button + button { border-left: 1px solid var(--line); }
+.seg button[aria-pressed="true"] { background: var(--accent); color: var(--accent-ink); font-weight: 600; }
+.compare-add { gap: 10px; }
+.compare-warnings { margin: 0; padding-left: 1.6rem; border-left: 3px solid var(--warn); display: grid; gap: 4px; }
+.compare-table th[scope="row"] { font-weight: 600; white-space: normal; min-width: 11rem; }
+.compare-table td.num { font-variant-numeric: tabular-nums; }
+.compare-stat th, .compare-stat td { background: var(--surface); }
+.compare-key { display: inline-block; vertical-align: middle; margin-right: 6px; }
+
+/* Print report (Load test, the Test screen after a test, and a comparison): only the report, on white paper. */
 .print-only { display: none; }
 @media print {
   :root, :root[data-theme="dark"] { --bg: #fff; --surface: #fff; --panel: #fff; --ink: #000; --muted: #333; --line: #999; color-scheme: light; }
   body { background: #fff; color: #000; font-size: 11pt; }
-  .top, .statusbar, .view-as, .help-button, .help-panel, .toolbar, .graph-tools, .views, .defs-switch, .graph-readout, main > .row button, .setup, .scrim, .work > .status, .notice-bad { display: none !important; }
+  .top, .statusbar, .view-as, .help-button, .help-panel, .toolbar, .graph-tools, .views, .defs-switch, .graph-readout, main > .row button, .setup, .scrim, .work > .status, .notice-bad, .seg, .compare-add, .compare-table td:last-child, .compare-table th:last-child { display: none !important; }
   .body { display: block; }
   .work { padding: 0; }
   .print-only { display: block; }

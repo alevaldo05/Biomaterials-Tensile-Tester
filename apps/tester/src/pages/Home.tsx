@@ -5,18 +5,19 @@ import type { SessionRow } from '../lab-api';
 
 export type Destination = 'test' | 'load' | 'methods' | 'device' | 'history';
 
-export interface RecentRow { key: string; saved: string; specimen: string; test: string; method: string; samples: number; stored: string; open: () => void }
+export interface RecentRow { key: string; saved: string; specimen: string; test: string; method: string; samples: number; stored: string; open: () => void; /** The test's file, for comparing. */ fetch?: () => Promise<{ name: string; text: string }> }
 
 const TEST_NAME = { uniaxial: 'Uniaxial tension', relaxation: 'Stress relaxation' } as const;
 const when = (iso: string | null) => (iso ? new Date(iso).toLocaleString() : '—');
 
-export function recentRows(local: JournalMeta[], lab: SessionRow[], openLocal: (id: string) => void, openLab: (id: string) => void): RecentRow[] {
+export function recentRows(local: JournalMeta[], lab: SessionRow[], openLocal: (id: string) => void, openLab: (id: string) => void,
+  fetchLocal?: (id: string) => Promise<{ name: string; text: string }>, fetchLab?: (id: string) => Promise<{ name: string; text: string }>): RecentRow[] {
   const a: (RecentRow & { t: string })[] = local.filter((m) => m.status !== 'recording').map((m) => ({
     key: 'l' + m.id, t: m.endedAt ?? m.startedAt, saved: when(m.endedAt ?? m.startedAt) + (m.status === 'interrupted' ? ' (interrupted)' : ''),
-    specimen: m.setup.specimenId || '—', test: TEST_NAME[m.test], method: '—', samples: m.sampleCount, stored: 'This computer', open: () => openLocal(m.id) }));
+    specimen: m.setup.specimenId || '—', test: TEST_NAME[m.test], method: '—', samples: m.sampleCount, stored: 'This computer', open: () => openLocal(m.id), ...(fetchLocal ? { fetch: () => fetchLocal(m.id) } : {}) }));
   const b: (RecentRow & { t: string })[] = lab.map((s) => ({
     key: 'r' + s.id, t: s.savedAt, saved: when(s.savedAt), specimen: s.specimenId || '—', test: TEST_NAME[s.testType], method: '—',
-    samples: s.sampleCount, stored: 'Lab server', open: () => openLab(s.id) }));
+    samples: s.sampleCount, stored: 'Lab server', open: () => openLab(s.id), ...(fetchLab ? { fetch: () => fetchLab(s.id) } : {}) }));
   return [...a, ...b].sort((x, y) => y.t.localeCompare(x.t)).slice(0, 8);
 }
 

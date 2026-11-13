@@ -132,7 +132,9 @@ export function Shell({ controller: c, serialAvailable, journal, methods }: Shel
     refresh();
     if (how === 'open') await openLocal(m.id);
   };
-  const recent = recentRows(local, lab, (id) => void openLocal(id), (id) => void openLab(id));
+  const recent = recentRows(local, lab, (id) => void openLocal(id), (id) => void openLab(id),
+    async (id) => { if (!journal) throw new Error('No storage on this computer.'); return { name: 'recording-' + id + '.session.json', text: JSON.stringify(await sessionFileFromJournal(journal, id)) }; },
+    async (id) => ({ name: 'test-' + id + '.session.json', text: await api.sessionFileText(id) }));
   const go = (d: Destination | Page) => setPage(d);
 
   const signOut = () => { void api.logout().catch(() => undefined); setUser(null); setViewAsUser(false); setDialog(null); if (page === 'history' || page === 'admin') setPage('home'); };
