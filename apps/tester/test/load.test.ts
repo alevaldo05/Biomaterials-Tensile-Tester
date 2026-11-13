@@ -68,6 +68,15 @@ describe('Load test', () => {
     expect(loaded.record!.skippedRows).toBe(2);
   });
 
+  it('refuses a session file marked real that carries a simulated calibration', async () => {
+    const { c } = await recorded();
+    const file = c.sessionFile()!;
+    expect(file.calibrations.length).toBeGreaterThan(0);
+    const mixed = { ...file, calibrations: file.calibrations.map((k) => ({ ...k, origin: 'simulated' as const })) };
+    await expect(openTestFile('m.session.json', JSON.stringify(mixed))).rejects.toThrow(REJECT_SIMULATED);
+    await expect(openTestFile('ok.session.json', JSON.stringify(file))).resolves.toBeDefined();
+  });
+
   it('refuses a CSV without dimensions, and text that is not a test file', async () => {
     const rows = Array.from({ length: 20 }, (_, i) => i + ',' + i + ',' + (i / 10)).join('\n');
     await expect(openTestFile('x.csv', 'Time (s),Force (N),Displacement (mm)\n' + rows + '\n')).rejects.toThrow('no specimen dimensions');

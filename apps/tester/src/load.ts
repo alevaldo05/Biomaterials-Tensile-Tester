@@ -73,6 +73,8 @@ export async function openTestFile(name: string, text: string, testHint?: TestTy
   if (trimmed.startsWith('{')) {
     const file = parseSessionFile(text);
     if (file.recordedFrom === 'simulated') throw new Error(REJECT_SIMULATED);
+    /* a file marked real but carrying a simulated calibration is refused too: its force or displacement would not be measured */
+    if (file.calibrations.some((c) => c.origin === 'simulated')) throw new Error(REJECT_SIMULATED);
     const r = await replaySession(file);
     return { name, kind: 'session', test: file.test, record: r.record, problem: r.problem, setup: { ...EMPTY_SETUP, ...file.setup }, file, session: r.session,
       provenance: 'Session file saved by this app (' + file.appVersion + '). Rebuilt from the lines the device sent; its origin is not independently verified.', original: text };
