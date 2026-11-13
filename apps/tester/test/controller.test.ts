@@ -1,144 +1,179 @@
 import { describe, expect, it } from 'vitest';
-import { analyzeUniaxial, buildTestCsv, recordFromCsv } from '@tensile/core';
-import { TestController } from '../src/controller';
-import { EXAMPLE_DIMENSIONS } from '../src/setup';
+import { analyzeUniaxial } from '@tensile/core';
+import { sessionFileFromJournal } from '../src/controller';
 import { resultsFor } from '../src/results';
+import { MemoryJournal } from '../src/storage/journal';
+import { MemoryMethods, methodFromSetup } from '../src/storage/methods';
+import { measuredSetup, move, ready, rig } from './helpers';
 
-function ready(c: TestController) {
-  c.setup = { ...c.setup, material: 'Test', ...EXAMPLE_DIMENSIONS, speed: '30' };
-}
+const sentTypes = (bytes: Uint8Array[]) => bytes.map((b) => (JSON.parse(new TextDecoder().decode(b)) as { type: string }).type);
 
-describe('session controller', () => {
-  it('runs a simulated uniaxial test from connect to key results', async () => {
-    const c = new TestController({ edition: 'lab', autoRun: false });
+describe('test controller (real acquisition only)', () => {
+  it('records a calibrated uniaxial test and sends only acquisition requests', async () => {
+    const { dev, c } = rig();
     expect(c.state).toBe('disconnected');
     expect(c.startProblem).toBe('Enter the material.');
     ready(c);
-    expect(c.startProblem).toBe('Connect a source first.');
+    expect(c.startProblem).toBe('Connect the acquisition device first.');
     await c.connect();
+    expect(c.source!.kind).toBe('real');
+    expect(c.state).toBe('connected-uncalibrated');
+    c.useSetup(measuredSetup(c));
     expect(c.state).toBe('ready');
-    c.simulator!.step(64);
+    dev.step(64);
     expect(c.recorder!.latest.force!.unit).toBe('N');
-    c.startRecording();
-    expect(c.state).toBe('recording');
+    await c.startRecording();
+    expect(c.phase).toBe('recording');
     expect(c.locked).toBe(true);
-    c.simulator!.step(2400);
+    move(dev, c);
+    dev.step(2400);
     expect(c.live!.x.length).toBeGreaterThan(1000);
     c.stopRecording();
     expect(c.phase).toBe('done');
-    expect(c.record!.source).toBe('simulated');
-    const a = analyzeUniaxial(c.record!)!;
-    expect(a.uts.x).toBeCloseTo(0.33, 1);
+    expect(c.record!.source).toBe('measured');
+    expect(analyzeUniaxial(c.record!)!.uts.x).toBeCloseTo(0.33, 1);
     expect(resultsFor(c.record).rows.map((r) => r.id)).toEqual(['E', 'uts', 'fail', 'tough']);
-    expect(c.rate).toBeCloseTo(64, 1);
-    expect(c.dataLabel).toBe('Simulated data, not measured');
-    /* nothing but acquisition requests went to the device */
-    const sent = c.simulator!.written.map((b) => (JSON.parse(new TextDecoder().decode(b)) as { type: string }).type);
-    expect(sent).toEqual(['identify', 'get_channels', 'get_settings', 'start_stream']);
+    expect(c.dataLabel).toBe('Measured');
+    expect(sentTypes(dev.written)).toEqual(['identify', 'get_channels', 'get_settings', 'start_stream']);
+    expect(c.sessionFile()!.recordedFrom).toBe('real');
   });
 
-  it('writes a CSV the website format reader opens, marked simulated', async () => {
-    const c = new TestController({ edition: 'lab', autoRun: false });
-    ready(c);
-    c.setup.offsetOn = true; c.setup.offsetPct = '1';
-    await c.connect();
-    c.startRecording();
-    c.simulator!.step(2400);
-    c.stopRecording();
-    const csv = buildTestCsv(c.record!, { spec: { mat: 'Test', matLabel: 'Test', id: '', temp: '', env: '', notes: '' }, kind: { slug: 'uniaxial-tension', name: 'Uniaxial tension' }, isRelax: false, startedAt: c.startedAt, endReason: c.session!.endReason, checks: {} });
-    expect(csv).toContain('# Source,simulated (not measured)');
-    expect(csv).toContain('# Offset yield (% strain),1');
-    const back = recordFromCsv('x.csv', csv, 'uniaxial', { defaults: () => ({ specimen: { L0_mm: 1, width_mm: 1, thickness_mm: 1 } }) });
-    expect(back.simulated).toBe(true);
-    expect(back.params.offsetPct).toBe(1);
-    expect(back.x.length).toBe(c.record!.x.length);
-  });
-
-  it('saves a session file and replays it to the same record, still labeled simulated', async () => {
-    const c = new TestController({ edition: 'lab', autoRun: false });
+  it('keeps an uncalibrated device to voltages only', async () => {
+    const { dev, c } = rig();
     ready(c);
     await c.connect();
-    c.startRecording();
-    c.simulator!.step(2400);
-    c.stopRecording();
-    const file = JSON.stringify(c.sessionFile());
-    const r = new TestController({ edition: 'learning', autoRun: false });
-    r.loadReplay(file);
-    expect(r.setup.L0).toBe('25');
-    await r.connect();
-    expect(r.state).toBe('ready');
-    r.startRecording();
-    for (let i = 0; i < 100 && r.phase === 'recording'; i++) r.tick();
-    expect(r.phase).toBe('done');
-    expect(r.session!.endReason).toContain('end of the file');
-    expect(r.record!.raw).toEqual(c.record!.raw);
-    expect(r.record!.simulated).toBe(true);
-    expect(r.dataLabel).toContain('simulated data, not measured');
-    expect(() => r.loadReplay('time,force\n1,2')).toThrow('not a session file');
-  });
-
-  it('keeps a real device without calibration to voltages only', async () => {
-    const { SimulatedDevice } = await import('@tensile/acquisition');
-    const dev = new SimulatedDevice({ auto: false });
-    const c = new TestController({ edition: 'lab', autoRun: false, openReal: () => dev });
-    expect(c.choices).toEqual(['real', 'simulated', 'replay']);
-    c.choice = 'real';
-    ready(c);
-    await c.connect();
-    expect(c.state).toBe('connected-uncalibrated');
     dev.step(10);
     expect(c.recorder!.latest.force).toMatchObject({ value: null, unit: null });
     expect(c.startProblem).toContain('not calibrated');
-    c.startRecording();
+    await c.startRecording();
     expect(c.phase).toBe('setup');
     c.voltagesOnly = true;
-    c.startRecording();
+    await c.startRecording();
     dev.step(200);
     c.stopRecording();
     expect(c.record).toBeNull();
     expect(c.recordProblem).toContain('voltages only');
     expect(c.sessionFile()!.calibrations).toEqual([]);
-    expect(c.dataLabel).toBe('Measured');
-  });
-
-  it('the learning edition offers no hardware connection', async () => {
-    const c = new TestController({ edition: 'learning', autoRun: false });
-    expect(c.choices).toEqual(['simulated', 'replay']);
-    c.choice = 'real';
-    await c.connect();
-    expect(c.state).toBe('disconnected');
-    expect(c.message).toContain('cannot connect to hardware');
   });
 
   it('ends the recording and keeps the data when the connection is lost', async () => {
-    const c = new TestController({ edition: 'lab', autoRun: false });
+    const { dev, c } = rig();
     ready(c);
     await c.connect();
-    c.startRecording();
-    c.simulator!.step(600);
-    c.simulator!.unplug();
+    c.useSetup(measuredSetup(c));
+    await c.startRecording();
+    move(dev, c);
+    dev.step(600);
+    dev.unplug();
     expect(c.phase).toBe('done');
-    expect(c.state).toBe('disconnected');
     expect(c.session!.interrupted).toBe(true);
     expect(c.record!.x.length).toBeGreaterThan(200);
     expect(c.message).toContain('connection was lost');
   });
+
+  it('refuses a calibration change while recording, and a software baseline is labeled as such', async () => {
+    const { dev, c } = rig();
+    ready(c);
+    await c.connect();
+    const setup = measuredSetup(c);
+    c.useSetup(setup);
+    dev.step(20);
+    c.zeroForce();
+    expect(c.message).toContain('not a machine tare and not a calibration');
+    await c.startRecording();
+    expect(() => c.useSetup(setup)).toThrow('cannot be changed while recording');
+  });
 });
 
-describe('app preview (the build published with the website)', () => {
-  it('connects its pretend board by itself and offers no real connection', async () => {
-    const c = new TestController({ edition: 'learning', autoRun: false });
-    await c.startPreview();
-    expect(c.choices).toEqual(['simulated', 'replay']);
-    expect(c.source?.kind).toBe('simulated');
-    expect(c.state).toBe('ready');
-    expect(c.dataLabel).toBe('Simulated data, not measured');
-    await c.startPreview();   /* a second call changes nothing */
-    expect(c.simulator!.written.filter((b) => new TextDecoder().decode(b).includes('identify'))).toHaveLength(1);
+describe('recording on this computer', () => {
+  it('commits batches while recording and finishes the entry', async () => {
+    const journal = new MemoryJournal();
+    const { dev, c } = rig({ journal });
+    ready(c);
+    await c.connect();
+    c.useSetup(measuredSetup(c));
+    await c.startRecording();
+    move(dev, c);
+    dev.step(300);
+    await c.flushed();
+    expect(c.localSave).toBe('saved');
+    const mid = (await journal.list())[0]!;
+    expect(mid.status).toBe('recording');
+    const midLines = (await journal.lines(mid.id)).lines.length;
+    dev.step(300);
+    c.stopRecording();
+    await c.flushed();
+    await new Promise((r) => setTimeout(r, 0));
+    const end = (await journal.list())[0]!;
+    expect(end.status).toBe('complete');
+    expect((await journal.lines(end.id)).lines.length).toBeGreaterThan(midLines);
+    /* the journal holds the same lines as the session file */
+    const fromJournal = await sessionFileFromJournal(journal, end.id);
+    expect(fromJournal.lines).toEqual(c.sessionFile()!.lines);
+    expect(fromJournal.recordedFrom).toBe('real');
   });
-  it('does nothing in the lab edition', async () => {
-    const c = new TestController({ edition: 'lab', autoRun: false });
-    await c.startPreview();
-    expect(c.source).toBeNull();
+
+  it('a recording cut off by a closed app stays "recording" and can be rebuilt', async () => {
+    const journal = new MemoryJournal();
+    const { dev, c } = rig({ journal });
+    ready(c);
+    await c.connect();
+    c.useSetup(measuredSetup(c));
+    await c.startRecording();
+    move(dev, c);
+    dev.step(400);
+    await c.flushed();
+    /* the app closes here: no stop, no finish */
+    const [m] = await journal.list();
+    expect(m!.status).toBe('recording');
+    const f = await sessionFileFromJournal(journal, m!.id);
+    expect(f.lines.filter((l) => l.includes('"type":"sample"')).length).toBeGreaterThan(300);
+    await journal.finish(m!.id, 'interrupted', 'closed');
+    expect((await journal.list())[0]!.status).toBe('interrupted');
+  });
+
+  it('a failed write is reported, recording continues, and the next write catches up', async () => {
+    const journal = new MemoryJournal();
+    const { dev, c } = rig({ journal });
+    ready(c);
+    await c.connect();
+    c.useSetup(measuredSetup(c));
+    await c.startRecording();
+    move(dev, c);
+    dev.step(100);
+    journal.failNext = true;
+    await c.flushed();
+    expect(c.localSave).toBe('error');
+    expect(c.localError).toContain('continues in memory');
+    expect(c.phase).toBe('recording');
+    dev.step(100);
+    await c.flushed();
+    expect(c.localSave).toBe('saved');
+    const [m] = await journal.list();
+    const samples = (await journal.lines(m!.id)).lines.filter((l) => l.includes('"type":"sample"')).length;
+    expect(samples).toBe(c.sessionFile()!.lines.filter((l) => l.includes('"type":"sample"')).length);
+  });
+
+  it('without storage the app says so and records in memory', async () => {
+    const { c } = rig({ journal: null });
+    expect(c.localSave).toBe('off');
+  });
+});
+
+describe('test methods', () => {
+  it('saves revisions and fills the setup from a method without the specimen ID', async () => {
+    const store = new MemoryMethods();
+    const { c } = rig();
+    ready(c);
+    c.setup.specimenId = 'S-1';
+    const m1 = await store.save(methodFromSetup('Skin strip', 'uniaxial', c.setup, 'Clamp gently.'));
+    expect(m1.revision).toBe(1);
+    const m2 = await store.save({ ...methodFromSetup('Skin strip', 'uniaxial', { ...c.setup, speed: '10' }) }, m1);
+    expect(m2.revision).toBe(2);
+    expect((await store.list()).map((m) => m.revision)).toEqual([2]);
+    c.newTest();
+    c.useMethod(m2);
+    expect(c.setup.speed).toBe('10');
+    expect(c.setup.specimenId).toBe('');
   });
 });

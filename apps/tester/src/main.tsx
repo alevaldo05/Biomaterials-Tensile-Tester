@@ -2,22 +2,19 @@ import { StrictMode } from 'react';
 import { createRoot } from 'react-dom/client';
 import { Shell } from './Shell';
 import { TestController } from './controller';
-import type { Edition } from './controller';
+import { openUsbSerial, usbSerialAvailable } from './real';
+import type { SessionJournal } from './storage/journal';
+import { IdbJournal, IdbMethods, openAppDb } from './storage/idb';
+import { MemoryMethods } from './storage/methods';
+import type { MethodStore } from './storage/methods';
 import './app.css';
 
-declare const __EDITION__: Edition;
-
 async function start() {
-  /* The learning edition never loads the hardware module, so its bundle cannot open a port. */
-  let openReal: (() => import('@tensile/acquisition').Transport) | undefined;
-  let serialAvailable = false;
-  if (__EDITION__ === 'lab') {
-    const real = await import('./real');
-    openReal = real.openUsbSerial;
-    serialAvailable = real.usbSerialAvailable();
-  }
-  const controller = new TestController({ edition: __EDITION__, ...(openReal ? { openReal } : {}) });
-  void controller.startPreview();
-  createRoot(document.getElementById('root') as HTMLElement).render(<StrictMode><Shell controller={controller} serialAvailable={serialAvailable} /></StrictMode>);
+  /* Recordings and methods are kept in the browser's own storage. Without it, recordings stay in memory only. */
+  let journal: SessionJournal | null = null, methods: MethodStore = new MemoryMethods();
+  try { const db = await openAppDb(); journal = new IdbJournal(db); methods = new IdbMethods(db); } catch { /* storage refused (for example a private window) */ }
+  const controller = new TestController({ openReal: openUsbSerial, journal });
+  createRoot(document.getElementById('root') as HTMLElement).render(
+    <StrictMode><Shell controller={controller} serialAvailable={usbSerialAvailable()} journal={journal} methods={methods} /></StrictMode>);
 }
 void start();

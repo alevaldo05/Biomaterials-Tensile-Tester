@@ -3,6 +3,5 @@ dist/
 _site/
 coverage/
 *.tsbuildinfo
-dist-learning/
 .pio/
 .host-build/
