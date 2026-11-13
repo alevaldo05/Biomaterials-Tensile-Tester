@@ -43,6 +43,32 @@ docker compose exec api node dist/cli.js create-admin <username>
 
 Open <http://localhost:8080/app/> for the app and <http://localhost:8080/> for the website. Use `localhost` on the computer the tester is plugged into: Chrome allows USB (Web Serial) only on `localhost` or HTTPS.
 
+## On Windows (Docker Desktop)
+
+**Not yet tried on a Windows computer.** These steps are written from the Linux run; fill in what actually happens.
+
+1. Install Docker Desktop (with the WSL 2 option) and start it. Install Git for Windows (it includes Git Bash).
+2. Get the repository with Git (not a zip), so `.gitattributes` keeps the `.sh` scripts with Unix line endings. The scripts run inside the Linux containers; with Windows line endings they fail with a message such as `bad interpreter` or `\r: command not found`. If that happens, run `git add --renormalize .` after checking out again.
+3. In PowerShell, in the `deploy` folder:
+   ```
+   copy .env.example .env
+   notepad .env
+   docker compose up -d --build
+   docker compose exec api node dist/cli.js create-admin <username>
+   ```
+   Set `POSTGRES_PASSWORD` in `.env` first. Windows may ask to allow Docker through the firewall; allow it on private networks only.
+4. Check it, from PowerShell (`curl.exe` comes with Windows):
+   ```
+   curl.exe -s http://127.0.0.1:8080/api/v1/health
+   curl.exe -s -o NUL -w "%{http_code}" http://127.0.0.1:8080/app/
+   docker compose ps
+   ```
+   The health call should answer, the app page should print `200`, and every service should be running or healthy.
+5. `make-cert.sh` and `backup.sh` are bash scripts: run them in Git Bash (or WSL) from the `deploy` folder. The scheduled backups need no script on your side; the backup service runs inside Docker. Check that a file appears in `deploy/backups/` after the first delay.
+6. Docker Desktop must be running for the system to be up. Decide whether it should start at sign-in, and note it. After a restart, `docker compose up -d` brings the parts back.
+
+Results to record here: what worked, what failed, the Docker Desktop version, and the Windows version.
+
 ## Updating one part without touching the others
 
 Rebuild and replace only that service:

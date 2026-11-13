@@ -61,6 +61,8 @@ export interface TestRecord {
   /** Times kept from a uniaxial file only so the data checks can look at them. */
   checkT?: number[];
   skippedLines?: number;
+  /** Rows of a loaded CSV file that could not be read as numbers and were left out (set only when there were some). */
+  skippedRows?: number;
 }
 
 export function clone<T>(o: T): T { return JSON.parse(JSON.stringify(o)) as T; }
