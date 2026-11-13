@@ -9,9 +9,10 @@ import type { z } from 'zod';
 import { COOKIE, dummyHash, hashPassword, LoginLimiter, newToken, passwordProblem, readCookie, sessionCookie, tokenHash, verifyPassword } from './auth';
 import type { Config } from './config';
 import type { Db } from './db';
-import { CalibrationBody, LoginBody, MethodBody, NewUserBody, PasswordBody, problem, ProfileBody, UploadBody, UserPatch } from './schemas';
+import { CalibrationBody, DEVICE_MESSAGE_TYPES, LoginBody, MethodBody, NewUserBody, PasswordBody, problem, ProfileBody, UploadBody, UserPatch } from './schemas';
 
 export const API_VERSION = '0.1.0';
+const CAL_LABELS: Record<string, string> = { lab: 'Lab-approved calibration', 'not-from-lab': 'Calibration not from the lab', none: 'No calibration (voltages only)', unchecked: 'Calibration not checked (saved before checks)' };
 
 export interface User { id: string; username: string; displayName: string; role: 'admin' | 'user'; mustChangePassword: boolean }
 declare module 'fastify' { interface FastifyRequest { user: User | null } }
@@ -231,33 +232,47 @@ export function buildApp(o: { db: Db; config: Config; logger?: boolean; limiter?
     /* ---------- recorded tests ---------- */
     api.post('/test-sessions', async (req, reply) => {
       const u = signedIn(req), b = parse(UploadBody, req.body), f = b.file;
+      if (f.recordedFrom !== 'real') fail(400, 'simulated', 'The lab server keeps recorded tests only. Simulated data stays on the website.');
       type Hello = { device_id?: string; device_type?: string; sw_version?: string };
       let hello: Hello | null = null, samples = 0, firstSample: number | null = null;
+      /* Every line must be a message a device sends, in protocol version 1. */
       for (let i = 0; i < f.lines.length; i++) {
-        const l = f.lines[i] as string;
-        if (l.includes('"type":"sample"')) { samples++; if (firstSample === null && typeof f.receivedAt_ms[i] === 'number') firstSample = f.receivedAt_ms[i] as number; }
-        else if (!hello && l.includes('"type":"hello"')) { try { hello = JSON.parse(l) as Hello; } catch { hello = null; } }
+        let m: { v?: unknown; type?: unknown } | null = null;
+        try { m = JSON.parse(f.lines[i] as string) as { v?: unknown; type?: unknown }; } catch { m = null; }
+        if (!m || typeof m !== 'object' || m.v !== 1 || typeof m.type !== 'string' || !DEVICE_MESSAGE_TYPES.has(m.type)) {
+          fail(400, 'invalid', 'Line ' + (i + 1) + ' of the session file is not a message from the device.');
+        }
+        const msg = m as { type: string };
+        if (msg.type === 'sample') { samples++; if (firstSample === null) firstSample = f.receivedAt_ms[i] as number; }
+        else if (!hello && msg.type === 'hello') hello = m as Hello;
       }
       const h: Hello = hello ?? fail(400, 'invalid', 'The session file has no device identification.');
+      /* Where the calibration came from: approved on this server with the same numbers, or not. The test is saved either way. */
+      let calSource: 'lab' | 'not-from-lab' | 'none' = 'none';
+      if (f.calibrations.length) {
+        const known = (await db.query("select id, quantity, slope, offset_value from calibrations where status = 'approved' and id = any($1)", [f.calibrations.map((c) => c.id)])).rows;
+        const same = (c: (typeof f.calibrations)[number]) => known.some((k) => k.id === c.id && (c.quantity === undefined || c.quantity === k.quantity) && c.slope === k.slope && (c.offset ?? 0) === k.offset_value);
+        calSource = f.calibrations.every(same) ? 'lab' : 'not-from-lab';
+      }
       const raw = JSON.stringify((req.body as { file: unknown }).file), gz = zlib.gzipSync(raw), sha = crypto.createHash('sha256').update(raw).digest('hex');
       const setup = f.setup as Record<string, string | boolean>;
       const client = await db.connect();
       try {
         await client.query('begin');
         const r = await client.query(`insert into test_sessions (owner_id, test_type, recorded_from, material, specimen_id, device_id, device_type, device_software,
-          protocol, app_version, calibration_ids, sample_count, started_at, summary, notes)
-          values ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, to_timestamp($13 / 1000.0), $14, $15) returning id, created_at`,
+          protocol, app_version, calibration_ids, sample_count, started_at, summary, notes, calibration_source)
+          values ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, to_timestamp($13 / 1000.0), $14, $15, $16) returning id, created_at`,
           [u.id, f.test, f.recordedFrom, String(setup.material ?? '').slice(0, 200), String(setup.specimenId ?? '').slice(0, 200), String(h.device_id ?? ''), String(h.device_type ?? ''),
-           String(h.sw_version ?? ''), 'tensile-ndjson/1', f.appVersion, f.calibrations.map((c) => c.id), samples, firstSample, JSON.stringify(b.summary), b.notes]);
+           String(h.sw_version ?? ''), 'tensile-ndjson/1', f.appVersion, f.calibrations.map((c) => c.id), samples, firstSample, JSON.stringify(b.summary), b.notes, calSource]);
         const id = r.rows[0].id;
         await client.query('insert into session_files (session_id, format_version, gzip, sha256, bytes_raw) values ($1, 1, $2, $3, $4)', [id, gz, sha, Buffer.byteLength(raw)]);
-        if (f.recordedFrom === 'real' && h.device_id) {
+        if (h.device_id) {
           await client.query(`insert into devices (device_id, device_type, last_software) values ($1, $2, $3)
             on conflict (device_id) do update set device_type = excluded.device_type, last_software = excluded.last_software, last_seen = now()`, [h.device_id, h.device_type ?? '', h.sw_version ?? '']);
         }
         await client.query('commit');
-        await audit(u.id, 'session_saved', { id: String(id), samples });
-        return reply.status(201).send({ id: String(id), createdAt: r.rows[0].created_at, sampleCount: samples, sha256: sha });
+        await audit(u.id, 'session_saved', { id: String(id), samples, calibration: calSource });
+        return reply.status(201).send({ id: String(id), createdAt: r.rows[0].created_at, sampleCount: samples, sha256: sha, calibrationSource: calSource });
       } catch (e) { await client.query('rollback'); throw e; } finally { client.release(); }
     });
 
@@ -265,7 +280,8 @@ export function buildApp(o: { db: Db; config: Config; logger?: boolean; limiter?
       id: String(r.id), owner: r.owner_name, testType: r.test_type, recordedFrom: r.recorded_from,
       data: r.recorded_from === 'simulated' ? 'Simulated data, not measured' : 'Measured',
       material: r.material, specimenId: r.specimen_id, deviceId: r.device_id, deviceType: r.device_type, deviceSoftware: r.device_software,
-      appVersion: r.app_version, calibrationIds: r.calibration_ids, sampleCount: r.sample_count, startedAt: r.started_at, savedAt: r.created_at,
+      appVersion: r.app_version, calibrationIds: r.calibration_ids,
+      calibrationSource: r.calibration_source, calibrationLabel: CAL_LABELS[r.calibration_source as string] ?? '', sampleCount: r.sample_count, startedAt: r.started_at, savedAt: r.created_at,
       summary: r.summary, notes: r.notes,
     });
     const sessionSelect = 'select s.*, u.username as owner_name from test_sessions s join users u on u.id = s.owner_id';

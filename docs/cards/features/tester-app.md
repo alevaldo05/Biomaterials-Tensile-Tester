@@ -42,6 +42,7 @@ The React and TypeScript app for running tests, the packages it shares with the 
 - A calibration is used only when its whole signal path matches; without one, values stay in volts and no stress or strain is calculated
 - Board pins, the I2C address, and channel wiring live only in the firmware's `board_config.h`, all marked as examples; the firmware sends raw counts only and understands only the six acquisition requests
 - Recording never depends on the back end; the website never needs it
+- The lab server refuses simulated tests and files with lines a device does not send; it labels each saved test's calibration (lab-approved, not from the lab, none) and shows it in History
 - The app has real acquisition and replay of saved sessions only: no simulator in its source or build
 - While recording, samples are committed to this computer's storage about once a second; an unfinished recording is offered for recovery on Home; a failed save is shown and recording continues in memory
 - A software baseline is not a machine tare and not a calibration, and the screen says so
