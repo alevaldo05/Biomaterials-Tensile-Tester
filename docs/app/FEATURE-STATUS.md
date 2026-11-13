@@ -26,7 +26,8 @@ Updated with each stage. "Checked" means tried in Chrome's engine (Chromium on L
 ## Website and app together
 
 - The website's own live test pages are retired. New Test on the website points to the tester app, the practice page, and Load Test. The website has no USB connection any more.
-- The app is not published on GitHub Pages. New Test on the website says "Download not yet available"; the Windows installer is not built yet.
+- The app is not published on GitHub Pages. Get the App on the website says "Download not yet available".
+- Windows app (`apps/desktop`, Electron): written and its settings checked by tests, but **not yet built or run** (Electron's own files could not be downloaded here). `.github/workflows/desktop.yml` builds an unsigned beta installer into a draft release when started by hand. See [WINDOWS-APP.md](WINDOWS-APP.md).
 - The app uses the website's definitions and materials (read at build time from `data/terms.js` and `data/materials.js`).
 
 ## Reference firmware (ESP32 + ADS1115)
