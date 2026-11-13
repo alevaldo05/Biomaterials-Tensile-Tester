@@ -79,7 +79,7 @@ export const HELP: Record<string, HelpTopic> = {
   load: {
     title: 'Load test',
     what: 'Open a recorded test: a session file saved by this app, or a CSV file. Opening a file never sends anything to a device.',
-    next: ['Choose a file, or pick a recent test.', 'Export or print from the opened test.'],
+    next: ['Choose a file, or pick a recent test.', 'Export the opened test, or press Print report and save it as a PDF from the print window. The report is marked Draft and is not saved by the app.'],
     problems: [['File marked as simulated', 'The app opens recorded tests only; practice files open on the website’s Load Test page.'], ['No dimensions', 'Stress and strain need the specimen dimensions stored in the file.']],
   },
   methods: {

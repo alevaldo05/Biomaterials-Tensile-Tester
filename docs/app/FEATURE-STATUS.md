@@ -8,7 +8,7 @@ Updated with each stage. "Checked" means tried in Chrome's engine (Chromium on L
 - The Test screen: five setup steps (Test and method, Specimen, Connect and identify, Channels and calibration, Review and start), recording toolbar, measurement strip, graph, key results, session details.
 - Real acquisition only. The simulator is used only by the automated tests, as a stand-in device; a test checks that the app's source does not import it, and the built app does not contain it.
 - Recordings kept on this computer (the browser's IndexedDB) while recording, committed about once a second; an interrupted recording is offered for recovery on Home. Checked in the automated tests (commits, a failed write, recovery) with an in-memory store; the IndexedDB store itself has not been tried with a real recording.
-- Load test: session files (rebuilt from their lines, sending nothing to any device) and CSV files; files marked simulated or sample are refused; imports are labeled as unverified.
+- Load test: session files (rebuilt from their lines, sending nothing to any device) and CSV files; files marked simulated or sample are refused; imports are labeled as unverified. Print report (Draft, light colors on paper) was checked with Chromium's print preview only.
 - Test methods: saved setups with revisions, kept on this computer (not yet shared through the lab server).
 - Recording: every sample with counts, device time, computer time, settings, volts, and the calibrated value; gaps, faults, restarts, and disconnects are written into the session.
 - Key results from the shared calculations (the same numbers the website gives for the same data).
