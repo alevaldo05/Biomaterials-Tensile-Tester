@@ -7,6 +7,7 @@ import { ApiError, LabApi } from './lab-api';
 import type { Account, LabUser } from './lab-api';
 import { Admin } from './pages/Admin';
 import { History } from './pages/History';
+import { PREVIEW } from './preview-text';
 
 /* The app is served at <site>/app/ (on GitHub Pages and behind the gateway), so the website is one folder up. */
 const SITE_URL = '../';
@@ -54,6 +55,25 @@ function NewPassword(p: { api: LabApi; required: boolean; onDone: () => void; on
   );
 }
 
+/** The app preview's opening panel: open the first time, remembered closed in this browser. */
+function PreviewIntro() {
+  const [open, setOpen] = useState(() => { try { return localStorage.getItem('app-preview-intro') !== 'closed'; } catch { return true; } });
+  return (
+    <details className="intro" open={open} onToggle={(e) => {
+      const now = (e.currentTarget as HTMLDetailsElement).open;
+      setOpen(now);
+      try { localStorage.setItem('app-preview-intro', now ? 'open' : 'closed'); } catch { /* not remembered */ }
+    }}>
+      <summary>{PREVIEW.introTitle}</summary>
+      <div className="intro-body">
+        {PREVIEW.intro.map((t) => <p key={t}>{t}</p>)}
+        <p className="hint">{PREVIEW.simulator}</p>
+        <p className="row">{PREVIEW.introLinks.map((l) => <a key={l.href} href={l.href}>{l.label}</a>)}</p>
+      </div>
+    </details>
+  );
+}
+
 export function Shell({ controller: c, serialAvailable }: { controller: TestController; serialAvailable: boolean }) {
   useSyncExternalStore(c.subscribe, c.snapshot);
   const [theme, toggleTheme] = useTheme();
@@ -96,8 +116,7 @@ export function Shell({ controller: c, serialAvailable }: { controller: TestCont
     <div className="app">
       <header className="top">
         <a className="brand" href={SITE_URL}>Biomaterials Tensile Tester</a>
-        <span className="badge">App</span>
-        {c.edition === 'learning' ? <span className="badge badge-soft">Learning edition</span> : null}
+        {lab ? <span className="badge">App</span> : <span className="badge">{PREVIEW.badge}</span>}
         {user ? <nav className="navs" aria-label="Pages">{nav('test', 'Test')}{nav('history', 'History')}{effectiveRole === 'admin' ? nav('admin', 'Admin') : null}</nav> : null}
         <span className="top-space" />
         <a href={SITE_URL + 'learn.html'}>Learn</a>
@@ -115,6 +134,7 @@ export function Shell({ controller: c, serialAvailable }: { controller: TestCont
             </>) : null}
           </span>) : null}
       </header>
+      {!lab ? <PreviewIntro /> : null}
       {viewAsUser ? <p className="view-as" role="status">Viewing as a user. This changes only what this screen shows; your admin permissions are unchanged. <button type="button" className="link" onClick={() => setViewAsUser(false)}>Back to admin view</button></p> : null}
 
       {page === 'test' ? <App controller={c} serialAvailable={serialAvailable} theme={theme} account={account} /> : null}

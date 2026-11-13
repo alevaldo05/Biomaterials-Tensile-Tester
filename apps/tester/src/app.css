@@ -48,6 +48,13 @@ input[type="text"], select, input[type="file"] { width: 100%; background: var(--
 .nav-on { background: var(--panel); border-color: var(--line); font-weight: 650; }
 .account { display: inline-flex; flex-wrap: wrap; align-items: center; gap: 4px 8px; }
 .who { display: inline-flex; align-items: center; gap: 6px; font-weight: 600; }
+.intro { background: var(--surface); border-bottom: 1px solid var(--line); padding: 0 20px; }
+.intro summary { cursor: pointer; padding: 10px 0; font-weight: 650; }
+.intro-body { display: grid; gap: 6px; padding-bottom: 12px; max-width: 70rem; }
+.intro-body p { margin: 0; }
+.intro-body .row { gap: 6px 16px; }
+.step-note { margin: 0; padding: 8px 10px; background: var(--panel); border: 1px solid var(--line); border-left: 3px solid var(--accent); border-radius: 6px; font-size: 0.9rem; }
+.curve-note { background: var(--panel); border: 1px solid var(--line); border-left: 3px solid var(--accent); border-radius: var(--radius); padding: 10px 14px; font-size: 0.93rem; }
 .view-as { margin: 0; padding: 8px 20px; background: var(--surface); border-bottom: 1px solid var(--line); color: var(--warn); font-size: 0.9rem; }
 .page { padding: 16px 20px 28px; display: grid; gap: var(--gap); align-content: start; min-width: 0; }
 .form { display: grid; gap: var(--gap); min-width: min(22rem, calc(100vw - 80px)); }
