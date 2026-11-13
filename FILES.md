@@ -100,6 +100,7 @@ Every page except `404.html` starts with a "Skip to main content" link (`.skip-l
 | `docs/BRANCHES.md` | Backups (tags), `main`, branch rules, and how to go back to a backup. |
 | `docs/REPO-SETTINGS.md` | Checklist of repository settings only the owner can change on GitHub. |
 | `.github/workflows/deploy.yml` | The workflow that publishes the site when `main` changes. Not part of the published site. |
+| `docs/app/FEATURE-STATUS.md` | What in the tester app is implemented, simulated, untested, not built, and unsupported. |
 | `docs/app/PROTOCOL.md` | The acquisition protocol (the project's own; not a manufacturer protocol): messages, requests, and what the app does when data is bad. |
 | `docs/app/ARCHITECTURE.md` | The design of the tester app, shared packages, back end, and containers, and what works today. |
 | `.github/dependabot.yml` | Update checker for the Actions in the workflow, switched off (limit 0). Change the 0 to 2 to receive weekly update pull requests. Not part of the published site. |
@@ -121,6 +122,9 @@ Every page except `404.html` starts with a "Skip to main content" link (`.skip-l
 | `packages/acquisition/` | The common acquisition interface (`src/types.ts`), the connection logic (`src/source.ts`), the protocol adapter (`src/adapters/`), and the transports (`src/transports/`: simulator, recorded-data replay, USB serial). |
 | `packages/machine-control/` | The machine-control interface. Its only implementation answers "unsupported" and transmits nothing. |
 | `packages/recording/` | The recorder, the conversion from ADC counts to physical values, calibration compatibility, and the acceptance tests (`test/acceptance.test.ts`). |
+| `packages/ui/` | Shared React pieces: the graph (`src/Graph.tsx`, with its arithmetic in `src/graph-math.ts`), the measurement strip, status bar, panels, and form fields. |
+| `apps/tester/` | The app. `src/controller.ts` wires a source to the recorder; `src/App.tsx` is the screen; `src/exports.ts` builds the saved files; `src/real.ts` is the only file that reaches for hardware (lab edition only); `src/app.css` holds the look (the website's green light and dark colors). Run with `npm run app`, build with `npm run app:build`. |
+| `tsconfig.web.json` | TypeScript settings for the parts that run in a browser page. |
 | `packages/`, `apps/`, `firmware/`, `deploy/` | The app, its packages, the back end, device-side software, and container files. `scripts/check-site.js` and `scripts/build-site.sh` leave them alone and out of the published site. |
 
 ## To change…

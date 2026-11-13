@@ -1,8 +1,15 @@
 {
   "extends": "./tsconfig.base.json",
   "include": [
-    "packages/*/src/**/*.ts",
-    "packages/*/src/**/*.tsx",
-    "packages/*/test/**/*.ts"
+    "packages/core/src",
+    "packages/core/test",
+    "packages/protocol/src",
+    "packages/protocol/test",
+    "packages/acquisition/src",
+    "packages/acquisition/test",
+    "packages/machine-control/src",
+    "packages/machine-control/test",
+    "packages/recording/src",
+    "packages/recording/test"
   ]
 }
