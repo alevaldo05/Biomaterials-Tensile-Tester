@@ -31,7 +31,7 @@ function FitChart({ r }: { r: BenchResult }) {
 }
 
 export function BenchCalibration({ controller: c }: { controller: TestController }) {
-  useSyncExternalStore(c.subscribe, c.snapshot);
+  useSyncExternalStore(c.subscribe, c.snapshot, c.snapshot);
   const [open, setOpen] = useState(false);
   const [quantity, setQuantity] = useState<Quantity>('force');
   const [rows, setRows] = useState<BenchRow[]>(emptyBenchRows);

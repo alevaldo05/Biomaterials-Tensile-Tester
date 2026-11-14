@@ -16,6 +16,9 @@ import type { Account } from './lab-api';
 import { fileBase, samplesCsv, save, sessionDetails, svgText, svgToPng, testCsv, testXlsx } from './exports';
 import { EXAMPLE_DIMENSIONS, EXAMPLE_SETTINGS, MATERIAL_CHOICES, num, setupProblems, STEP_FIELDS } from './setup';
 import type { Setup } from './setup';
+import { ResponsibleOperator } from './components/ResponsibleOperator';
+import { BROWSER_WHY } from './people';
+import type { Me, People } from './people';
 import type { RunTest } from './run-tests';
 import { CalibrationPanel, DeviceFacts } from './components/DevicePanels';
 import { RecordGraph } from './components/RecordGraph';
@@ -60,11 +63,13 @@ export interface TestScreenProps {
   onHelpSub: (sub: string) => void;
   /** Tests finished in this run of the app (the Specimens strip). */
   runTests: RunTest[];
+  /** The sign-in on the lab computer (Windows app). people is null in a browser, which does not connect to the tester. */
+  machine?: { people: People | null; me: Me | null; onSignIn: () => void; onMe: (me: Me) => void };
 }
 
 /** The Test screen. */
-export function App({ controller: c, serialAvailable, theme, account, onHelpSub, runTests }: TestScreenProps) {
-  useSyncExternalStore(c.subscribe, c.snapshot);
+export function App({ controller: c, serialAvailable, theme, account, onHelpSub, runTests, machine }: TestScreenProps) {
+  useSyncExternalStore(c.subscribe, c.snapshot, c.snapshot);
   const [section, setSection] = useState<SectionId>('test');
   const [drawer, setDrawer] = useState(false);
   /* null: follow the phase (open while setting up, a rail while recording and after the test). */
@@ -178,7 +183,7 @@ export function App({ controller: c, serialAvailable, theme, account, onHelpSub,
   const block: Record<SectionId, string | undefined> = {
     test: STEP_FIELDS.specimen.concat(STEP_FIELDS.settings).map((k) => problems[k]).find(Boolean),
     dimensions: STEP_FIELDS.dimensions.map((k) => problems[k]).find(Boolean),
-    connection: c.connected ? undefined : 'Connect the acquisition device.',
+    connection: c.connected ? undefined : machine && !machine.people ? 'Run tests from the Windows app on the lab computer.' : machine && !machine.me ? 'Sign in to run the machine.' : machine?.me && !machine.me.canRunMachine ? machine.me.why : 'Connect the acquisition device.',
     calibration: c.readiness?.ready ? undefined : c.voltagesOnly ? undefined : c.readiness ? 'Not calibrated: load the setup file for this tester.' : 'Connect first.',
     review: c.startProblem || undefined,
   };
@@ -231,12 +236,13 @@ export function App({ controller: c, serialAvailable, theme, account, onHelpSub,
       {!c.locked ? <p><button type="button" className="link" onClick={() => set(EXAMPLE_DIMENSIONS)}>Fill example</button></p> : null}
     </>),
     connection: (<>
+      {machine ? <WhoRuns machine={machine} locked={c.locked || c.connected} /> : null}
       <p className={'conn-state conn-' + st.tone}><span className="conn-dot" aria-hidden="true" /><strong>{st.name}</strong></p>
       <p className="hint">USB serial, 921600 baud. You choose the port yourself; the app never opens one by itself. {serialAvailable ? '' : 'This browser cannot open USB serial ports: use Chrome on a computer, or the Windows app. '}The hardware connection is untested.</p>
       <p className="row">
         {/* after a fault the port is still open: both Disconnect and Connect (which closes the old connection first) are offered */}
         {c.connected || c.state === 'fault' ? <button type="button" onClick={() => (c.saved ? void c.disconnect() : setAsk('disconnect'))}>Disconnect</button> : null}
-        {!c.connected ? <button type="button" className="primary" disabled={state === 'connecting' || state === 'identifying'} onClick={() => void c.connect()}>Connect…</button> : null}
+        {!c.connected ? <button type="button" className="primary" disabled={state === 'connecting' || state === 'identifying' || (!!machine && !(machine.me?.canRunMachine))} onClick={() => void c.connect()}>Connect…</button> : null}
       </p>
       {c.message && !c.connected ? <p className="error" role="alert">{c.message}</p> : null}
       <details className="more"><summary>Device details</summary><div className="more-body"><DeviceFacts c={c} /></div></details>
@@ -401,5 +407,19 @@ export function App({ controller: c, serialAvailable, theme, account, onHelpSub,
         </p>
       </dialog>
     </main>
+  );
+}
+
+/** Who is running the machine: the signed-in person, a Sign in button, or (for a student) the responsible operator.
+    In a browser: the line that tests are run from the Windows app. */
+function WhoRuns({ machine: m, locked }: { machine: NonNullable<TestScreenProps['machine']>; locked: boolean }) {
+  if (!m.people) return <p className="hint who-runs">{BROWSER_WHY}</p>;
+  if (!m.me) return (<div className="who-runs"><p className="hint">Only people given access on this computer can run the machine.</p><p className="row"><button type="button" className="primary" onClick={m.onSignIn}>Sign in</button></p></div>);
+  return (
+    <div className="who-runs">
+      <p className="hint">Running the machine: <strong>{m.me.name}</strong> ({m.me.kindName.toLowerCase()}). Named in the test file.</p>
+      {m.me.mustChange ? <p className="hint">Choose your own password first (top right, Password).</p> : null}
+      {m.me.kind === 'student' && !m.me.mustChange ? <ResponsibleOperator people={m.people} me={m.me} locked={locked} onChange={m.onMe} /> : null}
+    </div>
   );
 }

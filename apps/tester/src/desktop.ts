@@ -1,5 +1,6 @@
 /* What the Windows app gives the screens (apps/desktop/preload.cjs). Absent in a browser. */
 import type { SessionJournal } from './storage/journal';
+import type { PeopleBridge } from './people';
 export interface DesktopBridge {
   kind: 'windows-app';
   getLabServer: () => Promise<string>;
@@ -12,6 +13,8 @@ export interface DesktopBridge {
   openReleasePage?: (url: string) => Promise<boolean>;
   getUpdateCheck?: () => Promise<boolean>;
   setUpdateCheck?: (on: boolean) => Promise<{ on?: boolean; error?: string }>;
+  /** Sign-in and the people who may run the machine (apps/desktop/people.cjs). */
+  people?: PeopleBridge;
 }
 export interface UpdateAnswer { available: boolean; version?: string; pageUrl?: string }
 export function desktopBridge(): DesktopBridge | null {

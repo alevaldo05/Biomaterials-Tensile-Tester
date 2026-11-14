@@ -6,6 +6,7 @@
    the preload's narrow bridge) with the same screens. The browser version keeps it in IndexedDB. Nothing here recreates samples that were
    not committed: a recovered recording ends where its last batch ends. */
 import type { TestType } from '@tensile/core';
+import type { OperatorBlock } from '../people';
 import type { CalibrationRecord, DeviceProfile } from '@tensile/recording';
 import type { Setup } from '../setup';
 
@@ -24,6 +25,8 @@ export interface JournalMeta {
   deviceId: string;
   /** Local time the recording started, ISO. */
   startedAt: string;
+  /** Who ran the test (written by the Windows app's main process). Missing in older entries and in the browser. */
+  operator?: OperatorBlock;
   /** Local time of the last committed batch, ISO. */
   lastCommitAt: string;
   endedAt: string | null;

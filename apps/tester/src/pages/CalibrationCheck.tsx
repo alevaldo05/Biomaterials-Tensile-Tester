@@ -13,7 +13,7 @@ import { usePrintReport } from '../components/usePrintReport';
 const READ_MS = 1000, POLL_MS = 50;
 
 export function CalibrationCheck({ controller: c }: { controller: TestController }) {
-  useSyncExternalStore(c.subscribe, c.snapshot);
+  useSyncExternalStore(c.subscribe, c.snapshot, c.snapshot);
   const [rows, setRows] = useState(emptyRows);
   const [unit, setUnit] = useState<'g' | 'kg'>('g');
   const [g, setG] = useState(DEFAULT_G);

@@ -9,8 +9,12 @@ import { BenchCalibration } from './BenchCalibration';
 import { CalibrationPanel, DeviceFacts } from '../components/DevicePanels';
 import { downloadBeforeLeaving } from '../exports';
 
-export function Device({ controller: c, account, serialAvailable }: { controller: TestController; account: Account | null; serialAvailable: boolean }) {
-  useSyncExternalStore(c.subscribe, c.snapshot);
+/** Who may use the setup-file and calibration makers: anyone (no sign-in in use), only the admin (the Windows app's
+    sign-in), or nobody here (a browser: they are made in the Windows app). */
+export type Makers = 'yes' | 'admin-only' | 'windows-app';
+
+export function Device({ controller: c, account, serialAvailable, makers = 'yes' }: { controller: TestController; account: Account | null; serialAvailable: boolean; makers?: Makers }) {
+  useSyncExternalStore(c.subscribe, c.snapshot, c.snapshot);
   const [copied, setCopied] = useState('');
   const busy = c.state === 'connecting' || c.state === 'identifying';
   const state = c.connected ? 'Connected' : busy ? 'Connecting…' : c.state === 'fault' ? 'Stopped by a fault' : 'Not connected';
@@ -43,9 +47,14 @@ export function Device({ controller: c, account, serialAvailable }: { controller
             <h2 id="cal-title">Calibration in use</h2>
             <CalibrationPanel c={c} account={account} />
           </section>
-          <SetupFileMaker controller={c} />
+          {makers === 'yes' ? <SetupFileMaker controller={c} /> : null}
           <CalibrationCheck controller={c} />
-          <BenchCalibration controller={c} />
+          {makers === 'yes' ? <BenchCalibration controller={c} /> : (
+            <section className="card-plain" aria-labelledby="makers-title">
+              <h2 id="makers-title">Setup file and calibration makers</h2>
+              <p className="hint">{makers === 'admin-only' ? 'Admin only. Sign in as the admin to make a setup file or a calibration from bench points.' : 'Made in the Windows app on the lab computer, by the admin.'}</p>
+            </section>
+          )}
         </div>
       </div>
       <section className="card-plain" aria-labelledby="diag-title">
