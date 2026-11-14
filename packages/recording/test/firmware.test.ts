@@ -1,4 +1,4 @@
-/* The reference firmware's own code (firmware/esp32-ads1115/src: protocol, acquisition loop, ADS1115 driver), built
+/* The reference firmware's own code (firmware/common: protocol, acquisition loop, ADS1115 driver), built
    for this computer with a pretend ADS1115, driven by the app's real connection, adapter, and recorder.
    This checks the two sides of the protocol against each other. It does not run on an ESP32 or touch hardware.
    Skipped when no C++ compiler is installed. */
@@ -16,7 +16,7 @@ import { countsToVolts, Recorder, sessionToTestRecord, signalPathOf } from '../s
 import type { CalibrationRecord, DeviceProfile } from '../src/index';
 
 const root = path.resolve(import.meta.dirname, '../../..');
-const script = path.join(root, 'firmware/esp32-ads1115/test/host/build-and-test.sh');
+const script = path.join(root, 'firmware/common/test/host/build-and-test.sh');
 const out = path.join(os.tmpdir(), 'tensile-firmware-host-' + process.pid);
 let hasCompiler = true;
 try { execFileSync('g++', ['--version'], { stdio: 'ignore' }); } catch { hasCompiler = false; }

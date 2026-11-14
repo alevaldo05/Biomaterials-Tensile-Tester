@@ -44,8 +44,8 @@ The reference lives in `firmware/esp32-ads1115/`. It may still be changing. Chec
 
 | ESP32 reference file | Pico work |
 |---|---|
-| `src/protocol.*` | Reuse unchanged. It is plain C++ with no Arduino calls, so it should compile on the Pico. |
-| `src/ads1115_driver.*` | Mostly unchanged. The register code stays. Replace the I²C read and write wrapper with the Pico's I²C calls. |
+| `firmware/common/protocol.*` | Reuse unchanged. It is plain C++ with no Arduino calls, so it should compile on the Pico. |
+| `firmware/common/ads1115_driver.*` | Unchanged. The register code stays; the Pico supplies its own I²C bus class in its `main.cpp`. |
 | `include/board_config.h` | New file for the Pico: I²C pins, I²C speed, ADC address, serial settings. |
 | `src/main.cpp` | Rewrite the loop for the Pico. Keep the same order of work. |
 | Timing source | Use `time_us_64()` for the microsecond timestamp. Report `time_unit` as `us`. |

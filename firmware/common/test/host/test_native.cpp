@@ -6,9 +6,9 @@
 #include <string>
 #include <vector>
 
-#include "../../src/acquisition_core.h"
-#include "../../src/ads1115_driver.h"
-#include "../../src/protocol.h"
+#include "../../acquisition_core.h"
+#include "../../ads1115_driver.h"
+#include "../../protocol.h"
 #include "fake_board.h"
 
 static int g_checks = 0;

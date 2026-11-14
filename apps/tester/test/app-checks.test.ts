@@ -1,7 +1,7 @@
 /* Checks on the app's pieces that are not the recording itself: help text, recent tests and recovery,
    method stores, and the exports. */
 import { describe, expect, it } from 'vitest';
-import { existsSync, readFileSync } from 'node:fs';
+import { existsSync, readdirSync, readFileSync } from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { HELP, helpFor, searchHelp } from '../src/help-text';
@@ -218,5 +218,28 @@ describe('status page', () => {
     expect(named.length).toBeGreaterThan(5);
     const missing = named.filter((t) => !existsSync(path.join(ROOT, t)) && !existsSync(path.join(ROOT, 'docs/app', t)));
     expect(missing).toEqual([]);
+  });
+});
+
+describe('no board names in app code', () => {
+  /* The app never branches on the board: device_type is free text. Comments may name boards as examples
+     (packages/protocol/src/messages.ts and two acquisition files do), so comments are removed before checking. */
+  const BOARDS = /esp32|esp-32|rp2040|pico|arduino|atmega|stm32|teensy/i;
+  const files = (dir: string): string[] => readdirSync(dir, { withFileTypes: true }).flatMap((e) => {
+    const p = path.join(dir, e.name);
+    return e.isDirectory() ? files(p) : /\.(ts|tsx|js|jsx|css|html)$/.test(e.name) ? [p] : [];
+  });
+  const roots = [path.join(ROOT, 'apps/tester/src'), ...readdirSync(path.join(ROOT, 'packages')).map((n) => path.join(ROOT, 'packages', n, 'src')).filter((d) => existsSync(d))];
+  it('has no board name in the code of the app or the shared packages', () => {
+    const found: string[] = [];
+    for (const f of roots.flatMap(files)) {
+      const code = readFileSync(f, 'utf8').replace(/\/\*[\s\S]*?\*\//g, '').replace(/(^|\s)\/\/.*$/gm, '$1');
+      if (BOARDS.test(code)) found.push(path.relative(ROOT, f));
+    }
+    expect(found).toEqual([]);
+  });
+  it('finds the source folders it checks', () => {
+    expect(roots.length).toBeGreaterThan(3);
+    expect(roots.flatMap(files).length).toBeGreaterThan(20);
   });
 });

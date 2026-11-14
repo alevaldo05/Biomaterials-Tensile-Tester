@@ -59,7 +59,7 @@ The first build downloads the ESP32 toolchain from the PlatformIO registry. (In 
 To build and test the firmware's portable code on a computer, with a pretend ADS1115 (needs a C++ compiler):
 
 ```bash
-bash firmware/esp32-ads1115/test/host/build-and-test.sh
+bash firmware/common/test/host/build-and-test.sh
 ```
 
 `npm test` also runs the app's connection and recorder against this host build (`packages/recording/test/firmware.test.ts`).
@@ -68,10 +68,7 @@ bash firmware/esp32-ads1115/test/host/build-and-test.sh
 
 The checks do not name a board. Every `firmware/<name>/platformio.ini` is built by the `firmware-build` job (all its environments, compile only), so a new board needs no change to the workflow.
 
-1. Make a folder `firmware/<name>/` with its own `platformio.ini`. Pin the `platform` there (for example `platform = <platform>@<version>`), using a version that has actually built; each board owns its own pin.
-2. Keep the board facts (pins, bus address, channel assignment) in one file, as `include/board_config.h` does for the ESP32 build, and mark them as examples until checked against the real wiring.
-3. The firmware must speak protocol v1 ([PROTOCOL.md](PROTOCOL.md)) and only read: it sends raw counts and no command to the tester. The ESP32 binary does not run on another chip.
-4. A new folder is picked up by the next run of the checks. A green build proves only that it compiles and links. The Pico plan is in [GUIDE-pico.md](GUIDE-pico.md); nothing there has been built.
+The protocol, acquisition loop, and ADS1115 driver are shared in `firmware/common/`; a board folder holds only its `platformio.ini`, `include/board_config.h`, and `src/main.cpp`. The steps are in [firmware/README.md](../../firmware/README.md): copy the ESP32 folder, rewrite the chip-specific block in `main.cpp`, edit `board_config.h` (examples until checked against the real wiring, including `TT_DEVICE_TYPE`), and pin the platform. The firmware must speak protocol v1 ([PROTOCOL.md](PROTOCOL.md)) and only read: it sends raw counts and no command to the tester. A green build proves only that it compiles and links. The Pico plan is in [GUIDE-pico.md](GUIDE-pico.md); nothing there has been built.
 
 ## Throughput
 

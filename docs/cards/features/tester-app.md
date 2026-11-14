@@ -17,7 +17,7 @@ The React and TypeScript app for running tests, the packages it shares with the 
 - `docs/app/CONTAINERS.md`; `deploy/` (compose file, Dockerfiles, gateway, backups, test image); `.github/workflows/app.yml` (checks; publishes nothing); `.dockerignore`
 - `docs/app/BACKEND.md`; `apps/api/` (back end and database migrations); `apps/tester/src/Shell.tsx`, `lab-api.ts`, `pages/` (sign-in, History, Admin, View as user)
 - `docs/app/SETUP.md`, `docs/app/GUIDE-pico.md`, `docs/app/GUIDE-raspberry-pi-service.md`
-- `firmware/esp32-ads1115/`: reference ESP32 + ADS1115 firmware; board facts only in `include/board_config.h`; `test/host/` runs its portable code on a computer
+- `firmware/common/`: shared protocol, acquisition loop, and ADS1115 driver (plain C++); `test/host/` runs it on a computer with a pretend ADS1115. `firmware/esp32-ads1115/`: the ESP32 board folder (platformio.ini, `include/board_config.h` with the only board facts, `src/main.cpp` with the chip-specific code in one block); it builds the shared code with `lib_deps = symlink://../common`. Adding a board: see the README in `firmware/`; never run on a board
 - `docs/app/PROTOCOL.md` (the acquisition protocol; the code in `packages/protocol/` is the reference)
 - `packages/acquisition/`, `packages/recording/`, `packages/machine-control/`: sources and transports (simulator, replay, USB serial), the recorder and conversion chain, and the machine-control stub; `packages/recording/test/` holds the acceptance tests
 - `scripts/check-site.js` (leaves the app folders and workspace files alone)
@@ -75,7 +75,7 @@ The React and TypeScript app for running tests, the packages it shares with the 
 - [graph-engine](graph-engine.md), [downloads](downloads.md), [calibration](calibration.md), [compare](compare.md) (the scripts the reference tests run)
 
 ## How to check
-- `bash firmware/esp32-ads1115/test/host/build-and-test.sh` (needs a C++ compiler); `pio run -e esp32dev` in `firmware/esp32-ads1115` (needs PlatformIO and its download hosts); the `firmware-build` job in `.github/workflows/app.yml` builds every `firmware/*/platformio.ini` on GitHub (compile only, no board named; each platformio.ini pins its own platform; the ESP32 one is `espressif32@8.0.0`)
+- `bash firmware/common/test/host/build-and-test.sh` (needs a C++ compiler); `pio run -e esp32dev` in `firmware/esp32-ads1115` (needs PlatformIO and its download hosts); the `firmware-build` job in `.github/workflows/app.yml` builds every `firmware/*/platformio.ini` on GitHub (compile only, no board named; each platformio.ini pins its own platform; the ESP32 one is `espressif32@8.0.0`)
 - `npm run app:build`, then open each screen in Chrome at 1366, 1280, 1024, 768, and 390 px, light and dark; recording, recovery, and Load test are covered by `apps/tester/test/` with a stand-in device
 - `npm install` once, then `npm test` and `npm run typecheck`
 - `node scripts/check-site.js`

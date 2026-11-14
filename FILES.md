@@ -133,7 +133,9 @@ Every page except `404.html` starts with a "Skip to main content" link (`.skip-l
 | `apps/tester/src/Shell.tsx`, `lab-api.ts`, `pages/` | The app's header, sign-in, and page switching; its client for the back end; the History and Admin pages. |
 | `apps/tester/site-data.ts` | Reads the website's `data/terms.js` and `data/materials.js` when the app is built, so the app shows the same definitions and materials. |
 | `tsconfig.web.json` | TypeScript settings for the parts that run in a browser page. |
-| `firmware/esp32-ads1115/` | Reference acquisition firmware for an ESP32 with an ADS1115 (PlatformIO). `include/board_config.h` is the only file with pins, the I2C address, and channel wiring (all example values); `src/ads1115_driver.*` holds the ADS1115 register work; `src/protocol.*` and `src/acquisition_core.*` are plain C++ with no Arduino calls; `src/main.cpp` connects them to the board. `test/host/` builds the portable code for a computer with a pretend ADS1115 and runs its unit tests (`build-and-test.sh`). |
+| `firmware/common/` | Firmware code shared by every board, plain C++ with no Arduino calls: `ads1115_driver.*` (ADS1115 register work), `protocol.*`, `acquisition_core.*`; `library.json` lets PlatformIO build it. `test/host/` builds it for a computer with a pretend ADS1115 and runs its unit tests (`build-and-test.sh`). |
+| `firmware/esp32-ads1115/` | The ESP32 + ADS1115 board folder (PlatformIO): `platformio.ini`, `include/board_config.h` (the only file with pins, the I2C address, and channel wiring; all example values), and `src/main.cpp` (the chip-specific code in one marked block). |
+| `firmware/README.md` | Firmware layout, the host tests, and how to add another board. |
 | `packages/`, `apps/`, `firmware/`, `deploy/` | The app, its packages, the back end, device-side software, and container files. `scripts/check-site.js` and `scripts/build-site.sh` leave them alone and out of the published site. |
 
 ## To change…
