@@ -21,7 +21,7 @@ services:
     restart: unless-stopped
 
   app:
-    build: { context: .., dockerfile: deploy/app/Dockerfile, args: { VERSION: "${APP_VERSION:-local}" } }
+    build: { context: .., dockerfile: deploy/app/Dockerfile, args: { VERSION: "${APP_VERSION:-local}", GITHUB_SHA: "${GITHUB_SHA:-}" } }
     image: ${IMAGE_PREFIX:-tensile}/app:${APP_VERSION:-local}
     restart: unless-stopped
 

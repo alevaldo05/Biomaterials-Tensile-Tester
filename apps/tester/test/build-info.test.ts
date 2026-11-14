@@ -46,6 +46,25 @@ describe('build stamp', () => {
     expect(commitId(ROOT, { GITHUB_SHA: 'not a sha' })).toMatch(/^([0-9a-f]{7,12}|unknown)$/);
     expect(commitId(path.join(ROOT, '..', 'no-such-folder-' + Date.now()), {})).toBe('unknown');
   });
+  it('treats an empty GITHUB_SHA (a local image build) as unset', () => {
+    expect(commitId(ROOT, { GITHUB_SHA: '' })).toMatch(/^([0-9a-f]{7,12}|unknown)$/);
+    expect(commitId(path.join(ROOT, '..', 'no-such-folder-' + Date.now()), { GITHUB_SHA: '' })).toBe('unknown');
+  });
+  it('is stamped inside the app image: the Dockerfile copies every file the build stamp reads and takes GITHUB_SHA', () => {
+    const docker = readFileSync(path.join(ROOT, 'deploy/app/Dockerfile'), 'utf8');
+    const build = docker.split(/^FROM /m)[1] ?? '';
+    const copies = build.split('\n').filter((l) => /^COPY\s/.test(l)).map((l) => l.split(/\s+/).slice(1, -1));
+    const sources = copies.flat().map((p) => p.replace(/^\.\//, '').replace(/\/$/, ''));
+    const covered = (file: string) => sources.some((p) => p === file || (p === '*.js' && !file.includes('/')) || file.startsWith(p + '/'));
+    expect(covered('scripts/shared-files.js')).toBe(true);
+    expect(covered('apps/desktop/package.json')).toBe(true);
+    expect(covered('data/terms.js')).toBe(true);
+    for (const f of sharedFiles(ROOT).SHARED_FILES) expect(covered(f), f + ' is not copied into the app image build').toBe(true);
+    expect(build).toMatch(/^ARG GITHUB_SHA\s*$/m);
+    expect(build.indexOf('ARG GITHUB_SHA')).toBeLessThan(build.indexOf('npm run build'));
+    expect(readFileSync(path.join(ROOT, 'deploy/compose.yml'), 'utf8')).toContain('GITHUB_SHA: "${GITHUB_SHA:-}"');
+    expect(readFileSync(path.join(ROOT, '.dockerignore'), 'utf8')).not.toMatch(/^\*\.js|^scripts|^data/m);
+  });
   it('is shown on the Help screen', () => {
     const html = renderToStaticMarkup(createElement(HelpPage));
     expect(html).toContain('class="hint version-line"');
