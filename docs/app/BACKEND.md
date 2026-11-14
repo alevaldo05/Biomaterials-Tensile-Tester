@@ -57,7 +57,7 @@ All under `/api/v1`, JSON. Changes (POST, PATCH) must carry the header `x-tensil
 
 
 ### Limits and refusals when saving
-- Saving a test: at most 30 saves a minute for each person (429, `too_many_saves`); the same file saved twice by the same person answers 409 (`duplicate`, with the number of the saved test); arrival times must fall between the years 2000 and 2100 (400).
+- Saving a test: at most 30 saves a minute for each person (429, `too_many_saves`); the same file saved twice by the same person answers 409 (`duplicate`, with the number of the saved test), also when both saves arrive at the same moment (a lock per person and file inside the save's transaction); a recorded test whose calibrations include one made for the simulator is refused (400, `simulated`); arrival times must fall between the years 2000 and 2100 (400).
 - A cookie that cannot be decoded counts as signed out (401), not as a server error.
 - A new password must differ from the current one, so a temporary password has to be replaced (400, `weak_password`).
 - Signing in also clears sign-ins that have run out. Sign-in attempts keep their own limit. Each attempt is counted before its password is checked, so attempts sent at the same time cannot pass the limit (an attempt that could not be checked because of a server error is not counted). When the counts reach 10,000 names and addresses, counts that ran out are dropped first, then the oldest that are not paused; paused ones go only if the table is still full.
@@ -72,7 +72,7 @@ All under `/api/v1`, JSON. Changes (POST, PATCH) must carry the header `x-tensil
 | `COOKIE_SECURE` | `true` | Send the login cookie only over HTTPS. Set `false` only for plain `http://localhost` |
 | `SESSION_HOURS` | `12` | How long a sign-in lasts |
 | `TRUST_PROXY` | `false` | `true` behind the gateway, so sign-in limits use the real address |
-| `BODY_LIMIT_MB` | `64` | Largest upload (a long test's session file) |
+| `BODY_LIMIT_MB` | `256` | Largest upload (a long test's session file; a one-hour relaxation test is over 64 MB) |
 
 ## Running it on your computer (without containers)
 

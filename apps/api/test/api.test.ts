@@ -630,6 +630,24 @@ describe.skipIf(!PG_BIN)('API against a real PostgreSQL', () => {
       expect(Math.abs(Date.parse(list[0]?.startedAt as string) - (T0 + 30))).toBeLessThan(2);   /* arrival time of the first sample line */
     });
 
+    it('refuses a recorded test that used a calibration made for the simulator', async () => {
+      const u = await mkSignedIn();
+      const cal = { id: 'cal-force', quantity: 'force', unit: 'N', slope: 2, offset: 0, signalPath: {}, origin: 'simulated', createdAt: '2026-01-01' };
+      const r = await upload(u.cookie, sessionFile({ calibrations: [cal] }));
+      expect(r.statusCode).toBe(400);
+      expect(r.json().error.message).toContain('calibration made for the simulator');
+      expect((await upload(u.cookie, sessionFile({ calibrations: [{ ...cal, origin: 'measured' }] }))).statusCode).toBe(201);
+    });
+
+    it('stores the same file once even when it is saved twice at the same moment', async () => {
+      const u = await mkSignedIn();
+      const file = sessionFile({ samples: 4, material: 'Twice at once' });
+      const [a, b] = await Promise.all([upload(u.cookie, file), upload(u.cookie, file)]);
+      expect([a.statusCode, b.statusCode].sort()).toEqual([201, 409]);
+      const list = (await call(app, 'GET', '/test-sessions', u.cookie)).json().sessions as Record<string, unknown>[];
+      expect(list.filter((s) => s.material === 'Twice at once')).toHaveLength(1);
+    });
+
     it('saves a session file made by the app\'s own controller, unchanged', async () => {
       /* the recording is a test stand-in from the test simulator, not data from a real tester */
       const { dev, c } = rig();

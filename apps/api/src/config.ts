@@ -23,6 +23,6 @@ export function readConfig(env: NodeJS.ProcessEnv = process.env): Config {
     cookieSecure: env.COOKIE_SECURE !== 'false',
     sessionHours: num(env.SESSION_HOURS, 12),
     trustProxy: env.TRUST_PROXY === 'true',
-    bodyLimitBytes: num(env.BODY_LIMIT_MB, 64) * 1024 * 1024,
+    bodyLimitBytes: num(env.BODY_LIMIT_MB, 256) * 1024 * 1024,
   };
 }
