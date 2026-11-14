@@ -37,8 +37,10 @@ function checkMeta(m) {
   if (m.profile !== null && (typeof m.profile !== 'object' || Array.isArray(m.profile))) fail('The device profile is not valid.');
   if (!Array.isArray(m.calibrations) || m.calibrations.length > 16) fail('The calibrations are not valid.');
   for (const f of ['appVersion', 'deviceId', 'startedAt']) if (typeof m[f] !== 'string' || m[f].length > 200) fail('Missing ' + f + '.');
+  if (m.forceZero_N !== undefined && !(typeof m.forceZero_N === 'number' && Number.isFinite(m.forceZero_N))) fail('The software baseline is not a number.');
   return {
     id: m.id, test: m.test, setup: { ...m.setup }, profile: small(m.profile, 'The device profile'), calibrations: small(m.calibrations, 'The calibrations'),
+    ...(m.forceZero_N !== undefined ? { forceZero_N: m.forceZero_N } : {}),
     appVersion: m.appVersion, deviceId: m.deviceId, startedAt: m.startedAt,
   };
 }

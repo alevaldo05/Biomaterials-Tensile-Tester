@@ -1,6 +1,10 @@
 import { describe, expect, it } from 'vitest';
+import { SimulatedDevice, TransportError } from '@tensile/acquisition';
+import type { Transport } from '@tensile/acquisition';
 import { analyzeUniaxial } from '@tensile/core';
-import { sessionFileFromJournal } from '../src/controller';
+import { signalPathOf } from '@tensile/recording';
+import { sessionFileFromJournal, TestController } from '../src/controller';
+import { openTestFile } from '../src/load';
 import { resultsFor } from '../src/results';
 import { MemoryJournal } from '../src/storage/journal';
 import { MemoryMethods, methodFromSetup } from '../src/storage/methods';
@@ -71,6 +75,85 @@ describe('test controller (real acquisition only)', () => {
     expect(c.message).toContain('connection was lost');
   });
 
+  for (const [name, trouble, kind] of [
+    ['a device fault', (d: SimulatedDevice) => d.injectText('{"v":1,"type":"fault","code":"adc_error","message":"ADC error"}\n'), 'fault'],
+    ['a device restart', (d: SimulatedDevice) => d.restart(), 'device-reset'],
+    ['a lost connection', (d: SimulatedDevice) => d.unplug(), 'disconnected'],
+  ] as const) {
+    it('a recording ended by ' + name + ' reopens from its session file as interrupted', async () => {
+      const { dev, c } = rig();
+      ready(c);
+      await c.connect();
+      c.useSetup(measuredSetup(c));
+      await c.startRecording();
+      move(dev, c);
+      dev.step(600);
+      trouble(dev);
+      expect(c.phase).toBe('done');
+      expect(c.session!.interrupted).toBe(true);
+      const f = c.sessionFile()!;
+      expect(f.interrupted).toBe(true);
+      expect(f.endReason).toContain('Recording interrupted');
+      const loaded = await openTestFile('cut.session.json', JSON.stringify(f));
+      expect(loaded.session!.interrupted).toBe(true);
+      expect(loaded.session!.endReason).toBe(c.session!.endReason);
+      expect(loaded.session!.events.map((e) => e.kind)).toContain(kind);
+      expect(loaded.record!.raw).toEqual(c.record!.raw);
+      /* without the saved flag (an older file), a fault or restart line in the file still ends the replay as interrupted */
+      if (kind !== 'disconnected') {
+        const { interrupted: _i, endReason: _r, events: _e, ...older } = f;
+        expect((await openTestFile('old.session.json', JSON.stringify(older))).session!.interrupted).toBe(true);
+      }
+    });
+  }
+
+  it('keeps the samples of a device that writes JSON with spaces after the separators', async () => {
+    /* the same messages as the stand-in sends, written the way Python's json.dumps writes them by default */
+    const dev = new SimulatedDevice({ manualMotion: true, auto: false });
+    const dec = new TextDecoder(), enc = new TextEncoder();
+    const spaced: Transport = {
+      label: 'USB serial (stand-in)', open: () => dev.open(), close: () => dev.close(), write: (b) => dev.write(b), onClose: (l) => dev.onClose(l),
+      onData: (l) => dev.onData((chunk) => l(enc.encode(dec.decode(chunk).replace(/":/g, '": ').replace(/,"/g, ', "')))),
+    };
+    const journal = new MemoryJournal();
+    const c = new TestController({ openReal: () => spaced, journal, commitEvery_ms: 0 });
+    ready(c);
+    await c.connect();
+    c.useSetup(measuredSetup(c));
+    await c.startRecording();
+    move(dev, c);
+    dev.step(1200);
+    c.stopRecording();
+    await c.flushed();
+    const f = c.sessionFile()!;
+    expect(f.lines.some((l) => l.includes('"type": "sample"'))).toBe(true);
+    expect(f.lines.length).toBeGreaterThan(c.sampleCount);
+    expect((await journal.lines(c.journalId!)).lines).toEqual(f.lines);
+    const loaded = await openTestFile('spaced.session.json', JSON.stringify(f));
+    expect(loaded.record!.raw).toEqual(c.record!.raw);
+  });
+
+  it('keeps the device profile the test was recorded with when another setup file is chosen afterwards', async () => {
+    const { dev, c } = rig();
+    ready(c);
+    await c.connect();
+    const a = measuredSetup(c);
+    c.useSetup(a);
+    await c.startRecording();
+    move(dev, c);
+    dev.step(1200);
+    c.stopRecording();
+    /* another rig's setup chosen in the Calibration step before the test is saved */
+    const src = c.source!, other = { conditioning: { id: 'div-b', gain: 0.5, offset_V: 0 } };
+    const profileB = { id: 'rig-b', name: 'Rig B', channels: { force: other, displacement: other } };
+    c.useSetup({ profile: profileB, calibrations: a.calibrations.map((k) => ({ ...k, id: k.id + '-b', signalPath: signalPathOf(src.identity!, src.channels.find((ch) => ch.quantity === k.quantity)!, src.settings!, other.conditioning) })) });
+    const f = c.sessionFile()!;
+    expect(f.profile!.id).toBe('test-rig');
+    expect(f.calibrations.map((k) => k.id)).toEqual(['cal-force', 'cal-displacement']);
+    const loaded = await openTestFile('swap.session.json', JSON.stringify(f));
+    expect(loaded.record!.raw).toEqual(c.record!.raw);
+  });
+
   it('refuses a calibration change while recording, and a software baseline is labeled as such', async () => {
     const { dev, c } = rig();
     ready(c);
@@ -83,6 +166,78 @@ describe('test controller (real acquisition only)', () => {
     await c.startRecording();
     expect(() => c.useSetup(setup)).toThrow('cannot be changed while recording');
   });
+});
+
+/* One physical port, like Web Serial: opening it while it is already open fails (Chrome: InvalidStateError). */
+function onePort(dev: SimulatedDevice) {
+  let openBy: object | null = null;
+  const log: string[] = [];
+  const make = (): Transport => {
+    const me: Transport = {
+      label: 'USB serial (stand-in)',
+      async open() { log.push('open'); if (openBy) throw new TransportError('port-in-use', 'InvalidStateError: The port is already open.'); openBy = me; await dev.open(); },
+      async close() { log.push('close'); if (openBy === me) { openBy = null; await dev.close(); } },
+      write: (b) => dev.write(b),
+      onData: (l) => dev.onData(l),
+      onClose: (l) => dev.onClose((i) => { if (i.unexpected) openBy = null; l(i); }),
+    };
+    return me;
+  };
+  return { make, log };
+}
+
+describe('connecting again', () => {
+  it('keeps the finished test with its session file when Connect is pressed after an interrupted recording', async () => {
+    const { dev, c } = rig();
+    ready(c);
+    await c.connect();
+    c.useSetup(measuredSetup(c));
+    await c.startRecording();
+    move(dev, c);
+    dev.step(1200);
+    dev.unplug();
+    expect(c.phase).toBe('done');
+    const before = c.sessionFile()!;
+    await c.connect();
+    expect(c.connected).toBe(true);
+    expect(c.phase).toBe('done');
+    const after = c.sessionFile()!;
+    expect(after.lines).toEqual(before.lines);
+    expect(after.receivedAt_ms).toEqual(before.receivedAt_ms);
+    dev.step(200);   /* readings on the new connection are not added to the finished test */
+    expect(c.sessionFile()!.lines).toEqual(before.lines);
+    await c.disconnect();
+    expect(c.sessionFile()!.lines).toEqual(before.lines);   /* and the file can still be saved after Disconnect */
+    expect((await openTestFile('kept.session.json', JSON.stringify(c.sessionFile()))).record!.raw).toEqual(c.record!.raw);
+  });
+
+  for (const [name, trouble] of [
+    ['a device restart', (d: SimulatedDevice) => d.restart()],
+    ['a fault message', (d: SimulatedDevice) => d.injectText('{"v":1,"type":"fault","code":"buffer_overflow","message":"overflow"}\n')],
+  ] as const) {
+    it('closes the port and connects again after ' + name, async () => {
+      const dev = new SimulatedDevice({ manualMotion: true, auto: false });
+      const port = onePort(dev);
+      const c = new TestController({ openReal: port.make, journal: null, commitEvery_ms: 0 });
+      ready(c);
+      await c.connect();
+      c.useSetup(measuredSetup(c));
+      await c.startRecording();
+      move(dev, c);
+      dev.step(400);
+      trouble(dev);
+      expect(c.state).toBe('fault');
+      const kept = c.sessionFile()!.lines;
+      await c.connect();
+      expect(c.message).toBe('');
+      expect(port.log).toEqual(['open', 'close', 'open']);
+      expect(c.source!.state).toBe('streaming');
+      expect(c.sessionFile()!.lines).toEqual(kept);
+      /* the old connection no longer changes the screen */
+      c.useSetup(measuredSetup(c));
+      expect(c.state).toBe('ready');
+    });
+  }
 });
 
 describe('recording on this computer', () => {
@@ -111,6 +266,60 @@ describe('recording on this computer', () => {
     const fromJournal = await sessionFileFromJournal(journal, end.id);
     expect(fromJournal.lines).toEqual(c.sessionFile()!.lines);
     expect(fromJournal.recordedFrom).toBe('real');
+  });
+
+  for (const [name, trouble] of [['a lost connection', (d: SimulatedDevice) => d.unplug()], ['a device restart', (d: SimulatedDevice) => d.restart()]] as const) {
+    it('marks a recording ended by ' + name + ' as interrupted, with the reason', async () => {
+      const journal = new MemoryJournal();
+      const { dev, c } = rig({ journal });
+      ready(c);
+      await c.connect();
+      c.useSetup(measuredSetup(c));
+      await c.startRecording();
+      move(dev, c);
+      dev.step(600);
+      trouble(dev);
+      await c.flushed();
+      await new Promise((r) => setTimeout(r, 0));
+      const m = (await journal.list())[0]!;
+      expect(m.status).toBe('interrupted');
+      expect(m.endReason).toBe(c.session!.endReason);
+      expect(m.endReason).toContain('Recording interrupted');
+      const reopened = await openTestFile('j.session.json', JSON.stringify(await sessionFileFromJournal(journal, m.id)));
+      expect(reopened.session!.interrupted).toBe(true);
+      expect(reopened.session!.endReason).toBe(m.endReason);
+    });
+  }
+
+  it('keeps the software baseline in the session file and the journal, so a reopened test gives the same results', async () => {
+    const journal = new MemoryJournal();
+    const { dev, c } = rig({ journal });
+    ready(c);
+    await c.connect();
+    c.useSetup(measuredSetup(c));
+    move(dev, c);
+    dev.step(200);   /* a small preload on the specimen */
+    c.zeroForce();
+    const zero = c.recorder!.forceZero_N;
+    expect(zero).toBeGreaterThan(0);
+    await c.startRecording();
+    dev.step(2400);
+    c.stopRecording();
+    await c.flushed();
+    await new Promise((r) => setTimeout(r, 0));
+    const f = c.sessionFile()!;
+    expect(f.forceZero_N).toBe(zero);
+    expect((await journal.list())[0]!.forceZero_N).toBe(zero);
+    const live = analyzeUniaxial(c.record!)!;
+    for (const file of [f, await sessionFileFromJournal(journal, c.journalId!)]) {
+      const loaded = await openTestFile('z.session.json', JSON.stringify(file));
+      expect(loaded.session!.forceZero_N).toBe(zero);
+      expect(loaded.record!.raw).toEqual(c.record!.raw);
+      expect(analyzeUniaxial(loaded.record!)!.uts.y).toBeCloseTo(live.uts.y, 9);
+    }
+    /* an older file without the field opens with no baseline */
+    const { forceZero_N: _z, ...older } = f;
+    expect((await openTestFile('old.session.json', JSON.stringify(older))).session!.forceZero_N).toBe(0);
   });
 
   it('a recording cut off by a closed app stays "recording" and can be rebuilt', async () => {

@@ -35,7 +35,8 @@ export class ReplayTransport implements Transport {
     for (const l of o.lines) {
       const t = typeOf(l);
       if (t === 'sample') streaming = true;
-      if (streaming && (t === 'sample' || t === 'fault' || t === 'settings')) this.stream.push(l);
+      /* a hello after the samples began is a device restart; it is replayed in place so the replay ends there too */
+      if (streaming && (t === 'sample' || t === 'fault' || t === 'settings' || t === 'hello')) this.stream.push(l);
       else if (t && this.first[t] === undefined) this.first[t] = l;
     }
   }

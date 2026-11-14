@@ -192,7 +192,7 @@ export class DeviceSource implements AcquisitionSource {
   private receive(chunk: Uint8Array): void {
     const at = this.opts.now();
     for (const e of this.adapter.receive(chunk)) {
-      if ('raw' in e && e.raw !== undefined) this.emit('line', e.raw, at);
+      if ('raw' in e && e.raw !== undefined) this.emit('line', e.raw, at, e.kind);
       switch (e.kind) {
         case 'rejected':
           this.rejectedCount++;

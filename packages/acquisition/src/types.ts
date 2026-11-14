@@ -116,8 +116,8 @@ export interface SourceEvents {
   gap: (gap: Gap) => void;
   diagnostic: (d: Diagnostic) => void;
   settings: (settings: AcquisitionSettings) => void;
-  /** Every valid line received, for a replay log. */
-  line: (line: string, receivedAt_ms: number) => void;
+  /** Every valid line received, for a replay log, with what the adapter read it as (so nobody has to match its text). */
+  line: (line: string, receivedAt_ms: number, kind: AdapterEvent['kind']) => void;
 }
 
 /** The one interface the screens and the recorder use. They cannot tell an ESP32 from a Pico, a Raspberry Pi

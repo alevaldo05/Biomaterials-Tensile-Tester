@@ -52,7 +52,7 @@ All under `/api/v1`, JSON. Changes (POST, PATCH) must carry the header `x-tensil
 | `GET /calibrations` · `POST /calibrations`, `POST /calibrations/:id/approve`, `POST /calibrations/:id/retire` | signed in · admin | Calibrations |
 | `GET /methods` · `POST /methods`, `POST /methods/:key/archive` | signed in · admin | Shared test methods (current revisions only). Fields are limited to the setup's own names (material, temperature, environment, dimensions, speed, hold, offset yield); a specimen ID, notes, or any other name is refused. A change names the revision it was made from and is refused (409) if someone changed the method since |
 | `GET /setup-files/:profileId` | signed in | A profile with its approved calibrations, in the app's setup-file shape |
-| `POST /test-sessions`, `GET /test-sessions`, `GET /test-sessions/:id`, `GET /test-sessions/:id/file` | signed in | Save a test, list (own; admins all, `?owner=`), details, the session file. Someone else's test answers "not found". A save is refused when the file is marked simulated, a line is not a protocol-1 message a device sends, or there is not one arrival time per line. The calibration is labeled, never refused: lab-approved (every calibration in the file is approved here with the same numbers), not from the lab, or none |
+| `POST /test-sessions`, `GET /test-sessions`, `GET /test-sessions/:id`, `GET /test-sessions/:id/file` | signed in | Save a test, list (own; admins all, `?owner=`), details, the session file. Someone else's test answers "not found". A save is refused when the file is marked simulated, a line is not a protocol-1 message a device sends, or there is not one arrival time per line. Optional fields from newer apps (`forceZero_N`, `interrupted`, `endReason`) are checked when present; the file is stored as uploaded. The calibration is labeled, never refused: lab-approved (every calibration in the file is approved here with the same numbers), not from the lab, or none |
 | `GET /audit` | admin | The last 200 entries |
 
 
@@ -60,7 +60,7 @@ All under `/api/v1`, JSON. Changes (POST, PATCH) must carry the header `x-tensil
 - Saving a test: at most 30 saves a minute for each person (429, `too_many_saves`); the same file saved twice by the same person answers 409 (`duplicate`, with the number of the saved test); arrival times must fall between the years 2000 and 2100 (400).
 - A cookie that cannot be decoded counts as signed out (401), not as a server error.
 - A new password must differ from the current one, so a temporary password has to be replaced (400, `weak_password`).
-- Signing in also clears sign-ins that have run out. Sign-in attempts keep their own limit.
+- Signing in also clears sign-ins that have run out. Sign-in attempts keep their own limit. Each attempt is counted before its password is checked, so attempts sent at the same time cannot pass the limit (an attempt that could not be checked because of a server error is not counted). When the counts reach 10,000 names and addresses, counts that ran out are dropped first, then the oldest that are not paused; paused ones go only if the table is still full.
 - These counters are kept in the API's memory, so they reset when it restarts and are per copy of the API.
 
 ## Settings (environment variables)

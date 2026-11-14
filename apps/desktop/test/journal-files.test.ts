@@ -86,6 +86,17 @@ describe('recording files', () => {
   });
 });
 
+describe('the software baseline', () => {
+  it('is kept with the recording, and refused when it is not a number', async () => {
+    const j = createJournalFiles(tmp());
+    await j.begin({ ...meta(), forceZero_N: 0.8125 }, { lines: [], receivedAt_ms: [] });
+    expect((await j.list())[0]!.forceZero_N).toBe(0.8125);
+    await j.begin(meta('s-abc123-nozero'), { lines: [], receivedAt_ms: [] });
+    expect((await j.list()).find((m) => m.id === 's-abc123-nozero')!.forceZero_N).toBeUndefined();
+    await expect(j.begin({ ...meta('s-abc123-zz'), forceZero_N: 'a lot' as never }, { lines: [], receivedAt_ms: [] })).rejects.toThrow('not a number');
+  });
+});
+
 describe('a whole recording through the app onto files', () => {
   it('records, recovers after the app closes, and opens the result in Load test', async () => {
     const files = createJournalFiles(tmp());

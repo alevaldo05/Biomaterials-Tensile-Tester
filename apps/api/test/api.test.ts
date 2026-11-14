@@ -4,6 +4,7 @@ import crypto from 'node:crypto';
 import type { FastifyInstance } from 'fastify';
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 import { parseSetupFile } from '../../tester/src/controller';
+import { openTestFile } from '../../tester/src/load';
 import { measuredSetup, move, ready, rig } from '../../tester/test/helpers';
 import { buildApp } from '../src/app';
 import { hashPassword, LoginLimiter } from '../src/auth';
@@ -114,6 +115,41 @@ describe.skipIf(!PG_BIN)('API against a real PostgreSQL', () => {
       expect((await call(a, 'POST', '/auth/login', null, { username: u.username, password: PW })).statusCode).toBe(429);
       t += 15 * 60_000 + 1;
       expect((await call(a, 'POST', '/auth/login', null, { username: u.username, password: PW })).statusCode).toBe(200);
+    });
+
+    it('holds the limit when many wrong passwords arrive at the same time', async () => {
+      const a = make({ limiter: new LoginLimiter() });
+      const u = await mkUser(uname('parallel'));
+      const rs = await Promise.all(Array.from({ length: 40 }, (_, i) => call(a, 'POST', '/auth/login', null, { username: u.username, password: 'guess-' + i })));
+      const codes = rs.map((r) => r.statusCode);
+      expect(codes.filter((c) => c === 401)).toHaveLength(5);   /* only 5 passwords were checked */
+      expect(codes.filter((c) => c === 429)).toHaveLength(35);
+      expect((await call(a, 'POST', '/auth/login', null, { username: u.username, password: PW })).statusCode).toBe(429);
+    });
+
+    it('does not count a sign-in that failed because the database was down', async () => {
+      const lim = new LoginLimiter(2);
+      const a = buildApp({ db: { query: async () => { throw new Error('connect ECONNREFUSED 127.0.0.1:5432'); } } as unknown as Db, config, limiter: lim });
+      apps.push(a);
+      for (let i = 0; i < 3; i++) expect((await call(a, 'POST', '/auth/login', null, { username: 'anyone', password: PW })).statusCode).toBe(503);
+      expect(lim.blocked(['u:anyone', 'ip:127.0.0.1'])).toBe(0);
+    });
+
+    it('when its table is full, forgets old entries that are not paused before any lockout, and never clears them all', () => {
+      let t = 0;
+      const lim = new LoginLimiter(5, 15 * 60_000, () => t, 10);
+      for (let i = 0; i < 5; i++) lim.reserve(['u:victim']);   /* paused */
+      expect(lim.blocked(['u:victim'])).toBeGreaterThan(0);
+      t += 1000;
+      for (let i = 0; i < 50; i++) lim.reserve(['u:spray-' + i]);   /* one guess each for many other names */
+      expect(lim.size).toBeLessThanOrEqual(10);
+      expect(lim.blocked(['u:victim'])).toBeGreaterThan(0);
+      expect(lim.blocked(['u:spray-49'])).toBe(0);
+      for (let i = 0; i < 4; i++) lim.reserve(['u:spray-49']);
+      expect(lim.blocked(['u:spray-49'])).toBeGreaterThan(0);   /* recent counts are kept */
+      t += 15 * 60_000 + 1;
+      lim.reserve(['u:late']);
+      expect(lim.size).toBe(1);   /* run-out entries are removed when the table is full */
     });
 
     it('a success clears only that name\'s own count', async () => {
@@ -612,6 +648,30 @@ describe.skipIf(!PG_BIN)('API against a real PostgreSQL', () => {
       expect(back.statusCode).toBe(200);
       expect(sha(back.rawPayload)).toBe(r.json().sha256);
       expect(JSON.parse(back.body).lines).toEqual(file.lines);
+    });
+
+    it('keeps the software baseline of a saved test, and refuses one that is not a number', async () => {
+      const { dev, c } = rig();
+      ready(c);
+      await c.connect();
+      c.useSetup(measuredSetup(c));
+      move(dev, c);
+      dev.step(200);
+      c.zeroForce();
+      await c.startRecording();
+      dev.step(1200);
+      c.stopRecording();
+      const file = c.sessionFile()!;
+      expect(file.forceZero_N).toBeGreaterThan(0);
+      const u = await mkSignedIn();
+      const r = await upload(u.cookie, file);
+      expect(r.statusCode).toBe(201);
+      const back = JSON.parse((await call(app, 'GET', '/test-sessions/' + r.json().id + '/file', u.cookie)).body);
+      expect(back.forceZero_N).toBe(file.forceZero_N);
+      expect((await openTestFile('lab.session.json', JSON.stringify(back))).session!.forceZero_N).toBe(file.forceZero_N);
+      const bad = await upload(u.cookie, { ...file, forceZero_N: 'a lot' });
+      expect(bad.statusCode).toBe(400);
+      expect(bad.json().error.message).toContain('forceZero_N');
     });
 
     it('treats a cookie that cannot be decoded as signed out, not as a server error', async () => {
