@@ -82,6 +82,13 @@ describe('Windows app', () => {
     expect(pkg.build.files).not.toContain('node_modules/**/*');
     expect(pkg.build.files).toEqual(expect.arrayContaining(['main.cjs', 'preload.cjs', 'ui-files.cjs', 'lab-proxy.cjs', 'journal-files.cjs', 'update-check.cjs', 'ui/**/*']));
   });
+  it('uses the curve mark as the Windows icon: a 256 x 256 PNG that electron-builder turns into the .ico', () => {
+    const pkg = JSON.parse(read('package.json'));
+    expect(pkg.build.win.icon).toBe('build/icon.png');
+    const png = readFileSync(path.join(dir, pkg.build.win.icon));
+    expect(png.subarray(1, 4).toString('ascii')).toBe('PNG');
+    expect([png.readUInt32BE(16), png.readUInt32BE(20)]).toEqual([256, 256]);
+  });
   it('builds an installer and a portable program, both x64, both named unsigned beta, with the same name before the kind', () => {
     const pkg = JSON.parse(read('package.json'));
     expect(pkg.build.win.target).toEqual([{ target: 'nsis', arch: ['x64'] }, { target: 'portable', arch: ['x64'] }]);
