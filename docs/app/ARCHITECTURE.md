@@ -75,7 +75,7 @@ Rules that hold everywhere:
 | USB serial (Web Serial) transport | Implemented and checked with a stand-in port only; **untested with real hardware** |
 | `packages/recording`: conversion chain, calibration compatibility, recorder (raw and converted values, both timestamps, gaps, faults), session to test record | Implemented |
 | `packages/machine-control`: "unsupported", transmits nothing | Implemented (as a stub, on purpose) |
-| ESP32 reference firmware (`firmware/esp32-ads1115`) | Implemented; tested on a computer with a pretend ADS1115 only, never on a board ([SETUP](SETUP.md)) |
+| ESP32 reference firmware (shared code in `firmware/common`, board folder `firmware/esp32-ads1115`) | Implemented; tested on a computer with a pretend ADS1115 only, never on a board ([SETUP](SETUP.md)) |
 | Pico firmware, Raspberry Pi service | Planned; guides only |
 | Electron, a network transport to a Raspberry Pi | Planned |
 | `packages/ui` and `apps/tester`: the app screens, graph, exports, local recording and recovery | Implemented; details in [FEATURE-STATUS](FEATURE-STATUS.md) |

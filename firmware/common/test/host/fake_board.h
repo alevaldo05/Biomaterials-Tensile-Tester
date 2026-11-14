@@ -10,8 +10,8 @@
 #include <string>
 #include <vector>
 
-#include "../../src/acquisition_core.h"
-#include "../../src/ads1115_driver.h"
+#include "../../acquisition_core.h"
+#include "../../ads1115_driver.h"
 
 namespace tt_test {
 

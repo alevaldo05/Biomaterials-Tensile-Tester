@@ -14,7 +14,8 @@ import type { SessionJournal } from './storage/journal';
 import type { TestMethod } from './storage/methods';
 import { setupFromMethod } from './storage/methods';
 
-export const APP_VERSION = '0.2.0';
+/** The app's version, written only in apps/desktop/package.json and added by the build (apps/tester/build-info.ts). */
+export const APP_VERSION: string = __APP_VERSION__;
 export type Phase = 'setup' | 'recording' | 'done';
 /** Saving on this computer: separate from the lab server. */
 export type LocalSave = 'none' | 'saving' | 'saved' | 'error' | 'off';

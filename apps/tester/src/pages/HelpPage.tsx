@@ -3,6 +3,7 @@ import { useState } from 'react';
 import { HelpTopicView } from '../components/HelpButton';
 import { HELP, searchHelp } from '../help-text';
 import { siteUrl } from '../site-url';
+import { versionLine } from '../version';
 
 export function HelpPage() {
   const [q, setQ] = useState('');
@@ -19,6 +20,7 @@ export function HelpPage() {
           <div className="panel-body"><HelpTopicView topic={topic} /></div>
         </details>
       ))}
+      <p className="hint version-line">{versionLine()}</p>
     </main>
   );
 }

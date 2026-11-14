@@ -145,7 +145,7 @@ Nothing in the files names a computer. By default the gateway listens only on th
 
 ## Checks
 
-`.github/workflows/app.yml` runs on pushes to `main` and `tester-app` and on pull requests into `main`. It builds `deploy/test/Dockerfile` (all type checks and tests, with PostgreSQL and a C++ compiler), then builds and starts the containers (with a throwaway certificate), checks each part through the gateway over HTTP and HTTPS, and checks that the backup service wrote a dump that `pg_restore --list` can read. It publishes no image.
+`.github/workflows/app.yml` runs on pushes to `main` and `tester-app` and on pull requests into `main`. It builds `deploy/test/Dockerfile` (all type checks and tests, with PostgreSQL and a C++ compiler), then builds and starts the containers (with a throwaway certificate), checks each part through the gateway over HTTP and HTTPS, and checks that the backup service wrote a dump that `pg_restore --list` can read. It publishes no image. The app image copies `scripts/shared-files.js`, the website scripts in the top folder, `data/`, and `apps/` because its build stamp (Help: "built from <commit>") hashes them; the commit comes from the `GITHUB_SHA` build argument and reads "unknown" when it is empty (a local build). A test in `apps/tester/test/build-info.test.ts` checks the Dockerfile copies them.
 
 ## Notes for unusual networks
 

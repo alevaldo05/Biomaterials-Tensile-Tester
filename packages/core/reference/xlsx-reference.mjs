@@ -1,10 +1,8 @@
 /* Builds two .xlsx files with the website's own excel-export.js (loaded in a sandbox, as in legacy.mjs).
    The time stamp stored in the zip is frozen, so the bytes are the same on every run.
    The values below are made up (synthetic sample numbers). None of it is measured data. */
-import fs from 'node:fs';
-import path from 'node:path';
 import vm from 'node:vm';
-import { ROOT } from './legacy.mjs';
+import { readShared } from './legacy.mjs';
 
 /* Local time, so the stored zip time is the same in every time zone. Seconds are even (the zip keeps 2-second steps). */
 export const XLSX_DATE_PARTS = [2026, 0, 15, 9, 30, 6];
@@ -71,7 +69,7 @@ function loadExcelExport() {
   sandbox.window = sandbox;
   vm.createContext(sandbox);
   const file = 'excel-export.js';
-  vm.runInContext(fs.readFileSync(path.join(ROOT, file), 'utf8'), sandbox, { filename: file });
+  vm.runInContext(readShared(file), sandbox, { filename: file });
   const bytes = () => {
     const chunks = parts.splice(0).map((p) => (p instanceof Uint8Array ? Buffer.from(p.buffer, p.byteOffset, p.byteLength) : Buffer.from(new Uint8Array(p))));
     return Buffer.concat(chunks);

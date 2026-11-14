@@ -10,6 +10,10 @@
 #include "ads1115_driver.h"
 #include "board_config.h"
 
+// ===================================================================================================
+// Board-specific: ESP32 (Arduino core). Everything that calls the ESP32 or Arduino (Wire, Serial,
+// esp_timer, esp_random, the efuse MAC) is in this block. Another board rewrites only this block.
+// ===================================================================================================
 namespace {
 
 class WireBus : public tt::I2cBus {
@@ -41,22 +45,41 @@ std::string hex32(uint32_t v) {
   return buf;
 }
 
+// Id and boot id sources. The id is stable for this chip; the boot id is new on every start.
+std::string chipId() { return hex32(static_cast<uint32_t>(ESP.getEfuseMac() >> 16)); }
+std::string newBootId() { return hex32(esp_random()); }
+
+void startSerial() {
+  Serial.setTxBufferSize(8192);
+  Serial.begin(TT_SERIAL_BAUD);
+}
+void startBus() { Wire.begin(TT_I2C_SDA_PIN, TT_I2C_SCL_PIN, TT_I2C_CLOCK_HZ); }
+
+bool serialReadByte(uint8_t& b) {
+  if (!Serial.available()) return false;
+  b = static_cast<uint8_t>(Serial.read());
+  return true;
+}
+
 WireBus bus;
 SerialPlatform platform;
+// ===================================================================================================
+// End of the board-specific block.
+// ===================================================================================================
+
 tt::Ads1115 adc(bus, TT_ADS1115_ADDRESS);
 tt::AcquisitionCore* core = nullptr;
 
 }  // namespace
 
 void setup() {
-  Serial.setTxBufferSize(8192);
-  Serial.begin(TT_SERIAL_BAUD);
-  Wire.begin(TT_I2C_SDA_PIN, TT_I2C_SCL_PIN, TT_I2C_CLOCK_HZ);
+  startSerial();
+  startBus();
   tt::CoreConfig cfg;
-  cfg.deviceId = "esp32-" + hex32(static_cast<uint32_t>(ESP.getEfuseMac() >> 16));
+  cfg.deviceId = std::string(TT_DEVICE_TYPE) + "-" + chipId();
   cfg.deviceType = TT_DEVICE_TYPE;
   cfg.swVersion = TT_SOFTWARE_VERSION;
-  cfg.bootId = hex32(esp_random());   // new on every start, so the app notices a restart
+  cfg.bootId = newBootId();   // new on every start, so the app notices a restart
   cfg.channels = TT_CHANNELS;
   cfg.fullScale_mV = TT_DEFAULT_FULL_SCALE_MV;
   cfg.dataRate_sps = TT_DEFAULT_DATA_RATE_SPS;
@@ -67,7 +90,7 @@ void setup() {
 void loop() {
   uint8_t buf[128];
   size_t n = 0;
-  while (Serial.available() && n < sizeof buf) buf[n++] = static_cast<uint8_t>(Serial.read());
+  while (n < sizeof buf && serialReadByte(buf[n])) n++;
   if (n) core->receive(reinterpret_cast<const char*>(buf), n);
   core->poll();
 }

@@ -203,6 +203,8 @@ input[type="password"] { width: 100%; background: var(--panel); border: 1px soli
 .help-topic h4 { margin: 4px 0 0; font-size: 0.92rem; }
 .help-topic dl { margin: 0; display: grid; gap: 4px; }
 .help-topic dd { margin: 0 0 0 1rem; color: var(--muted); }
+/* The version line at the foot of Help (version, commit, shared website files); wraps on narrow windows. */
+.version-line { margin: 0; overflow-wrap: anywhere; }
 .help-assist { border-left: 3px solid var(--warn); padding-left: 10px; }
 
 /* Narrow windows: the setup becomes a drawer opened with the Setup button. */

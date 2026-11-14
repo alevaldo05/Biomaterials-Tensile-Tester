@@ -1,0 +1,12 @@
+{
+  "name": "tensile-firmware-common",
+  "version": "0.1.0",
+  "description": "Board-independent firmware code: protocol v1, acquisition loop, ADS1115 driver (plain C++, no Arduino calls).",
+  "frameworks": "*",
+  "platforms": "*",
+  "build": {
+    "srcDir": ".",
+    "includeDir": ".",
+    "srcFilter": ["+<*.cpp>", "-<test/>"]
+  }
+}

@@ -19,18 +19,47 @@ The website stays on GitHub Pages; the app is not published there.
 - One copy at a time (two would compete for the port).
 - Packaging switches (Electron fuses): no "run as Node", no `NODE_OPTIONS`, no inspector flags, the app loads only from its checked archive.
 
+## Version
+Version 1 of the download is `1.0.0-beta.1`. The version is written in one place, `apps/desktop/package.json` (and the
+top of its lockfile); the build hands it to the screens (`apps/tester/build-info.ts`), so the Help screen, session
+files, the diagnostic summary, and Session details all show the same number. Sessions saved from now on carry
+`1.0.0-beta.1`; older files keep the version they were saved with.
+
 ## Building an installer
 The installer is built on GitHub, on Windows, by `.github/workflows/desktop.yml`. It runs only when started:
-1. GitHub > Actions > **Windows app** > Run workflow (or push a tag such as `app-v0.2.0`).
-2. It runs the checks, builds the screens and the installer, and creates a **draft** release with
-   `Biomaterials-Tensile-Tester-<version>-beta-unsigned-setup.exe` and `SHA256SUMS.txt`.
+1. GitHub > Actions > **Windows app** > Run workflow (or push a tag such as `app-v1.0.0-beta.1`).
+2. It runs the checks, builds the screens, the installer, and a portable program, and creates a **draft** release with
+   `Biomaterials-Tensile-Tester-<version>-beta-unsigned-setup.exe` (installs the app),
+   `Biomaterials-Tensile-Tester-<version>-beta-unsigned-portable.exe` (runs without installing; untried), and
+   `SHA256SUMS.txt` (the hash of both). The job summary and the release notes show the build stamp line (below).
+   A run started by hand names the draft `app-v<version>-run.<run number>` (for example `app-v1.0.0-beta.1-run.7`);
+   a run started by a tag uses the tag.
 3. A draft is visible only to people who can change the repository. Download it, try it on the lab computer, and
    publish it (GitHub > Releases > Edit > Publish) only when you are satisfied.
 4. After publishing, the website's Get the App page can link to it (a separate change; until then it says
    "Download not yet available").
 
-The installer is **unsigned**: Windows SmartScreen warns before running it ("More info" > "Run anyway").
-Code signing is not planned (a possible idea for later only), so Windows will keep warning.
+The installer and the portable program are **unsigned**: Windows SmartScreen warns before running them ("More info" >
+"Run anyway"). Code signing is not planned (a possible idea for later only), so Windows will keep warning.
+
+The portable `.exe` is built by the same electron-builder from the same files (`build.win.target` in
+`apps/desktop/package.json`). It has **not been tried** on a Windows computer: whether it starts, where it keeps its
+data, and whether SmartScreen treats it differently are all unknown until the checklist rows below are filled in.
+
+### Build stamp
+The app's Help screen ends with one line, for example:
+
+`Version 1.0.0-beta.1 · built from 9e0792ec6baa · shared website files 34df1db39cf5`
+
+- **Version**: from `apps/desktop/package.json`.
+- **built from**: the first 12 characters of the commit (`GITHUB_SHA` on GitHub, otherwise Git; "unknown" if neither).
+- **shared website files**: the first 12 characters of a SHA-256 hash over the website files the app shares
+  (`data/terms.js`, `data/materials.js`, and the calculation scripts its reference tests run). The list is in
+  `scripts/shared-files.js`; line endings are made LF before hashing, so a Windows and a Linux checkout give the same
+  hash. A test fails if the app's build or the reference tests read a website file that is not on that list.
+
+The workflow prints the same line in its job summary and the draft release notes, and stops if the built screens do
+not carry the same hash.
 
 ### Start-up check in the build
 After the installer is built, the workflow runs `apps/desktop/smoke.cjs` on the unpacked program: it starts it, waits for
@@ -42,6 +71,20 @@ stops the build before the draft release is made. It tries only that the built p
 not USB, recording, an installed copy, or a real person's Windows computer. It does not replace the first-install
 checklist below.
 
+## Refreshing the download after a website change
+The app copies some website files when it is built (definitions, materials) and its calculations are checked against
+others. A website change to one of the shared files reaches an installed app only through a new build.
+1. Run `node scripts/shared-files.js` on the updated `main`. It lists the shared files and prints the hash. If the
+   short hash is the same as the one on the installed app's Help screen, nothing the app uses has changed.
+2. If it differs (or a shared file was changed on purpose), the owner starts the workflow: GitHub > Actions >
+   **Windows app** > Run workflow. The assistant never starts it.
+3. When it finishes, download the artifacts from the draft release (both `.exe` files and `SHA256SUMS.txt`) and
+   check their hashes (checklist row 1 and row 10).
+4. Install (or run the portable program), open Help, and compare the last part of the version line with the short
+   hash from step 1. They should match; the commit should be the one the workflow ran on.
+5. If the version stays the same, the new draft is a rebuild of the same version; raise the version in
+   `apps/desktop/package.json` (and its lockfile's top two version fields) when the app itself changes.
+
 ## Building by hand (on a Windows computer)
 ```
 npm ci
@@ -50,7 +93,7 @@ cd apps/desktop
 npm ci
 npm run prepare-ui
 npm start            (runs it without installing)
-npm run dist:win     (makes the installer in apps/desktop/release/)
+npm run dist:win     (makes the installer and the portable .exe in apps/desktop/release/)
 ```
 
 ## First install checklist
@@ -68,7 +111,14 @@ note for each row. Anything not tried stays blank; nothing here is assumed to wo
 | 7 | A second copy of the app does not start while one is running | |
 | 8 | Help opens and is searchable with the network off | |
 | 9 | Uninstalling removes the program; note whether the data folder stays | |
+| 10 | The portable `.exe`'s hash matches `SHA256SUMS.txt` (untried) | |
+| 11 | SmartScreen warns for the portable `.exe`; "More info" then "Run anyway" starts it without installing (untried) | |
+| 12 | The portable program opens on the app's own Home screen; note where its data folder is and whether recordings are kept after closing it (untried) | |
+| 13 | Help ends with "Version 1.0.0-beta.1 · built from … · shared website files …"; the hash matches `node scripts/shared-files.js` for the commit it was built from (installer and portable) | |
 
 ## Status
 Built once by GitHub (`.github/workflows/desktop.yml`, run 1, succeeded; draft release `app-v0.2.0-beta.1`). It has not
 been installed or run on a Windows computer, and the USB connection is untested with real hardware.
+Version `1.0.0-beta.1` with the portable target and the build stamp has not been built on GitHub yet; the portable
+`.exe` is untried. The electron-builder settings were checked against electron-builder 26.18.1's own settings schema
+here (Linux), not by a Windows build.

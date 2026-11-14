@@ -54,15 +54,21 @@ pio run -e esp32dev
 pio run -e esp32dev -t upload
 ```
 
-The first build downloads the ESP32 toolchain from the PlatformIO registry. (In the cloud session used to write this, that download was blocked, so the ESP32 build was not run there. The `firmware-build` job in `.github/workflows/app.yml` compiles it on GitHub; that checks only that it builds, not that it works on a board.)
+The first build downloads the ESP32 toolchain from the PlatformIO registry. (In the cloud session used to write this, that download was blocked. The `firmware-build` job in `.github/workflows/app.yml` compiled it on GitHub with `espressif32` 8.0.0, which is now pinned in `platformio.ini`; that shows only that it builds and links, not that it works on a board.)
 
 To build and test the firmware's portable code on a computer, with a pretend ADS1115 (needs a C++ compiler):
 
 ```bash
-bash firmware/esp32-ads1115/test/host/build-and-test.sh
+bash firmware/common/test/host/build-and-test.sh
 ```
 
 `npm test` also runs the app's connection and recorder against this host build (`packages/recording/test/firmware.test.ts`).
+
+## Adding another board
+
+The checks do not name a board. Every `firmware/<name>/platformio.ini` is built by the `firmware-build` job (all its environments, compile only), so a new board needs no change to the workflow.
+
+The protocol, acquisition loop, and ADS1115 driver are shared in `firmware/common/`; a board folder holds only its `platformio.ini`, `include/board_config.h`, and `src/main.cpp`. The steps are in [firmware/README.md](../../firmware/README.md): copy the ESP32 folder, rewrite the chip-specific block in `main.cpp`, edit `board_config.h` (examples until checked against the real wiring, including `TT_DEVICE_TYPE`), and pin the platform. The firmware must speak protocol v1 ([PROTOCOL.md](PROTOCOL.md)) and only read: it sends raw counts and no command to the tester. A green build proves only that it compiles and links. The Pico plan is in [GUIDE-pico.md](GUIDE-pico.md); nothing there has been built.
 
 ## Throughput
 

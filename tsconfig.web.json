@@ -18,6 +18,7 @@
     "apps/tester/src",
     "apps/tester/test",
     "apps/tester/vite.config.ts",
-    "apps/tester/site-data.ts"
+    "apps/tester/site-data.ts",
+    "apps/tester/build-info.ts"
   ]
 }
