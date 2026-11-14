@@ -109,6 +109,8 @@ export class TestController {
   private handshake: { line: string; at: number }[] = [];
   /** The handshake as it was when the recording started: the start of this test's session file. */
   private header: { line: string; at: number }[] = [];
+  /** The device profile in use when the recording started: it belongs to this test's file even if another setup is chosen later. */
+  private testProfile: DeviceProfile | null = null;
   private recorded: { line: string; at: number }[] = [];
   private committed = 0;
   private committing: Promise<void> = Promise.resolve();
@@ -267,7 +269,7 @@ export class TestController {
   async startRecording(): Promise<void> {
     if (this.startProblem || !this.recorder || !this.source) { this.message = this.startProblem; this.changed(); return; }
     this.session = this.recorder.start({ allowUncalibrated: this.voltagesOnly });
-    this.record = null; this.recordProblem = ''; this.recorded = []; this.header = this.handshake.slice(); this.committed = 0; this.message = ''; this.saved = false;
+    this.record = null; this.recordProblem = ''; this.recorded = []; this.header = this.handshake.slice(); this.testProfile = this.setupFile?.profile ?? null; this.committed = 0; this.message = ''; this.saved = false;
     this.startedAt = new Date();
     this.phase = 'recording';
     this.liveCache = { count: -1, record: null };
@@ -279,7 +281,7 @@ export class TestController {
     try {
       const est = await j.estimate();
       if (est && est.quota - est.usage < 50 * 1024 * 1024) this.message = 'This computer has little storage space left for recordings. Download and remove old recordings soon.';
-      await j.begin({ id, test: this.test, setup: this.setup, profile: this.setupFile?.profile ?? null, calibrations: this.fileCalibrations(), forceZero_N: this.session.forceZero_N, appVersion: APP_VERSION,
+      await j.begin({ id, test: this.test, setup: this.setup, profile: this.testProfile, calibrations: this.fileCalibrations(), forceZero_N: this.session.forceZero_N, appVersion: APP_VERSION,
         deviceId: this.source.identity?.deviceId ?? '', startedAt: this.startedAt.toISOString() },
         { lines: this.header.map((x) => x.line), receivedAt_ms: this.header.map((x) => x.at) });
       this.journalId = id;
@@ -348,7 +350,7 @@ export class TestController {
     const all = [...this.header, ...this.recorded], s = this.session;
     return {
       format: 'tensile-tester-session', version: 1, savedAt: new Date().toISOString(), appVersion: APP_VERSION,
-      recordedFrom: 'real', test: this.test, setup: this.setup, profile: this.setupFile?.profile ?? null, calibrations: this.fileCalibrations(), forceZero_N: s.forceZero_N,
+      recordedFrom: 'real', test: this.test, setup: this.setup, profile: this.testProfile, calibrations: this.fileCalibrations(), forceZero_N: s.forceZero_N,
       method: this.method ? { id: this.method.id, name: this.method.name, revision: this.method.revision } : null,
       lines: all.map((x) => x.line), receivedAt_ms: all.map((x) => x.at),
       ...(this.phase === 'done' ? { interrupted: s.interrupted, endReason: s.endReason } : {}), events: s.events.map((e) => ({ ...e })),

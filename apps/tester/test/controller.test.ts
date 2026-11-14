@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest';
 import { SimulatedDevice } from '@tensile/acquisition';
 import type { Transport } from '@tensile/acquisition';
 import { analyzeUniaxial } from '@tensile/core';
+import { signalPathOf } from '@tensile/recording';
 import { sessionFileFromJournal, TestController } from '../src/controller';
 import { openTestFile } from '../src/load';
 import { resultsFor } from '../src/results';
@@ -129,6 +130,27 @@ describe('test controller (real acquisition only)', () => {
     expect(f.lines.length).toBeGreaterThan(c.sampleCount);
     expect((await journal.lines(c.journalId!)).lines).toEqual(f.lines);
     const loaded = await openTestFile('spaced.session.json', JSON.stringify(f));
+    expect(loaded.record!.raw).toEqual(c.record!.raw);
+  });
+
+  it('keeps the device profile the test was recorded with when another setup file is chosen afterwards', async () => {
+    const { dev, c } = rig();
+    ready(c);
+    await c.connect();
+    const a = measuredSetup(c);
+    c.useSetup(a);
+    await c.startRecording();
+    move(dev, c);
+    dev.step(1200);
+    c.stopRecording();
+    /* another rig's setup chosen in the Calibration step before the test is saved */
+    const src = c.source!, other = { conditioning: { id: 'div-b', gain: 0.5, offset_V: 0 } };
+    const profileB = { id: 'rig-b', name: 'Rig B', channels: { force: other, displacement: other } };
+    c.useSetup({ profile: profileB, calibrations: a.calibrations.map((k) => ({ ...k, id: k.id + '-b', signalPath: signalPathOf(src.identity!, src.channels.find((ch) => ch.quantity === k.quantity)!, src.settings!, other.conditioning) })) });
+    const f = c.sessionFile()!;
+    expect(f.profile!.id).toBe('test-rig');
+    expect(f.calibrations.map((k) => k.id)).toEqual(['cal-force', 'cal-displacement']);
+    const loaded = await openTestFile('swap.session.json', JSON.stringify(f));
     expect(loaded.record!.raw).toEqual(c.record!.raw);
   });
 
