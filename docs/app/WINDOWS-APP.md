@@ -79,6 +79,7 @@ checklist below.
 ## Checks on merge, drafts on request, and the update notice
 Checks on merge:
 - A merge into `main` that changes `apps/**`, `packages/**`, `package-lock.json`, `scripts/shared-files.js`, `.github/workflows/desktop.yml`, or a website file listed in `scripts/shared-files.js` runs Actions > **Windows app** as a **check only**. It builds the installer and the portable program on Windows and starts the program (start-up check). It makes no draft release and there is nothing to download. A failure shows as a red X in Actions. The run summary says "Check only: no draft made".
+- A Windows checkout ends text lines in CRLF, a Linux one in LF. Runs 15–18 failed at their tests for that reason (a test read a docs table split on LF only). So the pull-request checks (`.github/workflows/app.yml`, job `windows-line-endings`) now check the repository out again with Windows line endings, on Linux, and run the same test lines as this workflow (a test keeps the two in step). It catches line-ending failures only; other Windows-only failures still show only after a merge.
 
 Drafts on request:
 - A draft is made only when you ask: Actions > **Windows app** > Run workflow (or a pushed `app-v*` tag). The draft's tag is `app-v<version>-run.<N>` and its title is "Tester app <version> (Windows, beta)". It is not marked pre-release.

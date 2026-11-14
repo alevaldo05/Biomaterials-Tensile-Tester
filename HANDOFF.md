@@ -56,15 +56,13 @@ Merged after the five branches of the last handoff (#81–#85):
 
 Merged next: #91 tester interface requirements, calibration plan, parts list (docs); #92 Disconnect on the Device screen asks before dropping unsaved data; #93 make a calibration from bench points (Device screen); #94 make a setup file (Device screen); #95 the bench record and the Windows checklist as forms (Help screen); #96 the app's known problems (CSV header lines, uncounted samples, New test after Stop, raw-samples formula guard, 2000-character setup text, 256 MB open limit).
 
-Pushed, waiting for a pull request (each from `main`; none clashes with another):
+Merged after that: #97 `desktop-hardening` (the installed Windows app refuses debugging switches; local builds from changed files show `-changed` in Help); #98 `server-fixes` (simulated calibrations refused, a double save at once stored once, 256 MB upload limit in the back end and the gateway); #99 `stale-docs` (this file and other out-of-date lines).
 
-- `server-fixes`: simulated calibrations refused, a double save at once stored once, 256 MB upload limit in the back end and the gateway.
-- `desktop-hardening`: the installed Windows app refuses debugging switches; local builds from changed files show `-changed` in Help.
-- `stale-docs`: this file and other out-of-date lines (this change).
+Pushed, waiting for a pull request: none. No other pull request is open. `windows-line-endings` (this change) fixes the Windows build; see Known open issues.
 
 ## Checks status
 
-The App checks (tests, firmware build, containers), the website checks, and the app screenshots run on every pull request; check that they pass before merging. They passed on #91–#96 before they were merged.
+The App checks (tests, firmware build, containers), the website checks, and the app screenshots run on every pull request; check that they pass before merging. They passed on #91–#96 before they were merged. This change (`windows-line-endings`) adds a pull-request check, the `windows-line-endings` job in `.github/workflows/app.yml`: it checks out with Windows line endings on Linux and runs the Windows workflow's test lines. It catches line-ending failures only, not other Windows problems.
 
 ## What has never been tried
 
@@ -84,30 +82,24 @@ From `docs/app/FEATURE-STATUS.md` and related documents:
 
 ## Known open issues
 
-The app's known problems are fixed (#92, #96), and the stale combination check is fixed by this change. The two lab-server problems are fixed on `server-fixes`; remove them here once it is merged.
+The app's known problems are fixed (#92, #96), the stale combination check is fixed (#99), and the lab-server problems are fixed (#98).
 
-Found by review; low severity. Each was read in the code or the docs, not re-tested for this handoff. Confirm before fixing.
-
-Not yet fixed on `main`:
-
-- The lab server accepts a file marked real whose calibration is marked simulated (fixed on `server-fixes`).
-- The same file saved twice at once can be stored twice (fixed on `server-fixes`).
-- The lab server's upload limit is still 64 MB (`BODY_LIMIT_MB` and the gateway's `client_max_body_size`); `server-fixes` raises both to 256 MB, as the app's limit already is.
+Windows app: runs 15–18 on `main` (the merges of #96–#99) failed at their tests. `apps/tester/test/bench-record.test.tsx` read the docs tables split on "\n", and the Windows checkout has CRLF line endings, so the table separator row was counted as a row. No installer was built in those runs. This change (`windows-line-endings`) fixes it (the docs tables and the Dockerfile COPY lines in `build-info.test.ts` are read with CRLF or LF) and adds a pull-request check (see Checks status). After it is merged, check the next Windows app run: tests, installer, portable program, and start-up check (the first Windows run of #97's check).
 
 Unconfirmed suspicions (not reproduced; treat as questions):
 
 - A Windows journal retry after a partial write may misbehave.
-- The packaged Windows app may accept `--remote-debugging-port` (the build's start-up check uses it on purpose; whether the shipped program ignores it was not verified). Addressed on `desktop-hardening`: the installed program closes when started with such a switch.
-- The build stamp shows the commit even when files are uncommitted. Fixed on `desktop-hardening` (`-changed`).
+- The packaged Windows app may accept `--remote-debugging-port` (the build's start-up check uses it on purpose). Addressed in #97 (merged): the installed program closes when started with such a switch. Not yet confirmed on Windows: the start-up check has never run on a Windows runner. It was tried on Linux as a stand-in on 2026-11-14: the start-up check passed, and starting with --remote-debugging-port without `TT_SMOKE_CHECK=1` closed the program (run as root with the sandbox off). This is not proof for Windows.
+- The build stamp shows the commit even when files are uncommitted. Fixed in #97 (`-changed`); same Windows caveat.
 
 ## Next steps for the owner
 
-1. Open pull requests for `server-fixes`, `desktop-hardening`, and `stale-docs`, and merge them once their checks pass (any order). `desktop-hardening` is confirmed on Windows only by the next requested Windows build (its start-up check must still pass).
+1. Merge this change (`windows-line-endings`) once its checks pass, including the new `windows-line-endings` job. Then check the next Windows app run; #97 is confirmed on Windows only when its start-up check passes there.
 2. When enough has changed, raise the version in `apps/desktop/package.json` in its own small pull request and merge it. Then run Actions, **Windows app**, Run workflow on `main`. Download the draft, check both hashes against `SHA256SUMS.txt`, and try the installer and the portable `.exe` on a Windows computer.
 3. Fill in the first-install checklist in `docs/app/WINDOWS-APP.md`, including the Help version line against `node scripts/shared-files.js`.
 4. Publish a release only when satisfied. The Get the App page already links to the latest published release, and the Windows app shows an update notice for it. Older unpublished app drafts are removed when you ask for a new one.
 5. Do the breadboard test (`docs/app/BREADBOARD-TEST.md`) with the tester disconnected and keep the bench record from `docs/app/SETUP.md`.
-6. The limit for long files is decided: 256 MB (the app's is merged; the lab server's is on `server-fixes`).
+6. The limit for long files is decided: 256 MB (the app's is merged; the lab server's is merged in #98).
 7. Have the tester's interface verified and the protection circuit designed and reviewed before connecting it, using the requirements and review record in `docs/app/TESTER-INTERFACE.md`. Do not guess the pins. Then calibrate force and displacement following `docs/app/CALIBRATION-PLAN.md`.
 8. Decide what to do with the known open issues above, and review the draft documents and unreviewed material values with an advisor.
 
