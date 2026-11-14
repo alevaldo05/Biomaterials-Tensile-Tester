@@ -369,8 +369,8 @@ export function Admin(p: { account: Account; controller: TestController }): JSX.
   const loadProfiles = useCallback(() => api.profiles(), [api]);
   const profiles = useList<ProfileRow>(loadProfiles);
   return (
-    <section className="page" aria-labelledby="admin-h">
-      <div className="page-head"><h2 id="admin-h">Admin</h2></div>
+    <section className="page-block" aria-labelledby="admin-h">
+      <div className="page-head"><h1 id="admin-h">Admin</h1></div>
       <Panel title="People" open><People account={p.account} /></Panel>
       <Panel title="Device profiles"><Profiles account={p.account} items={profiles.items} error={profiles.error} reload={profiles.reload} /></Panel>
       <Panel title="Calibrations"><Calibrations account={p.account} controller={p.controller} profiles={profiles.items} /></Panel>
