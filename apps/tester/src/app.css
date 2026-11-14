@@ -328,7 +328,7 @@ button.strong:hover:not(:disabled) { opacity: 0.9; }
   .rec-pill { flex-basis: 100%; }
   .kr-list { grid-template-columns: minmax(0, 1fr); }
   button:not(.link), input[type="text"], input[type="password"], input[type="file"], input[type="search"], select { min-height: 44px; }
-  .graph-tools button { min-height: 44px; }
+  .graph-tools button, .actions .menu-list button { min-height: 44px; }
   p > button.link:only-child { min-height: 44px; }
   .nav { padding: 0 9px; }
   .brand { flex: 1 1 100%; }
@@ -376,7 +376,7 @@ button.strong:hover:not(:disabled) { opacity: 0.9; }
 @media print {
   :root, :root[data-theme="dark"] { --bg: #fff; --surface: #fff; --panel: #fff; --ink: #000; --muted: #333; --line: #999; color-scheme: light; }
   body { background: #fff; color: #000; font-size: 11pt; }
-  .top, .statusbar, .view-as, .help-button, .help-panel, .toolbar, .graph-tools, .views, .view-select, .info-button, .graph-readout, main > .row button, .quick, .test-top, .actions, .specimens, .side-state, .scrim, .test-center > .status, .notice-bad, .seg, .compare-add, .compare-table td:last-child, .compare-table th:last-child { display: none !important; }
+  .top, .statusbar, .view-as, .help-button, .help-panel, .toolbar, .graph-tools, .graph-guides, .views, .view-select, .info-button, .graph-readout, main > .row button, .quick, .test-top, .actions, .specimens, .side-state, .scrim, .test-center > .status, .notice-bad, .seg, .compare-add, .compare-table td:last-child, .compare-table th:last-child { display: none !important; }
   .test-grid { display: block; }
   .test-page { padding: 0; }
   .side { margin-top: 12px; }
