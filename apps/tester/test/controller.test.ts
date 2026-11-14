@@ -74,6 +74,38 @@ describe('test controller (real acquisition only)', () => {
     expect(c.message).toContain('connection was lost');
   });
 
+  for (const [name, trouble, kind] of [
+    ['a device fault', (d: SimulatedDevice) => d.injectText('{"v":1,"type":"fault","code":"adc_error","message":"ADC error"}\n'), 'fault'],
+    ['a device restart', (d: SimulatedDevice) => d.restart(), 'device-reset'],
+    ['a lost connection', (d: SimulatedDevice) => d.unplug(), 'disconnected'],
+  ] as const) {
+    it('a recording ended by ' + name + ' reopens from its session file as interrupted', async () => {
+      const { dev, c } = rig();
+      ready(c);
+      await c.connect();
+      c.useSetup(measuredSetup(c));
+      await c.startRecording();
+      move(dev, c);
+      dev.step(600);
+      trouble(dev);
+      expect(c.phase).toBe('done');
+      expect(c.session!.interrupted).toBe(true);
+      const f = c.sessionFile()!;
+      expect(f.interrupted).toBe(true);
+      expect(f.endReason).toContain('Recording interrupted');
+      const loaded = await openTestFile('cut.session.json', JSON.stringify(f));
+      expect(loaded.session!.interrupted).toBe(true);
+      expect(loaded.session!.endReason).toBe(c.session!.endReason);
+      expect(loaded.session!.events.map((e) => e.kind)).toContain(kind);
+      expect(loaded.record!.raw).toEqual(c.record!.raw);
+      /* without the saved flag (an older file), a fault or restart line in the file still ends the replay as interrupted */
+      if (kind !== 'disconnected') {
+        const { interrupted: _i, endReason: _r, events: _e, ...older } = f;
+        expect((await openTestFile('old.session.json', JSON.stringify(older))).session!.interrupted).toBe(true);
+      }
+    });
+  }
+
   it('keeps the samples of a device that writes JSON with spaces after the separators', async () => {
     /* the same messages as the stand-in sends, written the way Python's json.dumps writes them by default */
     const dev = new SimulatedDevice({ manualMotion: true, auto: false });
@@ -141,6 +173,29 @@ describe('recording on this computer', () => {
     expect(fromJournal.lines).toEqual(c.sessionFile()!.lines);
     expect(fromJournal.recordedFrom).toBe('real');
   });
+
+  for (const [name, trouble] of [['a lost connection', (d: SimulatedDevice) => d.unplug()], ['a device restart', (d: SimulatedDevice) => d.restart()]] as const) {
+    it('marks a recording ended by ' + name + ' as interrupted, with the reason', async () => {
+      const journal = new MemoryJournal();
+      const { dev, c } = rig({ journal });
+      ready(c);
+      await c.connect();
+      c.useSetup(measuredSetup(c));
+      await c.startRecording();
+      move(dev, c);
+      dev.step(600);
+      trouble(dev);
+      await c.flushed();
+      await new Promise((r) => setTimeout(r, 0));
+      const m = (await journal.list())[0]!;
+      expect(m.status).toBe('interrupted');
+      expect(m.endReason).toBe(c.session!.endReason);
+      expect(m.endReason).toContain('Recording interrupted');
+      const reopened = await openTestFile('j.session.json', JSON.stringify(await sessionFileFromJournal(journal, m.id)));
+      expect(reopened.session!.interrupted).toBe(true);
+      expect(reopened.session!.endReason).toBe(m.endReason);
+    });
+  }
 
   it('a recording cut off by a closed app stays "recording" and can be rebuilt', async () => {
     const journal = new MemoryJournal();

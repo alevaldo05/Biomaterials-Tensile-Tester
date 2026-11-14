@@ -7,7 +7,7 @@ import { DeviceSource, NdjsonAdapter } from '@tensile/acquisition';
 import type { Transport } from '@tensile/acquisition';
 import type { TestRecord, TestType } from '@tensile/core';
 import { achievedRate, Recorder, sessionToTestRecord } from '@tensile/recording';
-import type { CalibrationRecord, DeviceProfile, Readiness, Session, SessionState } from '@tensile/recording';
+import type { CalibrationRecord, DeviceProfile, Readiness, Session, SessionEvent, SessionState } from '@tensile/recording';
 import { EMPTY_SETUP, paramsFrom, setupProblems } from './setup';
 import type { Setup } from './setup';
 import type { SessionJournal } from './storage/journal';
@@ -37,10 +37,16 @@ export interface SessionFile {
   setup: Setup;
   profile: DeviceProfile | null;
   calibrations: CalibrationRecord[];
-  /** The protocol lines as received: identification, channels, settings, then the samples of the recording. */
+  /** The protocol lines as received: identification, channels, settings, then the lines of the recording in arrival order
+      (samples, and any fault, restart (hello), or settings line the device sent while recording). */
   lines: string[];
   /** Computer time each line arrived, ms. */
   receivedAt_ms: number[];
+  /** How the recording ended. Missing in older files: a fault or restart line then still ends the replay as interrupted. */
+  interrupted?: boolean;
+  endReason?: string;
+  /** What happened during the recording (gaps, faults, restarts, disconnects, stale data), at the time it happened. */
+  events?: SessionEvent[];
 }
 
 export function parseSessionFile(text: string): SessionFile {
@@ -99,6 +105,8 @@ export class TestController {
   private listeners = new Set<() => void>();
   private version = 0;
   private handshake: { line: string; at: number }[] = [];
+  /** The handshake as it was when the recording started: the start of this test's session file. */
+  private header: { line: string; at: number }[] = [];
   private recorded: { line: string; at: number }[] = [];
   private committed = 0;
   private committing: Promise<void> = Promise.resolve();
@@ -133,11 +141,14 @@ export class TestController {
     const profile = this.setupFile?.profile ?? null, calibrations = this.setupFile?.calibrations ?? [];
     const source = new DeviceSource({ transport, adapter: new NdjsonAdapter(), kind: 'real', requiredQuantities: ['force', 'displacement'] });
     this.source = source; this.recorder = null; this.handshake = []; this.recorded = [];
-    source.on('state', (st) => this.onState(st));
+    const onState = (st: string) => this.onState(st);
+    let offState = source.on('state', onState);
     source.on('sample', () => { this.lastSampleAt = Date.now(); });
-    /* decided from the message as the adapter read it, never from its text (a device may write "type": "sample" with a space) */
+    /* decided from the message as the adapter read it, never from its text (a device may write "type": "sample" with a space).
+       While recording, a fault, a restart (a new hello), or new settings are kept in order with the samples, so a replay
+       ends where and how the recording ended. */
     source.on('line', (line, at, kind) => {
-      if (kind === 'sample') { if (this.phase === 'recording') this.recorded.push({ line, at }); }
+      if (this.phase === 'recording') { if (kind === 'sample' || kind === 'fault' || kind === 'identity' || kind === 'settings') this.recorded.push({ line, at }); }
       else if (kind === 'identity' || kind === 'channels' || kind === 'settings') this.handshake.push({ line, at });
     });
     this.changed();
@@ -149,6 +160,9 @@ export class TestController {
       return;
     }
     this.recorder = new Recorder({ source, profile, calibrations, appVersion: APP_VERSION });
+    /* The recorder marks the session interrupted when the connection ends; the controller listens after it, so finish()
+       and the journal see the interruption and its reason. */
+    offState(); offState = source.on('state', onState);
     await source.startStream();
     this.startTicking();
     this.changed();
@@ -251,7 +265,7 @@ export class TestController {
   async startRecording(): Promise<void> {
     if (this.startProblem || !this.recorder || !this.source) { this.message = this.startProblem; this.changed(); return; }
     this.session = this.recorder.start({ allowUncalibrated: this.voltagesOnly });
-    this.record = null; this.recordProblem = ''; this.recorded = []; this.committed = 0; this.message = ''; this.saved = false;
+    this.record = null; this.recordProblem = ''; this.recorded = []; this.header = this.handshake.slice(); this.committed = 0; this.message = ''; this.saved = false;
     this.startedAt = new Date();
     this.phase = 'recording';
     this.liveCache = { count: -1, record: null };
@@ -265,7 +279,7 @@ export class TestController {
       if (est && est.quota - est.usage < 50 * 1024 * 1024) this.message = 'This computer has little storage space left for recordings. Download and remove old recordings soon.';
       await j.begin({ id, test: this.test, setup: this.setup, profile: this.setupFile?.profile ?? null, calibrations: this.fileCalibrations(), appVersion: APP_VERSION,
         deviceId: this.source.identity?.deviceId ?? '', startedAt: this.startedAt.toISOString() },
-        { lines: this.handshake.map((x) => x.line), receivedAt_ms: this.handshake.map((x) => x.at) });
+        { lines: this.header.map((x) => x.line), receivedAt_ms: this.header.map((x) => x.at) });
       this.journalId = id;
       this.localSave = 'saving';
       await this.commit();
@@ -329,12 +343,13 @@ export class TestController {
   }
   sessionFile(): SessionFile | null {
     if (!this.session || !this.source) return null;
-    const all = [...this.handshake, ...this.recorded];
+    const all = [...this.header, ...this.recorded], s = this.session;
     return {
       format: 'tensile-tester-session', version: 1, savedAt: new Date().toISOString(), appVersion: APP_VERSION,
       recordedFrom: 'real', test: this.test, setup: this.setup, profile: this.setupFile?.profile ?? null, calibrations: this.fileCalibrations(),
       method: this.method ? { id: this.method.id, name: this.method.name, revision: this.method.revision } : null,
       lines: all.map((x) => x.line), receivedAt_ms: all.map((x) => x.at),
+      ...(this.phase === 'done' ? { interrupted: s.interrupted, endReason: s.endReason } : {}), events: s.events.map((e) => ({ ...e })),
     };
   }
 }
@@ -344,6 +359,9 @@ export async function sessionFileFromJournal(j: SessionJournal, id: string): Pro
   const meta = (await j.list()).find((m) => m.id === id);
   if (!meta) throw new Error('That recording is no longer on this computer.');
   const l = await j.lines(id);
+  /* a recording still marked "recording" was cut off when the app or computer closed */
+  const end = meta.status === 'complete' ? { interrupted: false, endReason: meta.endReason }
+    : { interrupted: true, endReason: meta.status === 'interrupted' ? meta.endReason : 'Recording interrupted: the app closed before the recording ended. The data saved on this computer up to ' + meta.lastCommitAt + ' is kept.' };
   return { format: 'tensile-tester-session', version: 1, savedAt: meta.lastCommitAt, appVersion: meta.appVersion, recordedFrom: 'real', test: meta.test, setup: meta.setup,
-    profile: meta.profile, calibrations: meta.calibrations, method: null, lines: l.lines, receivedAt_ms: l.receivedAt_ms };
+    profile: meta.profile, calibrations: meta.calibrations, method: null, lines: l.lines, receivedAt_ms: l.receivedAt_ms, ...end };
 }

@@ -26,7 +26,7 @@ export interface JournalMeta {
   lastCommitAt: string;
   endedAt: string | null;
   endReason: string;
-  /** Sample lines committed so far. */
+  /** Lines committed after the header: the samples, plus any fault, restart, or settings line sent while recording. */
   sampleCount: number;
 }
 

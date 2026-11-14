@@ -6,7 +6,7 @@ import { DeviceSource, NdjsonAdapter, ReplayTransport } from '@tensile/acquisiti
 import { recordFromCsv } from '@tensile/core';
 import type { TestRecord, TestType } from '@tensile/core';
 import { Recorder, sessionToTestRecord } from '@tensile/recording';
-import type { Session } from '@tensile/recording';
+import type { Session, SessionEvent } from '@tensile/recording';
 import { APP_VERSION, parseSessionFile } from './controller';
 import type { SessionFile } from './controller';
 import { EMPTY_SETUP, paramsFrom } from './setup';
@@ -42,8 +42,18 @@ export async function replaySession(file: SessionFile): Promise<{ session: Sessi
   recorder.stop('Rebuilt from the session file.');
   await source.disconnect();
   recorder.dispose();
+  /* How the recording ended, as written when it was saved (a lost connection leaves no line to replay). */
+  if (file.interrupted === true) session.interrupted = true;
+  if (typeof file.endReason === 'string' && file.endReason) session.endReason = file.endReason;
+  if (Array.isArray(file.events)) session.events = file.events.filter(isEvent).map((e) => ({ at_ms: e.at_ms, kind: e.kind, detail: e.detail }));
   const p = paramsFrom(file.setup, file.test), r = sessionToTestRecord(session, { test: file.test, specimen: p.specimen, params: p.params });
   return r.ok ? { session, record: r.record, problem: '' } : { session, record: null, problem: r.reason };
+}
+
+const EVENT_KINDS: ReadonlySet<string> = new Set<SessionEvent['kind']>(['gap', 'fault', 'stale', 'resumed', 'device-reset', 'disconnected', 'zero-force']);
+function isEvent(e: unknown): e is SessionEvent {
+  const x = e as Partial<SessionEvent> | null;
+  return !!x && typeof x === 'object' && typeof x.at_ms === 'number' && typeof x.kind === 'string' && EVENT_KINDS.has(x.kind) && typeof x.detail === 'string';
 }
 
 function detectTest(text: string): TestType {
