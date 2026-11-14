@@ -3,7 +3,7 @@
 Page card. Update it in the same change as the page.
 
 ## Purpose
-Lets a learner try the test screen with a labeled simulator. It is the website's only test screen: the website's own live test pages (and its USB connection) were retired, and real tests are run in the tester app. It is reached from the New Test page and from the Learn page ("Practice with a simulated test"), not from the main menu. Nothing on it connects to a tester.
+Lets a learner try the test screen with a labeled simulator. It is the website's only test screen: the website's own live test pages (and its USB connection) were retired, and real tests are run in the tester app. It is reached from the Get the App page and from the Learn page ("Practice with a simulated test"), not from the main menu. Nothing on it connects to a tester.
 
 ## Files
 - HTML: `practice.html` (`live-app`; the kind of test comes from `#uniaxial` or `#relaxation` in the address)

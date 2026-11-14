@@ -1,4 +1,5 @@
-/* The only file that reaches for hardware: USB serial through the browser (or, later, the Windows app's bridge). */
+/* The only file that reaches for hardware: USB serial through the browser's Web Serial, which the Windows app
+   (Electron, apps/desktop) provides the same way, with the person choosing the port. */
 import { WebSerialTransport } from '@tensile/acquisition';
 import type { SerialLike, Transport } from '@tensile/acquisition';
 
