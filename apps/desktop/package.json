@@ -33,6 +33,7 @@
     "asar": true,
     "publish": null,
     "win": {
+      "icon": "build/icon.png",
       "target": [
         {
           "target": "nsis",

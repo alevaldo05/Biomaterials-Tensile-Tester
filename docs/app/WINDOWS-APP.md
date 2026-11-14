@@ -39,6 +39,9 @@ The installer is built on GitHub, on Windows, by `.github/workflows/desktop.yml`
 4. After publishing, the website's Get the App page link (**Download the tester app (beta)**, to the latest release)
    shows it. Until the first release is published, that link has nothing to show.
 
+The program, installer, and shortcuts use the curve mark logo as their icon (`apps/desktop/build/icon.png`, 256 px;
+electron-builder makes the `.ico` from it).
+
 The installer and the portable program are **unsigned**: Windows SmartScreen warns before running them ("More info" >
 "Run anyway"). Code signing is not planned (a possible idea for later only), so Windows will keep warning.
 
