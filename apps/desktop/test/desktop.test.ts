@@ -162,4 +162,27 @@ describe('Windows app', () => {
       expect(paths, f + ' is missing from the paths in .github/workflows/desktop.yml').toContain(f);
     }
   });
+  it('has its tests also run on pull requests with Windows line endings (app.yml), with the same lines', () => {
+    /* The lines of a step's "run: |" block, trimmed. Lines may end in CRLF (this test also runs on a CRLF checkout). */
+    const runLines = (wf: string, step: string) => {
+      const lines = wf.split(/\r?\n/), at = lines.findIndex((l) => l.trim() === '- name: ' + step);
+      expect(at, step).toBeGreaterThan(-1);
+      const run = lines.findIndex((l, i) => i > at && l.trim() === 'run: |');
+      const indent = (l: string) => l.length - l.trimStart().length, body: string[] = [];
+      for (const l of lines.slice(run + 1)) { if (l.trim() && indent(l) <= indent(lines[run]!)) break; if (l.trim()) body.push(l.trim()); }
+      return body;
+    };
+    const desktop = readFileSync(path.resolve(dir, '../../.github/workflows/desktop.yml'), 'utf8');
+    const app = readFileSync(path.resolve(dir, '../../.github/workflows/app.yml'), 'utf8');
+    const windows = runLines(desktop, 'Checks before building (all tests, type checks, website checks)');
+    expect(windows).toContain('npx vitest run --exclude "apps/api/**" --exclude "packages/recording/test/firmware.test.ts"   # these two run on Linux in app.yml');
+    expect(runLines(app, "The Windows app workflow's checks, on the CRLF checkout")).toEqual(windows);
+    /* the job checks out with CRLF (set before the checkout), makes sure it did, and runs on every pull request */
+    const job = app.split(/^ {2}windows-line-endings:\s*$/m)[1]!.split(/^ {2}\S/m)[0]!;
+    expect(job.indexOf('git config --global core.autocrlf true')).toBeGreaterThan(-1);
+    expect(job.indexOf('git config --global core.autocrlf true')).toBeLessThan(job.indexOf('uses: actions/checkout@'));
+    expect(job).toContain("grep -q $'\\r$' docs/app/SETUP.md");
+    expect(job).not.toMatch(/^\s+if:/m);
+    expect(app).toMatch(/^ {2}pull_request:\s*\n {4}branches: \[main\]/m);
+  });
 });
