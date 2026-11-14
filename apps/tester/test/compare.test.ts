@@ -1,7 +1,8 @@
 import { describe, expect, it } from 'vitest';
-import { sampleStats } from '@tensile/core';
+import { csvCell, sampleStats } from '@tensile/core';
 import type { TestRecord } from '@tensile/core';
 import { openTestFile } from '../src/load';
+import { testCsv } from '../src/exports';
 import { compareCsv, compareItemFromLoaded, compareSummary, MAX_COMPARE } from '../src/compare';
 import type { CompareItem } from '../src/compare';
 import { measuredSetup, move, ready, rig } from './helpers';
@@ -105,7 +106,9 @@ describe('compare', () => {
     const hi = lines.findIndex((l) => l.startsWith('Test,'));
     expect(hi).toBe(4 + s.warnings.length);
     expect(lines.slice(4, hi).every((l) => l.startsWith('# Warning,'))).toBe(true);
-    expect(lines[hi]).toBe('Test,Specimen ID,Material,' + s.metrics.map((m) => `${m.label} (${m.unit})`).join(',') + ',Note');
+    /* a heading with a semicolon is quoted, as in the website's compare.js, so Excel set to semicolons keeps it in one cell */
+    expect(lines[hi]).toBe(['Test', 'Specimen ID', 'Material', ...s.metrics.map((m) => `${m.label} (${m.unit})`), 'Note'].map(csvCell).join(','));
+    expect(lines[hi]).toContain(',"Offset yield (estimate; only when set) (MPa)",');
     expect(lines[hi + 1]).toContain('"Skin, rabbit"');
     expect(lines[hi + 3]).toContain('"c ""x"""');
     const rest = lines.slice(hi + 1).filter((l) => l !== '');
@@ -115,5 +118,34 @@ describe('compare', () => {
     expect(rest[3]).toContain(String(s.stats.uts!.mean));
     expect(rest[2]).toMatch(/,No data$/);
     expect(compareCsv(compareSummary([item({ test: 'relaxation' })])).split('\n')[1]).toBe('# Test,Stress relaxation');
+  });
+
+  it('guards text cells of the summary CSV against formulas, like the other CSV files', () => {
+    const csv = compareCsv(compareSummary([item({ name: '=HYPERLINK("http://x","y").csv', material: '+cmd|calc', specimenId: '@SUM(1)', problem: '-2+3' })]));
+    const row = csv.split('\n').find((l) => l.includes('SUM(1)'))!;
+    expect(row).toBe('"\'=HYPERLINK(""http://x"",""y"").csv",\'@SUM(1),\'+cmd|calc,' + ',,,,,' + ',\'-2+3');
+    expect(csv).not.toMatch(/(^|,)[=+@]/m);
+  });
+
+  it('takes the material and specimen ID of a CSV file from the file', async () => {
+    const csvOf = async (material: string, id: string) => {
+      const { dev, c } = rig();
+      ready(c);
+      c.setup = { ...c.setup, material, specimenId: id };
+      await c.connect();
+      c.useSetup(measuredSetup(c));
+      await c.startRecording();
+      move(dev, c);
+      dev.step(2400);
+      c.stopRecording();
+      return testCsv(c)!;
+    };
+    const a = compareItemFromLoaded(await openTestFile('a.csv', await csvOf('Rabbit tissue', 'S-1')));
+    const b = compareItemFromLoaded(await openTestFile('b.csv', await csvOf('Porcine skin', 'S-2')));
+    expect([a.material, a.specimenId, b.material, b.specimenId]).toEqual(['Rabbit tissue', 'S-1', 'Porcine skin', 'S-2']);
+    const s = compareSummary([a, b]);
+    expect(s.rows.map((r) => r.specimenId)).toEqual(['S-1', 'S-2']);
+    expect(s.warnings.join('\n')).toContain('different materials (Rabbit tissue, Porcine skin)');
+    expect(s.warnings.join('\n')).not.toContain('no specimen ID');
   });
 });

@@ -1,6 +1,6 @@
 /* Summary of several recorded tests of one test type, for the Compare tests screen.
    Pure functions: no React, no DOM. A missing value stays null and is never replaced by a number. */
-import { dimIsExample, keyNumbers, sampleStats } from '@tensile/core';
+import { csvCell, dimIsExample, keyNumbers, sampleStats } from '@tensile/core';
 import type { TestRecord, TestType } from '@tensile/core';
 import type { LoadedTest } from './load';
 
@@ -47,9 +47,10 @@ const METRICS: Record<TestType, CompareMetric[]> = {
 };
 
 export function compareItemFromLoaded(t: LoadedTest): CompareItem {
+  /* a session file carries its setup; a CSV file carries the material and specimen ID in its header lines */
   return {
     name: t.name, test: t.test, record: t.record, problem: t.problem || undefined, kind: t.kind,
-    material: t.setup ? t.setup.material : '', specimenId: t.setup ? t.setup.specimenId : '',
+    material: t.setup ? t.setup.material : t.record?.materialText ?? '', specimenId: t.setup ? t.setup.specimenId : t.record?.specimenId ?? '',
   };
 }
 
@@ -100,15 +101,13 @@ export function compareSummary(items: CompareItem[]): CompareSummary {
   return { test, metrics, rows, stats, warnings };
 }
 
-function cell(v: string): string {
-  return /[",\n\r]/.test(v) ? '"' + v.replace(/"/g, '""') + '"' : v;
-}
 function numCell(v: number | null): string {
   return v === null ? '' : String(v);
 }
 
 export function compareCsv(s: CompareSummary): string {
-  const line = (cells: string[]) => cells.map(cell).join(',');
+  /* text cells go through the shared csvCell: quoted when needed, and a cell starting with = + - or @ cannot run as a formula */
+  const line = (cells: string[]) => cells.map(csvCell).join(',');
   const out: string[] = [
     '# Comparison summary',
     '# Test,' + (s.test === 'relaxation' ? 'Stress relaxation' : 'Uniaxial tension'),
