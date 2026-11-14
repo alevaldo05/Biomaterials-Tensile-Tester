@@ -1,10 +1,14 @@
 /* Content shared with the website. The website keeps its definitions and materials in plain script files
    (data/terms.js, data/materials.js). This reads them when the app is built and hands them to the app as
-   "virtual:site-data", so a change to one of those files reaches the website and the app together. */
-import fs from 'node:fs';
+   "virtual:site-data", so a change to one of those files reaches the website and the app together.
+   Both files are on the list of shared website files (scripts/shared-files.js), which refuses any file not listed. */
 import path from 'node:path';
 import vm from 'node:vm';
 import type { Plugin } from 'vite';
+import { sharedFiles } from './build-info';
+
+/** The website files read here. Each must also be in scripts/shared-files.js (a test checks this). */
+export const SITE_DATA_FILES = ['data/terms.js', 'data/materials.js'];
 
 export interface SiteTerm { name: string; def: string; eq: string; unit: string }
 export interface SiteMaterial { id: string; name: string; family: string }
@@ -15,7 +19,8 @@ export function loadSiteData(root: string): SiteData {
   const sandbox: Record<string, unknown> = {};
   sandbox.window = sandbox;
   vm.createContext(sandbox);
-  for (const f of ['data/terms.js', 'data/materials.js']) vm.runInContext(fs.readFileSync(path.join(root, f), 'utf8'), sandbox, { filename: f });
+  const shared = sharedFiles(root);
+  for (const f of SITE_DATA_FILES) vm.runInContext(shared.readShared(f, root), sandbox, { filename: f });
   const terms = sandbox.TERMS as Record<string, SiteTerm> | undefined, mats = sandbox.MATERIALS as { id: string; name: string; family: string }[] | undefined;
   if (!terms || !Array.isArray(mats)) throw new Error('data/terms.js or data/materials.js did not define TERMS and MATERIALS.');
   const plain = (s: string) => String(s ?? '').replace(/<[^>]*>/g, '');
@@ -31,7 +36,7 @@ export function siteData(root: string): Plugin {
     resolveId: (s) => (s === id ? resolved : null),
     load(s) {
       if (s !== resolved) return null;
-      for (const f of ['data/terms.js', 'data/materials.js']) this.addWatchFile(path.join(root, f));
+      for (const f of SITE_DATA_FILES) this.addWatchFile(path.join(root, f));
       return 'export default ' + JSON.stringify(loadSiteData(root)) + ';';
     },
   };

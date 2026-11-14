@@ -75,4 +75,24 @@ describe('Windows app', () => {
     expect(pkg.build.files).not.toContain('node_modules/**/*');
     expect(pkg.build.files).toEqual(expect.arrayContaining(['main.cjs', 'preload.cjs', 'ui-files.cjs', 'lab-proxy.cjs', 'journal-files.cjs', 'ui/**/*']));
   });
+  it('builds an installer and a portable program, both x64, both named unsigned beta, with the same name before the kind', () => {
+    const pkg = JSON.parse(read('package.json'));
+    expect(pkg.build.win.target).toEqual([{ target: 'nsis', arch: ['x64'] }, { target: 'portable', arch: ['x64'] }]);
+    expect(pkg.build.nsis.artifactName).toMatch(/-beta-unsigned-setup\.\$\{ext\}$/);
+    expect(pkg.build.portable.artifactName).toMatch(/-beta-unsigned-portable\.\$\{ext\}$/);
+    expect(pkg.build.portable.artifactName.replace('-portable.', '-setup.')).toBe(pkg.build.nsis.artifactName);
+  });
+  it('has its build workflow hash and attach both .exe files, and start-check only the unpacked program', () => {
+    const wf = readFileSync(path.resolve(dir, '../../.github/workflows/desktop.yml'), 'utf8');
+    expect(wf).toContain('sha256sum *.exe > SHA256SUMS.txt');
+    expect(wf).toContain('apps/desktop/release/*.exe apps/desktop/release/SHA256SUMS.txt');
+    expect(wf).toContain('for kind in setup portable; do');
+    expect(wf).toContain('exe=$(ls release/win-unpacked/*.exe | grep -v -i uninstall | head -1)');
+    expect(wf).toContain('--draft');
+    /* the release notes and the job summary carry the Help screen's line, from the same sources */
+    expect(wf).toContain('node scripts/shared-files.js --short');
+    expect(wf).toContain("require('./apps/desktop/package.json').version");
+    expect(wf).toContain('line="Version ${version} · built from ${GITHUB_SHA:0:12} · shared website files ${shared}"');
+    expect(wf).toContain('${BUILD_LINE}');
+  });
 });

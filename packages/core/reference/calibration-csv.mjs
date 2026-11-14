@@ -1,12 +1,10 @@
 /* Runs the website's own calibration CSV code (the download function in calibration.js) in a sandbox
    with a stub page, and returns the text and file name it would have saved. The date is frozen. */
-import fs from 'node:fs';
-import path from 'node:path';
 import vm from 'node:vm';
-import { ROOT } from './legacy.mjs';
+import { readShared } from './legacy.mjs';
 
 export function legacyCalibrationCsv(settings, rows, example, dateParts) {
-  const text = fs.readFileSync(path.join(ROOT, 'calibration.js'), 'utf8');
+  const text = readShared('calibration.js');
   const a = text.indexOf('function cell(v) {'), b = text.indexOf('/* ---------- printed report');
   const pts = text.slice(text.indexOf('function points(s) {'), text.indexOf('/* Least squares'));
   const fitSrc = text.slice(text.indexOf('/* Least squares'), text.indexOf('/* ---------- page ---------- */'));

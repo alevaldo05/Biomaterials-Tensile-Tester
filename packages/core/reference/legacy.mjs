@@ -1,13 +1,18 @@
 /* Loads the website's own calculation scripts (the plain .js files at the repository root) into a
    sandbox, exactly as a page would, so their results can be recorded and compared with the
-   TypeScript port in src/. Nothing here changes those files. */
-import fs from 'node:fs';
+   TypeScript port in src/. Nothing here changes those files.
+   Every website file is read through readShared, which refuses a file that is not on the list of shared website
+   files (scripts/shared-files.js), so the app's build stamp covers everything these checks run. */
+import { createRequire } from 'node:module';
 import path from 'node:path';
 import vm from 'node:vm';
 import { fileURLToPath } from 'node:url';
 
 export const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '../../..');
-const read = (rel) => fs.readFileSync(path.join(ROOT, rel), 'utf8');
+const shared = createRequire(import.meta.url)(path.join(ROOT, 'scripts', 'shared-files.js'));
+/** Reads a website file (path from the top of the project); throws if it is not in scripts/shared-files.js. */
+export const readShared = (rel) => shared.readShared(rel, ROOT);
+const read = readShared;
 
 function slice(text, from, to, file) {
   const a = text.indexOf(from);

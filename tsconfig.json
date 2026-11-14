@@ -12,6 +12,7 @@
     "packages/recording/src",
     "packages/recording/test",
     "apps/api/src",
-    "apps/api/test"
+    "apps/api/test",
+    "apps/tester/src/build-info.d.ts"
   ]
 }
