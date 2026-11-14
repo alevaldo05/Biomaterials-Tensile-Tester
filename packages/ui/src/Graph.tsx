@@ -27,7 +27,7 @@ export interface GraphProps {
   y: readonly number[];
   xLabel: string;
   yLabel: string;
-  /** Short names for the readout line, for example "ε" and "σ". */
+  /** Short names for the readout line, for example "Strain" and "Stress". */
   xName: string;
   yName: string;
   xUnit: string;
@@ -267,7 +267,7 @@ export function Graph(p: GraphProps) {
         })() : null}
       </svg>
       <p className="graph-readout" aria-live="off">
-        {shown ? <>{shown.name ? <strong>{shown.name}: </strong> : null}{p.xName} = {sig(shown.x, 4)} {p.xUnit}, {p.yName} = {sig(shown.y, 4)} {p.yUnit}{tangentAt && p.tangent ? <>, local slope {p.tangent.slopeName} ≈ {sig(tangentAt.slope, 3)} {p.tangent.slopeUnit} (fitted over nearby points)</> : null}</>
+        {shown ? <>{shown.name ? <strong>{shown.name}: </strong> : null}{p.xName} = {sig(shown.x, 4)} {p.xUnit}, {p.yName} = {sig(shown.y, 4)} {p.yUnit}{tangentAt && p.tangent ? <>, local slope{p.tangent.slopeName ? ' ' + p.tangent.slopeName : ''} ≈ {sig(tangentAt.slope, 3)} {p.tangent.slopeUnit} (fitted over nearby points)</> : null}</>
           : n < 2 ? ' ' : p.live ? 'Recording. Zoom and the readout are available when recording stops.' : many ? 'Move over a curve to read a point and see which test it is. Scroll or drag to zoom; double-click to reset.' : 'Move over the curve, or use the arrow keys, to read a point. Scroll or drag to zoom; double-click to reset.'}
         {zoom && !p.live ? <span className="graph-range"> · Showing {p.xName} {sig(view.x0, 3)} to {sig(view.x1, 3)}</span> : null}
       </p>
