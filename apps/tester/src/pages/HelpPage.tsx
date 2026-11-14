@@ -5,6 +5,7 @@ import { HelpTopicView } from '../components/HelpButton';
 import { HELP, searchHelp } from '../help-text';
 import { siteUrl } from '../site-url';
 import { versionLine } from '../version';
+import { BenchRecord } from './BenchRecord';
 
 export function HelpPage({ openDevice }: { openDevice?: () => void }) {
   const [q, setQ] = useState(''), [sel, setSel] = useState('');
@@ -49,6 +50,7 @@ export function HelpPage({ openDevice }: { openDevice?: () => void }) {
           </section>
         </aside>
       </div>
+      <BenchRecord />
       <p className="hint version-line">{versionLine()}</p>
     </main>
   );
