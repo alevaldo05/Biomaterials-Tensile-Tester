@@ -84,6 +84,7 @@ Builds:
 
 Update notice (Windows app only, not the browser version):
 - A few seconds after the window loads, the app checks GitHub once. It asks `api.github.com` for this repository's latest releases (10 second timeout). On any failure it does nothing.
+- Only releases with an app tag (`app-v…`) count; other published releases, such as a backup, are skipped.
 - If a newer published release exists (a higher version, or the same version with a higher build run number), a small dismissible bar under the status line says "Version 1.0.0-beta.2 is available. Download". Download opens the release page in the computer's default browser. Installing stays the user's own click.
 - The bar is hidden while recording.
 - Settings has a switch, "Check for updates when the app starts", on by default and remembered on this computer. When it is off, no request is made.

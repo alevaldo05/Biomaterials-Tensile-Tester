@@ -44,6 +44,10 @@ describe('version and run comparison', () => {
     expect(u.isNewer({ version: '1.0.0', run: 0 }, own)).toBe(true);
     expect(u.isNewer({ version: '0.9.0', run: 99 }, own)).toBe(false);          /* older */
   });
+  it('skips published releases that are not the app, such as a backup', () => {
+    expect(u.pickRelease([rel('backup-2026-11-20'), rel('app-v1.0.0-beta.2-run.30')])).toEqual({ version: '1.0.0-beta.2', run: 30, tag: 'app-v1.0.0-beta.2-run.30' });
+    expect(u.pickRelease([rel('backup-2026-11-08')])).toBeNull();
+  });
   it('takes the first release that is not a draft', () => {
     expect(u.pickRelease([rel('app-v9.0.0-run.1', true), rel('app-v1.0.0-beta.2-run.30'), rel('app-v1.0.0-run.40')])).toEqual({ version: '1.0.0-beta.2', run: 30, tag: 'app-v1.0.0-beta.2-run.30' });
     expect(u.pickRelease([rel('app-v1.0.0', true)])).toBeNull();
@@ -70,6 +74,9 @@ describe('asking GitHub (stand-in answers, no network)', () => {
     expect(f.mock.calls[0]![1]!.headers!['User-Agent']).toBe('tensile-tester-app');
     expect(f.mock.calls[0]![1]!.signal).toBeInstanceOf(AbortSignal);
   });
+  it('finds an app release listed after a newer backup release', async () => {
+    expect(await u.checkForUpdate(reply([rel('backup-2026-11-20'), rel('app-v1.0.0-beta.2-run.25')]), own)).toMatchObject({ available: true, version: '1.0.0-beta.2' });
+  });
   it('says a newer release is available and gives its page on github.com, never the answer\'s own link', async () => {
     expect(await u.checkForUpdate(reply([rel('app-v1.0.0-beta.2-run.25')]), own)).toEqual({ available: true, version: '1.0.0-beta.2', pageUrl: 'https://github.com/alevaldo05/Biomaterials-Tensile-Tester/releases/tag/app-v1.0.0-beta.2-run.25' });
     expect(await u.checkForUpdate(reply([rel('app-v1.0.0-beta.1-run.21')]), own)).toMatchObject({ available: true, version: '1.0.0-beta.1' });
@@ -79,6 +86,7 @@ describe('asking GitHub (stand-in answers, no network)', () => {
     expect(await u.checkForUpdate(reply([rel('app-v1.0.0-beta.1-run.12')]), own)).toEqual({ available: false });
     expect(await u.checkForUpdate(reply([rel('app-v0.9.0-run.99')]), own)).toEqual({ available: false });
     expect(await u.checkForUpdate(reply([rel('app-v5.0.0-run.99', true)]), own)).toEqual({ available: false });   /* drafts are ignored */
+    expect(await u.checkForUpdate(reply([rel('backup-2026-11-08')]), own)).toEqual({ available: false });
   });
   it('does nothing when offline, on an error answer, an unexpected format, or a timeout', async () => {
     expect(await u.checkForUpdate(vi.fn<Fetch>(async () => { throw new Error('net::ERR_INTERNET_DISCONNECTED'); }), own)).toEqual({ available: false });

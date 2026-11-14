@@ -52,13 +52,16 @@ function isNewer(release, own) {
   return c > 0 || (c === 0 && release.run > (Number.isInteger(own.run) ? own.run : 0));
 }
 
-/* The first release that is not a draft and has a tag this app understands. */
+/* The first published (not draft) release with an app tag. Other releases in the repository, such as a hand-made
+   "backup-…" release, are skipped, so a newer one of those never hides an app update. */
 function pickRelease(list) {
   if (!Array.isArray(list)) return null;
-  const r = list.find((x) => x && typeof x === 'object' && x.draft === false);
-  if (!r) return null;
-  const t = parseTag(r.tag_name);
-  return t ? { ...t, tag: r.tag_name } : null;
+  for (const x of list) {
+    if (!x || typeof x !== 'object' || x.draft !== false) continue;
+    const t = parseTag(x.tag_name);
+    if (t) return { ...t, tag: x.tag_name };
+  }
+  return null;
 }
 
 /* Only this repository's release pages may be opened in the computer's browser. */
