@@ -29,7 +29,7 @@ Every page except `404.html` starts with a "Skip to main content" link (`.skip-l
 
 | File | Used by | What it does |
 |---|---|---|
-| `styles.css` | every page | Shared styles (theme colors, text size, fonts, top bar, page, buttons, Settings), the seven color themes (green light and dark, purple light and dark, pink light and dark, MU colors), and the three font stacks. |
+| `styles.css` | every page | Shared styles (theme colors, text size, fonts, top bar, page, buttons, Settings), the six color themes (green light and dark, purple light and dark, pink light and dark), and the three font stacks. |
 | `css/*.css` | every page | The page-specific styles that used to be in `styles.css`, split by their own section headings with the order unchanged: `graph.css` (graph pages), `test-setup.css` (test setup in steps), `home.css`, `protocol.css`, `live.css` (live test and Load Test), `about.css`, `materials.css`, `checklist.css`, `calibration.css`, `compare.css`, `report.css`, `extras.css` (page text, Help and Materials extras, Motion, Settings previews, data checks, version line), `guided.css` (guided test steps). **Every page links them all, in this order, right after `styles.css`** (the cascade depends on the order; `scripts/check-site.js` checks it). |
 | `styles-looks.css` | every page | The four optional styles (Lab instrument, Clinical clean, Engineering drawing, Academic report). |
 | `layouts.css` | every page | Styles for the five layouts and the Settings choices. |

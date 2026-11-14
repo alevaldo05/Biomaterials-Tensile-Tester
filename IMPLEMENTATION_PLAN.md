@@ -12,7 +12,7 @@ The site is live and works: plain HTML, CSS, and JavaScript with no framework, n
 2. **Make the pages less cramped**: definitions on hover, less instruction text, one step at a time on the test pages.
 3. **Help that appears when needed** and can be closed: a "Need help?" button, hints when someone is stuck, short animated tutorials.
 4. **A leave warning that looks like the site**, not the browser's own box.
-5. **More color themes**: dark pink, dark purple, and Manhattan University (MU) colors, previewed before anything changes.
+5. **More color themes** (the MU colors theme was later removed by the owner; the site offers six themes): dark pink, dark purple, and Manhattan University (MU) colors, previewed before anything changes.
 
 Everything that works today must keep working.
 

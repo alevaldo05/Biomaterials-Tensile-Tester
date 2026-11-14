@@ -7,7 +7,7 @@
    It is NOT part of node scripts/check-site.js and is not run by the publish workflow, because it needs Playwright
    (a browser driver) that this project does not install. Install it yourself, for example: npm install playwright
 
-   Phase A: EVERY combination of color theme x layout x style (7 x 5 x 5 = 175), on every page, at 1280 px and 1024 px.
+   Phase A: EVERY combination of color theme x layout x style (6 x 5 x 5 = 150), on every page, at 1280 px and 1024 px.
    Phase B: pairwise coverage of all 16 display choices (every pair of values of any two choices appears together at least once).
    For every page load it checks: no console error, failed request, or "Refused to" policy message; no sideways scroll; the title is
    shown and not clipped; the header logo, title, and menu do not overlap; and the contrast of the text actually drawn on the page
@@ -26,7 +26,7 @@ var QUICK = !!args.quick, WORKERS = +args.workers || 6, LIMIT = +args.limit || (
 
 /* ---------- the combinations ---------- */
 var OPTS = {
-  theme: ['light', 'dark', 'purple', 'pink', 'purple-dark', 'pink-dark', 'mu'],
+  theme: ['light', 'dark', 'purple', 'pink', 'purple-dark', 'pink-dark'],
   layout: ['start', 'sidebar', 'cards', 'tabs', 'reading'],
   style: ['standard', 'lab', 'clinical', 'drafting', 'academic'],
   font: ['serif', 'sans', 'humanist'], textsize: ['100', '125', '150', '200'], spacing: ['standard', 'comfortable', 'compact'],
@@ -265,7 +265,7 @@ async function feature(page, name, port, issues) {
   }
   if (name === 'settings') {
     var radios = await page.$$eval('input[name="theme"]', function (e) { return e.length; });
-    if (radios !== 7) issues.push({ k: 'settings', m: 'expected 7 color theme choices, found ' + radios });
+    if (radios !== 6) issues.push({ k: 'settings', m: 'expected 6 color theme choices, found ' + radios });
     return;
   }
   if (name === 'check-text') {

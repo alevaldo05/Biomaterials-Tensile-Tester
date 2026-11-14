@@ -3,7 +3,7 @@
    only: they never change test data, results, or what is sent to the tester. */
 (function () {
   var SETTINGS = {
-    theme: { values: ["light", "dark", "purple", "pink", "purple-dark", "pink-dark", "mu"], fallback: "light" },
+    theme: { values: ["light", "dark", "purple", "pink", "purple-dark", "pink-dark"], fallback: "light" },
     font: { values: ["serif", "sans", "humanist"], fallback: "serif" },
     checklist: { values: ["off", "on"], fallback: "off" },
     style: { values: ["standard", "lab", "clinical", "drafting", "academic"], fallback: "standard" },
