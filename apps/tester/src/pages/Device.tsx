@@ -4,6 +4,7 @@ import { useEffect, useRef, useState, useSyncExternalStore } from 'react';
 import type { TestController } from '../controller';
 import type { Account } from '../lab-api';
 import { CalibrationCheck } from './CalibrationCheck';
+import { BenchCalibration } from './BenchCalibration';
 import { CalibrationPanel, DeviceFacts } from '../components/DevicePanels';
 import { downloadBeforeLeaving } from '../exports';
 
@@ -42,6 +43,7 @@ export function Device({ controller: c, account, serialAvailable }: { controller
             <CalibrationPanel c={c} account={account} />
           </section>
           <CalibrationCheck controller={c} />
+          <BenchCalibration controller={c} />
         </div>
       </div>
       <section className="card-plain" aria-labelledby="diag-title">
