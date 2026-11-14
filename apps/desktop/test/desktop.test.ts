@@ -29,6 +29,15 @@ describe('Windows app', () => {
     expect(main).toContain("permission === 'clipboard-sanitized-write'");
     expect(main).not.toMatch(/'(media|geolocation|notifications|hid|usb|bluetooth)'/);
   });
+  it('the installed program refuses remote-debugging, inspector, and V8-flag switches (only the start-up check may use one)', () => {
+    expect(main).toMatch(/const BLOCKED_SWITCHES = \['remote-debugging-port', 'remote-debugging-pipe', 'remote-debugging-address', 'inspect', 'inspect-brk', 'inspect-port', 'js-flags'\];/);
+    expect(main).toContain("if (app.isPackaged && process.env.TT_SMOKE_CHECK !== '1' && blockedSwitch()) {");
+    expect(main).toContain('app.exit(1);');
+    /* the check runs before the window, the protocol, or the bridge are set up */
+    expect(main.indexOf('blockedSwitch()) {')).toBeLessThan(main.indexOf('protocol.registerSchemesAsPrivileged'));
+    expect(read('smoke.cjs')).toContain("TT_SMOKE_CHECK: '1'");
+    expect(main.match(/TT_SMOKE_CHECK/g)).toHaveLength(2);   /* the comment and the check; nothing else reads it */
+  });
   it('sends no machine commands and has no other way to reach the device', () => {
     expect(main).not.toMatch(/start_stream|stop_stream|set_settings|serialport|child_process/);
   });

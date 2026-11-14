@@ -37,7 +37,7 @@ function stop(child) {
 }
 
 async function run(exe, port, seconds, args = []) {
-  const child = spawn(exe, ['--remote-debugging-port=' + port, ...args], { stdio: 'ignore', windowsHide: false });
+  const child = spawn(exe, ['--remote-debugging-port=' + port, ...args], { stdio: 'ignore', windowsHide: false, env: { ...process.env, TT_SMOKE_CHECK: '1' } });   /* the installed program refuses remote debugging without it (main.cjs) */
   let exited = null;
   child.on('exit', (code) => { exited = code; });
   child.on('error', (e) => { exited = 'error: ' + e.message; });

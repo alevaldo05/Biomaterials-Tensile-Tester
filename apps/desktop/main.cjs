@@ -19,6 +19,17 @@ const { checkLabUrl, createLabProxy, API_PREFIX } = require('./lab-proxy.cjs');
 const { createJournalFiles } = require('./journal-files.cjs');
 const { createUpdateOnce, isReleasePage } = require('./update-check.cjs');
 
+/* The installed program refuses to start with switches that let another program inspect or drive it
+   (remote debugging, the Node inspector, V8 flags). The start-up check in the build workflow needs remote debugging,
+   so smoke.cjs sets TT_SMOKE_CHECK=1 for its own run. Someone who can set environment variables on this computer
+   already controls it; this guards against other programs and shortcuts that add a switch, not against them. */
+const BLOCKED_SWITCHES = ['remote-debugging-port', 'remote-debugging-pipe', 'remote-debugging-address', 'inspect', 'inspect-brk', 'inspect-port', 'js-flags'];
+const blockedSwitch = () => BLOCKED_SWITCHES.find((s) => app.commandLine.hasSwitch(s)) || (process.argv.find((a) => /^--(inspect|remote-debugging|js-flags)/.test(a)) ?? null);
+if (app.isPackaged && process.env.TT_SMOKE_CHECK !== '1' && blockedSwitch()) {
+  dialog.showErrorBox('Biomaterials Tensile Tester', 'The app was started with a debugging switch (' + blockedSwitch() + ') and will close. Start it from its own shortcut.');
+  app.exit(1);
+}
+
 const SCHEME = 'app', ORIGIN = 'app://tester';
 const UI_DIR = path.join(__dirname, 'ui');
 /* The only outside pages the app opens, in the computer's own browser. */

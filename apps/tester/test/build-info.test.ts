@@ -1,6 +1,8 @@
 /* The app's version and build stamp: one version (apps/desktop/package.json) everywhere the app shows or saves it,
    and the Help line "Version <v> · built from <commit> · shared website files <hash>". */
-import { readFileSync } from 'node:fs';
+import { mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
+import { execFileSync } from 'node:child_process';
+import { tmpdir } from 'node:os';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { createElement } from 'react';
@@ -39,11 +41,11 @@ describe('build stamp', () => {
   it('hashes the shared website files and names a commit', () => {
     expect(info.sharedFilesHash).toBe(sharedFiles(ROOT).sharedFilesHash(ROOT));
     expect(info.sharedFilesHash).toMatch(/^[0-9a-f]{64}$/);
-    expect(info.commit).toMatch(/^([0-9a-f]{7,12}|unknown)$/);
+    expect(info.commit).toMatch(/^([0-9a-f]{7,12}(-changed)?|unknown)$/);
   });
   it('takes the commit from GITHUB_SHA (12 characters), else Git, else "unknown", and never fails', () => {
     expect(commitId(ROOT, { GITHUB_SHA: '0123456789ABCDEF0123456789abcdef01234567' })).toBe('0123456789ab');
-    expect(commitId(ROOT, { GITHUB_SHA: 'not a sha' })).toMatch(/^([0-9a-f]{7,12}|unknown)$/);
+    expect(commitId(ROOT, { GITHUB_SHA: 'not a sha' })).toMatch(/^([0-9a-f]{7,12}(-changed)?|unknown)$/);
     expect(commitId(path.join(ROOT, '..', 'no-such-folder-' + Date.now()), {})).toBe('unknown');
   });
   it('takes the build number from GITHUB_RUN_NUMBER, else 0', () => {
@@ -51,8 +53,18 @@ describe('build stamp', () => {
     expect(buildNumber({ GITHUB_RUN_NUMBER: '17' })).toBe(17);
     for (const bad of [undefined, '', '0', '-3', '1.5', 'abc', '12345678901']) expect(buildNumber({ GITHUB_RUN_NUMBER: bad }), String(bad)).toBe(0);
   });
+  it('marks a local build made from changed files, and not a clean one', () => {
+    const dir = mkdtempSync(path.join(tmpdir(), 'stamp-'));
+    const git = (...a: string[]) => execFileSync('git', ['-c', 'user.name=t', '-c', 'user.email=t@example.invalid', ...a], { cwd: dir, stdio: 'ignore' });
+    git('init', '-q'); writeFileSync(path.join(dir, 'a.txt'), '1'); git('add', '.'); git('commit', '-q', '-m', 'one');
+    expect(commitId(dir, {})).toMatch(/^[0-9a-f]{12}$/);
+    writeFileSync(path.join(dir, 'a.txt'), '2');
+    expect(commitId(dir, {})).toMatch(/^[0-9a-f]{12}-changed$/);
+    expect(commitId(dir, { GITHUB_SHA: '0123456789abcdef0123456789abcdef01234567' })).toBe('0123456789ab');   /* GitHub builds are clean checkouts */
+    rmSync(dir, { recursive: true, force: true });
+  });
   it('treats an empty GITHUB_SHA (a local image build) as unset', () => {
-    expect(commitId(ROOT, { GITHUB_SHA: '' })).toMatch(/^([0-9a-f]{7,12}|unknown)$/);
+    expect(commitId(ROOT, { GITHUB_SHA: '' })).toMatch(/^([0-9a-f]{7,12}(-changed)?|unknown)$/);
     expect(commitId(path.join(ROOT, '..', 'no-such-folder-' + Date.now()), { GITHUB_SHA: '' })).toBe('unknown');
   });
   it('is stamped inside the app image: the Dockerfile copies every file the build stamp reads and takes GITHUB_SHA', () => {
