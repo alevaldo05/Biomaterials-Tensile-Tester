@@ -69,6 +69,9 @@ export function parseSetupFile(text: string): SetupFile {
   return { profile: f.profile, calibrations: f.calibrations };
 }
 
+/** The longest text a setup field may hold: the Windows app's journal refuses longer (apps/desktop/journal-files.cjs). */
+export const SETUP_TEXT_LIMIT = 2000;
+
 export interface ControllerOptions {
   /** Opens the real connection (USB serial). Tests pass a stand-in device here. */
   openReal: () => Transport;
@@ -114,7 +117,9 @@ export class TestController {
   /** The device profile in use when the recording started: it belongs to this test's file even if another setup is chosen later. */
   private testProfile: DeviceProfile | null = null;
   private recorded: { line: string; at: number }[] = [];
-  private committed = 0;
+  /** Lines written to the journal for the current recording. A new object per recording, so a write still running for
+      the previous one keeps counting its own lines (New test right after Stop must not lose the last batch). */
+  private commitState = { n: 0 };
   private committing: Promise<void> = Promise.resolve();
   private lastCommitTry = 0;
   private timer: ReturnType<typeof setInterval> | null = null;
@@ -243,17 +248,19 @@ export class TestController {
   /** Writes the sample lines not yet committed. One write at a time; a failed write is retried with the next one. */
   commit(): Promise<void> {
     this.lastCommitTry = Date.now();
-    const j = this.o.journal, id = this.journalId;
+    const j = this.o.journal, id = this.journalId, rec = this.recorded, st = this.commitState;
     if (!j || !id) return Promise.resolve();
     this.committing = this.committing.then(async () => {
-      const batch = this.recorded.slice(this.committed);
+      const batch = rec.slice(st.n);
       if (!batch.length) return;
-      this.localSave = 'saving';
+      const current = st === this.commitState;
+      if (current) this.localSave = 'saving';
       try {
         await j.append(id, { lines: batch.map((x) => x.line), receivedAt_ms: batch.map((x) => x.at) });
-        this.committed += batch.length;
-        this.localSave = 'saved'; this.localError = ''; this.lastCommitAt = new Date();
+        st.n += batch.length;
+        if (st === this.commitState) { this.localSave = 'saved'; this.localError = ''; this.lastCommitAt = new Date(); }
       } catch (e) {
+        if (st !== this.commitState) return;
         this.localSave = 'error';
         this.localError = 'Saving on this computer failed: ' + (e instanceof Error ? e.message : String(e)) + ' The recording continues in memory; download the data when it ends.';
       }
@@ -284,7 +291,7 @@ export class TestController {
   async startRecording(): Promise<void> {
     if (this.startProblem || !this.recorder || !this.source) { this.message = this.startProblem; this.changed(); return; }
     this.session = this.recorder.start({ allowUncalibrated: this.voltagesOnly });
-    this.record = null; this.recordProblem = ''; this.recorded = []; this.header = this.handshake.slice(); this.testProfile = this.setupFile?.profile ?? null; this.committed = 0; this.message = ''; this.saved = false;
+    this.record = null; this.recordProblem = ''; this.recorded = []; this.header = this.handshake.slice(); this.testProfile = this.setupFile?.profile ?? null; this.commitState = { n: 0 }; this.message = ''; this.saved = false;
     this.startedAt = new Date();
     this.phase = 'recording';
     this.liveCache = { count: -1, record: null };
@@ -341,7 +348,7 @@ export class TestController {
 
   /** Another specimen: the method, test type, and connection stay; the specimen's identity, baseline, and results do not. */
   newTest(): void {
-    this.phase = 'setup'; this.session = null; this.record = null; this.recordProblem = ''; this.recorded = []; this.committed = 0;
+    this.phase = 'setup'; this.session = null; this.record = null; this.recordProblem = ''; this.recorded = []; this.commitState = { n: 0 };
     this.message = ''; this.saved = true; this.startedAt = null; this.journalId = null; this.localSave = this.o.journal ? 'none' : 'off'; this.localError = '';
     this.setup = this.method ? setupFromMethod(this.method) : { ...this.setup, specimenId: '', notes: '' };
     this.recorder?.zeroForceReset();

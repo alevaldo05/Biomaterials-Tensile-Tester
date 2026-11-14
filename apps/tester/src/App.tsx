@@ -3,6 +3,7 @@
    results on the right, and this run's specimens along the bottom. It shows what the controller holds. It has no
    device, board, or protocol knowledge, and it sends nothing to the tester. */
 import { useEffect, useRef, useState, useSyncExternalStore } from 'react';
+import { SETUP_TEXT_LIMIT } from './controller';
 import type { ReactNode } from 'react';
 import { keyNumbers, sig } from '@tensile/core';
 import type { TestType } from '@tensile/core';
@@ -182,9 +183,10 @@ export function App({ controller: c, serialAvailable, theme, account, onHelpSub,
     review: c.startProblem || undefined,
   };
   const lockNote = c.locked ? <p className="hint lock-note">{ICON.lock} Locked {recording ? 'while recording' : 'until New test'}.</p> : null;
+  /* Each setup text is kept within what the Windows app's journal accepts (apps/desktop/journal-files.cjs LIMITS.text). */
   const text = (k: keyof Setup, label: string, o: { unit?: string; required?: boolean; hint?: string; numeric?: boolean; ref?: React.Ref<HTMLInputElement> } = {}) => (
     <Field label={label} {...(o.unit ? { unit: o.unit } : {})} {...(o.required ? { required: true } : {})} {...(show(k) ? { error: show(k) as string } : {})} {...(o.hint ? { hint: o.hint } : {})}>
-      <input type="text" inputMode={o.numeric ? 'decimal' : 'text'} value={c.setup[k] as string} disabled={c.locked && k !== 'notes'} onChange={(e) => set({ [k]: e.target.value })} onBlur={touch(k)} aria-invalid={!!show(k)} {...(o.ref ? { ref: o.ref } : {})} />
+      <input type="text" inputMode={o.numeric ? 'decimal' : 'text'} value={c.setup[k] as string} maxLength={SETUP_TEXT_LIMIT} disabled={c.locked && k !== 'notes'} onChange={(e) => set({ [k]: e.target.value })} onBlur={touch(k)} aria-invalid={!!show(k)} {...(o.ref ? { ref: o.ref } : {})} />
     </Field>
   );
   const w = num(c.setup.width), t = num(c.setup.thickness);
@@ -223,7 +225,7 @@ export function App({ controller: c, serialAvailable, theme, account, onHelpSub,
       <details className="more">
         <summary>More details (temperature, environment, notes)</summary>
         <div className="more-body">
-          {text('temperature', 'Temperature', { unit: '°C', hint: 'Leave empty if not known.' })}{text('environment', 'Environment', { hint: 'For example hydration condition.' })}{text('notes', 'Notes')}
+          {text('temperature', 'Temperature', { unit: '°C', hint: 'Leave empty if not known.' })}{text('environment', 'Environment', { hint: 'For example hydration condition.' })}{text('notes', 'Notes', { hint: c.setup.notes.length > SETUP_TEXT_LIMIT - 200 ? c.setup.notes.length + ' of ' + SETUP_TEXT_LIMIT + ' characters.' : 'Up to ' + SETUP_TEXT_LIMIT + ' characters.' })}
         </div>
       </details>
       {!c.locked ? <p><button type="button" className="link" onClick={() => set(EXAMPLE_DIMENSIONS)}>Fill example</button></p> : null}
