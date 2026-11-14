@@ -53,12 +53,12 @@ The tester's output pins, signal scaling, and grounding are **not verified**. No
 ### 3.1 For lab users
 
 1. Open the website and press **Get the app** on Home. This opens the Get the App page.
-2. The page says **Download not yet available** until the owner publishes a release. Nothing can be downloaded before that. Ask the owner for the installer.
+2. Press **Download the tester app (beta)**. It opens the latest release on GitHub. A release shows there only after the owner has published one; until then, ask the owner for the installer.
 3. Real tests on the tester are run in the app on the lab computer, not on the website.
 
 ### 3.2 For the owner: making the download
 
-The Windows app is built on GitHub, on Windows, only when you start it. Nothing is published automatically.
+The Windows app is built on GitHub, on Windows. A build runs by itself after a merge into `main` (see 3.2.1), or when you start it by hand. Nothing is published automatically: every build makes a draft, and only you publish it.
 
 1. On GitHub open **Actions**, choose **Windows app**, and press **Run workflow**.
 2. Wait for it to finish. It runs the checks, builds the screens, builds the installer and a portable program, and creates a **draft release**. A run started by hand names the draft `app-v<version>-run.<n>` (for example `app-v1.0.0-beta.1-run.7`).
@@ -78,7 +78,18 @@ The Windows app is built on GitHub, on Windows, only when you start it. Nothing 
    ```
    The short hash it prints should match the "shared website files" part of the Help line.
 8. Fill in the first-install checklist in [docs/app/WINDOWS-APP.md](app/WINDOWS-APP.md).
-9. Publish the draft (**Releases**, **Edit**, **Publish**) only when you are satisfied. Linking it from the Get the App page is a separate website change.
+9. Publish the draft (**Releases**, **Edit**, **Publish**) only when you are satisfied. The Get the App page already links to the latest release, so it shows this one once published.
+
+#### 3.2.1 Automatic builds and the update notice
+
+- Every merge into `main` that changes the app (`apps/**`, `packages/**`, `package-lock.json`, `scripts/shared-files.js`, `.github/workflows/desktop.yml`) or a shared website file listed in `scripts/shared-files.js` runs Actions, **Windows app**, and creates a new **draft** release. Its tag is `app-v<version>-run.<N>` and its title is "Tester app <version> (Windows, beta)". It is not marked pre-release. Run workflow by hand and `app-v*` tags still work.
+- Your steps: merge, open **Releases**, download and try the draft, then press **Publish**. Only published releases are offered on the website and in the app's notice.
+- Older drafts pile up. Delete the ones you do not want on the Releases page.
+- The Windows app (not the browser version) checks GitHub once when it starts, a few seconds after the window loads. It asks `api.github.com` for this repository's latest releases (10 second timeout; if anything fails it does nothing). If a newer published release exists (a higher version, or the same version with a higher build run number), a small bar under the status line says "Version 1.0.0-beta.2 is available. Download". **Download** opens the release page in the computer's default browser. Installing stays your own click. The bar can be dismissed and is hidden while recording.
+- People who already have the app see the notice the next time they open it after you publish.
+- In Settings, the switch **Check for updates when the app starts** is on by default and is remembered on this computer. When it is off, no request is made.
+- The website's download link shows a release only after the first one is published.
+- The update check has not been tried on Windows.
 
 ### 3.3 Running from source on Windows (PowerShell)
 
@@ -241,7 +252,7 @@ Open the website in Chrome (Windows or Mac) or Safari (Mac). The menu is **Home*
 | Page | What it is for |
 |---|---|
 | **Home** | Starting point. **Get the app** and **Learn and practice**. |
-| **Get the App** | Says **Download not yet available** until a release is published. Links to the practice page and Load Test. |
+| **Get the App** | Has a **Download the tester app (beta)** link to the latest published release (for Windows). Links to the practice page and Load Test. |
 | **Learn** | Before you test (checklist), Background, and the Glossary. Hover or Tab onto a dotted-underlined term for its definition. |
 | **Protocols** | Uniaxial Tension and Stress Relaxation, both marked draft. Four tabs: Steps, Specimen and equipment, Report and notes, and Example graph and equations. |
 | **Materials** | Typical property tables ("Typical, unreviewed"), a two-material comparison, and a chart of Young's modulus against density. Example curves not made by hand are labeled "Sample data, not measured". |

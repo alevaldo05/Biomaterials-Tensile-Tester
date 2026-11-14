@@ -7,7 +7,7 @@ import { createElement } from 'react';
 import { renderToStaticMarkup } from 'react-dom/server';
 import { describe, expect, it } from 'vitest';
 import info from 'virtual:build-info';
-import { appVersion, commitId, sharedFiles } from '../build-info';
+import { appVersion, buildNumber, commitId, sharedFiles } from '../build-info';
 import { APP_VERSION } from '../src/controller';
 import { HelpPage } from '../src/pages/HelpPage';
 import { versionLine } from '../src/version';
@@ -45,6 +45,11 @@ describe('build stamp', () => {
     expect(commitId(ROOT, { GITHUB_SHA: '0123456789ABCDEF0123456789abcdef01234567' })).toBe('0123456789ab');
     expect(commitId(ROOT, { GITHUB_SHA: 'not a sha' })).toMatch(/^([0-9a-f]{7,12}|unknown)$/);
     expect(commitId(path.join(ROOT, '..', 'no-such-folder-' + Date.now()), {})).toBe('unknown');
+  });
+  it('takes the build number from GITHUB_RUN_NUMBER, else 0', () => {
+    expect(Number.isInteger(info.buildNumber) && info.buildNumber >= 0).toBe(true);
+    expect(buildNumber({ GITHUB_RUN_NUMBER: '17' })).toBe(17);
+    for (const bad of [undefined, '', '0', '-3', '1.5', 'abc', '12345678901']) expect(buildNumber({ GITHUB_RUN_NUMBER: bad }), String(bad)).toBe(0);
   });
   it('treats an empty GITHUB_SHA (a local image build) as unset', () => {
     expect(commitId(ROOT, { GITHUB_SHA: '' })).toMatch(/^([0-9a-f]{7,12}|unknown)$/);

@@ -1,14 +1,32 @@
 # Builds the Windows installer and the portable program of the tester app and attaches both (with SHA256SUMS.txt)
 # to a DRAFT release. Nothing is published:
 # a draft release is visible only to people who can change the repository, and only the owner publishes it.
-# The installer is unsigned (a beta): Windows will warn before running it. Runs only when started by hand
-# (Actions > Windows app > Run workflow) or when a tag starting with app-v is pushed.
+# The installer is unsigned (a beta): Windows will warn before running it. Runs when started by hand
+# (Actions > Windows app > Run workflow), when a tag starting with app-v is pushed, and on every merge into main that
+# changes the app or a shared website file (the paths below; a test checks they cover scripts/shared-files.js).
 name: Windows app
 
 on:
   workflow_dispatch:
   push:
     tags: ['app-v*']
+    branches: [main]
+    paths:
+      - 'apps/**'
+      - 'packages/**'
+      - 'package-lock.json'
+      - 'scripts/shared-files.js'
+      - '.github/workflows/desktop.yml'
+      # every file in SHARED_FILES (scripts/shared-files.js)
+      - 'data/terms.js'
+      - 'data/materials.js'
+      - 'data/device.js'
+      - 'data/samples.js'
+      - 'graph-core.js'
+      - 'live-csv.js'
+      - 'calibration.js'
+      - 'compare.js'
+      - 'excel-export.js'
 
 permissions:
   contents: read
@@ -37,7 +55,7 @@ jobs:
 
       - name: Build the app's screens
         shell: bash
-        run: npm run app:build
+        run: npm run app:build   # GITHUB_RUN_NUMBER becomes the app's build number (apps/tester/build-info.ts)
 
       - name: Build stamp (the line the app's Help screen shows)
         # The same line as Help in the built app: the version (apps/desktop/package.json), the commit, and the short
@@ -57,6 +75,7 @@ jobs:
         working-directory: apps/desktop
         run: |
           npm ci --no-audit --no-fund
+          npm pkg set buildNumber="${GITHUB_RUN_NUMBER}" --json   # read by main.cjs for the update check
           npm run prepare-ui
           npm run dist:win
           cd release
@@ -98,7 +117,8 @@ jobs:
           - The hardware connection is untested.
           - Check the download against SHA256SUMS.txt.
 
-          This is a draft. It is published only by the owner.
+          This is a draft. It is published only by the owner. Once published, the website's download link and the
+          app's update notice offer it.
           NOTES
-          gh release create "$tag" --draft --prerelease --target "${GITHUB_SHA}" --title "Tester app ${version} (Windows, beta)" --notes-file notes.md \
+          gh release create "$tag" --draft --target "${GITHUB_SHA}" --title "Tester app ${version} (Windows, beta)" --notes-file notes.md \
             apps/desktop/release/*.exe apps/desktop/release/SHA256SUMS.txt

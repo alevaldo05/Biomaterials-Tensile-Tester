@@ -2,6 +2,7 @@
 import { useEffect, useState } from 'react';
 import type { SessionJournal, JournalMeta } from '../storage/journal';
 import { desktopBridge } from '../desktop';
+import type { DesktopBridge } from '../desktop';
 import { THEME_CHOICES } from '../theme';
 import type { ThemeChoice } from '../theme';
 
@@ -31,6 +32,26 @@ function LabAddress({ recording, changed, reachable }: { recording: boolean; cha
     {msg ? <p className="hint" role="status">{msg}</p> : null}
     {err ? <p className="error" role="alert">{err}</p> : null}
   </>);
+}
+
+/* The Windows app only: whether to ask GitHub for a newer release when the app starts. Saved on this computer. */
+export function UpdateSetting({ bridge = desktopBridge() }: { bridge?: DesktopBridge | null }) {
+  const [on, setOn] = useState(true), [err, setErr] = useState('');
+  useEffect(() => { if (bridge?.getUpdateCheck) void bridge.getUpdateCheck().then((v) => setOn(v !== false), () => undefined); }, [bridge]);
+  if (!bridge?.getUpdateCheck || !bridge.setUpdateCheck) return null;
+  const change = async (next: boolean) => {
+    setErr(''); setOn(next);
+    const r = await bridge.setUpdateCheck!(next).catch(() => ({ error: 'The setting could not be saved on this computer.' }));
+    if (r.error) { setErr(r.error); setOn(!next); }
+  };
+  return (
+    <section className="card-plain" aria-labelledby="updates-title">
+      <h2 id="updates-title">Updates</h2>
+      <label className="check"><input type="checkbox" role="switch" checked={on} onChange={(e) => void change(e.target.checked)} /> Check for updates when the app starts</label>
+      <p className="hint">Asks GitHub for the latest release of the tester app. Nothing is downloaded or installed by itself.</p>
+      {err ? <p className="error" role="alert">{err}</p> : null}
+    </section>
+  );
 }
 
 export function Settings({ themeChoice, setThemeChoice, journal, download, recording, labChanged, reachable }: { themeChoice: ThemeChoice; setThemeChoice: (c: ThemeChoice) => void; journal: SessionJournal | null; download: (m: JournalMeta) => void; recording: boolean; labChanged: () => void; reachable: boolean | null }) {
@@ -75,6 +96,7 @@ export function Settings({ themeChoice, setThemeChoice, journal, download, recor
         <h2 id="lab-title">Lab server</h2>
         <LabAddress recording={recording} changed={labChanged} reachable={reachable} />
       </section>
+      <UpdateSetting />
     </main>
   );
 }

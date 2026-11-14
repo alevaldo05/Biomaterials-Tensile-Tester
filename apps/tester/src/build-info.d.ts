@@ -5,6 +5,6 @@
 declare const __APP_VERSION__: string;
 
 declare module 'virtual:build-info' {
-  const info: { appVersion: string; commit: string; sharedFilesHash: string };
+  const info: { appVersion: string; commit: string; sharedFilesHash: string; buildNumber: number };
   export default info;
 }

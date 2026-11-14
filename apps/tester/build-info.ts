@@ -1,7 +1,8 @@
 /* The build stamp. When the app is built, this gives it:
    - __APP_VERSION__: the version from apps/desktop/package.json (the one place the app's version is written);
-   - "virtual:build-info": { appVersion, commit, sharedFilesHash }, shown on the Help screen as
-     "Version <v> · built from <commit> · shared website files <first 12 of the hash>".
+   - "virtual:build-info": { appVersion, commit, sharedFilesHash, buildNumber }, shown on the Help screen as
+     "Version <v> · built from <commit> · shared website files <first 12 of the hash>". buildNumber is the Windows app
+     workflow's run number (GITHUB_RUN_NUMBER, 0 for a local build); release tags are app-v<version>-run.<N>.
    The hash covers the website files the app shares (the list and the hash are in scripts/shared-files.js), so an
    installed copy can be compared with the current website files: `node scripts/shared-files.js`.
    Nothing here can fail the build: without Git or GITHUB_SHA the commit is "unknown". */
@@ -11,7 +12,7 @@ import { createRequire } from 'node:module';
 import path from 'node:path';
 import type { Plugin } from 'vite';
 
-export interface BuildInfo { appVersion: string; commit: string; sharedFilesHash: string }
+export interface BuildInfo { appVersion: string; commit: string; sharedFilesHash: string; buildNumber: number }
 
 /** scripts/shared-files.js (plain Node, CommonJS), loaded with Node's own require. */
 export interface SharedFiles {
@@ -45,6 +46,12 @@ export function commitId(root: string, env: Record<string, string | undefined> =
   }
 }
 
+/** The workflow run number (GITHUB_RUN_NUMBER), or 0 when built anywhere else. */
+export function buildNumber(env: Record<string, string | undefined> = process.env): number {
+  const s = (env.GITHUB_RUN_NUMBER ?? '').trim();
+  return /^[1-9]\d{0,8}$/.test(s) ? Number(s) : 0;
+}
+
 export function buildInfo(root: string): Plugin {
   const id = 'virtual:build-info', resolved = '\0' + id;
   return {
@@ -56,7 +63,7 @@ export function buildInfo(root: string): Plugin {
       const shared = sharedFiles(root);
       this.addWatchFile(path.join(root, 'apps/desktop/package.json'));
       for (const f of shared.SHARED_FILES) this.addWatchFile(path.join(root, f));
-      const info: BuildInfo = { appVersion: appVersion(root), commit: commitId(root), sharedFilesHash: shared.sharedFilesHash(root) };
+      const info: BuildInfo = { appVersion: appVersion(root), commit: commitId(root), sharedFilesHash: shared.sharedFilesHash(root), buildNumber: buildNumber() };
       return 'export default ' + JSON.stringify(info) + ';';
     },
   };
