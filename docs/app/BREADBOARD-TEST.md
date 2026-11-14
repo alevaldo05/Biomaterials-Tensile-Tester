@@ -26,6 +26,26 @@ It does not show anything about the tester, a force or displacement sensor, a ca
 | Multimeter | The reference reading. A reading you trust more than the app's. |
 | Two 4.7 kΩ resistors (only if needed) | Pull-ups for SDA and SCL, only if your ADS1115 breakout has none. Many have them. |
 
+### Shopping list
+
+| Item | Quantity | What to look for | About |
+|---|---|---|---|
+| ESP32 DevKit (ESP32-WROOM-32) | 1 | Dev board with USB serial; USB-to-serial chip CP2102 or CH340 | Low cost |
+| ADS1115 breakout | 1–2 (one spare) | On-board pull-ups on SDA and SCL | Low cost |
+| 10 kΩ linear potentiometer | 2 | Linear taper | Very low cost |
+| Half-size breadboard | 1 | | Very low cost |
+| Male–male jumper wires | 1 pack | | Very low cost |
+| USB data cable | 1 | Matches the board's connector (micro-USB or USB-C); carries data, not charge-only | Very low cost |
+| Multimeter | 1 | Measures DC volts | Low cost |
+
+For later (the tester stage, after review):
+
+| Item | Quantity | What to look for | About |
+|---|---|---|---|
+| USB isolator for full-speed USB | 1 | See R5 in [TESTER-INTERFACE.md](TESTER-INTERFACE.md); rating chosen by the reviewer | Moderate |
+| Enclosure and panel connectors | As reviewed | Per the reviewed design | Low to moderate |
+| Resistors, diodes, capacitors | As reviewed | Per the reviewed schematic | Very low cost |
+
 Not needed: the tester, any sensor, a power supply other than USB.
 
 ## 3. Wiring (nets)

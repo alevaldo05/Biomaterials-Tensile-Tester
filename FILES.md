@@ -102,6 +102,8 @@ Every page except `404.html` starts with a "Skip to main content" link (`.skip-l
 | `docs/app/CONTAINERS.md` | Running everything in containers: the five services, first start, updating one part alone, backups, moving to the lab computer. |
 | `docs/app/BACKEND.md` | The back end: what the database stores, roles, the API, settings, running it, moving it to the lab computer. |
 | `docs/app/SETUP.md` | From the board to a recorded test: what is not yet verified, electrical restrictions, where pins, drivers, settings, and calibration are configured, building the firmware, and what the app's messages mean. |
+| `docs/app/TESTER-INTERFACE.md` | Draft requirements and a review record for the circuit between the tester and the board (not a design); what is known and unknown about the tester. |
+| `docs/app/CALIBRATION-PLAN.md` | Draft plan for calibrating force (known masses) and displacement (calipers or gauge blocks), alternatives, and a record template. |
 | `docs/app/GUIDE-pico.md`, `docs/app/GUIDE-raspberry-pi-service.md` | How a Raspberry Pi Pico or a Raspberry Pi service would speak the same protocol (planned; nothing built). |
 | `docs/app/PROTOCOL.md` | The acquisition protocol (the project's own; not a manufacturer protocol): messages, requests, and what the app does when data is bad. |
 | `docs/app/ARCHITECTURE.md` | The design of the tester app, shared packages, back end, and containers, and what works today. |
