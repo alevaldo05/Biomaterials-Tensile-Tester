@@ -135,9 +135,10 @@ export class TestController {
     this.source = source; this.recorder = null; this.handshake = []; this.recorded = [];
     source.on('state', (st) => this.onState(st));
     source.on('sample', () => { this.lastSampleAt = Date.now(); });
-    source.on('line', (line, at) => {
-      if (line.includes('"type":"sample"')) { if (this.phase === 'recording') this.recorded.push({ line, at }); }
-      else if (/"type":"(hello|channels|settings)"/.test(line)) this.handshake.push({ line, at });
+    /* decided from the message as the adapter read it, never from its text (a device may write "type": "sample" with a space) */
+    source.on('line', (line, at, kind) => {
+      if (kind === 'sample') { if (this.phase === 'recording') this.recorded.push({ line, at }); }
+      else if (kind === 'identity' || kind === 'channels' || kind === 'settings') this.handshake.push({ line, at });
     });
     this.changed();
     try {

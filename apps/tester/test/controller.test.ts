@@ -1,6 +1,9 @@
 import { describe, expect, it } from 'vitest';
+import { SimulatedDevice } from '@tensile/acquisition';
+import type { Transport } from '@tensile/acquisition';
 import { analyzeUniaxial } from '@tensile/core';
-import { sessionFileFromJournal } from '../src/controller';
+import { sessionFileFromJournal, TestController } from '../src/controller';
+import { openTestFile } from '../src/load';
 import { resultsFor } from '../src/results';
 import { MemoryJournal } from '../src/storage/journal';
 import { MemoryMethods, methodFromSetup } from '../src/storage/methods';
@@ -69,6 +72,32 @@ describe('test controller (real acquisition only)', () => {
     expect(c.session!.interrupted).toBe(true);
     expect(c.record!.x.length).toBeGreaterThan(200);
     expect(c.message).toContain('connection was lost');
+  });
+
+  it('keeps the samples of a device that writes JSON with spaces after the separators', async () => {
+    /* the same messages as the stand-in sends, written the way Python's json.dumps writes them by default */
+    const dev = new SimulatedDevice({ manualMotion: true, auto: false });
+    const dec = new TextDecoder(), enc = new TextEncoder();
+    const spaced: Transport = {
+      label: 'USB serial (stand-in)', open: () => dev.open(), close: () => dev.close(), write: (b) => dev.write(b), onClose: (l) => dev.onClose(l),
+      onData: (l) => dev.onData((chunk) => l(enc.encode(dec.decode(chunk).replace(/":/g, '": ').replace(/,"/g, ', "')))),
+    };
+    const journal = new MemoryJournal();
+    const c = new TestController({ openReal: () => spaced, journal, commitEvery_ms: 0 });
+    ready(c);
+    await c.connect();
+    c.useSetup(measuredSetup(c));
+    await c.startRecording();
+    move(dev, c);
+    dev.step(1200);
+    c.stopRecording();
+    await c.flushed();
+    const f = c.sessionFile()!;
+    expect(f.lines.some((l) => l.includes('"type": "sample"'))).toBe(true);
+    expect(f.lines.length).toBeGreaterThan(c.sampleCount);
+    expect((await journal.lines(c.journalId!)).lines).toEqual(f.lines);
+    const loaded = await openTestFile('spaced.session.json', JSON.stringify(f));
+    expect(loaded.record!.raw).toEqual(c.record!.raw);
   });
 
   it('refuses a calibration change while recording, and a software baseline is labeled as such', async () => {
