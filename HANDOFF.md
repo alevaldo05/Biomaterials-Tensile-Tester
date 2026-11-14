@@ -46,21 +46,25 @@ Website preview: `python3 -m http.server 8000` (on Windows `py -m http.server 80
 - **Windows app**: `npm run app:build`, then in `apps/desktop`: `npm ci`, `npm run prepare-ui`, `npm start`. A merge into `main` that changes the app runs a check only (installer and portable program built, start-up check, no draft). A draft release is made only on request: Actions, **Windows app**, Run workflow (`docs/app/WINDOWS-APP.md`); it removes older unpublished app drafts. Pull requests that change the app get screenshots of its screens (`node scripts/app-screenshots.mjs` after `npm run app:build`; untried until the first pull request runs it). The Windows app checks GitHub for a newer published release when it starts (Settings can turn this off); this update check is untried on Windows.
 - `node scripts/shared-files.js` prints the hash of the website files the app shares (compare it with the app's Help line).
 
-## Branches waiting to be merged
+## Pull requests
 
-Merge in this order. The owner opens pull requests into `main` and merges them; nothing here was pushed or merged by the tooling without that approval.
+The owner opens pull requests into `main` and merges them; nothing is pushed, opened, or merged without that approval.
 
-1. `firmware-and-download`: firmware split into `firmware/common` and one folder per board, version `1.0.0-beta.1`, portable `.exe` target, the build stamp in Help, the shared-files hash, the app image fix, and `-run.N` names for hand-started drafts. Merged into `main` (pull request #81).
-2. `app-bug-fixes`: ten data and security fixes: the software baseline is saved with the test, reconnect after a fault, interrupted recordings kept, JSON with spaces recorded, a sign-in limit, a guard in Compare, the CSV material and ID read back, and the profile kept.
-3. `website-themes`: MU colors removed; the website keeps six themes (green, purple, pink, each light and dark).
-4. `app-layout`: the one-window app layout, Light, Dark, and Follow system, no equations on screen, the other screens restyled, and the Need help bar.
-5. `user-guide`: `docs/USER-GUIDE.md` and this file.
+Merged after the five branches of the last handoff (#81–#85):
 
-(`docs/BRANCHES.md` says branches are normally started from the latest `main` and not stacked. These were built on one another, so the later ones may need to be updated after each merge.)
+- #86 update notice, automatic builds, Get the App download link, curve mark logo; #87 Windows app icon; #88 update check skips non-app releases; #89 `minimatch` override in the Windows build tools; #90 drafts only on request, check-only builds on merge, pull-request screenshots.
+
+Merged next: #91 tester interface requirements, calibration plan, parts list (docs); #92 Disconnect on the Device screen asks before dropping unsaved data; #93 make a calibration from bench points (Device screen); #94 make a setup file (Device screen); #95 the bench record and the Windows checklist as forms (Help screen); #96 the app's known problems (CSV header lines, uncounted samples, New test after Stop, raw-samples formula guard, 2000-character setup text, 256 MB open limit).
+
+Pushed, waiting for a pull request (each from `main`; none clashes with another):
+
+- `server-fixes`: simulated calibrations refused, a double save at once stored once, 256 MB upload limit in the back end and the gateway.
+- `desktop-hardening`: the installed Windows app refuses debugging switches; local builds from changed files show `-changed` in Help.
+- `stale-docs`: this file and other out-of-date lines (this change).
 
 ## Checks status
 
-For `firmware-and-download`, the App checks passed on GitHub: tests, `firmware-build` (with the shared library), and containers. The other four branches have pull requests into `main`: #82 `app-bug-fixes`, #83 `website-themes`, #84 `app-layout`, #85 `user-guide`. The App checks run on each pull request; check that they pass before merging.
+The App checks (tests, firmware build, containers), the website checks, and the app screenshots run on every pull request; check that they pass before merging. They passed on #91–#96 before they were merged.
 
 ## What has never been tried
 
@@ -80,34 +84,30 @@ From `docs/app/FEATURE-STATUS.md` and related documents:
 
 ## Known open issues
 
+The app's known problems are fixed (#92, #96), and the stale combination check is fixed by this change. The two lab-server problems are fixed on `server-fixes`; remove them here once it is merged.
+
 Found by review; low severity. Each was read in the code or the docs, not re-tested for this handoff. Confirm before fixing.
 
-Not yet fixed:
+Not yet fixed on `main`:
 
-- A line break in an end-of-test reason can break the app's CSV (the reason is written into a header line by `apps/tester/src/exports.ts`).
-- Samples with an unknown settings reference are dropped without being counted.
-- The lab server accepts a file marked real whose calibration is marked simulated (`apps/api/src/app.ts` refuses only `recordedFrom` other than real).
-- The same file saved twice at once can be stored twice (the duplicate check, answering 409, is not atomic).
-- Pressing **New test** right after Stop can drop the last journal batch.
-- One-hour relaxation files exceed the 64 MB limits (the screen limit in `Shell.tsx` and the lab server's `BODY_LIMIT_MB`).
-- The website combination check (`scripts/check-combinations.js`) expects a link to `app/` on the New Test page, which no longer has one (stale).
+- The lab server accepts a file marked real whose calibration is marked simulated (fixed on `server-fixes`).
+- The same file saved twice at once can be stored twice (fixed on `server-fixes`).
+- The lab server's upload limit is still 64 MB (`BODY_LIMIT_MB` and the gateway's `client_max_body_size`); `server-fixes` raises both to 256 MB, as the app's limit already is.
 
 Unconfirmed suspicions (not reproduced; treat as questions):
 
 - A Windows journal retry after a partial write may misbehave.
-- The packaged Windows app may accept `--remote-debugging-port` (the build's start-up check uses it on purpose; whether the shipped program ignores it was not verified).
-- The raw-samples CSV may lack the formula guard on some text cells (`samplesCsv` guards only the header values).
-- A note over 2000 characters may stop the Windows journal (`journal-files.cjs` limits text to 2000).
-- The build stamp shows the commit even when files are uncommitted.
+- The packaged Windows app may accept `--remote-debugging-port` (the build's start-up check uses it on purpose; whether the shipped program ignores it was not verified). Addressed on `desktop-hardening`: the installed program closes when started with such a switch.
+- The build stamp shows the commit even when files are uncommitted. Fixed on `desktop-hardening` (`-changed`).
 
 ## Next steps for the owner
 
-1. Merge the branches in the order above, running the App checks on GitHub for each.
+1. Open pull requests for `server-fixes`, `desktop-hardening`, and `stale-docs`, and merge them once their checks pass (any order). `desktop-hardening` is confirmed on Windows only by the next requested Windows build (its start-up check must still pass).
 2. When enough has changed, raise the version in `apps/desktop/package.json` in its own small pull request and merge it. Then run Actions, **Windows app**, Run workflow on `main`. Download the draft, check both hashes against `SHA256SUMS.txt`, and try the installer and the portable `.exe` on a Windows computer.
 3. Fill in the first-install checklist in `docs/app/WINDOWS-APP.md`, including the Help version line against `node scripts/shared-files.js`.
 4. Publish a release only when satisfied. The Get the App page already links to the latest published release, and the Windows app shows an update notice for it. Older unpublished app drafts are removed when you ask for a new one.
 5. Do the breadboard test (`docs/app/BREADBOARD-TEST.md`) with the tester disconnected and keep the bench record from `docs/app/SETUP.md`.
-6. Decide on the 64 MB limit for long files.
+6. The limit for long files is decided: 256 MB (the app's is merged; the lab server's is on `server-fixes`).
 7. Have the tester's interface verified and the protection circuit designed and reviewed before connecting it, using the requirements and review record in `docs/app/TESTER-INTERFACE.md`. Do not guess the pins. Then calibrate force and displacement following `docs/app/CALIBRATION-PLAN.md`.
 8. Decide what to do with the known open issues above, and review the draft documents and unreviewed material values with an advisor.
 

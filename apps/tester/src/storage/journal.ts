@@ -2,8 +2,8 @@
    committed here in small batches (about once a second), so a crash or a closed window loses at most the last
    second. When the app opens again, a recording that never finished is listed for recovery.
 
-   This is an interface so the Windows app can later keep the journal in its own files (through a narrow bridge),
-   with the same screens. The browser version keeps it in IndexedDB. Nothing here recreates samples that were
+   This is an interface, so the Windows app keeps the journal in its own files (apps/desktop/journal-files.cjs, through
+   the preload's narrow bridge) with the same screens. The browser version keeps it in IndexedDB. Nothing here recreates samples that were
    not committed: a recovered recording ends where its last batch ends. */
 import type { TestType } from '@tensile/core';
 import type { CalibrationRecord, DeviceProfile } from '@tensile/recording';

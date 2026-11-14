@@ -1,6 +1,6 @@
 # Project summary
 
-Biomaterials Tensile Tester: a website (plain HTML, CSS, and JavaScript; no framework, no dependencies, no build step) that is the learning front end for a lab tensile tester. It has learning pages, protocols, materials, calibration, a practice page with a labeled simulator, and Load Test for reopening saved CSV files. It has no live test pages and no USB connection: real tests are run in the separate tester app, which the New Test page links to. The tester hardware connection is untested. Test data is never saved or uploaded by the site.
+Biomaterials Tensile Tester: a website (plain HTML, CSS, and JavaScript; no framework, no dependencies, no build step) that is the learning front end for a lab tensile tester. It has learning pages, protocols, materials, calibration, a practice page with a labeled simulator, and Load Test for reopening saved CSV files. It has no live test pages and no USB connection: real tests are run in the separate tester app, which the Get the App page links to. The tester hardware connection is untested. Test data is never saved or uploaded by the site.
 
 A separate tester app (React and TypeScript, with shared packages, a back end, and containers) is being built in `packages/`, `apps/`, `firmware/`, and `deploy/`; neither its source nor a built copy is published on GitHub Pages; it is installed on the lab computer. See the [tester-app](docs/cards/features/tester-app.md) card and `docs/app/ARCHITECTURE.md`.
 

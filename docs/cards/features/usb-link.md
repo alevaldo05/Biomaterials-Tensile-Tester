@@ -11,7 +11,7 @@ RETIRED. The website used to connect to the tester over USB (Web Serial, Chrome 
 - `data/device.js` (the line format the simulator emits and parses; it is NOT the tester app's protocol, which is in `docs/app/PROTOCOL.md`)
 
 ## What the user sees
-- Nothing about USB on the website except words saying that USB connection is done in the tester app (New Test page, Help)
+- Nothing about USB on the website except words saying that USB connection is done in the tester app (Get the App page, Help)
 
 ## Behavior to keep
 - No website page, script, or tutorial opens a serial port or offers a "Connect to tester (USB)" button

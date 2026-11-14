@@ -77,7 +77,8 @@ Rules that hold everywhere:
 | `packages/machine-control`: "unsupported", transmits nothing | Implemented (as a stub, on purpose) |
 | ESP32 reference firmware (shared code in `firmware/common`, board folder `firmware/esp32-ads1115`) | Implemented; tested on a computer with a pretend ADS1115 only, never on a board ([SETUP](SETUP.md)) |
 | Pico firmware, Raspberry Pi service | Planned; guides only |
-| Electron, a network transport to a Raspberry Pi | Planned |
+| Electron Windows app (`apps/desktop`: installer and portable program, journal in its own files, update notice) | Implemented; built and start-checked on GitHub's Windows runner, never installed on a lab computer ([WINDOWS-APP](WINDOWS-APP.md)) |
+| A network transport to a Raspberry Pi | Planned |
 | `packages/ui` and `apps/tester`: the app screens, graph, exports, local recording and recovery | Implemented; details in [FEATURE-STATUS](FEATURE-STATUS.md) |
 | `apps/api`: back end and PostgreSQL database, sign-in, admin and user roles, saved tests, device profiles, calibrations, record of changes | Implemented; tested against a real PostgreSQL ([BACKEND](BACKEND.md)) |
 | Signing in, History, Admin, and View as user in the app | Implemented |

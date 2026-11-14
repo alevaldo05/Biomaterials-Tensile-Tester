@@ -198,9 +198,9 @@ async function focusRings(page, issues) {
 async function feature(page, name, port, issues) {
   var base = 'http://127.0.0.1:' + port + '/';
   if (name === 'practice' || name === 'practice-relaxation') { await runTest(page, issues); return; }   /* the simulator exists only on the practice page; the website has no real test pages */
-  if (name === 'choose-test') {   /* the New Test page only sends people elsewhere: the app (a folder made when the site is published), the practice page, and Load Test */
+  if (name === 'choose-test') {   /* the Get the App page only sends people elsewhere: the latest release of the Windows app, the practice page, and Load Test */
     var hs = await page.$$eval('main a', function (e) { return e.map(function (x) { return x.getAttribute('href'); }); });
-    ['app/', 'practice.html', 'load-test.html'].forEach(function (h) { if (hs.indexOf(h) < 0) issues.push({ k: 'newtest', m: 'the New Test page has no link to ' + h }); });
+    ['https://github.com/alevaldo05/Biomaterials-Tensile-Tester/releases/latest', 'practice.html', 'load-test.html'].forEach(function (h) { if (hs.indexOf(h) < 0) issues.push({ k: 'getapp', m: 'the Get the App page has no link to ' + h }); });
     return;
   }
   if (name === 'load-test') {
