@@ -39,11 +39,11 @@ describe('build stamp', () => {
   it('hashes the shared website files and names a commit', () => {
     expect(info.sharedFilesHash).toBe(sharedFiles(ROOT).sharedFilesHash(ROOT));
     expect(info.sharedFilesHash).toMatch(/^[0-9a-f]{64}$/);
-    expect(info.commit).toMatch(/^([0-9a-f]{7,12}|unknown)$/);
+    expect(info.commit).toMatch(/^([0-9a-f]{7,12}(-changed)?|unknown)$/);
   });
   it('takes the commit from GITHUB_SHA (12 characters), else Git, else "unknown", and never fails', () => {
     expect(commitId(ROOT, { GITHUB_SHA: '0123456789ABCDEF0123456789abcdef01234567' })).toBe('0123456789ab');
-    expect(commitId(ROOT, { GITHUB_SHA: 'not a sha' })).toMatch(/^([0-9a-f]{7,12}|unknown)$/);
+    expect(commitId(ROOT, { GITHUB_SHA: 'not a sha' })).toMatch(/^([0-9a-f]{7,12}(-changed)?|unknown)$/);
     expect(commitId(path.join(ROOT, '..', 'no-such-folder-' + Date.now()), {})).toBe('unknown');
   });
   it('takes the build number from GITHUB_RUN_NUMBER, else 0', () => {
@@ -51,8 +51,19 @@ describe('build stamp', () => {
     expect(buildNumber({ GITHUB_RUN_NUMBER: '17' })).toBe(17);
     for (const bad of [undefined, '', '0', '-3', '1.5', 'abc', '12345678901']) expect(buildNumber({ GITHUB_RUN_NUMBER: bad }), String(bad)).toBe(0);
   });
+  it('marks a local build made from changed files, and not a clean one', () => {
+    /* A stand-in for git (the test image has none): the commit, and what `git status --porcelain` prints. */
+    const fakeGit = (status: string) => (args: string[]) => (args[0] === 'rev-parse' ? '0123456789abcdef\n' : status);
+    expect(commitId('/project', {}, fakeGit(''))).toBe('0123456789ab');
+    expect(commitId('/project', {}, fakeGit(' M apps/tester/src/App.tsx\n'))).toBe('0123456789ab-changed');
+    expect(commitId('/project', {}, fakeGit('?? notes.txt\n'))).toBe('0123456789ab-changed');
+    /* GitHub builds are clean checkouts named by GITHUB_SHA; git is not asked */
+    expect(commitId('/project', { GITHUB_SHA: 'fedcba9876543210fedcba9876543210fedcba98' }, () => { throw new Error('git asked'); })).toBe('fedcba987654');
+    /* no git, or not a repository: unknown, never a failure */
+    expect(commitId('/project', {}, () => { throw new Error('spawnSync git ENOENT'); })).toBe('unknown');
+  });
   it('treats an empty GITHUB_SHA (a local image build) as unset', () => {
-    expect(commitId(ROOT, { GITHUB_SHA: '' })).toMatch(/^([0-9a-f]{7,12}|unknown)$/);
+    expect(commitId(ROOT, { GITHUB_SHA: '' })).toMatch(/^([0-9a-f]{7,12}(-changed)?|unknown)$/);
     expect(commitId(path.join(ROOT, '..', 'no-such-folder-' + Date.now()), { GITHUB_SHA: '' })).toBe('unknown');
   });
   it('is stamped inside the app image: the Dockerfile copies every file the build stamp reads and takes GITHUB_SHA', () => {

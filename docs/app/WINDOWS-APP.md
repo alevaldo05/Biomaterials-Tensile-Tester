@@ -18,6 +18,7 @@ The website stays on GitHub Pages; the app is not published there.
 - Permissions: USB serial (port chosen by the person) and copying text only.
 - One copy at a time (two would compete for the port).
 - Packaging switches (Electron fuses): no "run as Node", no `NODE_OPTIONS`, no inspector flags, the app loads only from its checked archive.
+- The installed program closes at once, with a short message, when it is started with a remote-debugging, inspector, or V8-flag switch (`--remote-debugging-port`, `--remote-debugging-pipe`, `--remote-debugging-address`, `--inspect…`, `--js-flags`). Only the build's start-up check (`smoke.cjs`) uses remote debugging; it sets `TT_SMOKE_CHECK=1` for its own run. Someone who can set environment variables on the computer already controls it, so this guards against other programs and shortcuts that add a switch, not against them.
 
 ## Version
 Version 1 of the download is `1.0.0-beta.1`. The version is written in one place, `apps/desktop/package.json` (and the

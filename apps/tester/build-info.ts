@@ -34,13 +34,21 @@ export function appVersion(root: string): string {
   return v;
 }
 
-/** The commit the build came from, 12 characters: GITHUB_SHA on GitHub, else Git, else "unknown". */
-export function commitId(root: string, env: Record<string, string | undefined> = process.env): string {
+/** The commit the build came from, 12 characters: GITHUB_SHA on GitHub, else Git, else "unknown". A local build from
+    files that differ from that commit (changed or not yet committed) ends in "-changed", so it is not mistaken for it. */
+/** Runs git in the project folder and returns its output; tests pass a stand-in (the test image has no git). */
+export type GitRunner = (args: string[], cwd: string) => string;
+const runGit: GitRunner = (args, cwd) => execFileSync('git', args, { cwd, encoding: 'utf8', stdio: ['ignore', 'pipe', 'ignore'], timeout: 10000 });
+
+export function commitId(root: string, env: Record<string, string | undefined> = process.env, git: GitRunner = runGit): string {
   const hex = (s: string | undefined) => (s && /^[0-9a-f]{7,40}$/i.test(s.trim()) ? s.trim().slice(0, 12).toLowerCase() : null);
   const fromEnv = hex(env.GITHUB_SHA);
   if (fromEnv) return fromEnv;
   try {
-    return hex(execFileSync('git', ['rev-parse', '--short=12', 'HEAD'], { cwd: root, encoding: 'utf8', stdio: ['ignore', 'pipe', 'ignore'], timeout: 10000 })) ?? 'unknown';
+    const head = hex(git(['rev-parse', '--short=12', 'HEAD'], root));
+    if (!head) return 'unknown';
+    const dirty = git(['status', '--porcelain', '--untracked-files=normal'], root).trim() !== '';
+    return dirty ? head + '-changed' : head;
   } catch {
     return 'unknown';
   }
