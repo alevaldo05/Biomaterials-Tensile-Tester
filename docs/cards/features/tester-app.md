@@ -59,7 +59,7 @@ The React and TypeScript app for running tests, the packages it shares with the 
 - The app has real acquisition and replay of saved sessions only: no simulator in its source or build
 - While recording, samples are committed to this computer's storage about once a second; an unfinished recording is offered for recovery on Home; a failed save is shown and recording continues in memory
 - A recording ended by a fault, a device restart, or a lost connection stays interrupted: its session file keeps the fault and restart lines in order and writes `interrupted`, `endReason`, and `events`; Load test and recovery show it as interrupted (older files without these fields still open). Which received lines are kept is decided from the parsed message type, never from the line's text
-- A software baseline is not a machine tare and not a calibration, and the screen says so
+- A software baseline is not a machine tare and not a calibration, and the screen says so; it is saved with the test (`forceZero_N` in the session file and the journal entry, also in the Windows app's journal files) and subtracted again when the test is reopened, so the results match; older files without it open with no baseline
 - Each container is replaceable on its own: no service waits for another, and the gateway looks addresses up per request
 - `.env` and backups are never committed; images are not published without the owner's okay
 - Roles are checked on the server; View as user changes only the screen

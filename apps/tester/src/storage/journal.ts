@@ -18,6 +18,8 @@ export interface JournalMeta {
   setup: Setup;
   profile: DeviceProfile | null;
   calibrations: CalibrationRecord[];
+  /** The software baseline subtracted from the force, N. Missing in entries from older versions: none. */
+  forceZero_N?: number;
   appVersion: string;
   deviceId: string;
   /** Local time the recording started, ISO. */

@@ -42,6 +42,8 @@ export interface SessionFile {
   lines: string[];
   /** Computer time each line arrived, ms. */
   receivedAt_ms: number[];
+  /** The software baseline subtracted from the force, N (not a machine tare, not a calibration). Missing in older files: none. */
+  forceZero_N?: number;
   /** How the recording ended. Missing in older files: a fault or restart line then still ends the replay as interrupted. */
   interrupted?: boolean;
   endReason?: string;
@@ -277,7 +279,7 @@ export class TestController {
     try {
       const est = await j.estimate();
       if (est && est.quota - est.usage < 50 * 1024 * 1024) this.message = 'This computer has little storage space left for recordings. Download and remove old recordings soon.';
-      await j.begin({ id, test: this.test, setup: this.setup, profile: this.setupFile?.profile ?? null, calibrations: this.fileCalibrations(), appVersion: APP_VERSION,
+      await j.begin({ id, test: this.test, setup: this.setup, profile: this.setupFile?.profile ?? null, calibrations: this.fileCalibrations(), forceZero_N: this.session.forceZero_N, appVersion: APP_VERSION,
         deviceId: this.source.identity?.deviceId ?? '', startedAt: this.startedAt.toISOString() },
         { lines: this.header.map((x) => x.line), receivedAt_ms: this.header.map((x) => x.at) });
       this.journalId = id;
@@ -346,7 +348,7 @@ export class TestController {
     const all = [...this.header, ...this.recorded], s = this.session;
     return {
       format: 'tensile-tester-session', version: 1, savedAt: new Date().toISOString(), appVersion: APP_VERSION,
-      recordedFrom: 'real', test: this.test, setup: this.setup, profile: this.setupFile?.profile ?? null, calibrations: this.fileCalibrations(),
+      recordedFrom: 'real', test: this.test, setup: this.setup, profile: this.setupFile?.profile ?? null, calibrations: this.fileCalibrations(), forceZero_N: s.forceZero_N,
       method: this.method ? { id: this.method.id, name: this.method.name, revision: this.method.revision } : null,
       lines: all.map((x) => x.line), receivedAt_ms: all.map((x) => x.at),
       ...(this.phase === 'done' ? { interrupted: s.interrupted, endReason: s.endReason } : {}), events: s.events.map((e) => ({ ...e })),
@@ -363,5 +365,5 @@ export async function sessionFileFromJournal(j: SessionJournal, id: string): Pro
   const end = meta.status === 'complete' ? { interrupted: false, endReason: meta.endReason }
     : { interrupted: true, endReason: meta.status === 'interrupted' ? meta.endReason : 'Recording interrupted: the app closed before the recording ended. The data saved on this computer up to ' + meta.lastCommitAt + ' is kept.' };
   return { format: 'tensile-tester-session', version: 1, savedAt: meta.lastCommitAt, appVersion: meta.appVersion, recordedFrom: 'real', test: meta.test, setup: meta.setup,
-    profile: meta.profile, calibrations: meta.calibrations, method: null, lines: l.lines, receivedAt_ms: l.receivedAt_ms, ...end };
+    profile: meta.profile, calibrations: meta.calibrations, forceZero_N: meta.forceZero_N ?? 0, method: null, lines: l.lines, receivedAt_ms: l.receivedAt_ms, ...end };
 }

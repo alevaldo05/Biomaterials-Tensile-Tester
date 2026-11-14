@@ -38,6 +38,8 @@ export async function replaySession(file: SessionFile): Promise<{ session: Sessi
   const recorder = new Recorder({ source, profile: file.profile, calibrations: file.calibrations, appVersion: APP_VERSION });
   await source.startStream();
   const session = recorder.start({ allowUncalibrated: true });
+  /* the software baseline taken before the test, as saved with it (older files have none) */
+  session.forceZero_N = typeof file.forceZero_N === 'number' && Number.isFinite(file.forceZero_N) ? file.forceZero_N : 0;
   replay.play(Number.MAX_SAFE_INTEGER);
   recorder.stop('Rebuilt from the session file.');
   await source.disconnect();

@@ -197,6 +197,37 @@ describe('recording on this computer', () => {
     });
   }
 
+  it('keeps the software baseline in the session file and the journal, so a reopened test gives the same results', async () => {
+    const journal = new MemoryJournal();
+    const { dev, c } = rig({ journal });
+    ready(c);
+    await c.connect();
+    c.useSetup(measuredSetup(c));
+    move(dev, c);
+    dev.step(200);   /* a small preload on the specimen */
+    c.zeroForce();
+    const zero = c.recorder!.forceZero_N;
+    expect(zero).toBeGreaterThan(0);
+    await c.startRecording();
+    dev.step(2400);
+    c.stopRecording();
+    await c.flushed();
+    await new Promise((r) => setTimeout(r, 0));
+    const f = c.sessionFile()!;
+    expect(f.forceZero_N).toBe(zero);
+    expect((await journal.list())[0]!.forceZero_N).toBe(zero);
+    const live = analyzeUniaxial(c.record!)!;
+    for (const file of [f, await sessionFileFromJournal(journal, c.journalId!)]) {
+      const loaded = await openTestFile('z.session.json', JSON.stringify(file));
+      expect(loaded.session!.forceZero_N).toBe(zero);
+      expect(loaded.record!.raw).toEqual(c.record!.raw);
+      expect(analyzeUniaxial(loaded.record!)!.uts.y).toBeCloseTo(live.uts.y, 9);
+    }
+    /* an older file without the field opens with no baseline */
+    const { forceZero_N: _z, ...older } = f;
+    expect((await openTestFile('old.session.json', JSON.stringify(older))).session!.forceZero_N).toBe(0);
+  });
+
   it('a recording cut off by a closed app stays "recording" and can be rebuilt', async () => {
     const journal = new MemoryJournal();
     const { dev, c } = rig({ journal });
