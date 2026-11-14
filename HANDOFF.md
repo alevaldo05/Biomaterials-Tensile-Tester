@@ -50,7 +50,7 @@ Website preview: `python3 -m http.server 8000` (on Windows `py -m http.server 80
 
 Merge in this order. The owner opens pull requests into `main` and merges them; nothing here was pushed or merged by the tooling without that approval.
 
-1. `firmware-and-download`: firmware split into `firmware/common` and one folder per board, version `1.0.0-beta.1`, portable `.exe` target, the build stamp in Help, the shared-files hash, the app image fix, and `-run.N` names for hand-started drafts. Its pull request is open.
+1. `firmware-and-download`: firmware split into `firmware/common` and one folder per board, version `1.0.0-beta.1`, portable `.exe` target, the build stamp in Help, the shared-files hash, the app image fix, and `-run.N` names for hand-started drafts. Merged into `main` (pull request #81).
 2. `app-bug-fixes`: ten data and security fixes: the software baseline is saved with the test, reconnect after a fault, interrupted recordings kept, JSON with spaces recorded, a sign-in limit, a guard in Compare, the CSV material and ID read back, and the profile kept.
 3. `website-themes`: MU colors removed; the website keeps six themes (green, purple, pink, each light and dark).
 4. `app-layout`: the one-window app layout, Light, Dark, and Follow system, no equations on screen, the other screens restyled, and the Need help bar.
@@ -60,7 +60,7 @@ Merge in this order. The owner opens pull requests into `main` and merges them; 
 
 ## Checks status
 
-For `firmware-and-download`, the App checks passed on GitHub: tests, `firmware-build` (with the shared library), and containers. They have **not yet been run** on `app-bug-fixes`, `website-themes`, `app-layout`, or `user-guide`. Run them (open each pull request, or run the commands above) before merging.
+For `firmware-and-download`, the App checks passed on GitHub: tests, `firmware-build` (with the shared library), and containers. The other four branches have pull requests into `main`: #82 `app-bug-fixes`, #83 `website-themes`, #84 `app-layout`, #85 `user-guide`. The App checks run on each pull request; check that they pass before merging.
 
 ## What has never been tried
 
