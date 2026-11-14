@@ -10,6 +10,7 @@ import { ResultsTable } from '../src/components/ResultsTable';
 import { viewData } from '../src/components/RecordGraph';
 import { resultsFor } from '../src/results';
 import { openTestFile } from '../src/load';
+import { runTestFrom, upsertRunTest } from '../src/run-tests';
 import { measuredSetup, move, ready, rig } from './helpers';
 
 const here = path.dirname(fileURLToPath(import.meta.url));
@@ -74,5 +75,30 @@ describe('graph and screen source', () => {
       const code = src(f);
       for (const p of FORMULA) expect(code, f + ' ' + p).not.toMatch(p);
     }
+  });
+});
+
+describe('this run\'s specimens', () => {
+  it('lists only finished tests, made from their own setup and key results', async () => {
+    const { c } = rig();
+    expect(runTestFrom(c)).toBeNull();
+    const done = await recorded();
+    done.setup.specimenId = 'S-9';
+    const row = runTestFrom(done)!;
+    const screen = resultsFor(done.record).screen;
+    expect(row).toMatchObject({ specimenId: 'S-9', material: 'Test', status: 'Done', test: 'uniaxial', saved: 'Not saved yet' });
+    expect(row.modulus).toBe(screen.find((r) => r.id === 'E')!.value + ' ' + screen.find((r) => r.id === 'E')!.unit);
+    expect(row.peak).toBe(screen.find((r) => r.id === 'uts')!.value + ' ' + screen.find((r) => r.id === 'uts')!.unit);
+    const list = upsertRunTest([], row);
+    expect(upsertRunTest(list, row)).toBe(list);
+    done.update((x) => { x.saved = true; });
+    const again = upsertRunTest(list, runTestFrom(done)!);
+    expect(again).toHaveLength(1);
+    expect(again[0]!.saved).toBe('Downloaded or on the lab server');
+  });
+  it('shows a dash, not a number, when a test has no stress-strain record', async () => {
+    const c = await recorded();
+    c.record = null;
+    expect(runTestFrom(c)).toMatchObject({ modulus: '—', peak: '—' });
   });
 });

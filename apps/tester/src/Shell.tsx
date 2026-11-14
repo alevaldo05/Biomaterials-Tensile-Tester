@@ -11,6 +11,8 @@ import type { Account, LabUser, SessionRow } from './lab-api';
 import { openTestFile } from './load';
 import type { LoadedTest } from './load';
 import { save } from './exports';
+import { runTestFrom, upsertRunTest } from './run-tests';
+import type { RunTest } from './run-tests';
 import { helpFor } from './help-text';
 import { HelpButton } from './components/HelpButton';
 import { StatusIndicators } from './components/StatusIndicators';
@@ -97,6 +99,9 @@ export function Shell({ controller: c, serialAvailable, journal, methods }: Shel
   const [loaded, setLoaded] = useState<LoadedTest | null>(null);
   const [loadError, setLoadError] = useState('');
   const [helpSub, setHelpSub] = useState('test');
+  /* Tests finished in this run of the app, for the Specimens strip (kept while you visit other screens). */
+  const [runTests, setRunTests] = useState<RunTest[]>([]);
+  useEffect(() => { const t = runTestFrom(c); if (t) setRunTests((l) => upsertRunTest(l, t)); }, [c.phase, c.startedAt, c.saved, c.localSave, c.record]);
   const onHelpSub = useCallback((s: string) => setHelpSub(s), []);
 
   const [notSetUp, setNotSetUp] = useState(false);
@@ -169,7 +174,7 @@ export function Shell({ controller: c, serialAvailable, journal, methods }: Shel
     <div className="app">
       <a className="skip-link" href="#main-content" onClick={(e) => { e.preventDefault(); focusMain(); }}>Skip to main content</a>
       <header className="top">
-        <span className="brand">Biomaterials Tensile Tester</span>
+        <span className="brand"><svg aria-hidden="true" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><path d="M3 20h18" /><path d="M5 20V5" /><path d="M5 17c4 0 6-2 8-6s4-6 6-6" /></svg>Biomaterials Tensile Tester</span>
         <nav className="navs" aria-label="Main">
           {nav('home', 'Home')}{nav('test', 'Test')}{user ? nav('history', 'History') : null}{nav('device', 'Device')}{nav('help', 'Help')}{nav('settings', 'Settings')}
           {effectiveRole === 'admin' ? nav('admin', 'Admin') : null}
@@ -189,7 +194,7 @@ export function Shell({ controller: c, serialAvailable, journal, methods }: Shel
       {viewAsUser ? <p className="view-as" role="status">Viewing as a user. This changes only what this screen shows; your admin permissions are unchanged. <button type="button" className="link" onClick={() => setViewAsUser(false)}>Back to admin view</button></p> : null}
 
       {page === 'home' ? <Home go={go} recent={recent} interrupted={interrupted} recover={(m, how) => void recover(m, how)} recording={recording} /> : null}
-      {page === 'test' ? <App controller={c} serialAvailable={serialAvailable} theme={theme} account={account} onHelpSub={onHelpSub} /> : null}
+      {page === 'test' ? <App controller={c} serialAvailable={serialAvailable} theme={theme} account={account} onHelpSub={onHelpSub} runTests={runTests} /> : null}
       {page === 'load' ? <LoadTest loaded={loaded} error={loadError} theme={theme} recent={recent} openFile={(n, t, h) => void open(n, t, h)} clear={() => { setLoaded(null); setLoadError(''); }} /> : null}
       {page === 'methods' ? <Methods store={methods} lab={labMethods} labAdmin={effectiveRole === 'admin'} controller={c} start={() => setPage('test')} /> : null}
       {page === 'device' ? <Device controller={c} account={account} serialAvailable={serialAvailable} /> : null}

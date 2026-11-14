@@ -1,5 +1,6 @@
 /* The graph with its view buttons, used for a live test and for an opened one. Views appear only when their data exists. */
 import { useMemo, useState } from 'react';
+import type { ReactNode } from 'react';
 import { keyPoints, regionsFor } from '@tensile/core';
 import type { TestRecord, TestType } from '@tensile/core';
 import { DARK_GRAPH, Graph, LIGHT_GRAPH } from '@tensile/ui';
@@ -27,6 +28,8 @@ export interface RecordGraphProps {
   sourceTag: string;
   emptyText: string;
   onSvg?: (el: SVGSVGElement | null) => void;
+  /** Shown at the foot of the graph card (the Test screen's action bar). */
+  children?: ReactNode;
 }
 
 export function RecordGraph(p: RecordGraphProps) {
@@ -73,6 +76,7 @@ export function RecordGraph(p: RecordGraphProps) {
           {!isRelax ? <label className="check"><input type="checkbox" checked={showTangent} onChange={(e) => setShowTangent(e.target.checked)} /> Tangent line at cursor</label> : null}
           <span className="hint">Guides only: they change the picture, never the results. Region boundaries are estimates.</span>
         </p>) : null}
+      {p.children}
     </section>
   );
 }

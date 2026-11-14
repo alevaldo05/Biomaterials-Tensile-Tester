@@ -22,8 +22,11 @@ const here = path.dirname(fileURLToPath(import.meta.url)), ROOT = path.resolve(h
 
 describe('help text', () => {
   const PAGES = ['home', 'load', 'methods', 'device', 'history', 'help', 'settings', 'admin'];
-  const STEPS = [...new Set([...readFileSync(path.join(here, '../src/App.tsx'), 'utf8').matchAll(/id: '([a-z]+)'/g)].map((m) => m[1] as string))];
-  it('has help for every screen and every setup step, recording, and after a test', () => {
+  /* The parts of the Test screen's quick settings (they replaced the five setup steps; each still has its own help). */
+  const app = readFileSync(path.join(here, '../src/App.tsx'), 'utf8');
+  const sections = app.slice(app.indexOf('const SECTIONS'), app.indexOf('];', app.indexOf('const SECTIONS')));
+  const STEPS = [...new Set([...sections.matchAll(/id: '([a-z]+)'/g)].map((m) => m[1] as string))];
+  it('has help for every screen and every part of the quick settings, recording, and after a test', () => {
     for (const p of PAGES) expect(HELP[p], p).toBeTruthy();
     expect(STEPS.length).toBeGreaterThanOrEqual(5);
     for (const s of [...STEPS, 'recording', 'done']) expect(HELP['test.' + s], 'test.' + s).toBeTruthy();
@@ -187,11 +190,21 @@ describe('connection buttons (source checks; the reconnect itself is tested in c
 describe('menu and required fields (source checks; the required-field name was checked in Chromium)', () => {
   const src = (f: string) => readFileSync(path.join(here, '../src', f), 'utf8');
   it('moves focus into the Save data menu, closes it with Esc, and gives focus back to the button', () => {
-    const app = src('App.tsx');
-    expect(app).toContain('ref={saveMenu} onKeyDown={onMenuKey}');
-    expect(app).toMatch(/e\.key === 'Escape'\) \{[^}]*setSaveOpen\(false\); saveButton\.current\?\.focus\(\)/);
-    expect(app).toContain("querySelector<HTMLElement>('[role=\"menuitem\"]')?.focus()");
-    expect(app).toContain('aria-haspopup="menu"');
+    const menu = src('components/SaveMenu.tsx');
+    expect(src('App.tsx')).toContain('<SaveMenu items={saveItems} />');
+    expect(menu).toContain('ref={saveMenu} onKeyDown={onMenuKey}');
+    expect(menu).toMatch(/e\.key === 'Escape'\) \{[^}]*setSaveOpen\(false\); saveButton\.current\?\.focus\(\)/);
+    expect(menu).toContain("querySelector<HTMLElement>('[role=\"menuitem\"]')?.focus()");
+    expect(menu).toContain('aria-haspopup="menu"');
+    expect(menu).not.toMatch(/Escape[^\n]*(stopRecording|STOP|sendStop)/);
+  });
+  it('closes the Save data menu with Tab or Shift+Tab, and with a click or tap outside it', () => {
+    const menu = src('components/SaveMenu.tsx');
+    expect(menu).toMatch(/e\.key === 'Tab'\) \{ e\.preventDefault\(\); leave\(e\.shiftKey\); \}/);
+    expect(menu).toMatch(/const leave = [\s\S]*?setSaveOpen\(false\);/);
+    expect(menu).toMatch(/document\.addEventListener\('pointerdown', onDown\)/);
+    expect(menu).toMatch(/const onDown = \(e: PointerEvent\) => \{ if \(!wrap\.current\?\.contains\(e\.target as Node\)\) setSaveOpen\(false\); \}/);
+    expect(menu).toMatch(/return \(\) => document\.removeEventListener\('pointerdown', onDown\)/);
   });
   it('says "(required)" to screen readers while the red asterisk stays hidden from them', () => {
     const parts = readFileSync(path.join(ROOT, 'packages/ui/src/parts.tsx'), 'utf8');
@@ -229,7 +242,7 @@ describe('control borders', () => {
     }
   });
   it('uses that border on buttons, text boxes, selects, and the password box', () => {
-    for (const sel of ['button {', 'input[type="text"], select, input[type="file"], textarea {', 'input[type="password"] {']) {
+    for (const sel of ['button {', 'input[type="text"], select, input[type="file"], textarea {', 'input[type="password"] {', 'input[type="search"] {']) {
       const line = css.split('\n').find((l) => l.startsWith(sel)) ?? '';
       expect(line, sel).toContain('border: 1px solid var(--control-line)');
     }
