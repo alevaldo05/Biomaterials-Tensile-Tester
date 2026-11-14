@@ -246,6 +246,8 @@ export function buildApp(o: { db: Db; config: Config; logger?: boolean; limiter?
       uploadLimiter.failed(['up:' + u.id]);   /* counts this save (the limiter's "failed" is just its counter) */
       const b = parse(UploadBody, req.body), f = b.file;
       if (f.recordedFrom !== 'real') fail(400, 'simulated', 'The lab server keeps recorded tests only. Simulated data stays on the website.');
+      /* A recorded test converted with a calibration made up for the simulator is not a measurement either. */
+      if (f.calibrations.some((c) => (c as { origin?: unknown }).origin === 'simulated')) fail(400, 'simulated', 'This test used a calibration made for the simulator, so its values are not measured. It cannot be saved on the lab server.');
       type Hello = { device_id?: string; device_type?: string; sw_version?: string };
       let hello: Hello | null = null, samples = 0, firstSample: number | null = null;
       /* Every line must be a message a device sends, in protocol version 1. */
@@ -268,12 +270,14 @@ export function buildApp(o: { db: Db; config: Config; logger?: boolean; limiter?
         calSource = f.calibrations.every(same) ? 'lab' : 'not-from-lab';
       }
       const raw = JSON.stringify((req.body as { file: unknown }).file), gz = zlib.gzipSync(raw), sha = crypto.createHash('sha256').update(raw).digest('hex');
-      const dup = await db.query('select s.id from session_files sf join test_sessions s on s.id = sf.session_id where sf.sha256 = $1 and s.owner_id = $2 limit 1', [sha, u.id]);
-      if (dup.rows[0]) fail(409, 'duplicate', 'This test is already saved (test number ' + String(dup.rows[0].id) + ').');
       const setup = f.setup as Record<string, string | boolean>;
       const client = await db.connect();
       try {
         await client.query('begin');
+        /* The same file saved twice at once: a lock for this person and this file makes the second save wait, then find the first. */
+        await client.query('select pg_advisory_xact_lock(hashtext($1))', ['session-file:' + String(u.id) + ':' + sha]);
+        const dup = await client.query('select s.id from session_files sf join test_sessions s on s.id = sf.session_id where sf.sha256 = $1 and s.owner_id = $2 limit 1', [sha, u.id]);
+        if (dup.rows[0]) fail(409, 'duplicate', 'This test is already saved (test number ' + String(dup.rows[0].id) + ').');   /* the catch below rolls back */
         const r = await client.query(`insert into test_sessions (owner_id, test_type, recorded_from, material, specimen_id, device_id, device_type, device_software,
           protocol, app_version, calibration_ids, sample_count, started_at, summary, notes, calibration_source)
           values ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, to_timestamp($13 / 1000.0), $14, $15, $16) returning id, created_at`,
