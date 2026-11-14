@@ -38,11 +38,27 @@ function checkMeta(m) {
   if (!Array.isArray(m.calibrations) || m.calibrations.length > 16) fail('The calibrations are not valid.');
   for (const f of ['appVersion', 'deviceId', 'startedAt']) if (typeof m[f] !== 'string' || m[f].length > 200) fail('Missing ' + f + '.');
   if (m.forceZero_N !== undefined && !(typeof m.forceZero_N === 'number' && Number.isFinite(m.forceZero_N))) fail('The software baseline is not a number.');
+  const operator = checkOperator(m.operator);
   return {
     id: m.id, test: m.test, setup: { ...m.setup }, profile: small(m.profile, 'The device profile'), calibrations: small(m.calibrations, 'The calibrations'),
     ...(m.forceZero_N !== undefined ? { forceZero_N: m.forceZero_N } : {}),
     appVersion: m.appVersion, deviceId: m.deviceId, startedAt: m.startedAt,
+    ...(operator ? { operator } : {}),
   };
+}
+/* Who ran the test (people.cjs): written by the main process, checked again here. */
+const KINDS = ['admin', 'operator', 'student'], BY = ['gave access', 'password'];
+const shortText = (v, n) => typeof v === 'string' && v.length > 0 && v.length <= n && !/[\u0000-\u001f]/.test(v);
+function checkOperator(o) {
+  if (o == null) return null;
+  if (typeof o !== 'object' || !shortText(o.name, 80) || !shortText(o.username, 40) || !KINDS.includes(o.kind)) fail('Who ran the test is not valid.');
+  const out = { name: o.name, username: o.username, kind: o.kind };
+  if (o.responsible != null) {
+    const r = o.responsible;
+    if (typeof r !== 'object' || !shortText(r.name, 80) || !shortText(r.username, 40) || !BY.includes(r.confirmedBy)) fail('The responsible operator is not valid.');
+    out.responsible = { name: r.name, username: r.username, confirmedBy: r.confirmedBy };
+  }
+  return out;
 }
 
 function createJournalFiles(dir) {
@@ -138,4 +154,4 @@ function createJournalFiles(dir) {
   };
 }
 
-module.exports = { createJournalFiles, checkMeta, checkLines, ID };
+module.exports = { createJournalFiles, checkMeta, checkLines, checkOperator, ID };
