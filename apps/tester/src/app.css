@@ -259,6 +259,17 @@ button.strong:hover:not(:disabled) { opacity: 0.9; }
 .ind-live .dot { background: var(--live); border-color: var(--live); animation: pulse 1.2s ease-in-out infinite; }
 @media (prefers-reduced-motion: reduce) { .ind-live .dot { animation: none; } }
 .sr { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
+/* Records to fill in (Help screen). Printing shows only the record. */
+.bench-record { margin-top: 16px; }
+.br-table td:nth-child(2) { min-width: 16em; }
+.br-table textarea { width: 100%; min-width: 12em; }
+@media print {
+  body.printing-bench .page > :not(.bench-record), body.printing-bench .br-actions { display: none !important; }
+  body.printing-bench .bench-record textarea, body.printing-bench .bench-record input[type="text"] { display: none !important; }
+  body.printing-bench .br-table td:nth-child(3) { width: 38%; }
+  body.printing-bench .br-print { display: block; white-space: pre-wrap; min-height: 1.4em; border-bottom: 1px solid #999; }
+}
+.br-print { display: none; }
 
 /* Home: start cards on the left, recent tests in the middle, device and recovery on the right. */
 .home { width: 100%; max-width: 1280px; margin: 0 auto; padding: 20px 20px 24px; display: grid; gap: 16px; align-content: start; }

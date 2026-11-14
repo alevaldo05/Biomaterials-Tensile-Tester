@@ -90,7 +90,7 @@ A step-by-step wiring sheet for a first bench test (ESP32, ADS1115, a potentiome
 
 Use this sheet the first time a board is connected to the app. **The tester stays disconnected.** Use a bench voltage source (a lab supply or a battery with a divider that someone has reviewed) kept inside the ADS1115's allowed input range for your supply, and read it with a reference meter. This sheet does not say what voltages, pins, or circuits are right; those come from the reviewed interface design. It records what happened, so nothing is assumed.
 
-Fill in the top and each row; leave a row blank if it was not tried.
+Fill in the top and each row; leave a row blank if it was not tried. The same sheet is in the app (Help → Records to fill in), where it can be downloaded as CSV or printed.
 
 | Item | Entry |
 |---|---|

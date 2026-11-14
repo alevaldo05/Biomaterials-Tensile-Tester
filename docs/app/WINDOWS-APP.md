@@ -132,7 +132,8 @@ npm run dist:win     (makes the installer and the portable .exe in apps/desktop/
 
 ## First install checklist
 Fill this in on the Windows computer after downloading the installer from the draft release. Write Pass, Fail, or the
-note for each row. Anything not tried stays blank; nothing here is assumed to work.
+note for each row. Anything not tried stays blank; nothing here is assumed to work. The same checklist is in the app
+(Help → Records to fill in), where it can be downloaded as CSV or printed.
 
 | # | Check | Result / notes |
 |---|---|---|
