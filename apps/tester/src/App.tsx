@@ -214,8 +214,9 @@ export function App({ controller: c, serialAvailable, theme, account, onHelpSub 
       </dl>
       <p className="hint">You choose the port yourself; the app never opens one by itself. {serialAvailable ? '' : 'This browser cannot open USB serial ports: use Chrome on a computer, or the Windows app. '}The hardware connection is untested.</p>
       <p className="row">
-        {c.connected ? <button type="button" onClick={() => (c.saved ? void c.disconnect() : setAsk('disconnect'))}>Disconnect</button>
-          : <button type="button" className="primary" disabled={state === 'connecting' || state === 'identifying'} onClick={() => void c.connect()}>Connect…</button>}
+        {/* after a fault the port is still open: both Disconnect and Connect (which closes the old connection first) are offered */}
+        {c.connected || c.state === 'fault' ? <button type="button" onClick={() => (c.saved ? void c.disconnect() : setAsk('disconnect'))}>Disconnect</button> : null}
+        {!c.connected ? <button type="button" className="primary" disabled={state === 'connecting' || state === 'identifying'} onClick={() => void c.connect()}>Connect…</button> : null}
       </p>
       {c.message && !c.connected ? <p className="error" role="alert">{c.message}</p> : null}
       <DeviceFacts c={c} />

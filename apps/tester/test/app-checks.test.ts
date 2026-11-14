@@ -172,6 +172,17 @@ describe('keyboard and focus (source checks; the Tab walk-through was done in Ch
   });
 });
 
+describe('connection buttons (source checks; the reconnect itself is tested in controller.test.ts)', () => {
+  const src = (f: string) => readFileSync(path.join(here, '../src', f), 'utf8');
+  it('offers both Disconnect and Connect while the device is in a fault, on the Test and Device screens', () => {
+    for (const f of ['App.tsx', 'pages/Device.tsx']) {
+      const code = src(f);
+      expect(code, f).toContain("{c.connected || c.state === 'fault' ? <button");
+      expect(code, f).toContain('{!c.connected ? <button type="button" className="primary"');
+    }
+  });
+});
+
 describe('menu and required fields (source checks; the required-field name was checked in Chromium)', () => {
   const src = (f: string) => readFileSync(path.join(here, '../src', f), 'utf8');
   it('moves focus into the Save data menu, closes it with Esc, and gives focus back to the button', () => {

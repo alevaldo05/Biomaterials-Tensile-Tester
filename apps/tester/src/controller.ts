@@ -107,6 +107,8 @@ export class TestController {
   private listeners = new Set<() => void>();
   private version = 0;
   private handshake: { line: string; at: number }[] = [];
+  /** Stops this controller listening to the current source. */
+  private offSource: (() => void)[] = [];
   /** The handshake as it was when the recording started: the start of this test's session file. */
   private header: { line: string; at: number }[] = [];
   /** The device profile in use when the recording started: it belongs to this test's file even if another setup is chosen later. */
@@ -137,24 +139,27 @@ export class TestController {
   get dataLabel(): string { return 'Measured'; }
 
   /* ---------- connection ---------- */
-  /** Must be called from a click: the person chooses the port. Nothing connects by itself. */
+  /** Must be called from a click: the person chooses the port. Nothing connects by itself.
+      A finished test stays as it is: its session file keeps its own lines, whatever is connected afterwards. */
   async connect(): Promise<void> {
     if (this.source && this.source.state !== 'disconnected' && this.source.state !== 'fault') return;
     this.message = '';
+    /* After a fault or a device restart the old connection still holds the port: close it first, so the port can be opened again. */
+    await this.releaseSource();
     const transport = this.o.openReal();
     const profile = this.setupFile?.profile ?? null, calibrations = this.setupFile?.calibrations ?? [];
     const source = new DeviceSource({ transport, adapter: new NdjsonAdapter(), kind: 'real', requiredQuantities: ['force', 'displacement'] });
-    this.source = source; this.recorder = null; this.handshake = []; this.recorded = [];
+    this.source = source; this.handshake = [];
     const onState = (st: string) => this.onState(st);
     let offState = source.on('state', onState);
-    source.on('sample', () => { this.lastSampleAt = Date.now(); });
+    this.offSource = [() => offState(), source.on('sample', () => { this.lastSampleAt = Date.now(); })];
     /* decided from the message as the adapter read it, never from its text (a device may write "type": "sample" with a space).
        While recording, a fault, a restart (a new hello), or new settings are kept in order with the samples, so a replay
        ends where and how the recording ended. */
-    source.on('line', (line, at, kind) => {
+    this.offSource.push(source.on('line', (line, at, kind) => {
       if (this.phase === 'recording') { if (kind === 'sample' || kind === 'fault' || kind === 'identity' || kind === 'settings') this.recorded.push({ line, at }); }
       else if (kind === 'identity' || kind === 'channels' || kind === 'settings') this.handshake.push({ line, at });
-    });
+    }));
     this.changed();
     try {
       await source.connect();
@@ -170,6 +175,16 @@ export class TestController {
     await source.startStream();
     this.startTicking();
     this.changed();
+  }
+
+  /** Stops listening to the old connection, closes it, and lets its recorder go. Nothing is sent to the device. */
+  private async releaseSource(): Promise<void> {
+    const old = this.source, rec = this.recorder;
+    this.offSource.forEach((off) => off()); this.offSource = [];
+    this.stopTicking();
+    this.source = null; this.recorder = null;
+    rec?.dispose();
+    if (old) await old.disconnect().catch(() => undefined);
   }
 
   async disconnect(): Promise<void> {
@@ -345,8 +360,9 @@ export class TestController {
     const cal = this.session?.calibrations ?? {};
     return (['force', 'displacement'] as const).flatMap((q) => { const c = cal[q]; return c ? [{ id: c.id, quantity: q, unit: c.unit, slope: c.slope, offset: c.offset, signalPath: c.signalPath, origin: c.origin, createdAt: '' }] : []; });
   }
+  /** The finished (or running) test's file. It does not need the connection: it is still there after Disconnect or a new Connect. */
   sessionFile(): SessionFile | null {
-    if (!this.session || !this.source) return null;
+    if (!this.session) return null;
     const all = [...this.header, ...this.recorded], s = this.session;
     return {
       format: 'tensile-tester-session', version: 1, savedAt: new Date().toISOString(), appVersion: APP_VERSION,

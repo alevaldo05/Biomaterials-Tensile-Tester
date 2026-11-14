@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { SimulatedDevice } from '@tensile/acquisition';
+import { SimulatedDevice, TransportError } from '@tensile/acquisition';
 import type { Transport } from '@tensile/acquisition';
 import { analyzeUniaxial } from '@tensile/core';
 import { signalPathOf } from '@tensile/recording';
@@ -166,6 +166,78 @@ describe('test controller (real acquisition only)', () => {
     await c.startRecording();
     expect(() => c.useSetup(setup)).toThrow('cannot be changed while recording');
   });
+});
+
+/* One physical port, like Web Serial: opening it while it is already open fails (Chrome: InvalidStateError). */
+function onePort(dev: SimulatedDevice) {
+  let openBy: object | null = null;
+  const log: string[] = [];
+  const make = (): Transport => {
+    const me: Transport = {
+      label: 'USB serial (stand-in)',
+      async open() { log.push('open'); if (openBy) throw new TransportError('port-in-use', 'InvalidStateError: The port is already open.'); openBy = me; await dev.open(); },
+      async close() { log.push('close'); if (openBy === me) { openBy = null; await dev.close(); } },
+      write: (b) => dev.write(b),
+      onData: (l) => dev.onData(l),
+      onClose: (l) => dev.onClose((i) => { if (i.unexpected) openBy = null; l(i); }),
+    };
+    return me;
+  };
+  return { make, log };
+}
+
+describe('connecting again', () => {
+  it('keeps the finished test with its session file when Connect is pressed after an interrupted recording', async () => {
+    const { dev, c } = rig();
+    ready(c);
+    await c.connect();
+    c.useSetup(measuredSetup(c));
+    await c.startRecording();
+    move(dev, c);
+    dev.step(1200);
+    dev.unplug();
+    expect(c.phase).toBe('done');
+    const before = c.sessionFile()!;
+    await c.connect();
+    expect(c.connected).toBe(true);
+    expect(c.phase).toBe('done');
+    const after = c.sessionFile()!;
+    expect(after.lines).toEqual(before.lines);
+    expect(after.receivedAt_ms).toEqual(before.receivedAt_ms);
+    dev.step(200);   /* readings on the new connection are not added to the finished test */
+    expect(c.sessionFile()!.lines).toEqual(before.lines);
+    await c.disconnect();
+    expect(c.sessionFile()!.lines).toEqual(before.lines);   /* and the file can still be saved after Disconnect */
+    expect((await openTestFile('kept.session.json', JSON.stringify(c.sessionFile()))).record!.raw).toEqual(c.record!.raw);
+  });
+
+  for (const [name, trouble] of [
+    ['a device restart', (d: SimulatedDevice) => d.restart()],
+    ['a fault message', (d: SimulatedDevice) => d.injectText('{"v":1,"type":"fault","code":"buffer_overflow","message":"overflow"}\n')],
+  ] as const) {
+    it('closes the port and connects again after ' + name, async () => {
+      const dev = new SimulatedDevice({ manualMotion: true, auto: false });
+      const port = onePort(dev);
+      const c = new TestController({ openReal: port.make, journal: null, commitEvery_ms: 0 });
+      ready(c);
+      await c.connect();
+      c.useSetup(measuredSetup(c));
+      await c.startRecording();
+      move(dev, c);
+      dev.step(400);
+      trouble(dev);
+      expect(c.state).toBe('fault');
+      const kept = c.sessionFile()!.lines;
+      await c.connect();
+      expect(c.message).toBe('');
+      expect(port.log).toEqual(['open', 'close', 'open']);
+      expect(c.source!.state).toBe('streaming');
+      expect(c.sessionFile()!.lines).toEqual(kept);
+      /* the old connection no longer changes the screen */
+      c.useSetup(measuredSetup(c));
+      expect(c.state).toBe('ready');
+    });
+  }
 });
 
 describe('recording on this computer', () => {

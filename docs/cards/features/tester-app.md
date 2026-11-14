@@ -51,6 +51,7 @@ The React and TypeScript app for running tests, the packages it shares with the 
 - `packages/core` gives the same results as the website's scripts (same CSV header lines, so files open on either side); a calculation changed on one side is changed on the other in the same change
 - Graph, calculation, and recording code never import a device adapter, a transport, or the wire protocol (a test checks this)
 - A calibration is used only when its whole signal path matches; without one, values stay in volts and no stress or strain is calculated
+- After a fault or a device restart, Disconnect and Connect are both offered; Connect closes the old connection before opening the port again and sends nothing to the device. A finished test keeps its session file through a new Connect or a Disconnect (the file no longer needs a connection)
 - A test's session file and journal entry carry the device profile and calibrations in use when Start recording was pressed; choosing another setup file after the test does not change them
 - Board pins, the I2C address, and channel wiring live only in the firmware's `board_config.h`, all marked as examples; the firmware sends raw counts only and understands only the six acquisition requests
 - Recording never depends on the back end; the website never needs it

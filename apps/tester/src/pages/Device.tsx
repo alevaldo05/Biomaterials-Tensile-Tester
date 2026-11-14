@@ -17,9 +17,9 @@ export function Device({ controller: c, account, serialAvailable }: { controller
         <section className="card-plain" aria-labelledby="conn-title">
           <h2 id="conn-title">Acquisition device</h2>
           <p className="row">
-            {c.connected ? <button type="button" disabled={c.phase === 'recording'} onClick={() => void c.disconnect()}>Disconnect</button>
-              : <button type="button" className="primary" disabled={busy} onClick={() => void c.connect()}>Connect…</button>}
-            <span className="hint">{c.connected ? 'Connected' : busy ? 'Connecting…' : 'Not connected'}</span>
+            {c.connected || c.state === 'fault' ? <button type="button" disabled={c.phase === 'recording'} onClick={() => void c.disconnect()}>Disconnect</button> : null}
+            {!c.connected ? <button type="button" className="primary" disabled={busy} onClick={() => void c.connect()}>Connect…</button> : null}
+            <span className="hint">{c.connected ? 'Connected' : busy ? 'Connecting…' : c.state === 'fault' ? 'Stopped by a fault' : 'Not connected'}</span>
           </p>
           {!serialAvailable ? <p className="hint">This browser cannot open USB serial ports. Use Chrome on a computer, or the Windows app.</p> : null}
           {c.message && !c.connected ? <p className="error" role="alert">{c.message}</p> : null}
