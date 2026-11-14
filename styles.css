@@ -96,27 +96,6 @@
   --danger-ink: #2a1414;
   color-scheme: dark;
 }
-/* MU colors: a separate theme in Manhattan University's colors (colors only: no logo, seal, or wordmark; not an official theme).
-   Manhattan Green #046A38. The values come from the project plan and have NOT been compared with the official guidelines yet.
-   Gold #F5A800 is light, so it is used only as an accent (the header underline below), never as text. */
-:root[data-theme="mu"] {
-  --bg: #ffffff;
-  --surface: #f3f8f0;
-  --ink: #14201a;
-  --muted: #44524a;
-  --line: #cdd9ca;
-  --accent: #046A38;
-  --accent-ink: #ffffff;
-  --accent-hover: #035a2f;
-  --link: #046A38;
-  --mark: #9a6700;
-  --focus: #02391e;
-  --danger: #9a3a3a;
-  --danger-ink: #ffffff;
-  color-scheme: light;
-}
-:root[data-theme="mu"] .topbar { border-bottom: 3px solid #F5A800; }
-
 /* Text size and spacing (Settings): --ts multiplies the browser's own text size (100% = unchanged) and
    --sp scales the gaps and padding between blocks. Controls, focus rings, and warnings keep their size.
    --sp is the Spacing choice (--sp-user) times --wide, which gives a little more room on wide windows. */

@@ -52,7 +52,7 @@ window.SEARCH_INDEX = [
   { t: "What the Calibration page does and does not do", p: "calibration.html", a: "limits-title", w: "Calibration", k: "traceability tare not a calibration limits" },
   { t: "Specimen and settings (practice test)", p: "practice.html", a: "spec-title", w: "Practice test", k: "material specimen id dimensions gauge length width thickness speed temperature environment notes" },
   { t: "Review before starting (practice test)", p: "practice.html", a: "rv-title", w: "Practice test", k: "review values start required entries" },
-  { t: "Color theme (Settings)", p: "settings.html", a: "set-theme", w: "Settings", k: "color theme green light dark purple pink mu manhattan university colors" },
+  { t: "Color theme (Settings)", p: "settings.html", a: "set-theme", w: "Settings", k: "color theme green light dark purple pink" },
   { t: "Layout (Settings)", p: "settings.html", a: "set-layout", w: "Settings", k: "layout start screen sidebar cards tabs reading" },
   { t: "Font (Settings)", p: "settings.html", a: "set-font", w: "Settings", k: "font serif sans humanist" },
   { t: "Style (Settings)", p: "settings.html", a: "set-style", w: "Settings", k: "style standard lab instrument clinical engineering drawing academic" },

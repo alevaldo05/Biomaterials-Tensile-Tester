@@ -22,7 +22,7 @@ Display choices remembered in this browser. See [display settings and themes](..
 
 ## Depends on
 - Feature: display settings and themes, layouts, styles
-- Color theme choices: Green light, Green dark, Purple light, Purple dark, Pink light, Pink dark, MU colors
+- Color theme choices: Green light, Green dark, Purple light, Purple dark, Pink light, Pink dark
 
 ## How to check
 - `node scripts/check-site.js`
