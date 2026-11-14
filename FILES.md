@@ -18,7 +18,7 @@ Everything is in the project root except `data/`, which holds the content and se
 | `protocol-stress-relaxation.html` | Stress Relaxation protocol (draft). |
 | `settings.html` | Settings: color theme, font, layout, style, text size, spacing, motion, and graph line thickness, curve style, and grid. |
 | `404.html` | Shown by GitHub Pages for a wrong address at any depth. Its links start with `/Biomaterials-Tensile-Tester/`; change that in this one file if the site is renamed or moved to its own domain. |
-| `favicon.svg` | The browser-tab icon: the "BTT" letters on a rounded square in the default green. `display-settings.js` swaps in the selected theme's colors while a page is open (the 404 page keeps this green icon). |
+| `favicon.svg` | The browser-tab icon: the curve mark (a stress-strain curve whose peak forms two cat ears, with two small eyes) on a rounded square in the default green; `favicon.png` is the same at 64 px. `display-settings.js` swaps in the selected theme's colors while a page is open (the 404 page keeps this green icon). |
 | `favicon.png` | The same icon as a 64 px picture, for browsers that ignore SVG icons. It stays green; the script removes this link when it swaps in the colored icon. |
 
 Each page has its own header, navigation, and text in its HTML. The interactive parts are drawn by the scripts below. The chosen layout rearranges what is already on the page; content is written only once.
@@ -153,7 +153,7 @@ Every page except `404.html` starts with a "Skip to main content" link (`.skip-l
 | Colors, spacing, themes, fonts | `styles.css` |
 | The look of one page or feature (graph, live test, Materials, Calibration, Compare, report, guided steps...) | its file in `css/` |
 | Styles (looks) | `styles-looks.css`, `display-settings.js` |
-| The header logo (the "BTT" letters; its color follows the selected theme through `--accent`, and `--logo-ink` on the Lab style's dark header) | the same `<svg class="logo">` in each page's header, `.logo` in `styles.css` |
+| The header logo (the curve mark, the same as the tester app's; its square follows the selected theme through `--accent` and its lines `--accent-ink`, with `--logo-ink` and `--logo-line` on the Lab style's dark header) | the same `<svg class="logo">` in each page's header, `.logo` in `css/home.css` |
 | Layouts | `layouts.css`, `layouts.js` |
 | Graph drawing, key results (modulus, yield, UTS…), CSV reading | `graph.js` |
 | Practice page behavior, CSV download | `live.js` |

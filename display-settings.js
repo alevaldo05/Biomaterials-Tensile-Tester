@@ -37,7 +37,7 @@
 
   Object.keys(SETTINGS).forEach(function (name) { apply(name, saved(name)); });
 
-  /* Browser-tab icon: the same "BTT" mark, in the selected theme's colors. The page's security policy allows
+  /* Browser-tab icon: the same curve mark as the header logo, in the selected theme's colors. The page's security policy allows
      blob: images, so the colored icon is built as a small SVG blob. If anything fails, the plain green favicon.svg stays. */
   var tabBlob = "";
   function tabIcon() {
@@ -46,8 +46,10 @@
       var bg = cs.getPropertyValue("--accent").trim(), fg = cs.getPropertyValue("--accent-ink").trim();
       var link = document.querySelector('link[rel="icon"][type="image/svg+xml"]');
       if (!bg || !fg || !link || !window.URL || !window.Blob) return;
-      var svg = '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 48 48"><rect width="48" height="48" rx="11" fill="' + bg + '"/>' +
-        '<text x="24" y="31.5" text-anchor="middle" textLength="40" lengthAdjust="spacingAndGlyphs" font-family="Georgia, \'Times New Roman\', serif" font-weight="700" font-size="20" fill="' + fg + '">BTT</text></svg>';
+      var svg = '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64"><rect x="2" y="2" width="60" height="60" rx="13" fill="' + bg + '"/>' +
+        '<g fill="none" stroke="' + fg + '" stroke-linecap="round" stroke-linejoin="round"><path stroke-width="2.4" d="M12 12V52H52"/>' +
+        '<path stroke-width="4" d="M13 51C18 50.5 20 48 21.5 43L25.5 15L31 25H36L41.5 15L45 30L48 51"/></g>' +
+        '<circle cx="30" cy="33" r="1.9" fill="' + fg + '"/><circle cx="37" cy="33" r="1.9" fill="' + fg + '"/></svg>';
       var next = URL.createObjectURL(new Blob([svg], { type: "image/svg+xml" }));
       var png = document.querySelector('link[rel="icon"][type="image/png"]');
       if (png) png.parentNode.removeChild(png);

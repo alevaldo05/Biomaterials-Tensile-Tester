@@ -12,7 +12,7 @@ Homepage: title, the Get the app and Learn and practice actions, the About the t
 - CSS: `styles.css` (Top bar), `css/home.css` (Home, Home additions); `layouts.css` Start screen
 
 ## What the user sees
-- Header with logo, main menu (Home, Learn, Protocols, Materials, Calibration, About, Help, Settings) and the search button
+- Header with logo (the curve mark: a stress-strain curve whose peak forms two cat ears, in the theme accent; the same mark is the browser-tab icon and the tester app's logo), main menu (Home, Learn, Protocols, Materials, Calibration, About, Help, Settings) and the search button
 - Heading **Biomaterials Tensile Tester**, "Tests are run in the tester app on the lab computer. Learn, practice, and review saved data here.", primary **Get the app** (opens the Get the App page: a download link for the Windows app (beta), plus links to the practice page and Load Test) and **Learn and practice** (opens Learn). Practice and Load Test are not on the homepage
 - **Need help?** at the bottom right (words in `data/page-help.js`)
 - Protocols and procedures links, marked Draft (a card in the Start screen layout)
