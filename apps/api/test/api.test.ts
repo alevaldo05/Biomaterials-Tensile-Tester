@@ -18,7 +18,7 @@ const config: Config = { databaseUrl: '', host: '127.0.0.1', port: 0, cookieSecu
 const PW = 'correct horse battery';
 const APP = { 'x-tensile-client': 'app' };
 
-type Method = 'GET' | 'POST' | 'PATCH';
+type Method = 'GET' | 'POST' | 'PATCH' | 'PUT';
 const sha = (b: Buffer | string) => crypto.createHash('sha256').update(b).digest('hex');
 
 describe.skipIf(!PG_BIN)('API against a real PostgreSQL', () => {
@@ -325,6 +325,8 @@ describe.skipIf(!PG_BIN)('API against a real PostgreSQL', () => {
   describe('roles', () => {
     const adminOnly: [Method, string, object?][] = [
       ['GET', '/users'],
+      ['GET', '/lab-people'],
+      ['PUT', '/lab-people', { format: 'tensile-tester-people', version: 1, people: [] }],
       ['POST', '/users', { username: 'zz-nope', role: 'user', password: 'long enough pw' }],
       ['PATCH', '/users/1', { displayName: 'x' }],
       ['POST', '/device-profiles', { id: 'zz-nope', name: 'x', channels: {} }],
@@ -349,6 +351,22 @@ describe.skipIf(!PG_BIN)('API against a real PostgreSQL', () => {
       ['GET', '/test-sessions'], ['POST', '/test-sessions'], ['GET', '/test-sessions/1'], ['GET', '/test-sessions/1/file'],
     ] as [Method, string][])('nobody signed in gets 401 on %s %s', async (method, url) => {
       expect((await call(app, method, url, null, method === 'POST' ? {} : undefined)).statusCode).toBe(401);
+    });
+    it('an admin copies a lab computer’s people list here and reads the newest copy back; hashes only, shape checked', async () => {
+      const person = { id: 'p-1', username: 'olga', name: 'Olga Operator', kind: 'operator', hash: 'scrypt$16384$8$1$c2FsdA==$a2V5', mustChange: false, changedAt: '2026-11-14T10:00:00.000Z' };
+      const copy = { format: 'tensile-tester-people', version: 1, people: [person] };
+      expect((await call(app, 'PUT', '/lab-people', adminCookie, { ...copy, people: [{ ...person, hash: 'olga-own-password' }] })).statusCode).toBe(400);
+      expect((await call(app, 'PUT', '/lab-people', adminCookie, { ...copy, extra: 1 })).statusCode).toBe(400);
+      const put = await call(app, 'PUT', '/lab-people', adminCookie, copy);
+      expect(put.statusCode).toBe(200);
+      expect(put.json()).toEqual({ count: 1 });
+      const later = { ...copy, people: [person, { ...person, id: 'p-2', username: 'sam', name: 'Sam Student', kind: 'student', endDate: '2026-12-20' }] };
+      await call(app, 'PUT', '/lab-people', adminCookie, later);
+      const got = await call(app, 'GET', '/lab-people', adminCookie);
+      expect(got.statusCode).toBe(200);
+      expect(got.json()).toEqual(later);
+      const audit = (await call(app, 'GET', '/audit', adminCookie)).json();
+      expect(JSON.stringify(audit)).toContain('people_copy_saved');
     });
     it('an admin can list users and read the audit', async () => {
       const users = await call(app, 'GET', '/users', adminCookie);
@@ -633,10 +651,13 @@ describe.skipIf(!PG_BIN)('API against a real PostgreSQL', () => {
     it('keeps who ran the test on the lab computer in the stored file, and refuses a malformed one', async () => {
       const u = await mkSignedIn();
       const operator = { name: 'Sam Student', username: 'sam', kind: 'student', responsible: { name: 'Olga Operator', username: 'olga', confirmedBy: 'gave access' } };
-      const r = await upload(u.cookie, { ...sessionFile({ samples: 3, material: 'Run by' }), operator });
+      const check = { sha256: 'a'.repeat(64) };
+      const r = await upload(u.cookie, { ...sessionFile({ samples: 3, material: 'Run by' }), operator, check });
       expect(r.statusCode).toBe(201);
       const back = JSON.parse((await call(app, 'GET', '/test-sessions/' + r.json().id + '/file', u.cookie)).body);
       expect(back.operator).toEqual(operator);
+      expect(back.check).toEqual(check);
+      expect((await upload(u.cookie, { ...sessionFile({ samples: 3, material: 'Bad check' }), check: { sha256: 'not a hash' } })).statusCode).toBe(400);
       expect((await upload(u.cookie, { ...sessionFile({ samples: 3, material: 'Bad run by' }), operator: { ...operator, kind: 'boss' } })).statusCode).toBe(400);
     });
 
@@ -1023,7 +1044,7 @@ describe.skipIf(!PG_BIN)('API against a real PostgreSQL', () => {
   /* ---------- 10. migrations ---------- */
   describe('migrations', () => {
     it('applied 001_initial.sql the first time, and applies nothing the second time', async () => {
-      expect(migratedFirst).toEqual(['001_initial.sql', '002_test_methods.sql', '003_calibration_source.sql']);
+      expect(migratedFirst).toEqual(['001_initial.sql', '002_test_methods.sql', '003_calibration_source.sql', '004_people_copies.sql']);
       expect(await migrate(db)).toEqual([]);
       const rows = (await db.query('select version, applied_at from schema_migrations order by version')).rows;
       expect(rows.map((r) => r.version)).toContain('001_initial.sql');

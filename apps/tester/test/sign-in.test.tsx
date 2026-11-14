@@ -45,8 +45,8 @@ describe('who may run the machine', () => {
     expect(access(null).check()).toEqual({ allowed: false, why: 'Sign in to run the machine.', operator: null });
     expect(access({ ...operator, mustChange: true, canRunMachine: false, why: 'Choose your own password first.' }).check().why).toBe('Choose your own password first.');
     expect(access(student).check()).toMatchObject({ allowed: false, why: 'Choose your responsible operator first.' });
-    expect(access(studentReady).check()).toEqual({ allowed: true, why: '', operator: { name: 'Sam Student', username: 'sam', kind: 'student', responsible: { name: 'Olga Operator', username: 'olga', confirmedBy: 'gave access' } } });
-    expect(access(operator).check()).toEqual({ allowed: true, why: '', operator: { name: 'Olga Operator', username: 'olga', kind: 'operator' } });
+    expect(access(studentReady).check()).toEqual({ allowed: true, why: '', operator: { name: 'Sam Student', username: 'sam', kind: 'student', responsible: { name: 'Olga Operator', username: 'olga', confirmedBy: 'gave access' } }, limits: null });
+    expect(access(operator).check()).toEqual({ allowed: true, why: '', operator: { name: 'Olga Operator', username: 'olga', kind: 'operator' }, limits: null });
   });
   it('does not open the USB connection or start a recording when not allowed', async () => {
     const a = access(null);

@@ -39,5 +39,10 @@ contextBridge.exposeInMainWorld('tensileDesktop', Object.freeze({
     update: (id, changes) => ipcRenderer.invoke('people:update', String(id), changes),
     recover: (code, newPassword) => ipcRenderer.invoke('people:recover', String(code), String(newPassword)),
     usageLog: () => ipcRenderer.invoke('people:usage-log'),
+    trainingItems: () => ipcRenderer.invoke('people:training-items'),
+    signOffTraining: (id, ticked) => ipcRenderer.invoke('people:sign-off-training', String(id), Array.isArray(ticked) ? ticked.map((t) => t === true) : []),
+    usageReport: () => ipcRenderer.invoke('people:usage-report'),
+    copyToLab: () => ipcRenderer.invoke('people:copy-to-lab'),
+    copyFromLab: () => ipcRenderer.invoke('people:copy-from-lab'),
   }),
 }));

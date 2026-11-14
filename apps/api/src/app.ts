@@ -9,7 +9,7 @@ import type { z } from 'zod';
 import { COOKIE, dummyHash, hashPassword, LoginLimiter, newToken, passwordProblem, readCookie, sessionCookie, tokenHash, verifyPassword } from './auth';
 import type { Config } from './config';
 import type { Db } from './db';
-import { CalibrationBody, DEVICE_MESSAGE_TYPES, LoginBody, MethodBody, NewUserBody, PasswordBody, problem, ProfileBody, UploadBody, UserPatch } from './schemas';
+import { CalibrationBody, DEVICE_MESSAGE_TYPES, LoginBody, MethodBody, NewUserBody, PasswordBody, PeopleCopyBody, problem, ProfileBody, UploadBody, UserPatch } from './schemas';
 
 export const API_VERSION = '0.1.0';
 const CAL_LABELS: Record<string, string> = { lab: 'Lab-approved calibration', 'not-from-lab': 'Calibration not from the lab', none: 'No calibration (voltages only)', unchecked: 'Calibration not checked (saved before checks)' };
@@ -171,6 +171,20 @@ export function buildApp(o: { db: Db; config: Config; logger?: boolean; limiter?
         await audit(a.id, 'user_changed', { id, ...b, password: b.password !== undefined ? 'reset' : undefined });
         return { user: userOut(r.rows[0]) };
       } catch (e) { await client.query('rollback'); throw e; } finally { client.release(); }
+    });
+
+    /* ---------- copies of a lab computer's people list (admin only) ---------- */
+    api.put('/lab-people', async (req) => {
+      const a = admin(req), b = parse(PeopleCopyBody, req.body);
+      await db.query('insert into people_copies (people, person_count, created_by) values ($1, $2, $3)', [JSON.stringify(b), b.people.length, a.id]);
+      await audit(a.id, 'people_copy_saved', { count: b.people.length });
+      return { count: b.people.length };
+    });
+    api.get('/lab-people', async (req) => {
+      admin(req);
+      const r = (await db.query('select people from people_copies order by id desc limit 1')).rows[0];
+      if (!r) fail(404, 'none', 'No people list has been copied to this lab server yet.');
+      return r.people;
     });
 
     /* ---------- device profiles and calibrations ---------- */

@@ -21,6 +21,12 @@ interface People {
   confirmResponsible(id: string, password?: string): Promise<Me>;
   add(i: object): Promise<View>;
   update(id: string, c: object): Promise<View>;
+  trainingItems(): string[];
+  signOffTraining(id: string, ticked: boolean[]): Promise<View & { training: { at: string; by: string } | null }>;
+  usageReport(): Promise<{ username: string; tests: number; recordingMinutes: number; lastUse: string | null; asResponsible: number }[]>;
+  exportForLab(): Promise<{ format: string; version: number; people: { username: string; hash: string; changedAt?: string; name: string }[] }>;
+  importFromLab(copy: object): Promise<{ added: number; updated: number }>;
+  checkSetup(setup: object): string;
   recover(code: string, p: string): Promise<{ recoveryCode: string; username: string }>;
   usageLog(): Promise<{ event: string; by: string | null; person?: string | null }[]>;
   machine(): { allowed: boolean; why: string };
@@ -46,6 +52,7 @@ async function lab(dir = tmp()) {
   await p.signIn('olga', 'first-op-pass');
   await p.changePassword('first-op-pass', 'olga-own-password');
   const st = await p.add({ username: 'sam', name: 'Sam Student', kind: 'student', password: 'first-st1', endDate: '2026-12-20' });
+  await p.signOffTraining(st.id, [true, true, true]);
   await p.signOut();
   return { p, dir, op, st, recoveryCode };
 }
@@ -208,5 +215,73 @@ describe('people on this computer', () => {
     expect(r.recoveryCode).not.toBe(recoveryCode);
     await expect(p.recover(recoveryCode, 'another-pass-1')).rejects.toThrow('not right');
     expect(await p.signIn('ale', 'new-admin-pass')).toMatchObject({ kind: 'admin' });
+  });
+  it('lets a student sign in only after their operator signs off every training item', async () => {
+    const { p } = await lab();
+    await p.signIn('olga', 'olga-own-password');
+    const fresh = await p.add({ username: 'tia', name: 'Tia New', kind: 'student', password: 'first-tia1', endDate: '2026-12-20' });
+    expect(p.trainingItems()).toHaveLength(3);
+    await expect(p.signOffTraining(fresh.id, [true, false, true])).rejects.toThrow('Tick every training item');
+    await p.signOut();
+    await expect(p.signIn('tia', 'first-tia1')).rejects.toThrow('training is not signed off');
+    await p.signIn('olga', 'olga-own-password');
+    expect((await p.signOffTraining(fresh.id, [true, true, true])).training).toMatchObject({ by: 'Olga Operator' });
+    await p.signOut();
+    expect(await p.signIn('tia', 'first-tia1')).toMatchObject({ username: 'tia', mustChange: true });
+  });
+  it('keeps a student within their maximum crosshead speed, and writes their limits into the test file', async () => {
+    const { p, st, op } = await lab();
+    await p.signIn('olga', 'olga-own-password');
+    await expect(p.update(st.id, { limits: { maxSpeed: -2 } })).rejects.toThrow('above 0');
+    expect((await p.update(st.id, { limits: { maxSpeed: 20, methods: [{ id: 'm-1', name: 'Skin, slow' }] } }) as View & { limits: object }).limits).toEqual({ maxSpeed: 20, methods: [{ id: 'm-1', name: 'Skin, slow' }] });
+    await p.signOut();
+    await p.signIn('sam', 'first-st1');
+    await p.changePassword('first-st1', 'sams-own-1');
+    await p.confirmResponsible(op.id);
+    expect(p.checkSetup({ speed: '30' })).toBe('Your operator set a maximum crosshead speed of 20 mm/min.');
+    expect(p.checkSetup({ speed: 'fast' })).toContain('maximum crosshead speed');
+    expect(p.checkSetup({ speed: '' })).toContain('maximum crosshead speed');
+    expect(p.checkSetup({ speed: '20' })).toBe('');
+    expect(p.operatorBlock()).toMatchObject({ limits: { maxSpeed: 20, methods: ['Skin, slow'] } });
+  });
+  it('reports tests, recording time, and last use per person, from the usage log', async () => {
+    const { p, op } = await lab();
+    await p.signIn('sam', 'first-st1');
+    await p.changePassword('first-st1', 'sams-own-1');
+    await p.confirmResponsible(op.id);
+    await p.noteTest('test_started', { id: 's-1' });
+    clock += 6 * 60000;
+    await p.noteTest('test_ended', { id: 's-1' });
+    await p.signOut();
+    await p.signIn('olga', 'olga-own-password');
+    const rows = await p.usageReport();
+    expect(rows.map((r) => r.username).sort()).toEqual(['olga', 'sam']);
+    expect(rows.find((r) => r.username === 'sam')).toMatchObject({ tests: 1, recordingMinutes: 6 });
+    expect(rows.find((r) => r.username === 'olga')).toMatchObject({ asResponsible: 1 });
+  });
+  it('copies the list for the lab server (admin only) and brings a newer copy in without losing local people', async () => {
+    const { p, st } = await lab();
+    await p.signIn('olga', 'olga-own-password');
+    await expect(p.exportForLab()).rejects.toThrow('does not allow');
+    await p.signOut();
+    await p.signIn('ale', ADMIN.password);
+    const copy = await p.exportForLab();
+    expect(copy.people.map((x) => x.username).sort()).toEqual(['ale', 'olga', 'sam']);
+    expect(JSON.stringify(copy)).not.toContain('olga-own-password');
+    /* on the second computer: a newer change to sam, and a new student from the other computer */
+    const other = createPeople(tmp(), { now });
+    await other.setup({ username: 'ale', name: 'Ale Admin', password: 'second-pc-admin' });
+    const later = new Date(clock + 60000).toISOString();
+    const edited = { ...copy, people: [...copy.people.map((x) => (x.username === 'sam' ? { ...x, name: 'Sam Student-Renamed', changedAt: later } : x)),
+      { ...copy.people.find((x) => x.username === 'sam')!, id: 'p-other', username: 'una', name: 'Una Other', changedAt: later }] };
+    expect(await other.importFromLab(copy)).toEqual({ added: 2, updated: 0 });
+    expect(await p.importFromLab(edited)).toEqual({ added: 1, updated: 1 });
+    const names = (await p.list()).map((v) => v.name).sort();
+    expect(names).toEqual(['Ale Admin', 'Olga Operator', 'Sam Student-Renamed', 'Una Other']);
+    expect((await p.list()).find((v) => v.id === st.id)?.username).toBe('sam');
+    await expect(p.importFromLab({ format: 'nope' })).rejects.toThrow('not a people list');
+    /* the signed-in admin's own account is never replaced by the copy */
+    await p.signOut();
+    expect(await other.signIn('ale', 'second-pc-admin')).toMatchObject({ kind: 'admin' });
   });
 });

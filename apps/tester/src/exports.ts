@@ -1,5 +1,6 @@
 /* Files the person can save. Everything is built in the browser tab and handed to the browser's own download;
    nothing is uploaded. Numbers stay in base units (N, mm, s, MPa). */
+import { sealedText } from './seal';
 import { responsibleText, runByText } from './people';
 import type { OperatorBlock } from './people';
 import { buildTestCsv, buildXlsx, csvCell, csvFileBase, dataChecks, dimSourceText, modulusFitText, sig, sourceTag } from '@tensile/core';
@@ -159,7 +160,7 @@ export function downloadBeforeLeaving(c: TestController): boolean {
   const base = fileBase(c);
   const csv = c.record ? testCsv(c) : null;
   if (csv) save(base + '.csv', [csv], 'text/csv;charset=utf-8');
-  else { const f = c.sessionFile(); if (!f) return false; save(base + '.session.json', [JSON.stringify(f)], 'application/json'); }
+  else { const f = c.sessionFile(); if (!f) return false; save(base + '.session.json', [sealedText(f)], 'application/json'); }
   c.update((x) => { x.saved = true; });
   return true;
 }

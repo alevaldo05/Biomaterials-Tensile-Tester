@@ -2,6 +2,7 @@
    a drawer opened with Setup on narrow windows), the graph with its action bar in the middle, live readouts or key
    results on the right, and this run's specimens along the bottom. It shows what the controller holds. It has no
    device, board, or protocol knowledge, and it sends nothing to the tester. */
+import { sealed, sealedText } from './seal';
 import { useEffect, useRef, useState, useSyncExternalStore } from 'react';
 import { SETUP_TEXT_LIMIT } from './controller';
 import type { ReactNode } from 'react';
@@ -144,7 +145,7 @@ export function App({ controller: c, serialAvailable, theme, account, onHelpSub,
     else if (what === 'xlsx') { const b = testXlsx(c); if (b) save(base + '.xlsx', [b as BlobPart], 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'); }
     else if (what === 'svg' && svg.current) save(base + '.svg', [svgText(svg.current)], 'image/svg+xml');
     else if (what === 'png' && svg.current) save(base + '.png', [await svgToPng(svg.current)], 'image/png');
-    else if (what === 'session') { const f = c.sessionFile(); if (f) save(base + '.session.json', [JSON.stringify(f)], 'application/json'); }
+    else if (what === 'session') { const f = c.sessionFile(); if (f) save(base + '.session.json', [sealedText(f)], 'application/json'); }
     else if (what === 'samples' && c.session) save(base + '_samples.csv', [samplesCsv(c, c.session)], 'text/csv;charset=utf-8');
     if (what === 'csv' || what === 'session' || what === 'samples') c.update((x) => { x.saved = true; });
   };
@@ -156,7 +157,7 @@ export function App({ controller: c, serialAvailable, theme, account, onHelpSub,
     const summary: Record<string, number | null> = {};
     for (const [k, v] of Object.entries(nums)) summary[k] = typeof v === 'number' && Number.isFinite(v) ? v : null;
     try {
-      const r = await account.api.saveSession(f, summary, c.setup.notes);
+      const r = await account.api.saveSession(sealed(f), summary, c.setup.notes);
       c.update((x) => { x.saved = true; x.message = 'Saved to the lab server as test ' + r.id + ' (' + r.sampleCount + ' samples).'; });
     } catch (e) {
       c.update((x) => { x.message = 'Not saved to the lab server: ' + (e instanceof Error ? e.message : String(e)) + ' It is still saved on this computer.'; });

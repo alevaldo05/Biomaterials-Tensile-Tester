@@ -1,5 +1,6 @@
 /* The frame around the screens: the menu, the status bar, which screen is shown, recovery of interrupted recordings,
    and the Need help button. The lab server is optional; recording never depends on it. */
+import { sealedText } from './seal';
 import { useCallback, useEffect, useMemo, useRef, useState, useSyncExternalStore } from 'react';
 import type { TestType } from '@tensile/core';
 import { App } from './App';
@@ -161,6 +162,13 @@ export function Shell({ controller: c, serialAvailable, journal, methods, access
   const personSignOut = () => { if (!people) return; void people.signOut().then(() => { setMe(null); setPersonDialog(null); if (page === 'people') setPage('home'); }, (e: unknown) => setPeopleProblem(e instanceof Error ? e.message : String(e))); };
   const canManagePeople = !!people && !!me && !me.mustChange && (me.kind === 'admin' || me.kind === 'operator');
   const labMethods = useMemo(() => (user && !user.mustChangePassword ? new LabMethods(api) : null), [user, api]);
+  /* The test methods on this computer and the lab server's, by name, for a student's limits on the People screen. */
+  const [methodNames, setMethodNames] = useState<{ id: string; name: string }[]>([]);
+  useEffect(() => {
+    if (page !== 'people') return;
+    void Promise.all([methods.list().catch(() => []), labMethods ? labMethods.list().catch(() => []) : Promise.resolve([])])
+      .then(([a, b]) => setMethodNames([...a, ...b].filter((m) => !m.archived).map((m) => ({ id: m.id, name: m.name }))));
+  }, [page, methods, labMethods]);
 
   /* Lists for Home and Load test: recordings on this computer, and the lab server's when signed in. */
   const refresh = useCallback(() => {
@@ -185,7 +193,7 @@ export function Shell({ controller: c, serialAvailable, journal, methods, access
   };
   const openLocal = async (id: string) => { if (!journal) return; try { const f = await sessionFileFromJournal(journal, id); await open('recording-' + id + '.session.json', JSON.stringify(f)); } catch (e) { setLoadError(e instanceof Error ? e.message : String(e)); setPage('load'); } };
   const openLab = async (id: string) => { try { await open('test-' + id + '.session.json', await api.sessionFileText(id)); } catch (e) { setLoadError(e instanceof Error ? e.message : String(e)); setPage('load'); } };
-  const downloadLocal = async (m: JournalMeta) => { if (journal) save('recording-' + m.id + '.session.json', [JSON.stringify(await sessionFileFromJournal(journal, m.id))], 'application/json'); };
+  const downloadLocal = async (m: JournalMeta) => { if (journal) save('recording-' + m.id + '.session.json', [sealedText(await sessionFileFromJournal(journal, m.id))], 'application/json'); };
   const interrupted = local.filter((m) => m.status === 'recording' && m.id !== c.journalId);
   const recover = async (m: JournalMeta, how: 'open' | 'download' | 'dismiss') => {
     if (!journal) return;
@@ -195,7 +203,7 @@ export function Shell({ controller: c, serialAvailable, journal, methods, access
     if (how === 'open') await openLocal(m.id);
   };
   const recent = recentRows(local, lab, (id) => void openLocal(id), (id) => void openLab(id),
-    async (id) => { if (!journal) throw new Error('No storage on this computer.'); return { name: 'recording-' + id + '.session.json', text: JSON.stringify(await sessionFileFromJournal(journal, id)) }; },
+    async (id) => { if (!journal) throw new Error('No storage on this computer.'); return { name: 'recording-' + id + '.session.json', text: sealedText(await sessionFileFromJournal(journal, id)) }; },
     async (id) => ({ name: 'test-' + id + '.session.json', text: await api.sessionFileText(id) }));
   const go = (d: Destination | Page) => setPage(d);
 
@@ -234,6 +242,7 @@ export function Shell({ controller: c, serialAvailable, journal, methods, access
             {me ? (<>
               <span className="who">{me.name}<span className="badge badge-soft">{me.kindName}</span></span>
               <button type="button" className="quiet" onClick={() => setPersonDialog('password')}>Password</button>
+              <button type="button" className="quiet" disabled={busy} title={busy ? 'Disconnect first' : undefined} onClick={() => { if (!people) return; void people.signOut().then(() => { setMe(null); setPersonDialog('sign-in'); if (page === 'people') setPage('home'); }, (e: unknown) => setPeopleProblem(e instanceof Error ? e.message : String(e))); }}>Switch person</button>
               <button type="button" className="quiet" disabled={busy} title={busy ? 'Disconnect first' : undefined} onClick={personSignOut}>Sign out</button>
             </>) : <button type="button" className="primary" disabled={!!peopleProblem} onClick={() => setPersonDialog('sign-in')}>Sign in</button>}
           </span>
@@ -260,7 +269,7 @@ export function Shell({ controller: c, serialAvailable, journal, methods, access
       {page === 'load' ? <LoadTest loaded={loaded} error={loadError} theme={theme} recent={recent} openFile={(n, t, h) => void open(n, t, h)} clear={() => { setLoaded(null); setLoadError(''); }} /> : null}
       {page === 'methods' ? <Methods store={methods} lab={labMethods} labAdmin={effectiveRole === 'admin'} controller={c} start={() => setPage('test')} /> : null}
       {page === 'device' ? <Device controller={c} account={account} serialAvailable={serialAvailable} makers={people ? (me?.kind === 'admin' && !me.mustChange ? 'yes' : 'admin-only') : 'windows-app'} /> : null}
-      {page === 'people' && canManagePeople && people && me ? <PeoplePage people={people} me={me} /> : null}
+      {page === 'people' && canManagePeople && people && me ? <PeoplePage people={people} me={me} methods={methodNames} labAdmin={!!user && user.role === 'admin' && !user.mustChangePassword} /> : null}
       {page === 'history' && user ? <main className="page" id="main-content"><History account={account} onReplay={(text) => void open('lab-test.session.json', text)} /></main> : null}
       {page === 'help' ? <HelpPage openDevice={() => setPage('device')} /> : null}
       {page === 'settings' ? <Settings themeChoice={themeChoice} setThemeChoice={setThemeChoice} journal={journal} download={(m) => void downloadLocal(m)} recording={recording} labChanged={() => { setViewAsUser(false); check(); }} reachable={reachable} /> : null}

@@ -13,7 +13,8 @@ import type { Setup } from './setup';
 import type { SessionJournal } from './storage/journal';
 import type { TestMethod } from './storage/methods';
 import { setupFromMethod } from './storage/methods';
-import type { OperatorBlock } from './people';
+import { limitProblem } from './people';
+import type { Limits, OperatorBlock } from './people';
 
 /** The app's version, written only in apps/desktop/package.json and added by the build (apps/tester/build-info.ts). */
 export const APP_VERSION: string = __APP_VERSION__;
@@ -52,6 +53,8 @@ export interface SessionFile {
   events?: SessionEvent[];
   /** Who ran the test (signed in on the lab computer), and a student's responsible operator. Missing in older files. */
   operator?: OperatorBlock | null;
+  /** A hash of the rest of the file, added when it is saved (seal.ts), so a change can be noticed. Missing in older files. */
+  check?: { sha256: string };
 }
 
 export function parseSessionFile(text: string): SessionFile {
@@ -83,7 +86,7 @@ export interface ControllerOptions {
   /** How often the journal is written while recording, ms. */
   commitEvery_ms?: number;
   /** Whether the machine may be run now, and who is running it (people.ts, MachineAccess). Without it (tests), always. */
-  machine?: () => { allowed: boolean; why: string; operator: OperatorBlock | null };
+  machine?: () => { allowed: boolean; why: string; operator: OperatorBlock | null; limits?: Limits | null };
 }
 
 export class TestController {
@@ -283,6 +286,8 @@ export class TestController {
     if (this.phase !== 'setup') return '';
     const gate = this.o.machine?.();
     if (gate && !gate.allowed) return gate.why;
+    const limit = limitProblem(gate?.limits, this.setup.speed, this.method?.name ?? null);
+    if (limit) return limit;
     const probs = Object.values(setupProblems(this.setup, this.test));
     if (probs.length) return probs[0] as string;
     if (!this.recorder || !this.source || (this.source.state !== 'streaming' && this.source.state !== 'stale')) return 'Connect the acquisition device first.';

@@ -1,6 +1,7 @@
 /* Load test: open a recorded test (a session file saved by this app, or a CSV file), see its graph and key results,
    and export it. Opening never sends anything to a device. Left: the file; middle: the graph; right: key results;
    along the bottom: the loaded files. A second mode compares several tests (Compare.tsx). */
+import { SEAL_TEXT } from '../seal';
 import { responsibleText, runByText } from '../people';
 import { useRef, useState } from 'react';
 import { usePrintReport } from '../components/usePrintReport';
@@ -95,6 +96,7 @@ export function LoadTest(p: {
         {l.session ? <><div><dt>Device</dt><dd>{l.session.identity.deviceType} · {l.session.identity.deviceId}</dd></div>
           <div><dt>Samples</dt><dd>{Object.values(l.session.columns).reduce((a, col) => a + col.raw.length, 0)}{l.session.missingSamples ? ' (' + l.session.missingSamples + ' missing in gaps)' : ''}</dd></div>
           <div><dt>Calibration</dt><dd>{l.session.calibrated ? Object.values(l.session.calibrations).map((x) => x?.id).join(', ') : 'none (voltages only)'}</dd></div></> : null}
+        {l.seal ? <div><dt>Changes</dt><dd className={l.seal === 'changed' ? 'bad-text' : undefined}>{SEAL_TEXT[l.seal]}</dd></div> : null}
         {l.file ? <><div><dt>Run by</dt><dd>{runByText(l.file.operator)}</dd></div>
           {responsibleText(l.file.operator) ? <div><dt>Responsible operator</dt><dd>{responsibleText(l.file.operator)}</dd></div> : null}</> : null}
       </dl>

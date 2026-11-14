@@ -8,7 +8,7 @@ import { fileURLToPath } from 'node:url';
 
 const here = path.dirname(fileURLToPath(import.meta.url)), dir = path.resolve(here, '..');
 const read = (f: string) => readFileSync(path.join(dir, f), 'utf8');
-const PEOPLE = ['status', 'setup', 'sign-in', 'sign-out', 'current', 'touch', 'change-password', 'list', 'responsible-choices', 'confirm-responsible', 'add', 'update', 'recover', 'usage-log'];
+const PEOPLE = ['status', 'setup', 'sign-in', 'sign-out', 'current', 'touch', 'change-password', 'list', 'responsible-choices', 'confirm-responsible', 'add', 'update', 'recover', 'usage-log', 'training-items', 'sign-off-training', 'usage-report', 'copy-to-lab', 'copy-from-lab'];
 const { uiFile } = createRequire(import.meta.url)('../ui-files.cjs') as { uiFile: (ui: string, p: string) => { file: string; type: string } | null };
 
 describe('Windows app', () => {
@@ -78,6 +78,8 @@ describe('Windows app', () => {
     expect(pick.indexOf('if (!machineAllowed())')).toBeLessThan(pick.indexOf('callback(pick === cancel'));
     const begin = main.split("if (name === 'begin') {")[1]!.split('return undefined;')[0]!;
     expect(begin).toContain('if (!m.allowed) throw new Error(m.why);');
+    /* a student's maximum crosshead speed is checked here too, against the recording's own setup */
+    expect(begin).toContain('const limit = people.checkSetup(args[0] && args[0].setup);');
     /* the screens' own operator field is replaced by the main process's */
     expect(begin).toContain("operator: people.operatorBlock() }");
     expect(begin.indexOf('...(args[0]')).toBeLessThan(begin.indexOf('operator: people.operatorBlock()'));

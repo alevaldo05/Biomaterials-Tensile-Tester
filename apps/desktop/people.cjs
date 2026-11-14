@@ -11,6 +11,10 @@
      people.json.bak. A file that cannot be read is never replaced by an empty list: sign-in is refused instead.
    - usage-log.jsonl is append only: sign-ins, wrong tries, sign-outs, responsible operators, tests started and ended,
      and every change to the people list. No password or code is ever written to it.
+   - A student's first sign-in needs their operator's training sign-off (safety briefing, where the tester's own STOP
+     is, a practice test). An operator may limit a student to chosen test methods and a maximum crosshead speed; the
+     app sends no command, so a limit stops a recording from starting, never the machine.
+   - The admin can copy the list to and from the lab server (exportForLab, importFromLab), for a second lab computer.
    - Every rule is checked here, in the main process; the screens only ever see names and kinds.
    This keeps casual and unauthorised use off the machine. It is not a lock on the tester, and someone with Windows
    administrator rights can still delete these files. No Electron here, so it can be tested on its own. */
@@ -30,6 +34,9 @@ const SCRYPT = { N: 16384, r: 8, p: 1, keylen: 32 };
 const TRIES = { max: 5, windowMs: 15 * 60 * 1000 };
 const IDLE_MS = 15 * 60 * 1000;
 const FORMAT = 'tensile-tester-people';
+/* The training sign-off items, in order (draft wording, for the owner's review). */
+const TRAINING_ITEMS = ['Safety briefing given', 'Shown where the tester’s own STOP is (the on-screen STOP is not an emergency stop)', 'Practice test completed on the learning website'];
+const MAX_METHODS = 20;
 
 function fail(msg) { const e = new Error(msg); e.plain = true; throw e; }
 
@@ -100,6 +107,25 @@ function checkDate(d, now, required) {
   if (typeof d !== 'string' || !DATE.test(d) || Number.isNaN(Date.parse(d + 'T00:00:00Z'))) fail('The end date is not a date (YYYY-MM-DD).');
   if (d < today(now)) fail('The end date is in the past.');
   return d;
+}
+
+function checkLimits(l) {
+  if (l == null) return null;
+  if (typeof l !== 'object' || Array.isArray(l)) fail('The limits are not valid.');
+  const out = { maxSpeed: null, methods: [] };
+  if (l.maxSpeed != null && l.maxSpeed !== '') {
+    const v = Number(l.maxSpeed);
+    if (!Number.isFinite(v) || v <= 0 || v > 10000) fail('The maximum crosshead speed must be a number above 0 (mm/min).');
+    out.maxSpeed = v;
+  }
+  if (l.methods != null) {
+    if (!Array.isArray(l.methods) || l.methods.length > MAX_METHODS) fail('Choose at most ' + MAX_METHODS + ' test methods.');
+    for (const m of l.methods) {
+      if (!m || typeof m.id !== 'string' || !m.id || m.id.length > 64 || typeof m.name !== 'string' || !m.name || m.name.length > 120) fail('A test method in the limits is not valid.');
+      out.methods.push({ id: m.id, name: m.name });
+    }
+  }
+  return out.maxSpeed === null && !out.methods.length ? null : out;
 }
 
 /* ---------- the file ---------- */
@@ -176,7 +202,8 @@ function createPeople(dir, opts = {}) {
     return {
       id: p.id, username: p.username, name: p.name, kind: p.kind, kindName: KIND_NAME[p.kind], disabled: !!p.disabled,
       endDate: p.endDate || null, ended: !!ended(p), mustChange: !!p.mustChange, addedBy: adder ? adder.name : null,
-      createdAt: p.createdAt || null, lastSignIn: p.lastSignIn || null,
+      createdAt: p.createdAt || null, lastSignIn: p.lastSignIn || null, limits: p.limits || null,
+      training: p.training ? { at: p.training.at, by: p.training.byName } : null,
     };
   }
   function responsibleView() {
@@ -219,6 +246,7 @@ function createPeople(dir, opts = {}) {
       tries.clear(key);
       if (p.disabled) { await log('sign_in_refused', { person: p.username, reason: 'turned off' }); fail('This access is turned off. Ask the person who gave it to you.'); }
       if (ended(p)) { await log('sign_in_refused', { person: p.username, reason: 'ended' }); fail('This access ended on ' + p.endDate + '. Ask your operator to extend it.'); }
+      if (p.kind === 'student' && !p.training) { await log('sign_in_refused', { person: p.username, reason: 'training not signed off' }); fail('Your training is not signed off yet. Ask your operator to sign it off on the People screen.'); }
       session = { id: p.id, lastActive: now(), busy: false, responsible: null };
       await serial(async () => { p.lastSignIn = new Date(now()).toISOString(); await save(); });
       await log('sign_in', { person: p.username });
@@ -238,7 +266,8 @@ function createPeople(dir, opts = {}) {
       const responsible = responsibleView();
       const why = p.mustChange ? 'Choose your own password first.' : p.kind === 'student' && !responsible ? 'Choose your responsible operator first.' : '';
       const daysLeft = p.kind === 'student' && p.endDate ? Math.round((Date.parse(p.endDate + 'T00:00:00Z') - Date.parse(today(now) + 'T00:00:00Z')) / 86400000) : null;
-      return { name: p.name, username: p.username, kind: p.kind, kindName: KIND_NAME[p.kind], mustChange: !!p.mustChange, endDate: p.endDate || null, daysLeft, responsible, canRunMachine: !why, why };
+      return { name: p.name, username: p.username, kind: p.kind, kindName: KIND_NAME[p.kind], mustChange: !!p.mustChange, endDate: p.endDate || null, daysLeft, responsible, canRunMachine: !why, why,
+        limits: p.kind === 'student' ? p.limits || null : null };
     },
     /** Activity from the screens: keeps the sign-in, and busy (connected or recording) blocks the sign-out. */
     touch(busy) {
@@ -256,7 +285,7 @@ function createPeople(dir, opts = {}) {
         if (!(await verifySecret(String(oldPassword ?? '').slice(0, MAX_PASSWORD), p.hash))) { tries.wrong(key); fail('Your current password is not right.'); }
         checkPassword(newPassword, p.kind);
         if (newPassword === oldPassword) fail('Choose a password different from the one you were given.');
-        p.hash = await hashSecret(newPassword); p.mustChange = false;
+        p.hash = await hashSecret(newPassword); p.mustChange = false; p.changedAt = new Date(now()).toISOString();
         await save();
         await log('password_changed', { person: p.username });
         return api.current();
@@ -307,8 +336,9 @@ function createPeople(dir, opts = {}) {
         const p = {
           id: newId(), username, name: checkName(i.name), kind, hash: await hashSecret(checkPassword(i.password, kind)),
           mustChange: true, disabled: false, endDate: checkDate(i.endDate, now, kind === 'student'), addedBy: actor.id,
-          createdAt: new Date(now()).toISOString(),
+          createdAt: new Date(now()).toISOString(), limits: kind === 'student' ? checkLimits(i.limits) : null, training: null,
         };
+        p.changedAt = p.createdAt;
         data.people.push(p);
         await save();
         await log('person_added', { person: p.username, kind: p.kind, endDate: p.endDate });
@@ -336,9 +366,10 @@ function createPeople(dir, opts = {}) {
           if (p.id === actor.id) fail('You cannot turn off your own access.');
           next.disabled = c.disabled === true; done.push(next.disabled ? 'turned off' : 'turned on');
         }
+        if (c.limits !== undefined) { next.limits = next.kind === 'student' ? checkLimits(c.limits) : null; done.push('limits'); }
         if (c.password !== undefined) { next.hash = await hashSecret(checkPassword(c.password, next.kind)); next.mustChange = true; done.push('password reset'); }
         if (p.kind === 'admin' && (next.kind !== 'admin' || next.disabled) && activeAdmins().length <= 1) fail('This is the only admin: add another admin first.');
-        Object.assign(p, next);
+        Object.assign(p, next, { changedAt: new Date(now()).toISOString() });
         await save();
         await log(c.password !== undefined ? 'password_reset' : 'person_changed', { person: p.username, changed: done.join(', ') });
         return view(p);
@@ -371,11 +402,87 @@ function createPeople(dir, opts = {}) {
       for (const line of text.split(/\r?\n/)) { if (!line) continue; try { rows.push(JSON.parse(line)); } catch { /* a line cut off by a crash */ } }
       return rows;
     },
+    /** The training items an operator ticks before a student's first sign-in. */
+    trainingItems() { return TRAINING_ITEMS.slice(); },
+    /** An operator (for their own students) or the admin signs off a student's training: every item must be ticked. */
+    signOffTraining(id, ticked) {
+      return serial(async () => {
+        await ready();
+        const actor = need(['admin', 'operator']);
+        const p = byId(String(id ?? ''));
+        if (!p || !canManage(actor, p)) fail('You cannot change this person.');
+        if (p.kind !== 'student') fail('Training sign-off is for students.');
+        if (!Array.isArray(ticked) || ticked.length !== TRAINING_ITEMS.length || !ticked.every((t) => t === true)) fail('Tick every training item first.');
+        p.training = { at: new Date(now()).toISOString(), by: actor.id, byName: actor.name, items: TRAINING_ITEMS.slice() };
+        p.changedAt = p.training.at;
+        await save();
+        await log('training_signed_off', { person: p.username });
+        return view(p);
+      });
+    },
+    /** Tests, recording time, and last use per person: the admin sees everyone, an operator their students and
+        themselves. Worked out from the usage log. */
+    async usageReport() {
+      await ready();
+      const actor = need(['admin', 'operator']);
+      const visible = data.people.filter((p) => p.id === actor.id || canManage(actor, p));
+      let rows = [];
+      try { rows = (await fsp.readFile(logFile, 'utf8')).split(/\r?\n/).filter(Boolean).map((l) => { try { return JSON.parse(l); } catch { return null; } }).filter(Boolean); } catch (e) { if (!e || e.code !== 'ENOENT') throw e; }
+      const started = new Map();
+      const per = new Map(visible.map((p) => [p.username, { username: p.username, name: p.name, kind: p.kind, kindName: KIND_NAME[p.kind], tests: 0, recordingMinutes: 0, lastUse: p.lastSignIn || null, asResponsible: 0 }]));
+      for (const r of rows) {
+        const who = r.person && per.get(r.person);
+        if (r.event === 'test_started') { if (r.id) started.set(r.id, { at: Date.parse(r.at), person: r.person }); if (who) who.tests++; if (r.responsible && per.get(r.responsible)) per.get(r.responsible).asResponsible++; }
+        if (r.event === 'test_ended' && r.id && started.has(r.id)) { const s0 = started.get(r.id), w = per.get(s0.person); if (w && Number.isFinite(s0.at)) w.recordingMinutes += Math.max(0, (Date.parse(r.at) - s0.at) / 60000); started.delete(r.id); }
+        if (who && (r.event === 'sign_in' || r.event === 'test_started' || r.event === 'test_ended') && (!who.lastUse || r.at > who.lastUse)) who.lastUse = r.at;
+      }
+      return [...per.values()].map((w) => ({ ...w, recordingMinutes: Math.round(w.recordingMinutes * 10) / 10 }));
+    },
+    /** Admin only: the list as kept on this computer (hashes included, never a password), to copy to the lab server.
+        Called by the main process only; never given to the screens. */
+    async exportForLab() {
+      await ready();
+      need(['admin']);
+      return { format: FORMAT, version: 1, people: data.people.map((p) => ({ ...p })) };
+    },
+    /** Admin only: brings in a list copied from the lab server. A person is matched by username: one that is newer
+        there replaces the one here, a new one is added, and people only on this computer are kept. The signed-in admin
+        is never turned off or demoted by it. Returns what changed. */
+    importFromLab(copy) {
+      return serial(async () => {
+        await ready();
+        const actor = need(['admin']);
+        if (!validFile(copy)) fail('The copy from the lab server is not a people list.');
+        let added = 0, updated = 0;
+        for (const q of copy.people) {
+          const here = byName(q.username);
+          const clean = { id: here ? here.id : q.id, username: q.username, name: checkName(q.name), kind: checkKind(q.kind), hash: String(q.hash), mustChange: !!q.mustChange,
+            disabled: !!q.disabled, endDate: q.endDate && DATE.test(q.endDate) ? q.endDate : null, addedBy: q.addedBy || null, createdAt: q.createdAt || null,
+            lastSignIn: q.lastSignIn || null, limits: q.kind === 'student' ? checkLimits(q.limits) : null, training: q.training && typeof q.training === 'object' ? q.training : null, changedAt: q.changedAt || null };
+          if (here && here.id === actor.id) continue;
+          if (here) { if ((q.changedAt || '') > (here.changedAt || '')) { Object.assign(here, clean); updated++; } }
+          else { if (data.people.some((p) => p.id === clean.id)) clean.id = newId(); data.people.push(clean); added++; }
+        }
+        if (!activeAdmins().length) fail('The copy would leave no admin.');
+        await save();
+        await log('people_copied_from_lab', { added, updated });
+        return { added, updated };
+      });
+    },
+    /** A copy to the lab server, for the usage log. */
+    async noteCopy(event, detail) { if (event === 'people_copied_to_lab') await log(event, detail && typeof detail === 'object' ? { count: Number(detail.count) || 0 } : {}); },
     /** Whether the machine may be connected now, and why not. */
     machine() {
       const c = api.current();
       if (!c) return { allowed: false, why: 'Sign in to run the machine.' };
       return c.canRunMachine ? { allowed: true, why: '' } : { allowed: false, why: c.why };
+    },
+    /** A student's limits against a recording's setup (checked by the main process before a recording starts). */
+    checkSetup(setup) {
+      const c = api.current();
+      if (!c || c.kind !== 'student' || !c.limits || c.limits.maxSpeed == null) return '';
+      const raw = setup && setup.speed != null ? String(setup.speed).trim() : '', v = raw === '' ? NaN : Number(raw);
+      return Number.isFinite(v) && v <= c.limits.maxSpeed ? '' : 'Your operator set a maximum crosshead speed of ' + c.limits.maxSpeed + ' mm/min.';
     },
     /** Who is running the test, for the test file: written by the main process, not by the screens. */
     operatorBlock() {
@@ -383,6 +490,7 @@ function createPeople(dir, opts = {}) {
       if (!c || !c.canRunMachine) return null;
       const b = { name: c.name, username: c.username, kind: c.kind };
       if (c.kind === 'student' && c.responsible) b.responsible = { name: c.responsible.name, username: c.responsible.username, confirmedBy: c.responsible.by };
+      if (c.kind === 'student' && c.limits) b.limits = { maxSpeed: c.limits.maxSpeed, methods: c.limits.methods.map((m) => m.name) };
       return b;
     },
     /** A test started or ended, for the usage log. */
@@ -396,4 +504,4 @@ function createPeople(dir, opts = {}) {
   return api;
 }
 
-module.exports = { createPeople, hashSecret, verifySecret, KINDS, USERNAME, MIN_PASSWORD, IDLE_MS, TRIES };
+module.exports = { createPeople, hashSecret, verifySecret, KINDS, USERNAME, MIN_PASSWORD, IDLE_MS, TRIES, TRAINING_ITEMS };

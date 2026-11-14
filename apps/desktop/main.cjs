@@ -145,7 +145,25 @@ app.on('web-contents-created', (_e, wc) => {
 const JOURNAL_CALLS = ['begin', 'append', 'finish', 'list', 'lines', 'remove', 'estimate'];
 /* people:<name> -> the people.cjs call and how many arguments it takes. Errors come back as { error } in plain words. */
 const PEOPLE_CALLS = { status: 0, setup: 1, 'sign-in': 2, 'sign-out': 0, current: 0, touch: 1, 'change-password': 2, list: 0,
-  'responsible-choices': 0, 'confirm-responsible': 2, add: 1, update: 2, recover: 2, 'usage-log': 0 };
+  'responsible-choices': 0, 'confirm-responsible': 2, add: 1, update: 2, recover: 2, 'usage-log': 0,
+  'training-items': 0, 'sign-off-training': 2, 'usage-report': 0, 'copy-to-lab': 0, 'copy-from-lab': 0 };
+/* The admin copies the people list to and from the lab server (for a second lab computer). The hashes go from this
+   process to the lab server through the lab connection (lab-proxy.cjs, with the admin's lab sign-in); they never reach
+   the screens. */
+async function labPeople(method, body) {
+  const res = await lab.handle(new Request(ORIGIN + API_PREFIX + 'lab-people', {
+    method, headers: { accept: 'application/json', 'x-tensile-client': 'app', ...(body ? { 'content-type': 'application/json' } : {}) }, body: body ? JSON.stringify(body) : undefined,
+  }));
+  const text = await res.text();
+  let json = null;
+  try { json = JSON.parse(text); } catch { json = null; }
+  if (!res.ok) { const e = new Error((json && json.error && json.error.message) || 'The lab server answered ' + res.status + '.'); e.plain = true; throw e; }
+  return json;
+}
+const peopleExtra = {
+  copyToLab: async () => { const list = await people.exportForLab(); const r = await labPeople('PUT', list); await people.noteCopy('people_copied_to_lab', { count: list.people.length }); return { count: r && typeof r.count === 'number' ? r.count : list.people.length }; },
+  copyFromLab: async () => { await people.exportForLab(); /* admin only, checked first */ return people.importFromLab(await labPeople('GET')); },
+};
 const camel = (n) => n.replace(/-([a-z])/g, (_m, c) => c.toUpperCase());
 function bridge() {
   const own = (e) => fromApp(e.senderFrame && e.senderFrame.url);
@@ -158,6 +176,8 @@ function bridge() {
         /* A new recording only for someone who may run the machine; who it is comes from here, not from the screens. */
         const m = people.machine();
         if (!m.allowed) throw new Error(m.why);
+        const limit = people.checkSetup(args[0] && args[0].setup);
+        if (limit) throw new Error(limit);
         const meta = { ...(args[0] && typeof args[0] === 'object' ? args[0] : {}), operator: people.operatorBlock() };
         await journal.begin(meta, args[1]);
         await people.noteTest('test_started', { id: meta.id });
@@ -171,7 +191,8 @@ function bridge() {
   for (const [name, n] of Object.entries(PEOPLE_CALLS)) {
     ipcMain.handle('people:' + name, async (e, ...args) => {
       if (!own(e)) return { error: 'Not allowed.' };
-      try { return { ok: await people[camel(name)](...args.slice(0, n)) }; } catch (x) { return { error: x && x.plain ? x.message : 'Something went wrong on this computer: ' + (x && x.message ? x.message : String(x)) }; }
+      const f = peopleExtra[camel(name)] || people[camel(name)];
+      try { return { ok: await f(...args.slice(0, n)) }; } catch (x) { return { error: x && x.plain ? x.message : 'Something went wrong on this computer: ' + (x && x.message ? x.message : String(x)) }; }
     });
   }
   ipcMain.handle('lab-server:get', (e) => (own(e) ? labUrl : ''));
