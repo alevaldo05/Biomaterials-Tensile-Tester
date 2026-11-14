@@ -14,6 +14,10 @@ import { versionLine } from '../src/version';
 
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '../../..');
 const desktop = JSON.parse(readFileSync(path.join(ROOT, 'apps/desktop/package.json'), 'utf8')) as { version: string };
+/* The sources of a Dockerfile's COPY lines (every word but the first and the destination). Lines may end in CRLF on a
+   Windows checkout; the destination must still be left out. */
+const copySources = (build: string) => build.split(/\r?\n/).filter((l) => /^COPY\s/.test(l)).flatMap((l) => l.trim().split(/\s+/).slice(1, -1))
+  .map((p) => p.replace(/^\.\//, '').replace(/\/$/, ''));
 
 describe('app version', () => {
   it('is the version in apps/desktop/package.json, in the app, the build stamp, and the Help line', () => {
@@ -69,8 +73,7 @@ describe('build stamp', () => {
   it('is stamped inside the app image: the Dockerfile copies every file the build stamp reads and takes GITHUB_SHA', () => {
     const docker = readFileSync(path.join(ROOT, 'deploy/app/Dockerfile'), 'utf8');
     const build = docker.split(/^FROM /m)[1] ?? '';
-    const copies = build.split('\n').filter((l) => /^COPY\s/.test(l)).map((l) => l.split(/\s+/).slice(1, -1));
-    const sources = copies.flat().map((p) => p.replace(/^\.\//, '').replace(/\/$/, ''));
+    const sources = copySources(build);
     const covered = (file: string) => sources.some((p) => p === file || (p === '*.js' && !file.includes('/')) || file.startsWith(p + '/'));
     expect(covered('scripts/shared-files.js')).toBe(true);
     expect(covered('apps/desktop/package.json')).toBe(true);
@@ -80,6 +83,13 @@ describe('build stamp', () => {
     expect(build.indexOf('ARG GITHUB_SHA')).toBeLessThan(build.indexOf('npm run build'));
     expect(readFileSync(path.join(ROOT, 'deploy/compose.yml'), 'utf8')).toContain('GITHUB_SHA: "${GITHUB_SHA:-}"');
     expect(readFileSync(path.join(ROOT, '.dockerignore'), 'utf8')).not.toMatch(/^\*\.js|^scripts|^data/m);
+  });
+  it('reads the Dockerfile the same with Windows line endings (CRLF), as on the Windows runner', () => {
+    const lf = (readFileSync(path.join(ROOT, 'deploy/app/Dockerfile'), 'utf8').split(/^FROM /m)[1] ?? '').replace(/\r\n/g, '\n');
+    const crlf = lf.replace(/\n/g, '\r\n');
+    expect(copySources(crlf)).toEqual(copySources(lf));
+    /* a destination (the last word of a COPY line) is never taken for a source */
+    expect(copySources('COPY a b ./dest/\r\nCOPY c ./\r\n')).toEqual(['a', 'b', 'c']);
   });
   it('is shown on the Help screen', () => {
     const html = renderToStaticMarkup(createElement(HelpPage));
