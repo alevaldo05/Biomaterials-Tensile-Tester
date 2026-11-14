@@ -21,7 +21,7 @@ The project is a tensile tester for biological materials such as skin, with thre
 | `firmware/` | `common/` (shared C++) and `esp32-ads1115/` (board folder) |
 | `deploy/` | Container files |
 | `scripts/` | `check-site.js`, `shared-files.js`, `build-site.sh`, and others |
-| `.github/workflows/` | `app.yml` (checks) and `desktop.yml` (Windows app draft release) |
+| `.github/workflows/` | `app.yml` (checks) and `desktop.yml` (Windows app: check on merge, draft release on request), and `app-screens.yml` (pull-request screenshots of the app) |
 
 Nothing under `packages/`, `apps/`, `firmware/`, or `deploy/` is published to GitHub Pages.
 
@@ -43,7 +43,7 @@ Website preview: `python3 -m http.server 8000` (on Windows `py -m http.server 80
 - **Firmware host tests** (needs `g++`): `bash firmware/common/test/host/build-and-test.sh`
 - **Firmware board build**: done by the `firmware-build` job in `.github/workflows/app.yml` on GitHub, which builds every `firmware/*/platformio.ini` (compile only). Locally, `cd firmware/esp32-ads1115 && pio run -e esp32dev`. Upload has never been tried.
 - **Containers**: `cd deploy`, copy `.env.example` to `.env`, set `POSTGRES_PASSWORD`, then `docker compose up -d --build` (see `docs/app/CONTAINERS.md`). The GitHub `containers` check builds and starts them.
-- **Windows app**: `npm run app:build`, then in `apps/desktop`: `npm ci`, `npm run prepare-ui`, `npm start`. Builds for release run on GitHub after a merge into `main` that changes the app, or by hand: Actions, **Windows app**, Run workflow (`docs/app/WINDOWS-APP.md`). Each build makes a draft release. The Windows app checks GitHub for a newer published release when it starts (Settings can turn this off); this update check is untried on Windows.
+- **Windows app**: `npm run app:build`, then in `apps/desktop`: `npm ci`, `npm run prepare-ui`, `npm start`. A merge into `main` that changes the app runs a check only (installer and portable program built, start-up check, no draft). A draft release is made only on request: Actions, **Windows app**, Run workflow (`docs/app/WINDOWS-APP.md`); it removes older unpublished app drafts. Pull requests that change the app get screenshots of its screens (`node scripts/app-screenshots.mjs` after `npm run app:build`; untried until the first pull request runs it). The Windows app checks GitHub for a newer published release when it starts (Settings can turn this off); this update check is untried on Windows.
 - `node scripts/shared-files.js` prints the hash of the website files the app shares (compare it with the app's Help line).
 
 ## Branches waiting to be merged
@@ -104,9 +104,9 @@ Unconfirmed suspicions (not reproduced; treat as questions):
 ## Next steps for the owner
 
 1. Merge the branches in the order above, running the App checks on GitHub for each.
-2. Run Actions, **Windows app**, Run workflow. Download the draft, check both hashes against `SHA256SUMS.txt`, and try the installer and the portable `.exe` on a Windows computer.
+2. When enough has changed, raise the version in `apps/desktop/package.json` in its own small pull request and merge it. Then run Actions, **Windows app**, Run workflow on `main`. Download the draft, check both hashes against `SHA256SUMS.txt`, and try the installer and the portable `.exe` on a Windows computer.
 3. Fill in the first-install checklist in `docs/app/WINDOWS-APP.md`, including the Help version line against `node scripts/shared-files.js`.
-4. Publish a release only when satisfied. The Get the App page already links to the latest published release, and the Windows app shows an update notice for it. Delete unwanted drafts on the Releases page.
+4. Publish a release only when satisfied. The Get the App page already links to the latest published release, and the Windows app shows an update notice for it. Older unpublished app drafts are removed when you ask for a new one.
 5. Do the breadboard test (`docs/app/BREADBOARD-TEST.md`) with the tester disconnected and keep the bench record from `docs/app/SETUP.md`.
 6. Decide on the 64 MB limit for long files.
 7. Have the tester's interface verified and the protection circuit designed and reviewed before connecting it. Do not guess the pins.

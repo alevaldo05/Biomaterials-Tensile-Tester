@@ -1,9 +1,10 @@
-# Builds the Windows installer and the portable program of the tester app and attaches both (with SHA256SUMS.txt)
-# to a DRAFT release. Nothing is published:
-# a draft release is visible only to people who can change the repository, and only the owner publishes it.
-# The installer is unsigned (a beta): Windows will warn before running it. Runs when started by hand
-# (Actions > Windows app > Run workflow), when a tag starting with app-v is pushed, and on every merge into main that
-# changes the app or a shared website file (the paths below; a test checks they cover scripts/shared-files.js).
+# Builds the Windows installer and the portable program of the tester app and checks that the program starts.
+# - On a merge into main that changes the app or a shared website file (the paths below; a test checks they cover
+#   scripts/shared-files.js): a CHECK ONLY. Nothing is released and there is nothing to download.
+# - When started by hand (Actions > Windows app > Run workflow) or by a pushed app-v* tag: the same build, then a
+#   DRAFT release with both .exe files and SHA256SUMS.txt, and older unpublished app drafts are removed.
+# Nothing is published: a draft is visible only to people who can change the repository, and only the owner
+# publishes it. The installer is unsigned (a beta): Windows will warn before running it.
 name: Windows app
 
 on:
@@ -39,7 +40,9 @@ jobs:
   installer:
     runs-on: windows-2025
     permissions:
-      contents: write   # only for the last step, which creates the draft release; no earlier step is given the token
+      contents: read
+    outputs:
+      build_line: ${{ steps.stamp.outputs.build_line }}
     steps:
       - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
         with:
@@ -58,6 +61,7 @@ jobs:
         run: npm run app:build   # GITHUB_RUN_NUMBER becomes the app's build number (apps/tester/build-info.ts)
 
       - name: Build stamp (the line the app's Help screen shows)
+        id: stamp
         # The same line as Help in the built app: the version (apps/desktop/package.json), the commit, and the short
         # hash of the website files the app shares (scripts/shared-files.js). Compare it with an installed copy.
         shell: bash
@@ -67,7 +71,7 @@ jobs:
           line="Version ${version} · built from ${GITHUB_SHA:0:12} · shared website files ${shared}"
           grep -rqF "$shared" apps/tester/dist/assets || { echo "The built screens do not carry the shared files hash $shared"; exit 1; }
           echo "$line"
-          echo "BUILD_LINE=$line" >> "$GITHUB_ENV"
+          echo "build_line=$line" >> "$GITHUB_OUTPUT"
           { echo "### Build stamp"; echo; echo "$line"; echo; node scripts/shared-files.js | sed 's/^/    /'; } >> "$GITHUB_STEP_SUMMARY"
 
       - name: Build the Windows installer and the portable program (unsigned beta)
@@ -98,13 +102,49 @@ jobs:
           echo "Checking: $exe"
           node smoke.cjs "$exe" 9333 90
 
+      - name: Check only (a merge into main)
+        if: ${{ !(github.event_name == 'workflow_dispatch' || github.ref_type == 'tag') }}
+        shell: bash
+        run: |
+          { echo; echo "### Check only: no draft made"; echo; echo "The installer and the portable program were built and the program started. To make a draft, use Run workflow."; } >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Keep the built files for the release job
+        if: ${{ github.event_name == 'workflow_dispatch' || github.ref_type == 'tag' }}
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: windows-app
+          path: |
+            apps/desktop/release/*.exe
+            apps/desktop/release/SHA256SUMS.txt
+          if-no-files-found: error
+          retention-days: 1
+
+  release:
+    # Only when asked: Run workflow by hand, or a pushed app-v* tag. Only this job can write to the repository.
+    if: ${{ github.event_name == 'workflow_dispatch' || github.ref_type == 'tag' }}
+    needs: installer
+    runs-on: ubuntu-24.04
+    permissions:
+      contents: write   # creates the draft release and removes older unpublished app drafts
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
+        with:
+          persist-credentials: false
+
+      - uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
+        with:
+          name: windows-app
+          path: release
+
       - name: Create a draft release (not published)
         shell: bash
         env:
           GH_TOKEN: ${{ github.token }}
+          BUILD_LINE: ${{ needs.installer.outputs.build_line }}
         run: |
           version=$(node -p "require('./apps/desktop/package.json').version")
           if [ "${GITHUB_REF_TYPE}" = "tag" ]; then tag="${GITHUB_REF_NAME}"; else tag="app-v${version}-run.${GITHUB_RUN_NUMBER}"; fi
+          echo "NEW_TAG=$tag" >> "$GITHUB_ENV"
           cat > notes.md <<NOTES
           Windows installer and portable program of the tester app, version ${version} (beta), built from ${GITHUB_SHA}.
 
@@ -121,4 +161,20 @@ jobs:
           app's update notice offer it.
           NOTES
           gh release create "$tag" --draft --target "${GITHUB_SHA}" --title "Tester app ${version} (Windows, beta)" --notes-file notes.md \
-            apps/desktop/release/*.exe apps/desktop/release/SHA256SUMS.txt
+            release/*.exe release/SHA256SUMS.txt
+
+      - name: Remove older app drafts (never a published release, never a release that is not the app)
+        shell: bash
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh release list --limit 100 --json tagName,isDraft \
+            --jq '.[] | select(.isDraft == true) | select(.tagName | startswith("app-v")) | .tagName' > old-drafts.txt
+          removed=0
+          while read -r old; do
+            [ -n "$old" ] && [ "$old" != "$NEW_TAG" ] || continue
+            echo "Removing the older draft $old"
+            gh release delete "$old" --yes
+            removed=$((removed + 1))
+          done < old-drafts.txt
+          { echo "### Draft ${NEW_TAG}"; echo; echo "Removed ${removed} older unpublished app draft(s)."; } >> "$GITHUB_STEP_SUMMARY"

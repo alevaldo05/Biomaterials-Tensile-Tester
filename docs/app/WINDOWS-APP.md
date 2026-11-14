@@ -26,17 +26,18 @@ files, the diagnostic summary, and Session details all show the same number. Ses
 `1.0.0-beta.1`; older files keep the version they were saved with.
 
 ## Building an installer
-The installer is built on GitHub, on Windows, by `.github/workflows/desktop.yml`. It runs after a merge into `main` that changes the app or a shared website file (see below), and when started by hand:
-1. GitHub > Actions > **Windows app** > Run workflow (or push a tag such as `app-v1.0.0-beta.1`).
-2. It runs the checks, builds the screens, the installer, and a portable program, and creates a **draft** release with
+The installer is built on GitHub, on Windows, by `.github/workflows/desktop.yml`. A merge into `main` that changes the app or a shared website file runs a check only (see below). A draft release is made only when you ask:
+1. GitHub > Actions > **Windows app** > Run workflow on `main` (or push a tag such as `app-v1.0.0-beta.1`).
+2. It runs the checks, builds the screens, the installer, and a portable program, and starts the program once (start-up check). A separate `release` job (the only job with write permission) then creates a **draft** release with
    `Biomaterials-Tensile-Tester-<version>-beta-unsigned-setup.exe` (installs the app),
    `Biomaterials-Tensile-Tester-<version>-beta-unsigned-portable.exe` (runs without installing; untried), and
    `SHA256SUMS.txt` (the hash of both). The job summary and the release notes show the build stamp line (below).
    A run started by hand names the draft `app-v<version>-run.<run number>` (for example `app-v1.0.0-beta.1-run.7`);
    a run started by a tag uses the tag.
-3. A draft is visible only to people who can change the repository. Download it, try it on the lab computer, and
+3. The `release` job then removes older unpublished app drafts (see below).
+4. A draft is visible only to people who can change the repository. Download it, try it on the lab computer, and
    publish it (GitHub > Releases > Edit > Publish) only when you are satisfied.
-4. After publishing, the website's Get the App page link (**Download the tester app (beta)**, to the latest release)
+5. After publishing, the website's Get the App page link (**Download the tester app (beta)**, to the latest release)
    shows it. Until the first release is published, that link has nothing to show.
 
 The program, installer, and shortcuts use the curve mark logo as their icon (`apps/desktop/build/icon.png`, 256 px;
@@ -70,16 +71,19 @@ the window, and confirms the only open page is the app's own bundled screen (`ap
 browser engine's local debugging port (127.0.0.1, opened only by this check; `smoke.cjs` is not part of the installer).
 Its logic is tested with a stand-in program (`apps/desktop/test/smoke.test.ts`). It passed on a Windows runner in the
 second build (it found one page, `app://tester/index.html`, titled "Biomaterials Tensile Tester · App"), so a failure now
-stops the build before the draft release is made. It tries only that the built program starts and shows its own screen:
+stops the build before any draft release is made. It tries only that the built program starts and shows its own screen:
 not USB, recording, an installed copy, or a real person's Windows computer. It does not replace the first-install
 checklist below.
 
-## Automatic builds and the update notice
-Builds:
-- A merge into `main` that changes `apps/**`, `packages/**`, `package-lock.json`, `scripts/shared-files.js`, `.github/workflows/desktop.yml`, or a website file listed in `scripts/shared-files.js` runs Actions > **Windows app** and creates a new **draft** release. Its tag is `app-v<version>-run.<N>` and its title is "Tester app <version> (Windows, beta)". It is not marked pre-release.
-- Run workflow by hand and `app-v*` tags still work.
-- Owner steps: merge, open Releases, download and try the draft, then press **Publish**. Only published releases are offered on the website and in the app's notice.
-- Older drafts pile up. Delete the ones you do not want on the Releases page.
+## Checks on merge, drafts on request, and the update notice
+Checks on merge:
+- A merge into `main` that changes `apps/**`, `packages/**`, `package-lock.json`, `scripts/shared-files.js`, `.github/workflows/desktop.yml`, or a website file listed in `scripts/shared-files.js` runs Actions > **Windows app** as a **check only**. It builds the installer and the portable program on Windows and starts the program (start-up check). It makes no draft release and there is nothing to download. A failure shows as a red X in Actions. The run summary says "Check only: no draft made".
+
+Drafts on request:
+- A draft is made only when you ask: Actions > **Windows app** > Run workflow (or a pushed `app-v*` tag). The draft's tag is `app-v<version>-run.<N>` and its title is "Tester app <version> (Windows, beta)". It is not marked pre-release.
+- After the new draft is made, the `release` job removes older unpublished app drafts: drafts whose tag starts with `app-v`, except the new one. Published releases, and releases that are not the app (for example the pre-release "Backup 2026-11-08"), are never removed.
+- If you have not yet published a draft when you ask for a new one, the older draft is removed and the new one replaces it.
+- Only published releases are offered on the website and in the app's notice.
 - The website's download link shows a release only after the first one is published.
 
 Update notice (Windows app only, not the browser version):
@@ -93,17 +97,27 @@ Update notice (Windows app only, not the browser version):
 
 ## Refreshing the download after a website change
 The app copies some website files when it is built (definitions, materials) and its calculations are checked against
-others. A website change to one of the shared files reaches an installed app only through a new build.
+others. A website change to one of the shared files reaches an installed app only through a new published build.
 1. Run `node scripts/shared-files.js` on the updated `main`. It lists the shared files and prints the hash. If the
    short hash is the same as the one on the installed app's Help screen, nothing the app uses has changed.
-2. If it differs (or a shared file was changed on purpose), a merge into `main` starts the workflow by itself (or the owner starts it: GitHub > Actions >
-   **Windows app** > Run workflow). The assistant never starts it.
-3. When it finishes, download the artifacts from the draft release (both `.exe` files and `SHA256SUMS.txt`) and
+2. If it differs (or a shared file was changed on purpose), a merge into `main` runs the check only. To get a download,
+   when enough has changed:
+   1. Raise the version in `apps/desktop/package.json` (and its lockfile's top two version fields), for example
+      `1.0.0-beta.1` to `1.0.0-beta.2`, in its own small pull request, and merge it. The update notice then names a new version.
+   2. GitHub > Actions > **Windows app** > Run workflow on `main`. The assistant never starts it.
+3. When it finishes, download the files from the draft release (both `.exe` files and `SHA256SUMS.txt`) and
    check their hashes (checklist row 1 and row 10).
 4. Install (or run the portable program), open Help, and compare the last part of the version line with the short
    hash from step 1. They should match; the commit should be the one the workflow ran on.
-5. If the version stays the same, the new draft is a rebuild of the same version; raise the version in
-   `apps/desktop/package.json` (and its lockfile's top two version fields) when the app itself changes.
+5. Publish the draft (Releases > Edit > Publish). The website's download link and the app's update notice then offer it.
+
+## Seeing app changes without installing
+On each pull request that changes `apps/**` or `packages/**`, `.github/workflows/app-screens.yml` ("App screenshots") builds the app's screens and photographs them in Chromium with Playwright, at 1366 and 390 px, light and dark. The screens are Home, Test, Load test, Test methods, Device, Help, and Settings. History and Admin need a lab-server sign-in and are not pictured. A stand-in for the Windows app is used (no device, nothing recorded).
+- The run's summary links to two contact sheets that open directly in the browser (laptop and phone) and to a zip of every picture. They are kept 14 days.
+- To run it on your computer: `npm run app:build`, then `node scripts/app-screenshots.mjs [folder]` (default `screenshots/`, ignored by Git).
+- Playwright is a dev dependency only (root `package.json`, exact version 1.64.1). It is never shipped in the app.
+- The pictures come from Chromium with a stand-in. They are not the installed Windows app and not a real Windows computer.
+- Untried until the first pull request runs it.
 
 ## Building by hand (on a Windows computer)
 ```

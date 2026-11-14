@@ -99,7 +99,7 @@ describe('Windows app', () => {
   it('has its build workflow hash and attach both .exe files, and start-check only the unpacked program', () => {
     const wf = readFileSync(path.resolve(dir, '../../.github/workflows/desktop.yml'), 'utf8');
     expect(wf).toContain('sha256sum *.exe > SHA256SUMS.txt');
-    expect(wf).toContain('apps/desktop/release/*.exe apps/desktop/release/SHA256SUMS.txt');
+    expect(wf).toContain('release/*.exe release/SHA256SUMS.txt');
     expect(wf).toContain('for kind in setup portable; do');
     expect(wf).toContain('exe=$(ls release/win-unpacked/*.exe | grep -v -i uninstall | head -1)');
     expect(wf).toContain('--draft');
@@ -117,6 +117,31 @@ describe('Windows app', () => {
     expect(wf).toContain('tag="app-v${version}-run.${GITHUB_RUN_NUMBER}"');
     expect(wf).toMatch(/^ {2}workflow_dispatch:/m);
     expect(wf).toMatch(/tags: \['app-v\*'\]/);
+  });
+  it('makes a draft only when asked (Run workflow or an app-v tag); a merge is a check only', () => {
+    const wf = readFileSync(path.resolve(dir, '../../.github/workflows/desktop.yml'), 'utf8');
+    const job = (name: string) => wf.split(new RegExp('^  ' + name + ':\\s*$', 'm'))[1]!.split(/^  \S/m)[0]!;
+    const asked = "github.event_name == 'workflow_dispatch' || github.ref_type == 'tag'";
+    const installer = job('installer'), release = job('release');
+    /* the build job can only read; only the release job can write, and it runs only when asked */
+    expect(installer).toMatch(/permissions:\s*\n\s*contents: read/);
+    expect(installer).not.toContain('contents: write');
+    expect(installer).not.toContain('gh release');
+    expect(release).toContain('if: ${{ ' + asked + ' }}');
+    expect(release).toContain('needs: installer');
+    expect(release).toMatch(/permissions:\s*\n\s*contents: write/);
+    expect(release).toContain('gh release create');
+    expect(installer).toContain('if: ${{ !(' + asked + ') }}');
+    expect(installer).toContain('Check only: no draft made');
+  });
+  it('removes only older unpublished app drafts, never the new one, a published release, or a backup', () => {
+    const wf = readFileSync(path.resolve(dir, '../../.github/workflows/desktop.yml'), 'utf8');
+    const step = wf.split('- name: Remove older app drafts')[1]!;
+    expect(step).toContain('select(.isDraft == true)');
+    expect(step).toContain('select(.tagName | startswith("app-v"))');
+    expect(step).toContain('[ "$old" != "$NEW_TAG" ]');
+    expect(step.match(/gh release delete/g)).toHaveLength(1);
+    expect(wf.indexOf('gh release create')).toBeLessThan(wf.indexOf('gh release delete'));
   });
   it('builds on merges into main that change the app or any shared website file (no file is missed)', () => {
     const wf = readFileSync(path.resolve(dir, '../../.github/workflows/desktop.yml'), 'utf8');
