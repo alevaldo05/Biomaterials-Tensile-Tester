@@ -3,7 +3,9 @@
    from the data in this tab; nothing is uploaded or saved.
    window.TensileReport.printRecord(info)  one test (info from the graph's reportInfo())
    window.TensileReport.printHtml(html)    any report body (used by the comparison summary)
-   window.TensileReport.printBlank()       a blank one-page run sheet to fill in by hand (Learn page button) */
+   window.TensileReport.printBlank()       a blank one-page run sheet to fill in by hand (Learn page button)
+   window.TensileReport.printPractice(info) a practice record of a simulated test, for a student to show their operator
+                                            before asking for access to the tester app (practice page button) */
 (function () {
   'use strict';
 
@@ -44,6 +46,24 @@
       '<table class="rp-table"><thead><tr><th>Result</th><th>Value</th><th>Definition</th></tr></thead><tbody>' +
       (info.results || []).map(function (q) { return '<tr><th scope="row">' + esc(q[0]) + '</th><td>' + esc(q[1]) + '</td><td>' + esc(q[2]) + '</td></tr>'; }).join('') + '</tbody></table>' +
       '<h2>How the values were obtained</h2><p class="rp-method">' + esc(METHOD) + '</p>' + foot() + '</article>';
+  }
+
+  /* ---------- practice record (a simulated test; shown to an operator before asking for access) ---------- */
+  var PRACTICE_NOTE = 'A practice test on the learning website’s labeled simulator. Simulated data, not measured. It is not a record of a test on the tester and not a training certification; it shows the operator who signs off your training that you have run the steps once.';
+  function practiceHtml(info) {
+    var keep = { 'Material': 1, 'Specimen ID': 1, 'Gauge length L0 (mm)': 1, 'Width (mm)': 1, 'Thickness (mm)': 1, 'Crosshead speed (mm/min)': 1, 'End of test': 1, 'Points': 1 };
+    var det = (info.details || []).filter(function (d) { return keep[d[0]] && d[1] !== '' && d[1] !== null && d[1] !== undefined; });
+    return '<article class="report rp-practice">' + head('Practice record', 'Simulated data, not measured') +
+      '<div class="rp-form"><div class="rp-field rp-wide"><span>Name</span><i></i></div><div class="rp-field"><span>Date</span><b>' + esc(stamp().slice(0, 10)) + '</b></div></div>' +
+      '<p class="rp-method">' + esc(PRACTICE_NOTE) + '</p>' +
+      '<h2>' + esc(info.title) + '</h2>' +
+      '<dl class="rp-details">' + det.map(function (d) { return '<div><dt>' + esc(d[0]) + '</dt><dd>' + esc(d[1]) + '</dd></div>'; }).join('') + '</dl>' +
+      '<figure class="rp-graph">' + fit(info.svg) + '</figure>' +
+      '<h2>Key results <span class="rp-tag">calculated from simulated data</span></h2>' +
+      '<table class="rp-table"><thead><tr><th>Result</th><th>Value</th></tr></thead><tbody>' +
+      (info.results || []).map(function (q) { return '<tr><th scope="row">' + esc(q[0]) + '</th><td>' + esc(q[1]) + '</td></tr>'; }).join('') + '</tbody></table>' +
+      '<footer class="rp-foot"><p>Printed ' + esc(stamp()) + '. Made in this browser from the practice test in this tab; nothing was uploaded or saved.</p>' +
+      '<div class="rp-sign"><span>Seen by operator: ____________________</span><span>Date: ______________</span></div></footer></article>';
   }
 
   /* ---------- printing ---------- */
@@ -105,6 +125,7 @@
     printRecord: function (info) { printHtml(recordHtml(info)); },
     printHtml: printHtml,
     printBlank: printBlank,
+    printPractice: function (info) { printHtml(practiceHtml(info)); },
     parts: { esc: esc, fit: fit, head: head, foot: foot, method: METHOD }
   };
 })();

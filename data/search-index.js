@@ -11,6 +11,7 @@ window.SEARCH_INDEX = [
   { t: "Offset yield (optional)", p: "practice.html", a: "", w: "Page", k: "offset yield optional estimate toe checkbox key results" },
   { t: "Practice test (simulator)", p: "practice.html", a: "", w: "Page", k: "practice simulator simulated learn try demo test uniaxial relaxation no tester" },
   { t: "Practice with a simulated test", p: "learn.html", a: "practice-title", w: "Learn", k: "practice simulator simulated learn try" },
+  { t: "Getting access to the tester", p: "learn.html", a: "access-title", w: "Learn", k: "access sign in login password student operator admin training username lab computer" },
   { t: "Load Test", p: "load-test.html", a: "", w: "Page", k: "open csv file earlier test compare several files overlay load" },
   { t: "Learn", p: "learn.html", a: "", w: "Page", k: "learn background checklist glossary" },
   { t: "Protocols", p: "protocol-uniaxial-tension.html", a: "", w: "Page", k: "procedure steps protocol" },

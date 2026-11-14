@@ -29,6 +29,18 @@ window.SITE_TEXT.learn = {
       ]
     },
 
+    /* Draft wording, for the owner's review. Sign-in exists only in the tester app on the lab computer; this website
+       has no sign-in and saves nothing. */
+    "access-title": {
+      heading: "Getting access to the tester",
+      blocks: [
+        { p: "Tests on the tester are run in the [tester app](choose-test.html) on the lab computer, not on this website. Only people given access there can connect to the tester: the admin, operators, and students." },
+        { p: "**Students:** an operator gives you a username and a first password, signs off a short training (a safety briefing, where the tester’s own STOP is, and a practice test), and sets an end date for your access. You choose your own password at your first sign-in, and you name a responsible operator before each test. Your name and theirs are kept with every test you run." },
+        { p: "**Before you ask for access:** run a test on the [practice page](practice.html) and print its practice record to show your operator." },
+        { note: "This website has no sign-in and saves nothing. Sign-in on the lab computer keeps casual use off the machine; it is not a safety lock, and the on-screen STOP is not an emergency stop." }
+      ]
+    },
+
     "bg-title": {
       heading: "Background",
       blocks: [
