@@ -3,7 +3,7 @@ import { useMemo, useState } from 'react';
 import type { ReactNode } from 'react';
 import { keyPoints, regionsFor } from '@tensile/core';
 import type { TestRecord, TestType } from '@tensile/core';
-import { DARK_GRAPH, Graph, LIGHT_GRAPH } from '@tensile/ui';
+import { DARK_GRAPH, GRAPH_READ_HINT, Graph, LIGHT_GRAPH } from '@tensile/ui';
 import { NO_RESULTS, resultsFor } from '../results';
 
 type ViewId = 'stress' | 'force-disp' | 'force-time' | 'disp-time';
@@ -45,7 +45,7 @@ export function RecordGraph(p: RecordGraphProps) {
   const current = views.some((v) => v[0] === view) ? view : 'stress';
   const results = useMemo(() => (p.showResults ? resultsFor(p.record) : NO_RESULTS), [p.record, p.showResults]);
   /* Display-only guides after a test: region guides on the stress view, and a tangent line on stress-strain. */
-  const [showRegions, setShowRegions] = useState(false), [showTangent, setShowTangent] = useState(false);
+  const [showRegions, setShowRegions] = useState(false), [showTangent, setShowTangent] = useState(false), [aboutOpen, setAboutOpen] = useState(false);
   const canGuide = !!p.showResults && !p.live && !!p.record && p.record.x.length >= 10 && current === 'stress';
   const regions = useMemo(() => {
     if (!canGuide || !showRegions || !p.record) return [];
@@ -68,14 +68,17 @@ export function RecordGraph(p: RecordGraphProps) {
       </div>
       <Graph {...viewData(p.record, current, isRelax)} palette={p.theme === 'dark' ? DARK_GRAPH : LIGHT_GRAPH} live={!!p.live} sourceTag={p.sourceTag}
         markers={current === 'stress' ? results.markers : []} fitLine={current === 'stress' ? results.fitLine : null} emptyText={p.emptyText}
-        regions={regions} tangent={tangent}
+        regions={regions} tangent={tangent} idleHint={false}
         {...(p.onSvg ? { onSvg: p.onSvg } : {})} />
-      {canGuide ? (
-        <p className="row graph-guides">
-          <label className="check"><input type="checkbox" checked={showRegions} onChange={(e) => setShowRegions(e.target.checked)} /> Show regions</label>
-          {!isRelax ? <label className="check"><input type="checkbox" checked={showTangent} onChange={(e) => setShowTangent(e.target.checked)} /> Tangent line at cursor</label> : null}
-          <span className="hint">Guides only: they change the picture, never the results. Region boundaries are estimates.</span>
-        </p>) : null}
+      {!p.live && p.record && p.record.x.length >= 2 ? (
+        <div className="graph-guides-box">
+          <p className="row graph-guides">
+            {canGuide ? <label className="check"><input type="checkbox" checked={showRegions} onChange={(e) => setShowRegions(e.target.checked)} /> Show regions</label> : null}
+            {canGuide && !isRelax ? <label className="check"><input type="checkbox" checked={showTangent} onChange={(e) => setShowTangent(e.target.checked)} /> Tangent line at cursor</label> : null}
+            <button type="button" className="info-button" aria-label="About the graph" aria-expanded={aboutOpen} aria-controls="about-graph" onClick={() => setAboutOpen((o) => !o)}><span aria-hidden="true">i</span></button>
+          </p>
+          <p className="hint graph-about" id="about-graph" hidden={!aboutOpen}>{GRAPH_READ_HINT} Guides only: they change the picture, never the results. Region boundaries are estimates.</p>
+        </div>) : null}
       {p.children}
     </section>
   );
