@@ -32,6 +32,8 @@ The installer is built on GitHub, on Windows, by `.github/workflows/desktop.yml`
    `Biomaterials-Tensile-Tester-<version>-beta-unsigned-setup.exe` (installs the app),
    `Biomaterials-Tensile-Tester-<version>-beta-unsigned-portable.exe` (runs without installing; untried), and
    `SHA256SUMS.txt` (the hash of both). The job summary and the release notes show the build stamp line (below).
+   A run started by hand names the draft `app-v<version>-run.<run number>` (for example `app-v1.0.0-beta.1-run.7`);
+   a run started by a tag uses the tag.
 3. A draft is visible only to people who can change the repository. Download it, try it on the lab computer, and
    publish it (GitHub > Releases > Edit > Publish) only when you are satisfied.
 4. After publishing, the website's Get the App page can link to it (a separate change; until then it says

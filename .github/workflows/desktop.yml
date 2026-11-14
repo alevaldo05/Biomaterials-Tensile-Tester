@@ -85,7 +85,7 @@ jobs:
           GH_TOKEN: ${{ github.token }}
         run: |
           version=$(node -p "require('./apps/desktop/package.json').version")
-          if [ "${GITHUB_REF_TYPE}" = "tag" ]; then tag="${GITHUB_REF_NAME}"; else tag="app-v${version}-beta.${GITHUB_RUN_NUMBER}"; fi
+          if [ "${GITHUB_REF_TYPE}" = "tag" ]; then tag="${GITHUB_REF_NAME}"; else tag="app-v${version}-run.${GITHUB_RUN_NUMBER}"; fi
           cat > notes.md <<NOTES
           Windows installer and portable program of the tester app, version ${version} (beta), built from ${GITHUB_SHA}.
 
