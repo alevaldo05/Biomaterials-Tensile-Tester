@@ -2,7 +2,8 @@
    and the Need help button. The lab server is optional; recording never depends on it. */
 import { useCallback, useEffect, useMemo, useRef, useState, useSyncExternalStore } from 'react';
 import type { TestType } from '@tensile/core';
-import { App, useTheme } from './App';
+import { App } from './App';
+import { useTheme } from './theme';
 import type { TestController } from './controller';
 import { sessionFileFromJournal } from './controller';
 import { ApiError, LabApi } from './lab-api';
@@ -10,9 +11,11 @@ import type { Account, LabUser, SessionRow } from './lab-api';
 import { openTestFile } from './load';
 import type { LoadedTest } from './load';
 import { save } from './exports';
+import { runTestFrom, upsertRunTest } from './run-tests';
+import type { RunTest } from './run-tests';
 import { helpFor } from './help-text';
 import { HelpButton } from './components/HelpButton';
-import { StatusIndicators } from './components/StatusIndicators';
+import { StatusIndicators, indicators } from './components/StatusIndicators';
 import type { JournalMeta, SessionJournal } from './storage/journal';
 import { LabMethods } from './storage/methods';
 import type { MethodStore } from './storage/methods';
@@ -84,7 +87,7 @@ export interface ShellProps { controller: TestController; serialAvailable: boole
 
 export function Shell({ controller: c, serialAvailable, journal, methods }: ShellProps) {
   useSyncExternalStore(c.subscribe, c.snapshot);
-  const [theme, toggleTheme] = useTheme();
+  const { theme, choice: themeChoice, setChoice: setThemeChoice } = useTheme();
   const api = useMemo(() => new LabApi(), []);
   const [reachable, setReachable] = useState<boolean | null>(null);
   const [user, setUser] = useState<LabUser | null>(null);
@@ -96,6 +99,9 @@ export function Shell({ controller: c, serialAvailable, journal, methods }: Shel
   const [loaded, setLoaded] = useState<LoadedTest | null>(null);
   const [loadError, setLoadError] = useState('');
   const [helpSub, setHelpSub] = useState('test');
+  /* Tests finished in this run of the app, for the Specimens strip (kept while you visit other screens). */
+  const [runTests, setRunTests] = useState<RunTest[]>([]);
+  useEffect(() => { const t = runTestFrom(c); if (t) setRunTests((l) => upsertRunTest(l, t)); }, [c.phase, c.startedAt, c.saved, c.localSave, c.record]);
   const onHelpSub = useCallback((s: string) => setHelpSub(s), []);
 
   const [notSetUp, setNotSetUp] = useState(false);
@@ -162,13 +168,15 @@ export function Shell({ controller: c, serialAvailable, journal, methods }: Shel
   const nav = (id: Page, label: string) => (
     <button type="button" className={'nav' + (page === id ? ' nav-on' : '')} aria-current={page === id ? 'page' : undefined} disabled={recording && id !== 'test' && id !== 'help'} onClick={() => setPage(id)}>{label}</button>
   );
+  const ind = indicators(c, account);
+  const glance = { state: ind[0]!.value, detail: c.source?.identity ? c.source.identity.deviceType + ' · ' + c.source.identity.deviceId : '', calibration: ind[2]!.value };
   const topic = helpFor(page, page === 'test' ? helpSub : undefined);
 
   return (
     <div className="app">
       <a className="skip-link" href="#main-content" onClick={(e) => { e.preventDefault(); focusMain(); }}>Skip to main content</a>
       <header className="top">
-        <span className="brand">Biomaterials Tensile Tester</span>
+        <span className="brand"><svg aria-hidden="true" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><path d="M3 20h18" /><path d="M5 20V5" /><path d="M5 17c4 0 6-2 8-6s4-6 6-6" /></svg>Biomaterials Tensile Tester</span>
         <nav className="navs" aria-label="Main">
           {nav('home', 'Home')}{nav('test', 'Test')}{user ? nav('history', 'History') : null}{nav('device', 'Device')}{nav('help', 'Help')}{nav('settings', 'Settings')}
           {effectiveRole === 'admin' ? nav('admin', 'Admin') : null}
@@ -187,17 +195,17 @@ export function Shell({ controller: c, serialAvailable, journal, methods }: Shel
       <StatusIndicators controller={c} account={account} />
       {viewAsUser ? <p className="view-as" role="status">Viewing as a user. This changes only what this screen shows; your admin permissions are unchanged. <button type="button" className="link" onClick={() => setViewAsUser(false)}>Back to admin view</button></p> : null}
 
-      {page === 'home' ? <Home go={go} recent={recent} interrupted={interrupted} recover={(m, how) => void recover(m, how)} recording={recording} /> : null}
-      {page === 'test' ? <App controller={c} serialAvailable={serialAvailable} theme={theme} account={account} onHelpSub={onHelpSub} /> : null}
+      {page === 'home' ? <Home go={go} recent={recent} interrupted={interrupted} recover={(m, how) => void recover(m, how)} recording={recording} device={glance} /> : null}
+      {page === 'test' ? <App controller={c} serialAvailable={serialAvailable} theme={theme} account={account} onHelpSub={onHelpSub} runTests={runTests} /> : null}
       {page === 'load' ? <LoadTest loaded={loaded} error={loadError} theme={theme} recent={recent} openFile={(n, t, h) => void open(n, t, h)} clear={() => { setLoaded(null); setLoadError(''); }} /> : null}
       {page === 'methods' ? <Methods store={methods} lab={labMethods} labAdmin={effectiveRole === 'admin'} controller={c} start={() => setPage('test')} /> : null}
       {page === 'device' ? <Device controller={c} account={account} serialAvailable={serialAvailable} /> : null}
       {page === 'history' && user ? <main className="page" id="main-content"><History account={account} onReplay={(text) => void open('lab-test.session.json', text)} /></main> : null}
-      {page === 'help' ? <HelpPage /> : null}
-      {page === 'settings' ? <Settings theme={theme} toggleTheme={toggleTheme} journal={journal} download={(m) => void downloadLocal(m)} recording={recording} labChanged={() => { setViewAsUser(false); check(); }} reachable={reachable} /> : null}
+      {page === 'help' ? <HelpPage openDevice={() => setPage('device')} /> : null}
+      {page === 'settings' ? <Settings themeChoice={themeChoice} setThemeChoice={setThemeChoice} journal={journal} download={(m) => void downloadLocal(m)} recording={recording} labChanged={() => { setViewAsUser(false); check(); }} reachable={reachable} /> : null}
       {page === 'admin' && effectiveRole === 'admin' ? <main className="page" id="main-content"><Admin account={account} controller={c} /></main> : null}
 
-      <HelpButton topic={topic} onOpenHelp={() => setPage('help')} />
+      <div className="help-bar"><HelpButton topic={topic} onOpenHelp={() => setPage('help')} /></div>
 
       <Dialog open={dialog === 'sign-in'} title="Sign in to the lab server" onClose={() => setDialog(null)}>
         <SignIn api={api} onDone={(u) => { setUser(u); setDialog(u.mustChangePassword ? 'password' : null); }} onCancel={() => setDialog(null)} />

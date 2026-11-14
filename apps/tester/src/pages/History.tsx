@@ -59,9 +59,9 @@ export function History(p: { account: Account; onReplay: (sessionFileText: strin
   };
 
   return (
-    <section className="page" aria-labelledby="history-h">
+    <section className="page-block" aria-labelledby="history-h">
       <div className="page-head">
-        <h2 id="history-h">Saved tests</h2>
+        <h1 id="history-h">Saved tests</h1>
         <button type="button" onClick={() => void load()} disabled={rows === null}>Refresh</button>
       </div>
       {isAdmin ? (

@@ -67,7 +67,7 @@ export function Methods(p: { store: MethodStore; lab: MethodStore | null; labAdm
   };
   return (
     <main className="page" id="main-content">
-      <h1>Test methods</h1>
+      <div className="page-head"><h1>Test methods</h1></div>
       <MethodList id="local-title" title="On this computer" store={p.store} controller={c} start={p.start} canChange reloadKey={version} onChange={change('local')} changed={bump}
         empty="No methods yet. Fill in a test's setup on the Test screen, then save it below as a method."
         note="Kept on this computer only. Earlier revisions stay with the tests that used them."

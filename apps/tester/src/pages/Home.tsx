@@ -2,6 +2,7 @@
    recording that did not finish, so it can be recovered. No paragraphs about the tester. */
 import type { JournalMeta } from '../storage/journal';
 import type { SessionRow } from '../lab-api';
+import { RecentTable } from '../components/RecentTable';
 
 export type Destination = 'test' | 'load' | 'methods' | 'device' | 'history';
 
@@ -29,12 +30,15 @@ function Icon({ name }: { name: string }) {
   return <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" aria-hidden="true"><path d={ICON[name]} /></svg>;
 }
 
+export interface DeviceGlance { state: string; detail: string; calibration: string }
+
 export function Home(p: {
   go: (d: Destination) => void;
   recent: RecentRow[];
   interrupted: JournalMeta[];
   recover: (m: JournalMeta, how: 'open' | 'download' | 'dismiss') => void;
   recording: boolean;
+  device: DeviceGlance;
 }) {
   const tile = (d: Destination, name: string, desc: string, icon: string, primary = false) => (
     <button type="button" className={'tile' + (primary ? ' primary' : '')} onClick={() => p.go(d)} disabled={p.recording && d !== 'test'}>
@@ -44,40 +48,39 @@ export function Home(p: {
   );
   return (
     <main className="home" id="main-content">
-      <section className="home-left" aria-labelledby="start-title">
-        <h1 id="start-title">Start</h1>
-        <div className="tiles">
-          {tile('test', p.recording ? 'Back to the recording' : 'New test', 'Uniaxial tension or stress relaxation', 'test', true)}
-          {tile('load', 'Load test', 'Open a recorded test', 'load')}
-          {tile('methods', 'Test methods', 'Saved setups', 'methods')}
-          {tile('load', 'Recent tests', 'All recorded tests', 'history')}
-          {tile('device', 'Device and calibration', 'Connect and check', 'device')}
-          {tile('load', 'Reports and exports', 'Print or export a test', 'reports')}
-        </div>
-      </section>
-      <section className="home-right" aria-labelledby="recent-title">
-        <div className="row"><h1 id="recent-title">Recent tests</h1><button type="button" className="link" onClick={() => p.go('load')}>All tests</button></div>
-        {p.interrupted.length ? p.interrupted.map((m) => (
-          <div key={m.id} className="recover" role="alert">
-            <strong>Interrupted recording</strong> started {when(m.startedAt)}: {m.sampleCount} samples were saved, up to {when(m.lastCommitAt)}. Anything after that was not saved and cannot be recreated.
-            <p className="row">
-              <button type="button" className="primary" onClick={() => p.recover(m, 'open')}>Open it</button>
-              <button type="button" onClick={() => p.recover(m, 'download')}>Download its session file</button>
-              <button type="button" className="quiet" onClick={() => p.recover(m, 'dismiss')}>Mark as handled</button>
-            </p>
-          </div>
-        )) : <p className="slot">Interrupted recordings appear here so they can be recovered. None.</p>}
-        {p.recent.length ? (
-          <div className="tablebox">
-            <table className="list-table">
-              <thead><tr><th scope="col">Saved</th><th scope="col">Specimen</th><th scope="col">Test</th><th scope="col">Samples</th><th scope="col">Stored</th><th scope="col"><span className="sr">Open</span></th></tr></thead>
-              <tbody>{p.recent.map((r) => (
-                <tr key={r.key}><td>{r.saved}</td><td>{r.specimen}</td><td>{r.test}</td><td>{r.samples}</td><td>{r.stored}</td>
-                  <td><button type="button" className="link" onClick={r.open}>Open</button></td></tr>))}
-              </tbody>
-            </table>
-          </div>) : <p className="hint">No recorded tests yet. They appear here after a test is recorded.</p>}
-      </section>
+      <h1>Home</h1>
+      <div className="home-grid">
+        <nav className="home-start" aria-label="Start">
+          {tile('test', p.recording ? 'Back to the recording' : 'Start a new test', 'Set up a specimen and record', 'test', true)}
+          {tile('load', 'Load a recorded test', 'Open or compare saved files', 'load')}
+          {tile('methods', 'Test methods', 'Start from a saved setup', 'methods')}
+          {tile('device', 'Device check', 'Connection and calibration', 'device')}
+        </nav>
+        <section className="home-recent card-plain" aria-labelledby="recent-title">
+          <div className="row between"><h2 id="recent-title">Recent tests</h2><button type="button" className="link" onClick={() => p.go('load')}>All tests</button></div>
+          <RecentTable rows={p.recent} />
+        </section>
+        <aside className="home-glance" aria-label="At a glance">
+          <section className="side-card" aria-labelledby="glance-device">
+            <h2 id="glance-device">Device</h2>
+            <p className="glance-state">{p.device.state}</p>
+            {p.device.detail ? <p className="hint">{p.device.detail}</p> : null}
+            <p className="hint">Calibration: {p.device.calibration}</p>
+          </section>
+          <section className="side-card" aria-labelledby="glance-int">
+            <h2 id="glance-int">Interrupted recording</h2>
+            {p.interrupted.length ? p.interrupted.map((m) => (
+              <div key={m.id} className="recover" role="alert">
+                <p><strong>Started {when(m.startedAt)}</strong>: {m.sampleCount} samples were saved, up to {when(m.lastCommitAt)}. Anything after that was not saved and cannot be recreated.</p>
+                <p className="row">
+                  <button type="button" className="primary" onClick={() => p.recover(m, 'open')}>Open it</button>
+                  <button type="button" onClick={() => p.recover(m, 'download')}>Download its session file</button>
+                  <button type="button" className="quiet" onClick={() => p.recover(m, 'dismiss')}>Mark as handled</button>
+                </p>
+              </div>)) : <p className="hint">None. An interrupted recording would appear here so it can be recovered.</p>}
+          </section>
+        </aside>
+      </div>
     </main>
   );
 }

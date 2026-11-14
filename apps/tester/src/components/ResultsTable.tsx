@@ -1,21 +1,29 @@
-/* Key results with optional definitions (from the website's data/terms.js). */
+/* Key results: a name, a value and its unit. Each has an "i" button that shows what the number is and its caveats
+   (estimates stay labeled as estimates). No equations on screen; the files keep their full wording. */
 import { useState } from 'react';
 import type { TestRecord } from '@tensile/core';
-import site from 'virtual:site-data';
-import { resultsFor, TERM_FOR } from '../results';
+import { resultsFor } from '../results';
 
 export function ResultsTable({ record, problem, note }: { record: TestRecord | null; problem: string; note: string }) {
-  const [showDefs, setShowDefs] = useState(false);
-  const rows = resultsFor(record).rows;
+  const [open, setOpen] = useState<Record<string, boolean>>({});
+  const rows = resultsFor(record).screen;
   return (
-    <>
-      <p className="row"><span className="hint">{note}</span><label className="check defs-switch"><input type="checkbox" checked={showDefs} onChange={(e) => setShowDefs(e.target.checked)} /> Show definitions</label></p>
+    <div className="key-results">
+      {note ? <p className="hint">{note}</p> : null}
       {rows.length ? (
-        <table className="results"><tbody>
-          {rows.map((r) => { const t = site.terms[TERM_FOR[r.id] ?? '']; return (
-            <tr key={r.id}><th scope="row">{r.name}{showDefs && t ? <span className="def">{t.def}{t.eq ? ' ' + t.eq + '.' : ''}</span> : null}</th><td className="num">{r.value}</td><td className="hint">{r.note}</td></tr>); })}
-        </tbody></table>) : <p>{problem || 'Too few points for key results.'}</p>}
-      {rows.length ? <p className="hint">Strain is crosshead-based (crosshead displacement divided by the gauge length), not measured on the specimen.</p> : null}
-    </>
+        <dl className="kr-list">
+          {rows.map((r) => (
+            <div key={r.id} className="kr-row">
+              <dt>{r.label}</dt>
+              <dd className="kr-value">{r.value}{r.unit ? <span className="kr-unit"> {r.unit}</span> : null}</dd>
+              <dd className="kr-info">
+                <button type="button" className="info-button" aria-label={'About ' + r.label.toLowerCase()} aria-expanded={!!open[r.id]} aria-controls={'about-' + r.id}
+                  onClick={() => setOpen((o) => ({ ...o, [r.id]: !o[r.id] }))}><span aria-hidden="true">i</span></button>
+              </dd>
+              <dd className="kr-about" id={'about-' + r.id} hidden={!open[r.id]}>{r.about}</dd>
+            </div>
+          ))}
+        </dl>) : <p>{problem || 'Too few points for key results.'}</p>}
+    </div>
   );
 }

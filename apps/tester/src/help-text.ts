@@ -1,4 +1,4 @@
-/* The app's help, one entry per screen and setup step, kept here so it is available offline and edited in one place.
+/* The app's help, one entry per screen and part of the Test screen’s quick settings, kept here so it is available offline and edited in one place.
    Each entry says what the screen is for, what to do next, unfamiliar terms, common problems, and when to get help
    from a technician or the laboratory. Links go to the learning website. */
 
@@ -24,23 +24,23 @@ export const HELP: Record<string, HelpTopic> = {
     links: [{ label: 'Help and troubleshooting on the website', page: 'help.html' }],
   },
   'test.test': {
-    title: 'Test and method',
-    what: 'Choose the test type and, if you have one, a saved method. A method fills in the usual settings; the specimen’s own details stay blank.',
-    next: ['Pick Uniaxial tension or Stress relaxation.', 'Type the material and the crosshead speed you will set on the tester.'],
+    title: 'Test',
+    what: 'The Test screen is one window: the quick settings on the left (on a narrow window, open them with Setup), the graph in the middle, and the live readings or key results on the right. Here you choose the test type and, if you have one, a saved method. A method fills in the usual settings; the specimen’s own details stay blank.',
+    next: ['Pick Uniaxial tension or Stress relaxation.', 'Type the material and the speed you will set on the tester.', 'Work down the quick settings: Specimen, Connection, Setup file and calibration, then Before you start.'],
     terms: [['Crosshead speed', 'The speed you set on the tester’s own controller. The app writes it into the record; it does not set it.'], ['Offset yield', 'Optional. Where the curve crosses the fitted line moved right by the offset; an estimate.']],
     links: [{ label: 'Uniaxial tension protocol', page: 'protocol-uniaxial-tension.html' }, { label: 'Stress relaxation protocol', page: 'protocol-stress-relaxation.html' }],
   },
   'test.dimensions': {
     title: 'Specimen',
     what: 'Stress is force divided by the cross-section (width × thickness) and strain is stretch divided by the gauge length, so these numbers are needed for stress and strain.',
-    next: ['Measure and type the gauge length, width, and thickness in millimetres.', 'Leave a field empty rather than guessing.'],
+    next: ['Measure and type the gauge length, width, and thickness in millimetres.', 'Leave a field empty rather than guessing.', 'Temperature, environment, and notes are under More details. Notes can still be changed after the test.'],
     terms: [['Gauge length, L₀', 'The length of specimen between the grips at the start.']],
     links: [{ label: 'Glossary', page: 'learn.html#gloss-title' }],
   },
   'test.connection': {
     title: 'Connect and identify',
     what: 'Connect the acquisition device over USB. You choose the port yourself; the app then asks the device who it is, and only shows it as identified after it answers.',
-    next: ['Press Connect and choose the controller’s port.', 'Check the device, channels, and achieved rate shown here.'],
+    next: ['Press Connect and choose the controller’s port.', 'Check the device, channels, and achieved rate under Device details.'],
     problems: [
       ['Permission denied', 'Choose the port again and allow access.'],
       ['Port in use', 'Close other programs or windows using the port (for example a serial monitor).'],
@@ -54,25 +54,25 @@ export const HELP: Record<string, HelpTopic> = {
     title: 'Channels and calibration',
     what: 'A calibration turns volts into newtons and millimetres. It is used only if the whole signal path matches the one it was made with. Without one, readings stay in volts.',
     next: ['Load the setup for this tester (from the lab server or a setup file).', 'If a channel says it needs review, ask whoever looks after calibration.'],
-    terms: [['Software baseline', 'A force offset taken in the app and subtracted in results; the original readings are kept. It is not a machine tare and not a calibration.'], ['Machine tare', 'Zeroing on the tester itself. Separate from this app.']],
+    terms: [['Zero force (software baseline)', 'A force offset taken in the app and subtracted in results; the original readings are kept. It is not a machine tare and not a calibration, and nothing is sent to the tester.'], ['Machine tare', 'Zeroing on the tester itself. Separate from this app.']],
     assistance: 'Calibrations are made and approved by the laboratory. Do not reuse one after a change to the board, ADC, conditioning circuit, or machine range.',
   },
   'test.review': {
-    title: 'Review and start',
-    what: 'Check everything before recording. Ready to record means the app can save calibrated readings; it says nothing about whether the machine is ready to move.',
-    next: ['Press Start recording.', 'Then start the test on the tester’s own controller.', 'Press Stop recording when the test is over.'],
+    title: 'Before you start',
+    what: 'A check of every part of the quick settings. Start recording stays unavailable, with the reason shown under it, until everything needed is ready. Ready to record means the app can save calibrated readings; it says nothing about whether the machine is ready to move.',
+    next: ['Press Zero force if you want a software baseline (optional).', 'Press Start recording under the graph.', 'Then start the test on the tester’s own controller.', 'Press End recording when the test is over.'],
     assistance: TECH,
   },
   'test.recording': {
     title: 'Recording',
-    what: 'Samples are being saved, in memory and on this computer about once a second. Stop recording only stops saving; it does not stop the machine.',
-    next: ['Stop the machine with its own controls.', 'Press Stop recording when done.'],
+    what: 'Samples are being saved, in memory and on this computer about once a second. The quick settings are locked and folded to a slim rail. End recording only stops saving; it does not stop the machine.',
+    next: ['Stop the machine with its own controls.', 'Press End recording when done.'],
     problems: [['Stale data', 'No readings for 2 seconds: check the USB cable and the device.'], ['Save error', 'The recording continues in memory; download the data as soon as it ends.']],
     assistance: TECH,
   },
   'test.done': {
     title: 'Results',
-    what: 'The graph and key results of the test just recorded. Strain is crosshead-based unless stated otherwise.',
+    what: 'The graph and key results of the test just recorded. Press the "i" beside a result to see what it is and its caveats. Strain is crosshead-based unless stated otherwise. The Specimens list at the bottom shows the tests finished since the app was opened.',
     next: ['Save data: CSV, Excel, graph pictures, the session file, or a Draft printed report (save it as a PDF from the print window).', 'Save to the lab server when signed in.', 'New test for the next specimen.'],
     links: [{ label: 'What a tensile test measures', page: 'about.html#measures-title' }],
   },
@@ -118,7 +118,7 @@ export const HELP: Record<string, HelpTopic> = {
   },
 };
 
-/** The help topic for a screen and, on the Test screen, its current step or phase. */
+/** The help topic for a screen and, on the Test screen, the part of the quick settings in use, or the phase. */
 export function helpFor(page: string, sub?: string): HelpTopic {
   return HELP[sub ? page + '.' + sub : page] ?? HELP[page] ?? (HELP.home as HelpTopic);
 }

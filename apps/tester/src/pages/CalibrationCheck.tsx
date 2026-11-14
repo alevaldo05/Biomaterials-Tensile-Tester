@@ -22,6 +22,7 @@ export function CalibrationCheck({ controller: c }: { controller: TestController
   const [reading, setReading] = useState<number | null>(null);
   const [readMsg, setReadMsg] = useState('');
   const [status, setStatus] = useState('');
+  const [open, setOpen] = useState(false);
   const timer = useRef<ReturnType<typeof setInterval> | null>(null);
   const { ref, print } = usePrintReport<HTMLElement>();
 
@@ -79,8 +80,14 @@ export function CalibrationCheck({ controller: c }: { controller: TestController
 
   return (
     <section className="card-plain check-section" aria-labelledby="check-title" ref={ref}>
-      <h2 id="check-title">Check the calibration with known weights</h2>
-      <p className="notice"><strong>Check only.</strong> This compares the force the app shows with the force expected from known weights (F = m g). It changes no reading and no calibration, makes no claim of traceability, and saves nothing: the rows stay on this screen. A software baseline or a tare is not a calibration.</p>
+      <div className="check-head">
+        <div>
+          <h2 id="check-title">Calibration check</h2>
+          <p className="hint"><strong>Check only.</strong> Compares the force reading with known weights. It changes no reading and no calibration, makes no claim of traceability, and saves nothing. A software baseline or a tare is not a calibration.</p>
+        </div>
+        <button type="button" className="outline" aria-expanded={open} aria-controls="check-body" onClick={() => setOpen((o) => !o)}>{open ? 'Hide calibration check' : 'Start calibration check'}</button>
+      </div>
+      <div id="check-body" className="check-body" hidden={!open}>
 
       <div className="print-only print-head">
         <p><strong>Calibration check · Draft</strong> · printed {new Date().toLocaleString()}</p>
@@ -99,7 +106,8 @@ export function CalibrationCheck({ controller: c }: { controller: TestController
         </div>
         {res.problems.map((p) => <p key={p} className="error" role="alert">{p}</p>)}
 
-        <p className="hint">The check uses the force reading as the app shows it (calibrated, with any software baseline subtracted). Read force takes the mean over about 1 second.</p>
+        <details className="more"><summary>How the check works</summary>
+          <p className="hint">The expected force is the mass times gravity (F = m g). The check uses the force reading as the app shows it (calibrated, with any software baseline subtracted). Read force takes the mean over about 1 second.</p></details>
         {!canRead ? <p className="hint" id="read-why">{whyNot}</p> : null}
 
         <div className="tablebox"><table className="list-table check-table">
@@ -141,8 +149,8 @@ export function CalibrationCheck({ controller: c }: { controller: TestController
         </table>
       </div>
 
-      <h3>Fitted line</h3>
-      <p className="notice" aria-live="polite">{fitOk ? 'reading = slope × force + offset (least squares). ' : ''}{fitSummary(res.fit)}</p>
+      <h3 className="check-sub">Fitted line</h3>
+      <p className="notice" aria-live="polite">{fitOk ? 'Least-squares line through the points: reading against expected force. ' : ''}{fitSummary(res.fit)}</p>
       {fitOk && res.fit.big !== null && res.fit.big !== undefined ? <p className="hint">Largest error {showNumber(res.fit.big)} N.{hasTol ? ' ' + res.points.filter((q) => q.out).length + ' point(s) outside the tolerance you entered.' : ' Enter a tolerance to flag points.'}</p> : null}
 
       <p className="row check-actions">
@@ -152,6 +160,7 @@ export function CalibrationCheck({ controller: c }: { controller: TestController
         <span className="hint" role="status">{status}</span>
       </p>
       <p className="hint">Draft. Nothing is sent anywhere.</p>
+      </div>
     </section>
   );
 }

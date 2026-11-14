@@ -27,7 +27,7 @@ export interface GraphProps {
   y: readonly number[];
   xLabel: string;
   yLabel: string;
-  /** Short names for the readout line, for example "ε" and "σ". */
+  /** Short names for the readout line, for example "Strain" and "Stress". */
   xName: string;
   yName: string;
   xUnit: string;
@@ -50,7 +50,11 @@ export interface GraphProps {
   regions?: readonly GuideRegion[];
   /** A short tangent line at the cursor point, and the local slope in the readout. Display only. */
   tangent?: { slopeName: string; slopeUnit: string } | null;
+  /** False when the caller shows GRAPH_READ_HINT itself (behind an info button); the idle line under the graph is then blank. */
+  idleHint?: boolean;
 }
+/** How to read a point and zoom (one curve). Shown under the graph, or behind the graph's info button. */
+export const GRAPH_READ_HINT = 'Move over the curve, or use the arrow keys, to read a point. Scroll or drag to zoom; double-click to reset.';
 export interface GuideRegion { name: string; from: number; to: number; approx?: boolean }
 
 /** Least-squares slope through the points within about 1% of the record (at least 2, at most 50) on each side of i. */
@@ -267,8 +271,8 @@ export function Graph(p: GraphProps) {
         })() : null}
       </svg>
       <p className="graph-readout" aria-live="off">
-        {shown ? <>{shown.name ? <strong>{shown.name}: </strong> : null}{p.xName} = {sig(shown.x, 4)} {p.xUnit}, {p.yName} = {sig(shown.y, 4)} {p.yUnit}{tangentAt && p.tangent ? <>, local slope {p.tangent.slopeName} ≈ {sig(tangentAt.slope, 3)} {p.tangent.slopeUnit} (fitted over nearby points)</> : null}</>
-          : n < 2 ? ' ' : p.live ? 'Recording. Zoom and the readout are available when recording stops.' : many ? 'Move over a curve to read a point and see which test it is. Scroll or drag to zoom; double-click to reset.' : 'Move over the curve, or use the arrow keys, to read a point. Scroll or drag to zoom; double-click to reset.'}
+        {shown ? <>{shown.name ? <strong>{shown.name}: </strong> : null}{p.xName} = {sig(shown.x, 4)} {p.xUnit}, {p.yName} = {sig(shown.y, 4)} {p.yUnit}{tangentAt && p.tangent ? <>, local slope{p.tangent.slopeName ? ' ' + p.tangent.slopeName : ''} ≈ {sig(tangentAt.slope, 3)} {p.tangent.slopeUnit} (fitted over nearby points)</> : null}</>
+          : n < 2 ? ' ' : p.live ? 'Recording. Zoom and the readout are available when recording stops.' : many ? 'Move over a curve to read a point and see which test it is. Scroll or drag to zoom; double-click to reset.' : p.idleHint === false ? ' ' : GRAPH_READ_HINT}
         {zoom && !p.live ? <span className="graph-range"> · Showing {p.xName} {sig(view.x0, 3)} to {sig(view.x1, 3)}</span> : null}
       </p>
     </div>
