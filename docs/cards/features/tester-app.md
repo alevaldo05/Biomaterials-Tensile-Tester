@@ -28,7 +28,7 @@ The React and TypeScript app for running tests, the packages it shares with the 
 - `packages/core/reference/`: runs the website's own calculation scripts on fixed sample and synthetic inputs and compares the results with the saved copy in `fixtures/reference.json`
 
 ## What the user sees
-- Windows app update check: once at start (a few seconds after the window loads) it asks `api.github.com` for the latest releases; if a newer published release exists, a dismissible bar under the status line offers a Download link (opens the release page in the default browser); hidden while recording; Settings switch "Check for updates when the app starts" (on by default, remembered on this computer); untried on Windows
+- Windows app update check: once at start (a few seconds after the window loads) it asks `api.github.com` for the latest releases; if a newer published release with an app tag (`app-v…`; other releases such as backups are skipped) exists, a dismissible bar under the status line offers a Download link (opens the release page in the default browser); hidden while recording; Settings switch "Check for updates when the app starts" (on by default, remembered on this computer); untried on Windows
 - Builds: a merge into `main` that changes the app or a shared website file makes a draft release; the owner tries it and publishes it
 - On the website: Get the App has a **Download the tester app (beta)** link to the latest GitHub release; it shows a release only after the owner publishes one
 - In the app (`npm run app`): menu Home · Test · History (signed in) · Device · Help · Settings (· Admin for admins), and a status bar with six separate indicators (Device, Data, Calibration, Recording, Local storage, Lab server), never one "Ready"
