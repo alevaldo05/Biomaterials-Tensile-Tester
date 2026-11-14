@@ -1,0 +1,73 @@
+# Pictures of the tester app's screens for each pull request that changes the app, so the owner can see a change
+# without installing anything. Builds the screens, opens them in Chromium (Playwright, a dev tool that is never
+# shipped) with a stand-in for the Windows app (no device, nothing recorded), and uploads two contact sheets
+# (1366 px and 390 px, light and dark) that open in the browser, plus all pictures as one zip. Publishes nothing.
+name: App screenshots
+
+on:
+  pull_request:
+    branches: [main]
+    paths:
+      - 'apps/**'
+      - 'packages/**'
+      - 'scripts/app-screenshots.mjs'
+      - '.github/workflows/app-screens.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  screenshots:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
+        with:
+          persist-credentials: false
+
+      - name: Install, build the screens, and take the pictures
+        run: |
+          npm ci --no-audit --no-fund
+          npx playwright install --with-deps chromium
+          npm run app:build
+          node scripts/app-screenshots.mjs screenshots
+
+      - name: Upload the 1366 px contact sheet (opens in the browser)
+        id: wide
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          path: screenshots/app-screens-1366.png
+          archive: false
+          retention-days: 14
+
+      - name: Upload the 390 px contact sheet (opens in the browser)
+        id: narrow
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          path: screenshots/app-screens-390.png
+          archive: false
+          retention-days: 14
+
+      - name: Upload every picture (one zip)
+        id: all
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: app-screens-all
+          path: screenshots/*.png
+          retention-days: 14
+
+      - name: Links in the summary
+        env:
+          WIDE: ${{ steps.wide.outputs.artifact-url }}
+          NARROW: ${{ steps.narrow.outputs.artifact-url }}
+          ALL: ${{ steps.all.outputs.artifact-url }}
+        run: |
+          {
+            echo "### Tester app screens"
+            echo
+            echo "- [Laptop, 1366 px, light and dark]($WIDE)"
+            echo "- [Phone, 390 px, light and dark]($NARROW)"
+            echo "- [Every picture (zip)]($ALL)"
+            echo
+            echo "Stand-in Windows app: no device connected, nothing recorded. Chromium only."
+          } >> "$GITHUB_STEP_SUMMARY"

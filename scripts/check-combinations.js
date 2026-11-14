@@ -5,7 +5,7 @@
             --pages=help,index (only these pages)   --only=layout=tabs (only combinations with that value; can be repeated as --only=a=b,c=d)
    It starts its own small web server for this folder, changes nothing, and saves nothing except an optional report file.
    It is NOT part of node scripts/check-site.js and is not run by the publish workflow, because it needs Playwright
-   (a browser driver) that this project does not install. Install it yourself, for example: npm install playwright
+   (a browser driver; installed by npm ci as a dev tool) and a browser for it: npx playwright install chromium
 
    Phase A: EVERY combination of color theme x layout x style (6 x 5 x 5 = 150), on every page, at 1280 px and 1024 px.
    Phase B: pairwise coverage of all 16 display choices (every pair of values of any two choices appears together at least once).
