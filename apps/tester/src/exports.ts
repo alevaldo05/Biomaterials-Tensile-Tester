@@ -1,5 +1,7 @@
 /* Files the person can save. Everything is built in the browser tab and handed to the browser's own download;
    nothing is uploaded. Numbers stay in base units (N, mm, s, MPa). */
+import { responsibleText, runByText } from './people';
+import type { OperatorBlock } from './people';
 import { buildTestCsv, buildXlsx, csvCell, csvFileBase, dataChecks, dimSourceText, modulusFitText, sig, sourceTag } from '@tensile/core';
 import type { CsvContext, TestRecord, TestType, XlsxInfo } from '@tensile/core';
 import type { Session } from '@tensile/recording';
@@ -17,9 +19,15 @@ const KIND = { uniaxial: { slug: 'uniaxial-tension', name: 'Uniaxial tension' },
 
 /** Header lines are one line each: a line break typed in a note or carried in an end reason would split the file. */
 export const oneLine = (t: string): string => String(t ?? '').replace(/[\r\n\u2028\u2029]+/g, ' ').trim();
+/** "Run by" and, for a student, "Responsible operator", as label and value pairs for the files. */
+export function runByRows(o: OperatorBlock | null | undefined): [string, string][] {
+  const r = responsibleText(o);
+  return [['Run by', oneLine(runByText(o))], ...(r ? [['Responsible operator', oneLine(r)] as [string, string]] : [])];
+}
 export function csvContext(c: TestController): CsvContext {
   const s = c.setup;
   return {
+    ...(c.session ? { runBy: runByRows(c.runBy) } : {}),
     spec: { mat: oneLine(s.material), matLabel: oneLine(s.material), id: oneLine(s.specimenId), temp: oneLine(s.temperature), env: oneLine(s.environment), notes: oneLine(s.notes) },
     kind: KIND[c.test], isRelax: c.test === 'relaxation', startedAt: c.startedAt, endReason: c.session ? oneLine(c.session.endReason) : '',
     checks: {},   /* the website's force-drop check does not apply: this app sends no stop command */
@@ -77,7 +85,7 @@ export function sessionDetails(c: TestController): [string, string][] {
   const settings = Object.values(s.settings), out: [string, string][] = [
     ['Data', c.dataLabel],
     ['Device', s.identity.deviceType + ' · ' + s.identity.deviceId + ' · software ' + s.identity.softwareVersion],
-    ['Protocol', s.identity.protocol], ['App version', s.appVersion],
+    ['Protocol', s.identity.protocol], ['App version', s.appVersion], ...runByRows(c.runBy),
     ['ADC settings', settings.map((x) => x.adc + ', ±' + x.fullScale_mV + ' mV, ' + x.dataRate_sps + ' conversions/s, order ' + x.channelOrder.join(' then ') + ' (' + x.ref + ')').join('; ')],
     ['Achieved rate', c.rate === null ? '' : sig(c.rate, 4) + ' samples/s per channel'],
     ['Device profile', s.profileId ?? 'none'],
@@ -127,10 +135,10 @@ export function svgToPng(svg: SVGSVGElement, scale = 3): Promise<Blob> {
 }
 
 /** Excel for a test opened in Load test. */
-export function xlsxForRecord(r: TestRecord, test: TestType, name: string, provenance: string): Uint8Array {
+export function xlsxForRecord(r: TestRecord, test: TestType, name: string, provenance: string, runBy: [string, string][] = []): Uint8Array {
   const isRelax = test === 'relaxation', sp = r.params.specimen, tag = 'Loaded from ' + name;
   const details: XlsxInfo['details'] = [['Biomaterials Tensile Tester', 'test data'], ['Test', isRelax ? 'Stress relaxation' : 'Uniaxial tension'], ['Source', provenance],
-    ['Gauge length L0 (mm)', sp.L0_mm], ['Width (mm)', sp.width_mm], ['Thickness (mm)', sp.thickness_mm], ['Points', r.x.length]];
+    ['Gauge length L0 (mm)', sp.L0_mm], ['Width (mm)', sp.width_mm], ['Thickness (mm)', sp.thickness_mm], ['Points', r.x.length], ...runBy];
   const mft = isRelax ? '' : modulusFitText(r);
   if (mft) details.push(['Modulus fit interval', mft]);
   const columns: XlsxInfo['columns'] = [];

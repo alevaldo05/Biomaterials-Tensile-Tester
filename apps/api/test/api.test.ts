@@ -630,6 +630,16 @@ describe.skipIf(!PG_BIN)('API against a real PostgreSQL', () => {
       expect(Math.abs(Date.parse(list[0]?.startedAt as string) - (T0 + 30))).toBeLessThan(2);   /* arrival time of the first sample line */
     });
 
+    it('keeps who ran the test on the lab computer in the stored file, and refuses a malformed one', async () => {
+      const u = await mkSignedIn();
+      const operator = { name: 'Sam Student', username: 'sam', kind: 'student', responsible: { name: 'Olga Operator', username: 'olga', confirmedBy: 'gave access' } };
+      const r = await upload(u.cookie, { ...sessionFile({ samples: 3, material: 'Run by' }), operator });
+      expect(r.statusCode).toBe(201);
+      const back = JSON.parse((await call(app, 'GET', '/test-sessions/' + r.json().id + '/file', u.cookie)).body);
+      expect(back.operator).toEqual(operator);
+      expect((await upload(u.cookie, { ...sessionFile({ samples: 3, material: 'Bad run by' }), operator: { ...operator, kind: 'boss' } })).statusCode).toBe(400);
+    });
+
     it('refuses a recorded test that used a calibration made for the simulator', async () => {
       const u = await mkSignedIn();
       const cal = { id: 'cal-force', quantity: 'force', unit: 'N', slope: 2, offset: 0, signalPath: {}, origin: 'simulated', createdAt: '2026-01-01' };

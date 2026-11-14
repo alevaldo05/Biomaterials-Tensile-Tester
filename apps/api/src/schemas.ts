@@ -65,6 +65,11 @@ export const SessionFileBody = z.object({
   forceZero_N: z.number().finite().optional(),
   interrupted: z.boolean().optional(),
   endReason: z.string().max(2000).optional(),
+  /* optional, from newer apps: who ran the test on the lab computer, and a student's responsible operator */
+  operator: z.strictObject({
+    name: z.string().min(1).max(80), username: z.string().min(1).max(40), kind: z.enum(['admin', 'operator', 'student']),
+    responsible: z.strictObject({ name: z.string().min(1).max(80), username: z.string().min(1).max(40), confirmedBy: z.enum(['gave access', 'password']) }).optional(),
+  }).nullable().optional(),
 }).refine((f) => f.receivedAt_ms.length === f.lines.length, 'receivedAt_ms: there must be one arrival time for each line.');
 
 /* What a device may send (packages/protocol/src/messages.ts). A saved line of any other type was not sent by a device. */

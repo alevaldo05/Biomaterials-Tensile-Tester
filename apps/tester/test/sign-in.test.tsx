@@ -9,6 +9,9 @@ import { createElement } from 'react';
 import { renderToStaticMarkup } from 'react-dom/server';
 import { App } from '../src/App';
 import { Device } from '../src/pages/Device';
+import { LoadTest } from '../src/pages/LoadTest';
+import { openTestFile } from '../src/load';
+import { samplesCsv, testCsv } from '../src/exports';
 import { BROWSER_WHY, MachineAccess, People, operatorBlockOf, responsibleText, runByText, usageCsv } from '../src/people';
 import type { Me, PeopleBridge } from '../src/people';
 import { TestController, sessionFileFromJournal } from '../src/controller';
@@ -79,6 +82,18 @@ describe('who may run the machine', () => {
     expect(runByText(kept.operator)).toBe('Sam Student (student, sam)');
     expect(responsibleText(kept.operator)).toBe('Olga Operator (olga; gave access)');
     expect(runByText(undefined)).toBe('Not recorded');
+    /* the test data CSV and the raw-samples CSV carry it as header lines */
+    const csv = testCsv(c)!;
+    expect(csv).toMatch(/^# Run by,"Sam Student \(student, sam\)"\r?$/m);
+    expect(csv).toMatch(/^# Responsible operator,"Olga Operator \(olga; gave access\)"\r?$/m);
+    expect(samplesCsv(c, c.session!)).toMatch(/^# Run by,"Sam Student \(student, sam\)"$/m);
+    /* Load test shows it for a session file, and "Not recorded" for an older file without it */
+    const loaded = await openTestFile('t.session.json', JSON.stringify(c.sessionFile()));
+    const page = (l: typeof loaded) => renderToStaticMarkup(createElement(LoadTest, { loaded: l, error: '', theme: 'light', recent: [], openFile: () => undefined, clear: () => undefined }));
+    expect(page(loaded)).toContain('<dt>Run by</dt><dd>Sam Student (student, sam)</dd>');
+    expect(page(loaded)).toContain('<dt>Responsible operator</dt><dd>Olga Operator (olga; gave access)</dd>');
+    const old = { ...c.sessionFile()! }; delete old.operator;
+    expect(page(await openTestFile('old.session.json', JSON.stringify(old)))).toContain('<dt>Run by</dt><dd>Not recorded</dd>');
   });
 });
 
