@@ -2,6 +2,8 @@
 import { useEffect, useState } from 'react';
 import type { SessionJournal, JournalMeta } from '../storage/journal';
 import { desktopBridge } from '../desktop';
+import { THEME_CHOICES } from '../theme';
+import type { ThemeChoice } from '../theme';
 
 /* The Windows app only: where the lab server is. Saved by the Windows app on this computer. */
 function LabAddress({ recording, changed, reachable }: { recording: boolean; changed: () => void; reachable: boolean | null }) {
@@ -30,7 +32,7 @@ function LabAddress({ recording, changed, reachable }: { recording: boolean; cha
   </>);
 }
 
-export function Settings({ theme, toggleTheme, journal, download, recording, labChanged, reachable }: { theme: string; toggleTheme: () => void; journal: SessionJournal | null; download: (m: JournalMeta) => void; recording: boolean; labChanged: () => void; reachable: boolean | null }) {
+export function Settings({ themeChoice, setThemeChoice, journal, download, recording, labChanged, reachable }: { themeChoice: ThemeChoice; setThemeChoice: (c: ThemeChoice) => void; journal: SessionJournal | null; download: (m: JournalMeta) => void; recording: boolean; labChanged: () => void; reachable: boolean | null }) {
   const [items, setItems] = useState<JournalMeta[]>([]);
   const [space, setSpace] = useState<{ usage: number; quota: number } | null>(null);
   const reload = () => { if (journal) { void journal.list().then(setItems); void journal.estimate().then(setSpace); } };
@@ -41,7 +43,16 @@ export function Settings({ theme, toggleTheme, journal, download, recording, lab
       <h1>Settings</h1>
       <section className="card-plain" aria-labelledby="look-title">
         <h2 id="look-title">Display</h2>
-        <p className="row"><span>Theme: {theme === 'dark' ? 'Dark' : 'Light'}</span><button type="button" onClick={toggleTheme}>Switch to {theme === 'dark' ? 'light' : 'dark'}</button></p>
+        <fieldset className="choice-group">
+          <legend>Theme</legend>
+          <div className="seg-choice">
+            {THEME_CHOICES.map((t) => (
+              <label key={t.id} className={themeChoice === t.id ? 'seg-on' : ''}>
+                <input type="radio" name="app-theme" value={t.id} checked={themeChoice === t.id} onChange={() => setThemeChoice(t.id)} />{t.label}
+              </label>))}
+          </div>
+          <p className="hint">Follow system uses this computer's light or dark setting. Remembered on this computer.</p>
+        </fieldset>
       </section>
       <section className="card-plain" aria-labelledby="store-title">
         <h2 id="store-title">Recordings on this computer</h2>

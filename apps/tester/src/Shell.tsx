@@ -2,7 +2,8 @@
    and the Need help button. The lab server is optional; recording never depends on it. */
 import { useCallback, useEffect, useMemo, useRef, useState, useSyncExternalStore } from 'react';
 import type { TestType } from '@tensile/core';
-import { App, useTheme } from './App';
+import { App } from './App';
+import { useTheme } from './theme';
 import type { TestController } from './controller';
 import { sessionFileFromJournal } from './controller';
 import { ApiError, LabApi } from './lab-api';
@@ -84,7 +85,7 @@ export interface ShellProps { controller: TestController; serialAvailable: boole
 
 export function Shell({ controller: c, serialAvailable, journal, methods }: ShellProps) {
   useSyncExternalStore(c.subscribe, c.snapshot);
-  const [theme, toggleTheme] = useTheme();
+  const { theme, choice: themeChoice, setChoice: setThemeChoice } = useTheme();
   const api = useMemo(() => new LabApi(), []);
   const [reachable, setReachable] = useState<boolean | null>(null);
   const [user, setUser] = useState<LabUser | null>(null);
@@ -194,7 +195,7 @@ export function Shell({ controller: c, serialAvailable, journal, methods }: Shel
       {page === 'device' ? <Device controller={c} account={account} serialAvailable={serialAvailable} /> : null}
       {page === 'history' && user ? <main className="page" id="main-content"><History account={account} onReplay={(text) => void open('lab-test.session.json', text)} /></main> : null}
       {page === 'help' ? <HelpPage /> : null}
-      {page === 'settings' ? <Settings theme={theme} toggleTheme={toggleTheme} journal={journal} download={(m) => void downloadLocal(m)} recording={recording} labChanged={() => { setViewAsUser(false); check(); }} reachable={reachable} /> : null}
+      {page === 'settings' ? <Settings themeChoice={themeChoice} setThemeChoice={setThemeChoice} journal={journal} download={(m) => void downloadLocal(m)} recording={recording} labChanged={() => { setViewAsUser(false); check(); }} reachable={reachable} /> : null}
       {page === 'admin' && effectiveRole === 'admin' ? <main className="page" id="main-content"><Admin account={account} controller={c} /></main> : null}
 
       <HelpButton topic={topic} onOpenHelp={() => setPage('help')} />

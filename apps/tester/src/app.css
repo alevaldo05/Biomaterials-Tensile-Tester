@@ -5,6 +5,8 @@
   --accent: #3f6b52; --accent-ink: #ffffff; --accent-hover: #335841; --link: #2f5a43; --mark: #b45309;
   --focus: #1f4d36; --danger: #9a3a3a; --danger-ink: #ffffff;
   --panel: #ffffff; --ok: #2f6b45; --warn: #8a5a00; --live: #a3321f;
+  --card: #ffffff; --line-soft: #ebe6da; --selected: #e4ede6; --selected-ink: #2f5a43; --live-soft: #f8ebe7;
+  --tag-bg: #f3efe4; --tag-line: #c9c3b2; --tag-ink: #3d4a42; --strong-bg: #1f2a24; --strong-ink: #ffffff;
   --radius: 8px; --gap: 12px;
   --font: system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
   color-scheme: light;
@@ -14,6 +16,8 @@
   --accent: #7fb08f; --accent-ink: #14201a; --accent-hover: #93c0a1; --link: #94c6a5; --mark: #f0a24b;
   --focus: #b6dcc2; --danger: #f0a3a3; --danger-ink: #2a1414;
   --panel: #1f2925; --ok: #8fd0a4; --warn: #f0c36b; --live: #ff9d8a;
+  --card: #222d28; --line-soft: #2e3a34; --selected: #2b3b33; --selected-ink: #94c6a5; --live-soft: #3a2622;
+  --tag-bg: #2b3530; --tag-line: #4d5d55; --tag-ink: #d5e0d8; --strong-bg: #e8efe9; --strong-ink: #14201a;
   color-scheme: dark;
 }
 * { box-sizing: border-box; }
@@ -232,6 +236,17 @@ input[type="password"] { width: 100%; background: var(--panel); border: 1px soli
   .results th, .results td { border: 0; padding: 1px 0; }
   .facts div, .facts.wide div { grid-template-columns: minmax(0, 1fr); gap: 0; }
 }
+
+/* A segmented choice made of radio buttons (Settings: theme). */
+.choice-group { border: 0; margin: 0; padding: 0; min-width: 0; display: grid; gap: 6px; }
+.choice-group legend { padding: 0 0 6px; font-size: 0.87rem; font-weight: 600; }
+.choice-group .hint { margin: 0; }
+.seg-choice { display: flex; flex-wrap: wrap; border: 1px solid var(--control-line); border-radius: var(--radius); overflow: hidden; max-width: 34rem; }
+.seg-choice label { flex: 1 1 6rem; display: flex; align-items: center; justify-content: center; gap: 8px; min-height: 44px; padding: 0 12px; background: var(--panel); cursor: pointer; }
+.seg-choice label + label { border-left: 1px solid var(--control-line); }
+.seg-choice label.seg-on { background: var(--selected); color: var(--selected-ink); font-weight: 650; }
+.seg-choice input { width: 18px; height: 18px; margin: 0; accent-color: var(--accent); }
+.seg-choice label:has(input:focus-visible) { outline: 3px solid var(--focus); outline-offset: -3px; }
 
 /* Load test: one test or a comparison */
 .seg { display: inline-flex; border: 1px solid var(--control-line); border-radius: 8px; overflow: hidden; width: fit-content; }

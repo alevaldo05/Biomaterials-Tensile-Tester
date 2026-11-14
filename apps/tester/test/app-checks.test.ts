@@ -15,6 +15,7 @@ import { LabMethods, MemoryMethods, methodFromSetup, setupFromMethod } from '../
 import type { TestMethod } from '../src/storage/methods';
 import type { SessionRow } from '../src/lab-api';
 import { EMPTY_SETUP } from '../src/setup';
+import { readThemeChoice, resolveTheme, saveThemeChoice, THEME_KEY } from '../src/theme';
 import { measuredSetup, move, ready, rig } from './helpers';
 
 const here = path.dirname(fileURLToPath(import.meta.url)), ROOT = path.resolve(here, '../../..');
@@ -213,11 +214,58 @@ describe('control borders', () => {
       for (const bg of ['bg', 'surface', 'panel'] as const) expect(ratio(t['control-line'] as string, t[bg] as string), name + ' vs ' + bg).toBeGreaterThanOrEqual(3);
     }
   });
+  it('keeps text at least 4.5:1 against the page, surface, panel, and card in both themes', () => {
+    for (const [name, t] of [['light', light], ['dark', dark]] as const) {
+      for (const ink of ['ink', 'muted', 'link', 'danger', 'ok', 'warn', 'live'] as const) {
+        for (const bg of ['bg', 'surface', 'panel', 'card'] as const) expect(ratio(t[ink] as string, t[bg] as string), name + ' ' + ink + ' vs ' + bg).toBeGreaterThanOrEqual(4.5);
+      }
+      expect(ratio(t['selected-ink'] as string, t.selected as string), name + ' selected').toBeGreaterThanOrEqual(4.5);
+      expect(ratio(t.ink as string, t.selected as string), name + ' ink on selected').toBeGreaterThanOrEqual(4.5);
+      expect(ratio(t['tag-ink'] as string, t['tag-bg'] as string), name + ' tag').toBeGreaterThanOrEqual(4.5);
+      expect(ratio(t.live as string, t['live-soft'] as string), name + ' recording').toBeGreaterThanOrEqual(4.5);
+      expect(ratio(t['accent-ink'] as string, t.accent as string), name + ' primary button').toBeGreaterThanOrEqual(4.5);
+      expect(ratio(t['strong-ink'] as string, t['strong-bg'] as string), name + ' End recording button').toBeGreaterThanOrEqual(4.5);
+      expect(ratio(t['control-line'] as string, t.card as string), name + ' control vs card').toBeGreaterThanOrEqual(3);
+    }
+  });
   it('uses that border on buttons, text boxes, selects, and the password box', () => {
     for (const sel of ['button {', 'input[type="text"], select, input[type="file"], textarea {', 'input[type="password"] {']) {
       const line = css.split('\n').find((l) => l.startsWith(sel)) ?? '';
       expect(line, sel).toContain('border: 1px solid var(--control-line)');
     }
+  });
+});
+
+describe('theme', () => {
+  const memory = () => { const m = new Map<string, string>(); return { getItem: (k: string) => m.get(k) ?? null, setItem: (k: string, v: string) => { m.set(k, v); }, m }; };
+  it('follows the computer by default, and when storage is empty, unknown, or refused', () => {
+    expect(readThemeChoice(memory())).toBe('system');
+    const odd = memory(); odd.setItem(THEME_KEY, 'purple');
+    expect(readThemeChoice(odd)).toBe('system');
+    expect(readThemeChoice({ getItem: () => { throw new Error('refused'); }, setItem: () => { throw new Error('refused'); } })).toBe('system');
+    expect(readThemeChoice(null)).toBe('system');
+    expect(resolveTheme('system', true)).toBe('dark');
+    expect(resolveTheme('system', false)).toBe('light');
+  });
+  it('remembers Light, Dark, and Follow system on this computer, and a refused write is not an error', () => {
+    for (const c of ['light', 'dark', 'system'] as const) {
+      const s = memory();
+      saveThemeChoice(c, s);
+      expect(s.m.get(THEME_KEY)).toBe(c);
+      expect(readThemeChoice(s)).toBe(c);
+    }
+    expect(resolveTheme('light', true)).toBe('light');
+    expect(resolveTheme('dark', false)).toBe('dark');
+    expect(() => saveThemeChoice('dark', { getItem: () => null, setItem: () => { throw new Error('full'); } })).not.toThrow();
+  });
+  it('offers the three choices as one radio group in Settings, tracks the computer live, and has no purple or pink', () => {
+    const settings = readFileSync(path.join(here, '../src/pages/Settings.tsx'), 'utf8');
+    expect(settings).toContain('<legend>Theme</legend>');
+    expect(settings).toContain('type="radio" name="app-theme"');
+    const theme = readFileSync(path.join(here, '../src/theme.ts'), 'utf8');
+    expect(theme).toContain("{ id: 'light', label: 'Light' }, { id: 'dark', label: 'Dark' }, { id: 'system', label: 'Follow system' }");
+    expect(theme).toMatch(/addEventListener\('change'/);
+    expect(readFileSync(path.join(here, '../src/app.css'), 'utf8')).not.toMatch(/purple|pink/i);
   });
 });
 

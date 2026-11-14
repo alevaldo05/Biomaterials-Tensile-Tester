@@ -34,17 +34,6 @@ const STEPS: { id: StepId; name: string }[] = [
   { id: 'calibration', name: 'Channels and calibration' }, { id: 'review', name: 'Review and start' },
 ];
 
-export function useTheme(): [string, () => void] {
-  /* Follows the computer's light or dark setting until the person chooses one in Settings. */
-  const [theme, setTheme] = useState(() => {
-    let saved: string | null = null;
-    try { saved = localStorage.getItem('app-theme'); } catch { /* storage refused */ }
-    return saved === 'dark' || saved === 'light' ? saved : typeof matchMedia === 'function' && matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
-  });
-  useEffect(() => { document.documentElement.dataset.theme = theme; }, [theme]);
-  return [theme, () => setTheme((t) => { const n = t === 'dark' ? 'light' : 'dark'; try { localStorage.setItem('app-theme', n); } catch { /* the choice is just not remembered */ } return n; })];
-}
-
 export interface TestScreenProps {
   controller: TestController;
   serialAvailable: boolean;
