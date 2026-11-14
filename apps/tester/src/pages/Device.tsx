@@ -3,6 +3,7 @@
 import { useEffect, useRef, useState, useSyncExternalStore } from 'react';
 import type { TestController } from '../controller';
 import type { Account } from '../lab-api';
+import { SetupFileMaker } from './SetupFileMaker';
 import { CalibrationCheck } from './CalibrationCheck';
 import { BenchCalibration } from './BenchCalibration';
 import { CalibrationPanel, DeviceFacts } from '../components/DevicePanels';
@@ -42,6 +43,7 @@ export function Device({ controller: c, account, serialAvailable }: { controller
             <h2 id="cal-title">Calibration in use</h2>
             <CalibrationPanel c={c} account={account} />
           </section>
+          <SetupFileMaker controller={c} />
           <CalibrationCheck controller={c} />
           <BenchCalibration controller={c} />
         </div>
