@@ -15,7 +15,7 @@ import { runTestFrom, upsertRunTest } from './run-tests';
 import type { RunTest } from './run-tests';
 import { helpFor } from './help-text';
 import { HelpButton } from './components/HelpButton';
-import { StatusIndicators } from './components/StatusIndicators';
+import { StatusIndicators, indicators } from './components/StatusIndicators';
 import type { JournalMeta, SessionJournal } from './storage/journal';
 import { LabMethods } from './storage/methods';
 import type { MethodStore } from './storage/methods';
@@ -168,6 +168,8 @@ export function Shell({ controller: c, serialAvailable, journal, methods }: Shel
   const nav = (id: Page, label: string) => (
     <button type="button" className={'nav' + (page === id ? ' nav-on' : '')} aria-current={page === id ? 'page' : undefined} disabled={recording && id !== 'test' && id !== 'help'} onClick={() => setPage(id)}>{label}</button>
   );
+  const ind = indicators(c, account);
+  const glance = { state: ind[0]!.value, detail: c.source?.identity ? c.source.identity.deviceType + ' · ' + c.source.identity.deviceId : '', calibration: ind[2]!.value };
   const topic = helpFor(page, page === 'test' ? helpSub : undefined);
 
   return (
@@ -193,17 +195,17 @@ export function Shell({ controller: c, serialAvailable, journal, methods }: Shel
       <StatusIndicators controller={c} account={account} />
       {viewAsUser ? <p className="view-as" role="status">Viewing as a user. This changes only what this screen shows; your admin permissions are unchanged. <button type="button" className="link" onClick={() => setViewAsUser(false)}>Back to admin view</button></p> : null}
 
-      {page === 'home' ? <Home go={go} recent={recent} interrupted={interrupted} recover={(m, how) => void recover(m, how)} recording={recording} /> : null}
+      {page === 'home' ? <Home go={go} recent={recent} interrupted={interrupted} recover={(m, how) => void recover(m, how)} recording={recording} device={glance} /> : null}
       {page === 'test' ? <App controller={c} serialAvailable={serialAvailable} theme={theme} account={account} onHelpSub={onHelpSub} runTests={runTests} /> : null}
       {page === 'load' ? <LoadTest loaded={loaded} error={loadError} theme={theme} recent={recent} openFile={(n, t, h) => void open(n, t, h)} clear={() => { setLoaded(null); setLoadError(''); }} /> : null}
       {page === 'methods' ? <Methods store={methods} lab={labMethods} labAdmin={effectiveRole === 'admin'} controller={c} start={() => setPage('test')} /> : null}
       {page === 'device' ? <Device controller={c} account={account} serialAvailable={serialAvailable} /> : null}
       {page === 'history' && user ? <main className="page" id="main-content"><History account={account} onReplay={(text) => void open('lab-test.session.json', text)} /></main> : null}
-      {page === 'help' ? <HelpPage /> : null}
+      {page === 'help' ? <HelpPage openDevice={() => setPage('device')} /> : null}
       {page === 'settings' ? <Settings themeChoice={themeChoice} setThemeChoice={setThemeChoice} journal={journal} download={(m) => void downloadLocal(m)} recording={recording} labChanged={() => { setViewAsUser(false); check(); }} reachable={reachable} /> : null}
       {page === 'admin' && effectiveRole === 'admin' ? <main className="page" id="main-content"><Admin account={account} controller={c} /></main> : null}
 
-      <HelpButton topic={topic} onOpenHelp={() => setPage('help')} />
+      <div className="help-bar"><HelpButton topic={topic} onOpenHelp={() => setPage('help')} /></div>
 
       <Dialog open={dialog === 'sign-in'} title="Sign in to the lab server" onClose={() => setDialog(null)}>
         <SignIn api={api} onDone={(u) => { setUser(u); setDialog(u.mustChangePassword ? 'password' : null); }} onCancel={() => setDialog(null)} />
