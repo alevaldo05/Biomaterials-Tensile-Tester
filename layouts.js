@@ -52,7 +52,7 @@
     if (heroActions) heroActions.remove();
     var start = el('div', { 'class': 'start-actions' },
       '<a class="action-card primary" href="choose-test.html">' + icon('M12 4v11M7 10l5 5 5-5M5 20h14') +
-        '<span class="ac-title">Get the app</span><span class="ac-text">' + cardText('getApp', 'The Windows app that connects to the tester and records tests. Download not yet available.') + '</span></a>' +
+        '<span class="ac-title">Get the app</span><span class="ac-text">' + cardText('getApp', 'The Windows app that connects to the tester and records tests. Download the beta.') + '</span></a>' +
       '<a class="action-card" href="learn.html">' + icon('M12 6c-2-2-6-2-8-1v14c2-1 6-1 8 1c2-2 6-2 8-1V5c-2-1-6-1-8 1zM12 6v14') +
         '<span class="ac-title">Learn and practice</span><span class="ac-text">' + cardText('learnStart', 'Before you test, practice with a simulated test, reopen saved files, and the glossary.') + '</span></a>');
     main.insertBefore(start, main.firstChild);

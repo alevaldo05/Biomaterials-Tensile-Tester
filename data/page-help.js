@@ -6,7 +6,7 @@ window.PAGE_HELP = {
   'index.html': {
     title: 'Getting started',
     lines: [
-      'Tests on the tester are run in the tester app on the lab computer. Get the app explains where to find it; the download is not yet available.',
+      'Tests on the tester are run in the tester app on the lab computer. Get the app has the beta download link for Windows.',
       'To learn the steps first, open Learn and practice: it has the checklist for before you test and a practice page with a labeled simulator.',
       'To reopen a CSV file saved earlier, use Load Test (in the Learn page and the menu).'
     ]

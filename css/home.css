@@ -1,6 +1,6 @@
 /* Home, the shared buttons, and the Home additions. Part of the site's styles: every page links these files in the order listed in FILES.md. */
 /* ---------- Home ---------- */
-.logo { width: 56px; height: 28px; flex: none; }
+.logo { width: 30px; height: 30px; flex: none; }
 .hero {
   background: var(--surface);
   background: linear-gradient(135deg, color-mix(in srgb, var(--accent) 16%, var(--bg)), var(--bg) 70%);

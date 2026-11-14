@@ -7,7 +7,9 @@
    The lab server (optional, set in Settings) is a data connection only: requests to /api/v1/ are sent on to it by
    lab-proxy.cjs, which keeps the sign-in here and never gives it to the screens.
    Recordings are kept as files in the app's data folder ("recordings") by journal-files.cjs, which checks
-   everything the screens send. */
+   everything the screens send.
+   Update check (update-check.cjs): once per start, when the screens ask and the "Check for updates" setting is on,
+   it asks GitHub whether a newer published release exists. It downloads nothing; the person opens the release page. */
 const { app, BrowserWindow, dialog, ipcMain, Menu, net, protocol, session, shell } = require('electron');
 const fs = require('node:fs');
 const path = require('node:path');
@@ -15,6 +17,7 @@ const { pathToFileURL } = require('node:url');
 const { uiFile } = require('./ui-files.cjs');
 const { checkLabUrl, createLabProxy, API_PREFIX } = require('./lab-proxy.cjs');
 const { createJournalFiles } = require('./journal-files.cjs');
+const { createUpdateOnce, isReleasePage } = require('./update-check.cjs');
 
 const SCHEME = 'app', ORIGIN = 'app://tester';
 const UI_DIR = path.join(__dirname, 'ui');
@@ -27,17 +30,31 @@ protocol.registerSchemesAsPrivileged([{ scheme: SCHEME, privileges: { standard: 
 const firstCopy = app.requestSingleInstanceLock();
 if (!firstCopy) app.quit();
 
-/* Settings kept by the Windows app on this computer: only the lab server address. */
+/* Settings kept by the Windows app on this computer: the lab server address and whether to check for updates. */
 const settingsFile = () => path.join(app.getPath('userData'), 'desktop-settings.json');
 let labUrl = '';
+let checkUpdates = true;
 function loadSettings() {
-  try { const s = JSON.parse(fs.readFileSync(settingsFile(), 'utf8')); const c = checkLabUrl(s.labUrl); labUrl = c.url ?? ''; } catch { labUrl = ''; }
+  let s = {};
+  try { s = JSON.parse(fs.readFileSync(settingsFile(), 'utf8')) || {}; } catch { s = {}; }
+  const c = checkLabUrl(s.labUrl); labUrl = c.url ?? '';
+  checkUpdates = s.checkUpdates !== false;
 }
-function saveLabUrl(url) {
+function saveSettings(next) {
   fs.mkdirSync(path.dirname(settingsFile()), { recursive: true });
-  fs.writeFileSync(settingsFile(), JSON.stringify({ labUrl: url }, null, 2));
-  labUrl = url;
+  fs.writeFileSync(settingsFile(), JSON.stringify({ labUrl: next.labUrl, checkUpdates: next.checkUpdates }, null, 2));
+  labUrl = next.labUrl; checkUpdates = next.checkUpdates;
 }
+const saveLabUrl = (url) => saveSettings({ labUrl: url, checkUpdates });
+
+/* This copy's version and the workflow run it was built by (package.json buildNumber, set only by the workflow). */
+function ownBuild() {
+  let run = 0;
+  try { const n = require('./package.json').buildNumber; if (Number.isInteger(n) && n > 0) run = n; } catch { run = 0; }
+  return { version: app.getVersion(), run };
+}
+/* At most one request to GitHub per start; never while the setting is off. */
+const updateOnce = createUpdateOnce((url, init) => net.fetch(url, init), ownBuild, () => checkUpdates);
 const lab = createLabProxy({ fetch: (url, init) => net.fetch(url, init), labUrl: () => labUrl });
 
 const fromApp = (url) => typeof url === 'string' && (url === ORIGIN || url.startsWith(ORIGIN + '/'));
@@ -112,6 +129,18 @@ function bridge() {
     });
   }
   ipcMain.handle('lab-server:get', (e) => (own(e) ? labUrl : ''));
+  ipcMain.handle('update:check', (e) => (own(e) ? updateOnce() : { available: false }));
+  ipcMain.handle('update:open', (e, url) => {
+    if (!own(e) || !isReleasePage(url)) return false;
+    void shell.openExternal(String(url));
+    return true;
+  });
+  ipcMain.handle('update:get-setting', (e) => (own(e) ? checkUpdates : true));
+  ipcMain.handle('update:set-setting', (e, on) => {
+    if (!own(e) || typeof on !== 'boolean') return { error: 'Not allowed.' };
+    try { saveSettings({ labUrl, checkUpdates: on }); } catch { return { error: 'The setting could not be saved on this computer.' }; }
+    return { on };
+  });
   ipcMain.handle('lab-server:set', (e, input) => {
     if (!own(e)) return { error: 'Not allowed.' };
     const c = checkLabUrl(typeof input === 'string' ? input.slice(0, 300) : '');

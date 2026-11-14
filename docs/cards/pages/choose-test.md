@@ -12,11 +12,11 @@ The page after the **Get the app** button on Home. The website no longer has liv
 
 ## What the user sees
 - Heading **Get the App** and a sentence: tests on the tester are run in the tester app, a Windows app installed on the lab computer; this website is for learning, protocols, materials, and reopening saved files
-- The plain line **Download not yet available.** (no button, since there is nothing to download yet), and a sentence: real tests are run in the tester app installed on the lab computer, which connects over USB; a Windows download will be offered here once a release is ready; the hardware connection is untested
+- A primary link **Download the tester app (beta)** to `https://github.com/alevaldo05/Biomaterials-Tensile-Tester/releases/latest`, the line "For Windows. Beta.", and a sentence: real tests are run in the tester app installed on the lab computer, which connects over USB
 - A link **Practice with a simulated test** to `practice.html` and a link to **Load Test** (`load-test.html`, which also opens CSV files saved by the tester app); links to the two draft protocols
 
 ## Behavior to keep
-- The tester app is not published on GitHub Pages. Replace the line with a real download link only when the owner has published a release
+- The tester app is not published on GitHub Pages. The download link shows a release only after the owner publishes one (the app's draft releases are not visible to the public)
 - Do not link to `.md` files from this page (they are not published); describe `docs/app/CONTAINERS.md` and `docs/app/SETUP.md` in words only
 - Never present simulated data as measured; nothing on this page is called an emergency stop
 

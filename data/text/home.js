@@ -12,7 +12,7 @@ window.SITE_TEXT.home = {
 
   /* Short descriptions on the cards in the "Start screen" layout. */
   cards: {
-    getApp: "The Windows app that connects to the tester and records tests. Download not yet available.",
+    getApp: "The Windows app that connects to the tester and records tests. Download the beta.",
     learnStart: "Before you test, practice with a simulated test, reopen saved files, and the glossary.",
     protocols: "Procedures for each test and material.",
     materials: "Properties, a stiffness chart, and sample graphs for many materials.",

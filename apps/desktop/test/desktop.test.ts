@@ -32,21 +32,28 @@ describe('Windows app', () => {
   it('sends no machine commands and has no other way to reach the device', () => {
     expect(main).not.toMatch(/start_stream|stop_stream|set_settings|serialport|child_process/);
   });
-  it('answers only the lab-address and journal calls, and only from its own screens', () => {
-    expect([...main.matchAll(/ipcMain\.(\w+)\('([^']+)'/g)].map((m) => m[1] + ' ' + m[2])).toEqual(['handle journal:', 'handle lab-server:get', 'handle lab-server:set']);
+  it('answers only the lab-address, journal, and update calls, and only from its own screens', () => {
+    expect([...main.matchAll(/ipcMain\.(\w+)\('([^']+)'/g)].map((m) => m[1] + ' ' + m[2])).toEqual(['handle journal:', 'handle lab-server:get', 'handle update:check', 'handle update:open', 'handle update:get-setting', 'handle update:set-setting', 'handle lab-server:set']);
+    expect(main.match(/if \(!own\(e\)/g)?.length).toBe(4);
+    expect(main).toContain("ipcMain.handle('update:check', (e) => (own(e) ? updateOnce() : { available: false }));");
+    expect(main).toContain("ipcMain.handle('update:get-setting', (e) => (own(e) ? checkUpdates : true));");
+    /* the release page is checked before it is opened, and nothing else is opened from an update call */
+    expect(main).toContain("if (!own(e) || !isReleasePage(url)) return false;");
+    expect(main).toContain("if (!own(e) || typeof on !== 'boolean') return { error: 'Not allowed.' };");
     expect(main).toContain("const JOURNAL_CALLS = ['begin', 'append', 'finish', 'list', 'lines', 'remove', 'estimate'];");
     expect(main).toContain("if (!own(e)) throw new Error('Not allowed.');");
     expect(main).not.toMatch(/ipcMain\.on\(|webContents\.send|\.send\(/);
     expect(main).toContain('const own = (e) => fromApp(e.senderFrame && e.senderFrame.url);');
     expect(main).toContain('checkLabUrl(');
   });
-  it('the preload gives the screens a fixed label, the lab-address calls, and the journal calls, nothing else', () => {
+  it('the preload gives the screens a fixed label, the lab-address, journal, and update calls, nothing else', () => {
     const pre = read('preload.cjs');
     expect(pre.match(/exposeInMainWorld/g)).toHaveLength(1);
     expect(pre).toContain("kind: 'windows-app'");
     expect([...pre.matchAll(/ipcRenderer\.(\w+)\('([^']+)'/g)].map((m) => m[1] + ' ' + m[2])).toEqual(['invoke lab-server:get', 'invoke lab-server:set',
+      'invoke update:check', 'invoke update:open', 'invoke update:get-setting', 'invoke update:set-setting',
       ...['begin', 'append', 'finish', 'list', 'lines', 'remove', 'estimate'].map((n) => 'invoke journal:' + n)]);
-    expect(pre.match(/ipcRenderer\./g)).toHaveLength(9);
+    expect(pre.match(/ipcRenderer\./g)).toHaveLength(13);
     expect(pre).not.toMatch(/require\(['"](fs|node:|child_process|path)/);
   });
   it('sends only /api/v1/ requests to the lab server, never screens', () => {
@@ -73,7 +80,7 @@ describe('Windows app', () => {
     expect(pkg.build.publish).toBeNull();
     expect(pkg.build.nsis.artifactName).toContain('beta-unsigned');
     expect(pkg.build.files).not.toContain('node_modules/**/*');
-    expect(pkg.build.files).toEqual(expect.arrayContaining(['main.cjs', 'preload.cjs', 'ui-files.cjs', 'lab-proxy.cjs', 'journal-files.cjs', 'ui/**/*']));
+    expect(pkg.build.files).toEqual(expect.arrayContaining(['main.cjs', 'preload.cjs', 'ui-files.cjs', 'lab-proxy.cjs', 'journal-files.cjs', 'update-check.cjs', 'ui/**/*']));
   });
   it('builds an installer and a portable program, both x64, both named unsigned beta, with the same name before the kind', () => {
     const pkg = JSON.parse(read('package.json'));
@@ -94,5 +101,24 @@ describe('Windows app', () => {
     expect(wf).toContain("require('./apps/desktop/package.json').version");
     expect(wf).toContain('line="Version ${version} · built from ${GITHUB_SHA:0:12} · shared website files ${shared}"');
     expect(wf).toContain('${BUILD_LINE}');
+  });
+  it('builds a draft (not a pre-release, so the latest-release link finds it once published) and stamps the run number', () => {
+    const wf = readFileSync(path.resolve(dir, '../../.github/workflows/desktop.yml'), 'utf8');
+    expect(wf).toMatch(/gh release create "\$tag" --draft --target/);
+    expect(wf).not.toContain('--prerelease');
+    expect(wf).toContain('npm pkg set buildNumber="${GITHUB_RUN_NUMBER}" --json');
+    expect(wf).toContain('tag="app-v${version}-run.${GITHUB_RUN_NUMBER}"');
+    expect(wf).toMatch(/^ {2}workflow_dispatch:/m);
+    expect(wf).toMatch(/tags: \['app-v\*'\]/);
+  });
+  it('builds on merges into main that change the app or any shared website file (no file is missed)', () => {
+    const wf = readFileSync(path.resolve(dir, '../../.github/workflows/desktop.yml'), 'utf8');
+    const push = wf.split(/^ {2}push:\s*$/m)[1]!.split(/^\S/m)[0]!;
+    expect(push).toMatch(/^ {4}branches: \[main\]\s*$/m);
+    const paths = [...push.split(/^ {4}paths:\s*$/m)[1]!.matchAll(/^ {6}- '([^']+)'\s*$/gm)].map((m) => m[1]!);
+    const { SHARED_FILES } = createRequire(import.meta.url)('../../../scripts/shared-files.js') as { SHARED_FILES: string[] };
+    for (const f of [...SHARED_FILES, 'apps/**', 'packages/**', 'package-lock.json', 'scripts/shared-files.js', '.github/workflows/desktop.yml']) {
+      expect(paths, f + ' is missing from the paths in .github/workflows/desktop.yml').toContain(f);
+    }
   });
 });

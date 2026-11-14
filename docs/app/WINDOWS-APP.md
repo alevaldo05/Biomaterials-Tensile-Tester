@@ -26,7 +26,7 @@ files, the diagnostic summary, and Session details all show the same number. Ses
 `1.0.0-beta.1`; older files keep the version they were saved with.
 
 ## Building an installer
-The installer is built on GitHub, on Windows, by `.github/workflows/desktop.yml`. It runs only when started:
+The installer is built on GitHub, on Windows, by `.github/workflows/desktop.yml`. It runs after a merge into `main` that changes the app or a shared website file (see below), and when started by hand:
 1. GitHub > Actions > **Windows app** > Run workflow (or push a tag such as `app-v1.0.0-beta.1`).
 2. It runs the checks, builds the screens, the installer, and a portable program, and creates a **draft** release with
    `Biomaterials-Tensile-Tester-<version>-beta-unsigned-setup.exe` (installs the app),
@@ -36,8 +36,8 @@ The installer is built on GitHub, on Windows, by `.github/workflows/desktop.yml`
    a run started by a tag uses the tag.
 3. A draft is visible only to people who can change the repository. Download it, try it on the lab computer, and
    publish it (GitHub > Releases > Edit > Publish) only when you are satisfied.
-4. After publishing, the website's Get the App page can link to it (a separate change; until then it says
-   "Download not yet available").
+4. After publishing, the website's Get the App page link (**Download the tester app (beta)**, to the latest release)
+   shows it. Until the first release is published, that link has nothing to show.
 
 The installer and the portable program are **unsigned**: Windows SmartScreen warns before running them ("More info" >
 "Run anyway"). Code signing is not planned (a possible idea for later only), so Windows will keep warning.
@@ -71,13 +71,29 @@ stops the build before the draft release is made. It tries only that the built p
 not USB, recording, an installed copy, or a real person's Windows computer. It does not replace the first-install
 checklist below.
 
+## Automatic builds and the update notice
+Builds:
+- A merge into `main` that changes `apps/**`, `packages/**`, `package-lock.json`, `scripts/shared-files.js`, `.github/workflows/desktop.yml`, or a website file listed in `scripts/shared-files.js` runs Actions > **Windows app** and creates a new **draft** release. Its tag is `app-v<version>-run.<N>` and its title is "Tester app <version> (Windows, beta)". It is not marked pre-release.
+- Run workflow by hand and `app-v*` tags still work.
+- Owner steps: merge, open Releases, download and try the draft, then press **Publish**. Only published releases are offered on the website and in the app's notice.
+- Older drafts pile up. Delete the ones you do not want on the Releases page.
+- The website's download link shows a release only after the first one is published.
+
+Update notice (Windows app only, not the browser version):
+- A few seconds after the window loads, the app checks GitHub once. It asks `api.github.com` for this repository's latest releases (10 second timeout). On any failure it does nothing.
+- If a newer published release exists (a higher version, or the same version with a higher build run number), a small dismissible bar under the status line says "Version 1.0.0-beta.2 is available. Download". Download opens the release page in the computer's default browser. Installing stays the user's own click.
+- The bar is hidden while recording.
+- Settings has a switch, "Check for updates when the app starts", on by default and remembered on this computer. When it is off, no request is made.
+- People who have the app see the notice the next time they open it after a release is published.
+- The update check is untried on Windows.
+
 ## Refreshing the download after a website change
 The app copies some website files when it is built (definitions, materials) and its calculations are checked against
 others. A website change to one of the shared files reaches an installed app only through a new build.
 1. Run `node scripts/shared-files.js` on the updated `main`. It lists the shared files and prints the hash. If the
    short hash is the same as the one on the installed app's Help screen, nothing the app uses has changed.
-2. If it differs (or a shared file was changed on purpose), the owner starts the workflow: GitHub > Actions >
-   **Windows app** > Run workflow. The assistant never starts it.
+2. If it differs (or a shared file was changed on purpose), a merge into `main` starts the workflow by itself (or the owner starts it: GitHub > Actions >
+   **Windows app** > Run workflow). The assistant never starts it.
 3. When it finishes, download the artifacts from the draft release (both `.exe` files and `SHA256SUMS.txt`) and
    check their hashes (checklist row 1 and row 10).
 4. Install (or run the portable program), open Help, and compare the last part of the version line with the short

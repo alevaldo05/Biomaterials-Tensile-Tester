@@ -55,6 +55,8 @@ input[type="text"], select, input[type="file"], textarea { width: 100%; backgrou
 .nav-on, .nav-on:hover:not(:disabled) { color: var(--selected-ink); font-weight: 700; box-shadow: inset 0 -3px 0 var(--accent); }
 .account { display: inline-flex; flex-wrap: wrap; align-items: center; gap: 4px 8px; }
 .who { display: inline-flex; align-items: center; gap: 6px; font-weight: 600; }
+.update-bar { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; margin: 0; padding: 6px 20px; background: var(--surface); border-bottom: 1px solid var(--line); font-size: 0.9rem; }
+.update-bar .update-close { margin-left: auto; padding: 2px 8px; }
 .view-as { margin: 0; padding: 8px 20px; background: var(--surface); border-bottom: 1px solid var(--line); color: var(--warn); font-size: 0.9rem; }
 .app > main { flex: 1 1 auto; }
 .page { width: 100%; max-width: 1280px; margin: 0 auto; padding: 20px 20px 24px; display: grid; gap: 16px; align-content: start; min-width: 0; }
@@ -386,7 +388,7 @@ button.strong:hover:not(:disabled) { opacity: 0.9; }
 @media print {
   :root, :root[data-theme="dark"] { --bg: #fff; --surface: #fff; --panel: #fff; --ink: #000; --muted: #333; --line: #999; color-scheme: light; }
   body { background: #fff; color: #000; font-size: 11pt; }
-  .top, .statusbar, .view-as, .help-button, .help-panel, .toolbar, .graph-tools, .graph-guides, .views, .view-select, .info-button, .graph-readout, main > .row button, .quick, .test-top, .actions, .specimens, .side-state, .scrim, .test-center > .status, .notice-bad, .seg, .compare-add, .compare-table td:last-child, .compare-table th:last-child { display: none !important; }
+  .top, .statusbar, .view-as, .update-bar, .help-button, .help-panel, .toolbar, .graph-tools, .graph-guides, .views, .view-select, .info-button, .graph-readout, main > .row button, .quick, .test-top, .actions, .specimens, .side-state, .scrim, .test-center > .status, .notice-bad, .seg, .compare-add, .compare-table td:last-child, .compare-table th:last-child { display: none !important; }
   .test-grid { display: block; }
   .test-page { padding: 0; }
   .side { margin-top: 12px; }
