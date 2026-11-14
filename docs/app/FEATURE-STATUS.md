@@ -53,7 +53,7 @@ Updated with each stage. "Checked" means tried in Chrome's engine (Chromium on L
 ## Implemented but untested with real equipment
 
 - USB serial (Web Serial) connection: checked only against a stand-in port in the automated tests. No real board has been connected.
-- Real acquisition with a setup file (device profile and calibration records): the loading and the compatibility check are tested with made-up records; no real calibration exists yet.
+- Real acquisition with a setup file (device profile and calibration records): the loading and the compatibility check are tested with made-up records; no real calibration exists yet. A setup file can now be made in the app (Device → Make a setup file); tested with typed values only.
 - The protocol has been spoken by the simulator and by the reference firmware's code on a computer, never by a real board.
 
 ## Not built yet
