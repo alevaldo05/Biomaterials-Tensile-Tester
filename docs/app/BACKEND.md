@@ -100,10 +100,8 @@ Then start the app (`npm run app`); its development server passes `/api` to `htt
 
 ## Moving to the lab computer
 
-See [CONTAINERS.md](CONTAINERS.md): copy `deploy/.env` and a backup, start the containers, restore. Nothing in the code names a computer.
+See [CONTAINERS.md](CONTAINERS.md): copy `deploy/.env` and a backup, start the containers, restore. Nothing in the code names a computer. HTTPS (with a certificate in `deploy/certs`) and scheduled database backups are in CONTAINERS.md; they were run only with Docker on Linux here, checked with `curl`, and not in a browser over HTTPS or on Windows. Web Serial needs `localhost` or HTTPS, so the app is used on the computer the tester is plugged into until HTTPS is tried in a browser.
 
 ## Not done yet
 
-- HTTPS on the lab network. Web Serial needs `localhost` or HTTPS, so until HTTPS is set up the app is opened on the computer the tester is plugged into.
 - The website reading from the back end (planned).
-- Backups on a schedule.

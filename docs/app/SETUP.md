@@ -76,7 +76,7 @@ A sample line is about 110 characters. At the default 128 conversions per second
 
 ## Connecting in the app
 
-1. Plug the board in. In Chrome, open the app and choose **Real acquisition**.
+1. Plug the board in. In Chrome, open the app and press **Connect** in the Connection part of the Test screen's quick settings panel (also on the Device screen).
 2. **Connection:** press Connect and pick the port in the browser's own box. The app never opens a port by itself. When an ESP32 board opens, it may restart and print a few unreadable start-up lines; the app skips them and counts them.
 3. **Device:** the app asks the board who it is (the `hello` reply) and checks the protocol version, the channels, and the settings. A USB name alone is not accepted.
 4. **Calibration:** load the setup file (device profile and calibration records). A calibration is used only if the whole signal path matches the one it was made with (device type, ADC, range, input, conditioning circuit). After any change to the hardware or the signal path, the calibration has to be reviewed; it is never carried over because a new board uses the same channel names.
