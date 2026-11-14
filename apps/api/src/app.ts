@@ -83,13 +83,18 @@ export function buildApp(o: { db: Db; config: Config; logger?: boolean; limiter?
     /* ---------- signing in ---------- */
     api.post('/auth/login', async (req, reply) => {
       const b = parse(LoginBody, req.body), name = b.username.trim().toLowerCase(), keys = ['u:' + name, 'ip:' + req.ip];
-      const wait = limiter.blocked(keys);
+      /* the attempt is counted before the password is checked, so guesses sent at the same time cannot pass the limit */
+      const wait = limiter.reserve(keys);
       if (wait) return fail(429, 'too_many_attempts', 'Too many failed sign-ins. Try again in ' + Math.ceil(wait / 60000) + ' minutes.');
-      const r = await db.query('select id, username, display_name, role, must_change_password, password_hash, disabled from users where username = $1', [name]);
-      const row = r.rows[0];
-      const ok = row ? await verifyPassword(row.password_hash, b.password) : (await verifyPassword(await dummyHash(), b.password), false);
+      let row, ok: boolean;
+      try {
+        row = (await db.query('select id, username, display_name, role, must_change_password, password_hash, disabled from users where username = $1', [name])).rows[0];
+        ok = row ? await verifyPassword(row.password_hash, b.password) : (await verifyPassword(await dummyHash(), b.password), false);
+      } catch (e) {
+        limiter.release(keys);   /* not checked (for example the database is down), so not counted */
+        throw e;
+      }
       if (!ok || row.disabled) {
-        limiter.failed(keys);
         if (row) await audit(String(row.id), 'login_failed');   /* an unknown name is not stored: it may be a password typed in the wrong box */
         return fail(401, 'wrong_login', 'Wrong username or password.');
       }
