@@ -90,7 +90,6 @@ Not yet fixed:
 - The same file saved twice at once can be stored twice (the duplicate check, answering 409, is not atomic).
 - Pressing **New test** right after Stop can drop the last journal batch.
 - One-hour relaxation files exceed the 64 MB limits (the screen limit in `Shell.tsx` and the lab server's `BODY_LIMIT_MB`).
-- **Disconnect** on the Device screen does not ask to save first (`apps/tester/src/pages/Device.tsx`); the Test screen's does.
 - The website combination check (`scripts/check-combinations.js`) expects a link to `app/` on the New Test page, which no longer has one (stale).
 
 Unconfirmed suspicions (not reproduced; treat as questions):

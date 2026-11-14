@@ -141,3 +141,14 @@ export function xlsxForRecord(r: TestRecord, test: TestType, name: string, prove
       xTitle: isRelax ? 'Time (s)' : 'Crosshead-based engineering strain, Δx/L₀ (mm/mm)', yTitle: isRelax ? 'Stress (MPa)' : 'Engineering stress, F/A₀ (MPa)', seriesName: tag },
     note: 'Stress and strain are calculated from the file. Displacement is crosshead displacement, not an extensometer measurement.' });
 }
+
+/** Downloads the test before leaving it (Disconnect or New test without saving): the CSV when there is a result,
+    else the full session file. Marks the test saved only when a file was actually offered. */
+export function downloadBeforeLeaving(c: TestController): boolean {
+  const base = fileBase(c);
+  const csv = c.record ? testCsv(c) : null;
+  if (csv) save(base + '.csv', [csv], 'text/csv;charset=utf-8');
+  else { const f = c.sessionFile(); if (!f) return false; save(base + '.session.json', [JSON.stringify(f)], 'application/json'); }
+  c.update((x) => { x.saved = true; });
+  return true;
+}
