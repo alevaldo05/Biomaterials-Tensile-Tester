@@ -15,11 +15,13 @@ export function save(name: string, parts: BlobPart[], type: string): void {
 
 const KIND = { uniaxial: { slug: 'uniaxial-tension', name: 'Uniaxial tension' }, relaxation: { slug: 'stress-relaxation', name: 'Stress relaxation' } };
 
+/** Header lines are one line each: a line break typed in a note or carried in an end reason would split the file. */
+export const oneLine = (t: string): string => String(t ?? '').replace(/[\r\n\u2028\u2029]+/g, ' ').trim();
 export function csvContext(c: TestController): CsvContext {
   const s = c.setup;
   return {
-    spec: { mat: s.material, matLabel: s.material, id: s.specimenId, temp: s.temperature, env: s.environment, notes: s.notes },
-    kind: KIND[c.test], isRelax: c.test === 'relaxation', startedAt: c.startedAt, endReason: c.session ? c.session.endReason : '',
+    spec: { mat: oneLine(s.material), matLabel: oneLine(s.material), id: oneLine(s.specimenId), temp: oneLine(s.temperature), env: oneLine(s.environment), notes: oneLine(s.notes) },
+    kind: KIND[c.test], isRelax: c.test === 'relaxation', startedAt: c.startedAt, endReason: c.session ? oneLine(c.session.endReason) : '',
     checks: {},   /* the website's force-drop check does not apply: this app sends no stop command */
   };
 }
@@ -83,6 +85,7 @@ export function sessionDetails(c: TestController): [string, string][] {
     ['Displacement calibration', s.calibrations.displacement ? s.calibrations.displacement.id + ' (' + s.calibrations.displacement.origin + ')' : 'none: uncalibrated'],
     ['Force zero (software, not a calibration)', sig(s.forceZero_N, 4) + ' N'],
     ['Missing samples', String(s.missingSamples)],
+    ['Samples not understood (unknown channel or settings)', String(s.unknownSamples ?? 0)],
     ['Interrupted', s.interrupted ? 'yes' : 'no'],
   ];
   if (s.events.length) out.push(['Events', s.events.map((e) => e.kind + ': ' + e.detail).join(' | ')]);
@@ -92,12 +95,12 @@ export function sessionDetails(c: TestController): [string, string][] {
 /** Every sample as recorded: counts, both timestamps, volts, and the value when calibrated (empty when not). */
 export function samplesCsv(c: TestController, session: Session): string {
   const out = ['# Biomaterials Tensile Tester,raw samples', '# Data,' + csvCell(c.dataLabel)];
-  for (const [k, v] of sessionDetails(c)) out.push('# ' + k + ',' + csvCell(v));
+  for (const [k, v] of sessionDetails(c)) out.push('# ' + k + ',' + csvCell(oneLine(v)));
   out.push('channel,quantity,seq,device_time_s,received_ms,raw_counts,settings_ref,volts_adc,volts_signal,value,unit,quality');
   const n = (v: number) => (Number.isFinite(v) ? String(v) : '');
   for (const col of Object.values(session.columns)) {
     for (let i = 0; i < col.raw.length; i++) {
-      out.push([col.channelId, col.quantity, col.seq[i], n(col.deviceTime_s[i] as number), col.receivedAt_ms[i], col.raw[i], col.settingsRef[i], n(col.volts_adc[i] as number), n(col.volts_signal[i] as number), n(col.value[i] as number), col.unit ?? '', (col.quality[i] ?? []).join(' ')].join(','));
+      out.push([csvCell(col.channelId), csvCell(col.quantity), col.seq[i], n(col.deviceTime_s[i] as number), col.receivedAt_ms[i], col.raw[i], csvCell(String(col.settingsRef[i])), n(col.volts_adc[i] as number), n(col.volts_signal[i] as number), n(col.value[i] as number), col.unit ?? '', csvCell((col.quality[i] ?? []).join(' '))].join(','));
     }
   }
   return '﻿' + out.join('\r\n') + '\r\n';

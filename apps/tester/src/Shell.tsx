@@ -135,7 +135,7 @@ export function Shell({ controller: c, serialAvailable, journal, methods }: Shel
 
   const open = async (name: string, text: string, hint?: TestType) => {
     setLoadError('');
-    if (!text) { setLoadError('The file is empty or too large (limit 64 MB).'); setPage('load'); return; }
+    if (!text) { setLoadError('The file is empty or too large (limit 256 MB).'); setPage('load'); return; }
     try { setLoaded(await openTestFile(name, text, hint)); } catch (e) { setLoaded(null); setLoadError(e instanceof Error ? e.message : String(e)); }
     setPage('load');
   };

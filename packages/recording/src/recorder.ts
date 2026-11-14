@@ -66,6 +66,8 @@ export interface Session {
   columns: Record<string, ChannelColumns>;
   gaps: Gap[];
   missingSamples: number;
+  /** Samples whose channel or settings reference is unknown: they cannot be interpreted, so they are counted, not shown. */
+  unknownSamples: number;
   events: SessionEvent[];
 }
 
@@ -183,7 +185,7 @@ export class Recorder {
     const session: Session = {
       sourceKind: this.source.kind, startedAt_ms: this.now(), endedAt_ms: null, endReason: '', interrupted: false, identity, appVersion: this.appVersion,
       profileId: this.profile ? this.profile.id : null, channels: this.source.channels.slice(), settings: {}, calibrations: {}, calibrated: ready.ready,
-      forceZero_N: this.pendingZero, columns: {}, gaps: [], missingSamples: 0, events: [],
+      forceZero_N: this.pendingZero, columns: {}, gaps: [], missingSamples: 0, unknownSamples: 0, events: [],
     };
     for (const q of ['force', 'displacement'] as const) {
       const id = ready.channels[q].calibrationId, c = id ? this.calibrations.find((x) => x.id === id) : undefined;
@@ -221,7 +223,10 @@ export class Recorder {
 
   private onSample(s: StandardSample): void {
     const route = this.routeFor(s.channelId, s.settingsRef);
-    if (!route) return;   /* a sample whose channel or settings are unknown cannot be interpreted, so it is not shown as a value */
+    if (!route) {   /* a sample whose channel or settings are unknown cannot be interpreted, so it is not shown as a value */
+      if (this._recording && this._session) this._session.unknownSamples += 1;
+      return;
+    }
     const c = convert(s.raw, route.settings, route.conditioning, route.cal);
     this.latest[route.channel.quantity] = { channelId: s.channelId, value: c.value, unit: c.unit, volts_adc: c.volts_adc, volts_signal: c.volts_signal, deviceTime_s: s.deviceTime_s, receivedAt_ms: s.receivedAt_ms };
     const session = this._session;

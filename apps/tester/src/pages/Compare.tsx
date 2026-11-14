@@ -47,7 +47,7 @@ export function Compare({ theme, recent }: { theme: string; recent: RecentRow[] 
   const addFiles = (files: FileList | null) => run(async () => {
     const problems: string[] = [];
     for (const f of Array.from(files ?? [])) {
-      if (f.size > 64 * 1024 * 1024) { problems.push(f.name + ': larger than 64 MB.'); continue; }
+      if (f.size > 256 * 1024 * 1024) { problems.push(f.name + ': larger than 256 MB.'); continue; }
       try { await add('file:' + f.name + ':' + f.size + ':' + f.lastModified, f.name, await f.text()); } catch (e) { problems.push(f.name + ': ' + (e instanceof Error ? e.message : String(e))); }
     }
     if (problems.length) throw new Error(problems.join(' '));

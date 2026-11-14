@@ -71,7 +71,7 @@ export function LoadTest(p: {
     <>
       <input ref={fileInput} type="file" hidden accept=".json,.csv,application/json,text/csv" onChange={(e) => {
         const f = e.target.files?.[0]; e.target.value = '';
-        if (f) { if (f.size > 64 * 1024 * 1024) { p.openFile(f.name, '', undefined); return; } void f.text().then((t) => p.openFile(f.name, t, hint || undefined)); }
+        if (f) { if (f.size > 256 * 1024 * 1024) { p.openFile(f.name, '', undefined); return; } void f.text().then((t) => p.openFile(f.name, t, hint || undefined)); }
       }} />
       <button type="button" className="primary screen-only" onClick={() => fileInput.current?.click()}>{l ? 'Open another file' : 'Open a file'}</button>
       <label className="field screen-only"><span className="field-label">Test type (CSV files)</span>

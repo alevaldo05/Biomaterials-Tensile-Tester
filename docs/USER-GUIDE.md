@@ -356,7 +356,7 @@ These rows come from the app's Help and the setup notes. They are first checks, 
 | Load test: file marked as simulated | The app opens recorded tests only. Practice files open on the website's Load Test page. |
 | Load test: no dimensions | Stress and strain need the specimen dimensions stored in the file. |
 | Cannot add a test to a comparison | A comparison holds one test type and at most 12 tests. Use **Clear all** to start a new one. |
-| The file is empty or too large (limit 64 MB) | The app opens files up to 64 MB. |
+| The file is empty or too large (limit 256 MB) | The app opens files up to 256 MB. |
 | Lab server: Not set up | No address has been saved in this Windows app. Ask the lab for the address. |
 | Lab server: Not connected | The address is saved but the lab server does not answer from this computer. Check the address and the network. Recording still works. |
 | Website: "That is not a number" beside a field | Type digits only, with a point or a comma, in the unit shown. Dimensions, speed, and hold values must be greater than 0. |
