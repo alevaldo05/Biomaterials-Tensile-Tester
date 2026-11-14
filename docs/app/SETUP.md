@@ -14,6 +14,7 @@ The tester's own controller moves the crosshead. The app and the firmware only r
 - The signal range and scaling of each output (a nominal 0–5 V is mentioned in the project documents; that does not say which pins carry it or whether a given circuit is compatible).
 - How the tester's signal ground relates to the computer's ground and the board's ground.
 - Any computer-control protocol. The app has no machine control and sends nothing to the tester.
+- Reported by the owner: the crosshead is driven by an 80 V DC motor (not yet verified). See [TESTER-INTERFACE.md](TESTER-INTERFACE.md).
 
 Nothing in this repository assumes any of these. Do not connect the tester until the interface circuit and the pinout have been reviewed.
 
@@ -23,7 +24,7 @@ Nothing in this repository assumes any of these. Do not connect the tester until
 - **A wider range is not permission for a higher voltage.** The programmable full-scale setting (for example ±6.144 V) only sets what the ADC can measure. It never allows a pin voltage above the supply limits. With a 3.3 V supply, the usable input is limited by the 3.3 V supply even on the ±6.144 V setting.
 - **I²C logic levels and pull-ups.** The ESP32's pins are 3.3 V and are not 5 V tolerant. Power the ADS1115 so its I²C levels match, and check that SDA and SCL have pull-up resistors to 3.3 V (many breakout boards already have them; several boards in parallel can make the combined pull-up too strong).
 - **Not isolation.** A voltage divider, a differential input, or a buffer does not isolate the computer from the tester. If the tester's outputs are not referenced to a safe, known ground, an isolation stage is needed. That belongs in the reviewed interface circuit.
-- **Reviewed interface circuit.** Connection to the tester requires a circuit (protection, scaling, and isolation as needed) that has been designed against the verified pinout and reviewed in the laboratory.
+- **Reviewed interface circuit.** Connection to the tester requires a circuit (protection, scaling, and isolation as needed) that has been designed against the verified pinout and reviewed in the laboratory. The circuit requirements and the review record are in [TESTER-INTERFACE.md](TESTER-INTERFACE.md).
 
 ## Where each thing is configured
 

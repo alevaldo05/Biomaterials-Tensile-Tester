@@ -109,7 +109,7 @@ Unconfirmed suspicions (not reproduced; treat as questions):
 4. Publish a release only when satisfied. The Get the App page already links to the latest published release, and the Windows app shows an update notice for it. Older unpublished app drafts are removed when you ask for a new one.
 5. Do the breadboard test (`docs/app/BREADBOARD-TEST.md`) with the tester disconnected and keep the bench record from `docs/app/SETUP.md`.
 6. Decide on the 64 MB limit for long files.
-7. Have the tester's interface verified and the protection circuit designed and reviewed before connecting it. Do not guess the pins.
+7. Have the tester's interface verified and the protection circuit designed and reviewed before connecting it, using the requirements and review record in `docs/app/TESTER-INTERFACE.md`. Do not guess the pins. Then calibrate force and displacement following `docs/app/CALIBRATION-PLAN.md`.
 8. Decide what to do with the known open issues above, and review the draft documents and unreviewed material values with an advisor.
 
 ## Project rules in short
