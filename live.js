@@ -485,6 +485,7 @@
     var dock = $('stop-dock'); if (dock) { dock.hidden = !running; document.body.classList.toggle('has-stop-dock', running); }
     $('dl-csv').disabled = running || !hasData;
     if ($('r-print')) $('r-print').disabled = running || !hasData;
+    if ($('r-practice')) $('r-practice').disabled = running || !hasData;
     /* The setup is locked while recording and after the test, until New test. Notes stays editable. */
     var lock = running || hasData;
     LOCK_IDS.forEach(function (id) { if ($(id)) $(id).disabled = lock; });
@@ -699,6 +700,16 @@
     pr.addEventListener('click', function () {
       if (!running && hasData) window.TensileReport.printRecord(api.reportInfo());
     });
+    /* Practice record: a one-page record of this simulated test, for a student to show their operator before asking
+       for access to the tester app (Learn > Getting access to the tester). Nothing is saved. */
+    if (window.TensileReport.printPractice) {
+      var pp = document.createElement('button');
+      pp.type = 'button'; pp.className = 'btn-secondary'; pp.id = 'r-practice'; pp.textContent = 'Print practice record';
+      pr.parentNode.insertBefore(pp, pr.nextSibling);
+      pp.addEventListener('click', function () {
+        if (!running && hasData) window.TensileReport.printPractice(api.reportInfo());
+      });
+    }
   }
   dl.addEventListener('click', function () {
     api.save(new Blob([csv.build(rec, startedAt, endReason)], { type: 'text/csv;charset=utf-8' }), csv.fileBase(rec, startedAt) + '.csv');

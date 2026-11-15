@@ -65,6 +65,13 @@ export const SessionFileBody = z.object({
   forceZero_N: z.number().finite().optional(),
   interrupted: z.boolean().optional(),
   endReason: z.string().max(2000).optional(),
+  /* optional, from newer apps: who ran the test on the lab computer, and a student's responsible operator */
+  operator: z.strictObject({
+    name: z.string().min(1).max(80), username: z.string().min(1).max(40), kind: z.enum(['admin', 'operator', 'student']),
+    responsible: z.strictObject({ name: z.string().min(1).max(80), username: z.string().min(1).max(40), confirmedBy: z.enum(['gave access', 'password']) }).optional(),
+  }).nullable().optional(),
+  /* optional, from newer apps: a hash of the rest of the file, so a change can be noticed (apps/tester/src/seal.ts) */
+  check: z.strictObject({ sha256: z.string().regex(/^[0-9a-f]{64}$/) }).optional(),
 }).refine((f) => f.receivedAt_ms.length === f.lines.length, 'receivedAt_ms: there must be one arrival time for each line.');
 
 /* What a device may send (packages/protocol/src/messages.ts). A saved line of any other type was not sent by a device. */
@@ -80,3 +87,17 @@ export function problem(e: z.ZodError): string {
   const i = e.issues[0];
   return i ? (i.path.length ? i.path.join('.') + ': ' : '') + i.message : 'The request is not valid.';
 }
+
+/* A copy of a lab computer's people list (apps/desktop/people.cjs). Checked for shape only; the hashes are kept as sent. */
+const SCRYPT_HASH = /^scrypt\$\d+\$\d+\$\d+\$[A-Za-z0-9+/=]+\$[A-Za-z0-9+/=]+$/;
+export const PeopleCopyBody = z.strictObject({
+  format: z.literal('tensile-tester-people'),
+  version: z.literal(1),
+  people: z.array(z.object({
+    id: z.string().min(1).max(40),
+    username: z.string().regex(/^[a-z0-9][a-z0-9._-]{1,39}$/),
+    name: z.string().min(1).max(80),
+    kind: z.enum(['admin', 'operator', 'student']),
+    hash: z.string().max(300).regex(SCRYPT_HASH),
+  }).passthrough()).min(1).max(2000),
+});

@@ -23,3 +23,22 @@ describe('pull-request screenshots', () => {
     expect(SCHEMES).toEqual(['light', 'dark']);
   });
 });
+
+describe('spacing check on pull requests', () => {
+  const root = path.join(path.dirname(fileURLToPath(import.meta.url)), '../../..');
+  const wf = readFileSync(path.join(root, '.github/workflows/spacing.yml'), 'utf8');
+  const script = readFileSync(path.join(root, 'scripts/check-spacing.mjs'), 'utf8');
+  it('runs strictly on every pull request that changes the website or the app, at the five widths, light and dark', () => {
+    expect(wf).toMatch(/^ {2}pull_request:\s*\n {4}branches: \[main\]/m);
+    expect(wf).toContain('node scripts/check-spacing.mjs spacing-out --strict');
+    expect(wf).toContain('npm run app:build');
+    for (const p of ["'*.html'", "'*.js'", "'*.css'", "'css/**'", "'data/**'", "'apps/tester/**'", "'scripts/check-spacing.mjs'", "'scripts/app-screenshots.mjs'"]) expect(wf).toContain('      - ' + p);
+    expect(script).toMatch(/\[1366, 1280, 1024, 768, 390\]/);
+    expect(script).toMatch(/'light', 'dark'/);
+  });
+  it('covers every website page (read from the folder) and every pictured app screen (the same list and stand-in as the screenshots)', () => {
+    expect(script).toContain("fs.readdirSync(ROOT).filter((f) => f.endsWith('.html'))");
+    expect(script).toContain("import { SCREENS, standIn } from './app-screenshots.mjs';");
+    expect(readFileSync(path.join(root, '.gitignore'), 'utf8')).toMatch(/^spacing-out\/$/m);
+  });
+});

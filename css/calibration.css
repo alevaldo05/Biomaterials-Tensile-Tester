@@ -18,3 +18,4 @@
 #cal-results > svg { display: block; width: 100%; max-width: 40rem; height: auto; }
 .how-list li { margin-bottom: 0.4rem; }
 
+.cal-table thead th:last-child { white-space: nowrap; }

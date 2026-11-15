@@ -15,7 +15,8 @@ const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const DIST = path.join(ROOT, 'apps/tester/dist');
 
 /** The screens pictured, by the app's page id (apps/tester/src/Shell.tsx PAGE_TITLES). History and Admin need a
-    lab-server sign-in, so they are not pictured. `open` is the button that leads there from Home. */
+    lab-server sign-in, so they are not pictured. The stand-in is signed in on this computer as an admin (made-up
+    people), so People is pictured too. `open` is the button that leads there from Home. */
 export const SCREENS = [
   { id: 'home', open: null },
   { id: 'test', open: { role: 'button', name: 'Test' } },
@@ -24,6 +25,7 @@ export const SCREENS = [
   { id: 'device', open: { role: 'button', name: 'Device' } },
   { id: 'help', open: { role: 'button', name: 'Help' } },
   { id: 'settings', open: { role: 'button', name: 'Settings' } },
+  { id: 'people', open: { role: 'button', name: 'People' } },
 ];
 export const SIZES = [{ width: 1366, height: 900 }, { width: 390, height: 844 }];
 export const SCHEMES = ['light', 'dark'];
@@ -41,12 +43,30 @@ function serve(dir) {
   return new Promise((resolve) => server.listen(0, '127.0.0.1', () => resolve(server)));
 }
 
-/* The same shape as apps/desktop/preload.cjs gives, with fixed answers. */
-function standIn() {
+/* The same shape as apps/desktop/preload.cjs gives, with fixed answers (made-up people, not real accounts). */
+export function standIn() {
+  const me = { name: 'Example Admin', username: 'admin', kind: 'admin', kindName: 'Admin', mustChange: false, endDate: null, daysLeft: null, responsible: null, canRunMachine: true, why: '' };
+  const person = { disabled: false, endDate: null, ended: false, mustChange: false, createdAt: '2026-11-14T09:00:00.000Z', lastSignIn: '2026-11-14T10:00:00.000Z' };
   window.tensileDesktop = Object.freeze({
     kind: 'windows-app', getLabServer: async () => '', setLabServer: async () => ({}),
     checkForUpdate: async () => ({ available: true, version: '1.0.0-beta.2', pageUrl: 'https://github.com/alevaldo05/Biomaterials-Tensile-Tester/releases/tag/app-v1.0.0-beta.2-run.1' }),
     openReleasePage: async () => true, getUpdateCheck: async () => true, setUpdateCheck: async (on) => ({ on }),
+    people: Object.freeze({
+      status: async () => ({ ok: { setUp: true, broken: null } }),
+      current: async () => ({ ok: me }), touch: async () => ({ ok: me }), signOut: async () => ({ ok: null }),
+      list: async () => ({ ok: [
+        { ...person, id: 'p-1', username: 'admin', name: 'Example Admin', kind: 'admin', kindName: 'Admin', addedBy: null },
+        { ...person, id: 'p-2', username: 'op.one', name: 'Example Operator', kind: 'operator', kindName: 'Operator', addedBy: 'Example Admin' },
+        { ...person, id: 'p-3', username: 'student.one', name: 'Example Student', kind: 'student', kindName: 'Student', endDate: '2027-05-31', addedBy: 'Example Operator' },
+        { ...person, id: 'p-4', username: 'student.two', name: 'Second Student', kind: 'student', kindName: 'Student', endDate: '2027-05-31', addedBy: 'Example Operator', mustChange: true },
+      ] }),
+      usageLog: async () => ({ ok: [] }),
+      trainingItems: async () => ({ ok: ['Safety briefing given', 'Shown where the tester’s own STOP is', 'Practice test completed'] }),
+      usageReport: async () => ({ ok: [
+        { username: 'op.one', name: 'Example Operator', kind: 'operator', kindName: 'Operator', tests: 4, recordingMinutes: 31.5, lastUse: '2026-11-14T10:00:00.000Z', asResponsible: 3 },
+        { username: 'student.one', name: 'Example Student', kind: 'student', kindName: 'Student', tests: 3, recordingMinutes: 18, lastUse: '2026-11-14T11:00:00.000Z', asResponsible: 0 },
+      ] }),
+    }),
   });
 }
 

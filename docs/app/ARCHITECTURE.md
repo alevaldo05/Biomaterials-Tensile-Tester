@@ -84,10 +84,13 @@ Rules that hold everywhere:
 | Signing in, History, Admin, and View as user in the app | Implemented |
 | The website's definitions and materials used by the app (read at build time) | Implemented |
 | Containers (`deploy/`): gateway, website, app, API, database, each replaceable on its own | Implemented; built and run with Docker here ([CONTAINERS](CONTAINERS.md)) |
+| Sign-in on the lab computer (Admin, Operator, Student): accounts kept by the Windows app's main process, checked in the screens and again in the main process, optional copy of the people list through the lab server | Implemented and tested on Linux as a stand-in; **untried on Windows** ([SIGN-IN](SIGN-IN.md)) |
 
 Two things `packages/core` does differently from the website on purpose (the website pages are unchanged):
 
 - The comparison numbers can include the opt-in offset yield (`keyNumbers(..., { includeOffsetYield: true })`). On the website, Compare leaves it out.
 - A loaded CSV with no known material no longer turns the 0.2% yield on; only steel does. The website's rule is still available (`websiteYieldRule`).
+
+Where accounts live: sign-in accounts are on the lab computer, in the Windows app's main process (`apps/desktop/people.cjs`), not in the lab server and not on the website. The screens only ask the main process through the preload (sign in, who may do what, the People calls); they never see a password hash. Two checks: the screens refuse Connect and Start recording for someone who may not run the machine, and the main process checks again before it opens the USB port or starts a recording, and writes who ran the test into the recording. An admin may also copy the whole list (as hashes) to the lab server and from it, for a second lab computer; the copy goes from the main process straight to the lab server. Implemented; untried on Windows. Details: [SIGN-IN](SIGN-IN.md). The browser version of the app does not connect to the tester.
 
 Not verified by anyone yet: the tester's analog output pins, signal scaling, grounding, and any computer-control protocol. Nothing in this repository assumes them.

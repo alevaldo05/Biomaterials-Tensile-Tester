@@ -8,6 +8,9 @@
    lab-proxy.cjs, which keeps the sign-in here and never gives it to the screens.
    Recordings are kept as files in the app's data folder ("recordings") by journal-files.cjs, which checks
    everything the screens send.
+   Who may run the machine (people.cjs, docs/app/SIGN-IN.md): the USB serial port and a new recording are allowed only
+   while someone is signed in who may run the machine (for a student, after naming a responsible operator). This is
+   checked here, not only in the screens, and the person running the test is written into the recording here.
    Update check (update-check.cjs): once per start, when the screens ask and the "Check for updates" setting is on,
    it asks GitHub whether a newer published release exists. It downloads nothing; the person opens the release page. */
 const { app, BrowserWindow, dialog, ipcMain, Menu, net, protocol, session, shell } = require('electron');
@@ -18,6 +21,7 @@ const { uiFile } = require('./ui-files.cjs');
 const { checkLabUrl, createLabProxy, API_PREFIX } = require('./lab-proxy.cjs');
 const { createJournalFiles } = require('./journal-files.cjs');
 const { createUpdateOnce, isReleasePage } = require('./update-check.cjs');
+const { createPeople } = require('./people.cjs');
 
 /* The installed program refuses to start with switches that let another program inspect or drive it
    (remote debugging, the Node inspector, V8 flags). The start-up check in the build workflow needs remote debugging,
@@ -67,6 +71,9 @@ function ownBuild() {
 /* At most one request to GitHub per start; never while the setting is off. */
 const updateOnce = createUpdateOnce((url, init) => net.fetch(url, init), ownBuild, () => checkUpdates);
 const lab = createLabProxy({ fetch: (url, init) => net.fetch(url, init), labUrl: () => labUrl });
+/* Created when the app is ready (it needs the data folder). Until then nobody may run the machine. */
+let people = null;
+const machineAllowed = () => !!people && people.machine().allowed;
 
 const fromApp = (url) => typeof url === 'string' && (url === ORIGIN || url.startsWith(ORIGIN + '/'));
 
@@ -88,10 +95,16 @@ function lockDown() {
   const s = session.defaultSession;
   /* Nothing but USB serial (chosen by the person) and copying text is allowed, and only for the app's own screens. */
   s.setPermissionRequestHandler((wc, permission, cb) => cb(fromApp(wc.getURL()) && permission === 'clipboard-sanitized-write'));
-  s.setPermissionCheckHandler((_wc, permission, origin) => fromApp(origin) && (permission === 'serial' || permission === 'clipboard-sanitized-write'));
-  s.setDevicePermissionHandler((d) => d.deviceType === 'serial' && fromApp(d.origin));
+  /* USB serial only while someone who may run the machine is signed in (people.cjs). */
+  s.setPermissionCheckHandler((_wc, permission, origin) => fromApp(origin) && ((permission === 'serial' && machineAllowed()) || permission === 'clipboard-sanitized-write'));
+  s.setDevicePermissionHandler((d) => d.deviceType === 'serial' && fromApp(d.origin) && machineAllowed());
   s.on('select-serial-port', (event, ports, wc, callback) => {
     event.preventDefault();
+    if (!machineAllowed()) {
+      const why = people ? people.machine().why : 'Sign in to run the machine.';
+      dialog.showMessageBox(BrowserWindow.fromWebContents(wc), { type: 'info', title: 'Sign in first', message: why, detail: 'Only people given access on this computer can connect to the tester.' });
+      return callback('');
+    }
     if (!ports.length) {
       dialog.showMessageBox(BrowserWindow.fromWebContents(wc), { type: 'info', title: 'No device found', message: 'No USB serial device was found.', detail: 'Check the cable and that the acquisition device is powered, then press Connect again.' });
       return callback('');
@@ -127,16 +140,59 @@ app.on('web-contents-created', (_e, wc) => {
   });
 });
 
-/* The bridge: read and set the lab server address, and the recording journal. Only the app's own screens may use them;
-   every argument is checked again in lab-proxy.cjs and journal-files.cjs. */
+/* The bridge: read and set the lab server address, the recording journal, and the people on this computer. Only the
+   app's own screens may use them; every argument is checked again in lab-proxy.cjs, journal-files.cjs, and people.cjs. */
 const JOURNAL_CALLS = ['begin', 'append', 'finish', 'list', 'lines', 'remove', 'estimate'];
+/* people:<name> -> the people.cjs call and how many arguments it takes. Errors come back as { error } in plain words. */
+const PEOPLE_CALLS = { status: 0, setup: 1, 'sign-in': 2, 'sign-out': 0, current: 0, touch: 1, 'change-password': 2, list: 0,
+  'responsible-choices': 0, 'confirm-responsible': 2, add: 1, update: 2, recover: 2, 'usage-log': 0,
+  'training-items': 0, 'sign-off-training': 2, 'usage-report': 0, 'copy-to-lab': 0, 'copy-from-lab': 0 };
+/* The admin copies the people list to and from the lab server (for a second lab computer). The hashes go from this
+   process to the lab server through the lab connection (lab-proxy.cjs, with the admin's lab sign-in); they never reach
+   the screens. */
+async function labPeople(method, body) {
+  const res = await lab.handle(new Request(ORIGIN + API_PREFIX + 'lab-people', {
+    method, headers: { accept: 'application/json', 'x-tensile-client': 'app', ...(body ? { 'content-type': 'application/json' } : {}) }, body: body ? JSON.stringify(body) : undefined,
+  }));
+  const text = await res.text();
+  let json = null;
+  try { json = JSON.parse(text); } catch { json = null; }
+  if (!res.ok) { const e = new Error((json && json.error && json.error.message) || 'The lab server answered ' + res.status + '.'); e.plain = true; throw e; }
+  return json;
+}
+const peopleExtra = {
+  copyToLab: async () => { const list = await people.exportForLab(); const r = await labPeople('PUT', list); await people.noteCopy('people_copied_to_lab', { count: list.people.length }); return { count: r && typeof r.count === 'number' ? r.count : list.people.length }; },
+  copyFromLab: async () => { await people.exportForLab(); /* admin only, checked first */ return people.importFromLab(await labPeople('GET')); },
+};
+const camel = (n) => n.replace(/-([a-z])/g, (_m, c) => c.toUpperCase());
 function bridge() {
   const own = (e) => fromApp(e.senderFrame && e.senderFrame.url);
   const journal = createJournalFiles(path.join(app.getPath('userData'), 'recordings'));
+  people = createPeople(path.join(app.getPath('userData'), 'people'));
   for (const name of JOURNAL_CALLS) {
     ipcMain.handle('journal:' + name, async (e, ...args) => {
       if (!own(e)) throw new Error('Not allowed.');
-      return journal[name](...args.slice(0, 3));
+      if (name === 'begin') {
+        /* A new recording only for someone who may run the machine; who it is comes from here, not from the screens. */
+        const m = people.machine();
+        if (!m.allowed) throw new Error(m.why);
+        const limit = people.checkSetup(args[0] && args[0].setup);
+        if (limit) throw new Error(limit);
+        const meta = { ...(args[0] && typeof args[0] === 'object' ? args[0] : {}), operator: people.operatorBlock() };
+        await journal.begin(meta, args[1]);
+        await people.noteTest('test_started', { id: meta.id });
+        return undefined;
+      }
+      const out = await journal[name](...args.slice(0, 3));
+      if (name === 'finish') await people.noteTest('test_ended', { id: args[0] });
+      return out;
+    });
+  }
+  for (const [name, n] of Object.entries(PEOPLE_CALLS)) {
+    ipcMain.handle('people:' + name, async (e, ...args) => {
+      if (!own(e)) return { error: 'Not allowed.' };
+      const f = peopleExtra[camel(name)] || people[camel(name)];
+      try { return { ok: await f(...args.slice(0, n)) }; } catch (x) { return { error: x && x.plain ? x.message : 'Something went wrong on this computer: ' + (x && x.message ? x.message : String(x)) }; }
     });
   }
   ipcMain.handle('lab-server:get', (e) => (own(e) ? labUrl : ''));

@@ -10,7 +10,7 @@ import type { ChannelInput, ProfileInput } from '../setup-maker';
 import { save } from '../exports';
 
 export function SetupFileMaker({ controller: c }: { controller: TestController }) {
-  useSyncExternalStore(c.subscribe, c.snapshot);
+  useSyncExternalStore(c.subscribe, c.snapshot, c.snapshot);
   const [open, setOpen] = useState(false);
   const deviceIds = (c.source?.channels ?? []).filter((ch) => ch.quantity === 'force' || ch.quantity === 'displacement').map((ch) => ch.id);
   const [p, setP] = useState<ProfileInput>(() => ({ id: '', name: '', channels: defaultChannels(deviceIds.length ? deviceIds : undefined) }));

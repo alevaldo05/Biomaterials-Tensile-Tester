@@ -24,6 +24,8 @@ export interface CsvContext {
   startedAt: Date | null;
   endReason: string;
   checks?: DataCheckOptions;
+  /** Who ran the test and, for a student, the responsible operator (the tester app's sign-in). Only written when given. */
+  runBy?: [string, string][];
 }
 
 const pad = (n: number) => (n < 10 ? '0' : '') + n;
@@ -65,7 +67,9 @@ export function csvMetaRows(rec: TestRecord, ctx: CsvContext): MetaRow[] {
   ];
   if (ctx.isRelax) meta.push(['Hold displacement (mm)', p.hold_mm], ['Hold duration (s)', p.hold_s]);
   if (!ctx.isRelax && p.offsetPct !== undefined && p.offsetPct > 0) meta.push(['Offset yield (% strain)', p.offsetPct]);   /* only when it was asked for */
-  meta.push(['Temperature (C)', s.temp], ['Environment', s.env], ['Notes', s.notes], ['End of test', ctx.endReason], ['Points', n]);
+  meta.push(['Temperature (C)', s.temp], ['Environment', s.env], ['Notes', s.notes]);
+  for (const r of ctx.runBy ?? []) meta.push(r);
+  meta.push(['End of test', ctx.endReason], ['Points', n]);
   const hst = ctx.isRelax ? holdStartText(rec) : '';
   if (hst) meta.push(['Hold start', hst]);
   const mfit = ctx.isRelax ? '' : modulusFitText(rec);

@@ -1,6 +1,8 @@
 /* Combination check: loads the site in a real browser under many combinations of the display choices and looks for bugs.
    Run it with:  node scripts/check-combinations.js            (needs Playwright installed on your computer; see below)
                  node scripts/check-combinations.js --quick     (a small sample, a few minutes)
+                 node scripts/check-combinations.js --quick --browser=webkit   (the same in Playwright's WebKit, the engine behind
+                                                                               Safari; not Safari itself)
    Options: --phase=A|B|all   --workers=N   --limit=N (a sample of N combinations of each phase)   --out=file.json
             --pages=help,index (only these pages)   --only=layout=tabs (only combinations with that value; can be repeated as --only=a=b,c=d)
    It starts its own small web server for this folder, changes nothing, and saves nothing except an optional report file.
@@ -22,6 +24,8 @@ try { pw = require('playwright'); } catch (e) { console.error('This check needs 
 
 var ROOT = path.resolve(__dirname, '..');
 var args = {}; process.argv.slice(2).forEach(function (a) { var m = /^--([^=]+)(?:=(.*))?$/.exec(a); if (m) args[m[1]] = m[2] === undefined ? true : m[2]; });
+/* --browser=webkit runs the same checks in Playwright's WebKit (the engine behind Safari, not Safari itself). */
+var BROWSER = args.browser === 'webkit' ? 'webkit' : 'chromium';
 var QUICK = !!args.quick, WORKERS = +args.workers || 6, LIMIT = +args.limit || (QUICK ? 6 : 0), PHASE = args.phase || 'all', STRICT = !!args.strict;
 
 /* ---------- the combinations ---------- */
@@ -299,7 +303,7 @@ async function task(browser, port, combo, name, width, withFeature, withFocus) {
   phases.forEach(function (ph) { ph[1] = ph[1].filter(function (c) { return Object.keys(only).every(function (k) { return String(c[k]) === only[k]; }); }); });
   if (args.pages && args.pages !== true) PAGES = PAGES.filter(function (p) { return String(args.pages).split(',').indexOf(p) >= 0; });
   serve(async function (srv, port) {
-    var browser = await pw.chromium.launch(), jobs = [], t0 = Date.now();
+    var browser = await pw[BROWSER].launch(BROWSER === 'chromium' && process.env.PW_CHROMIUM_PATH ? { executablePath: process.env.PW_CHROMIUM_PATH } : {}), jobs = [], t0 = Date.now();
     phases.forEach(function (ph) {
       ph[1].forEach(function (combo) {
         var full = Object.assign({ motion: 'reduced' }, combo);   /* Phase A leaves the other choices at their defaults; motion reduced keeps pages still */

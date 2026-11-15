@@ -8,6 +8,7 @@ import { IdbJournal, IdbMethods, openAppDb } from './storage/idb';
 import { MemoryMethods } from './storage/methods';
 import { DesktopJournal } from './storage/desktop-journal';
 import { desktopBridge } from './desktop';
+import { MachineAccess, People } from './people';
 import type { MethodStore } from './storage/methods';
 import './app.css';
 
@@ -18,8 +19,10 @@ async function start() {
   /* In the Windows app, recordings are kept as files in the app's data folder instead. */
   const d = desktopBridge();
   if (d?.journal) journal = new DesktopJournal(d.journal);
-  const controller = new TestController({ openReal: openUsbSerial, journal });
+  /* Running the machine needs a sign-in on the lab computer (the Windows app); a browser does not connect to the tester. */
+  const access = new MachineAccess(d?.people ? new People(d.people) : null);
+  const controller = new TestController({ openReal: openUsbSerial, journal, machine: () => access.check() });
   createRoot(document.getElementById('root') as HTMLElement).render(
-    <StrictMode><Shell controller={controller} serialAvailable={usbSerialAvailable()} journal={journal} methods={methods} /></StrictMode>);
+    <StrictMode><Shell controller={controller} serialAvailable={usbSerialAvailable()} journal={journal} methods={methods} access={access} /></StrictMode>);
 }
 void start();

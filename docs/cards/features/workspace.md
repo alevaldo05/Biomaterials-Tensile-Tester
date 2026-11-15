@@ -18,6 +18,7 @@ The graph-first layout of the practice page (the website's only test screen; its
 - Measurement strip: Force, Displacement, Elapsed, Stress, Recording status, Data source; a dash when a value is missing; hover or Tab shows what each is
 - Material is required (drop-down of Rabbit tissue and Test, or type your own); red outline only after you enter and leave a box
 - Entries are locked while recording and after the test until New test (Notes stays editable)
+- At 900 px and narrower the toolbar groups keep a row gap, and the measurement strip is an even grid (3 across; 2 across at 500 px and narrower) (`css/workspace.css`)
 
 ## Load Test
 - Load Test uses the same layout through `load-shell.js` (a File sidebar, a toolbar, a strip of facts read from the loaded file, the graph and its panels); see the [Load Test](../pages/load-test.md) card

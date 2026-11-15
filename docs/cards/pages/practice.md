@@ -12,6 +12,7 @@ Lets a learner try the test screen with a labeled simulator. It is the website's
 
 ## What the user sees
 - A banner saying it is practice with simulated data; a choice of Uniaxial Tension or Stress Relaxation; the setup steps (Specimen, Dimensions, Test settings, Connection, Review and start), the Fill example links, the toolbar (**Use simulator**, Tare, Start recording, End recording, STOP tester with "Not an emergency stop."), the measurement strip, and the graph
+- After a simulated test: **Print practice record** beside Print report, a one-page Draft record labeled "Simulated data, not measured" with lines for the name and "Seen by operator"; it says it is not a test on the tester and not a training certification; nothing is saved
 
 ## Behavior to keep
 - Always labeled "Simulated data, not measured"; the safety line stays; no USB or serial code is loaded (`live-links.js` makes only the simulator link)

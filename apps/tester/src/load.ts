@@ -2,6 +2,8 @@
    the same adapter and recorder as a live test; replaying sends nothing to any device. A CSV file is read with the
    shared CSV reader. Files marked as simulated are refused: this app is for recorded tests only. Nothing here can
    prove where an ordinary file came from, so imported files are labeled as not verified. */
+import { sealState } from './seal';
+import type { SealState } from './seal';
 import { DeviceSource, NdjsonAdapter, ReplayTransport } from '@tensile/acquisition';
 import { recordFromCsv } from '@tensile/core';
 import type { TestRecord, TestType } from '@tensile/core';
@@ -26,6 +28,8 @@ export interface LoadedTest {
   provenance: string;
   /** Text of the original file, so it can be downloaded unchanged. */
   original: string;
+  /** For a session file: whether its contents changed since the app saved it (seal.ts). */
+  seal?: SealState;
 }
 
 export const REJECT_SIMULATED = 'This file is marked as simulated data. The tester app opens recorded tests only; practice files open on the website’s Load Test page.';
@@ -89,7 +93,8 @@ export async function openTestFile(name: string, text: string, testHint?: TestTy
     if (file.calibrations.some((c) => c.origin === 'simulated')) throw new Error(REJECT_SIMULATED);
     const r = await replaySession(file);
     return { name, kind: 'session', test: file.test, record: r.record, problem: r.problem, setup: { ...EMPTY_SETUP, ...file.setup }, file, session: r.session,
-      provenance: 'Session file saved by this app (' + file.appVersion + '). Rebuilt from the lines the device sent; its origin is not independently verified.', original: text };
+      provenance: 'Session file saved by this app (' + file.appVersion + '). Rebuilt from the lines the device sent; its origin is not independently verified.', original: text,
+      seal: sealState(file) };
   }
   if (markedNotRecorded(trimmed)) throw new Error(REJECT_SIMULATED);
   const test = testHint ?? detectTest(text);

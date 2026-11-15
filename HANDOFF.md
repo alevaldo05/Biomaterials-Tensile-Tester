@@ -60,6 +60,8 @@ Merged after that: #97 `desktop-hardening` (the installed Windows app refuses de
 
 Pushed, waiting for a pull request: none. No other pull request is open. `windows-line-endings` (this change) fixes the Windows build; see Known open issues.
 
+This change (`operator-sign-in`): sign-in on the lab computer: Admin, Operator, and Student access kept by the Windows app (`apps/desktop/people.cjs`), checked in the screens and in the main process; responsible operator, training sign-off, end dates, student limits, the People screen, usage log and report, class list, sign-in slips, switch person, and an optional copy of the people list through the lab server (migration 004, `/lab-people`). Test files carry who ran them and a SHA-256 check, shown in Load test. The browser version no longer connects to the tester. The website's Learn page has a draft "Getting access to the tester" section and the practice page a printable practice record. Description: `docs/app/SIGN-IN.md`; what was proposed, built, and left: `docs/IMPROVEMENT-IDEAS.md`. Checks added: a spacing check for every website page and app screen (`scripts/check-spacing.mjs`, run on pull requests by `.github/workflows/spacing.yml`, not yet run on GitHub), accessibility and empty-section checks in `scripts/check-site.js` (16, 17), and `--browser=webkit` for the spacing and combination checks. The Windows app's sign-in was tried end to end on Linux as a stand-in (built with electron-builder, run under a virtual display): first start and recovery code, adding an operator and a student, training sign-off, the student's forced new password, both responsible-operator paths (gave access; another operator's password, including a wrong one), the files (`people.json`, `.bak`, `usage-log.jsonl`, no password in any), and a restart; the browser version refuses to connect. Not tried on Windows. Another branch, `windows-line-endings`, also edits this file; it is not merged here, and the Windows app workflow fails on `main` until it is (line endings).
+
 ## Checks status
 
 The App checks (tests, firmware build, containers), the website checks, and the app screenshots run on every pull request; check that they pass before merging. They passed on #91–#96 before they were merged. This change (`windows-line-endings`) adds a pull-request check, the `windows-line-endings` job in `.github/workflows/app.yml`: it checks out with Windows line endings on Linux and runs the Windows workflow's test lines. It catches line-ending failures only, not other Windows problems.
@@ -77,6 +79,7 @@ From `docs/app/FEATURE-STATUS.md` and related documents:
 - The print window after a test in the app (tried on Load test only).
 - Microsoft Excel for the `.xlsx` files (checked with openpyxl and LibreOffice).
 - Docker Desktop on Windows, the lab computer, HTTPS in a browser, and the lab server in real use.
+- Sign-in on a Windows computer, and by real users (tried on Linux as a stand-in only).
 - Pico firmware and a Raspberry Pi service (guides only; not built).
 - Layout at 1280 px was not re-checked after the Test screen changed.
 
@@ -102,6 +105,8 @@ Unconfirmed suspicions (not reproduced; treat as questions):
 6. The limit for long files is decided: 256 MB (the app's is merged; the lab server's is merged in #98).
 7. Have the tester's interface verified and the protection circuit designed and reviewed before connecting it, using the requirements and review record in `docs/app/TESTER-INTERFACE.md`. Do not guess the pins. Then calibrate force and displacement following `docs/app/CALIBRATION-PLAN.md`.
 8. Decide what to do with the known open issues above, and review the draft documents and unreviewed material values with an advisor.
+9. Review the draft sign-in wording: the training items and the Learn page's "Getting access to the tester" section.
+10. At first start on the lab computer, create the admin and keep the recovery code written down away from the computer (`docs/app/SIGN-IN.md`).
 
 ## Project rules in short
 

@@ -13,6 +13,8 @@ import type { Setup } from './setup';
 import type { SessionJournal } from './storage/journal';
 import type { TestMethod } from './storage/methods';
 import { setupFromMethod } from './storage/methods';
+import { limitProblem } from './people';
+import type { Limits, OperatorBlock } from './people';
 
 /** The app's version, written only in apps/desktop/package.json and added by the build (apps/tester/build-info.ts). */
 export const APP_VERSION: string = __APP_VERSION__;
@@ -49,6 +51,10 @@ export interface SessionFile {
   endReason?: string;
   /** What happened during the recording (gaps, faults, restarts, disconnects, stale data), at the time it happened. */
   events?: SessionEvent[];
+  /** Who ran the test (signed in on the lab computer), and a student's responsible operator. Missing in older files. */
+  operator?: OperatorBlock | null;
+  /** A hash of the rest of the file, added when it is saved (seal.ts), so a change can be noticed. Missing in older files. */
+  check?: { sha256: string };
 }
 
 export function parseSessionFile(text: string): SessionFile {
@@ -79,6 +85,8 @@ export interface ControllerOptions {
   journal?: SessionJournal | null;
   /** How often the journal is written while recording, ms. */
   commitEvery_ms?: number;
+  /** Whether the machine may be run now, and who is running it (people.ts, MachineAccess). Without it (tests), always. */
+  machine?: () => { allowed: boolean; why: string; operator: OperatorBlock | null; limits?: Limits | null };
 }
 
 export class TestController {
@@ -102,6 +110,8 @@ export class TestController {
   localSave: LocalSave;
   localError = '';
   journalId: string | null = null;
+  /** Who started the current or last test (from the sign-in), kept with its file. */
+  runBy: OperatorBlock | null = null;
   lastCommitAt: Date | null = null;
   /** Computer time the latest sample arrived, for the data-freshness indicator. */
   lastSampleAt: number | null = null;
@@ -149,6 +159,8 @@ export class TestController {
   async connect(): Promise<void> {
     if (this.source && this.source.state !== 'disconnected' && this.source.state !== 'fault') return;
     this.message = '';
+    const gate = this.o.machine?.();
+    if (gate && !gate.allowed) { this.message = gate.why; this.changed(); return; }
     /* After a fault or a device restart the old connection still holds the port: close it first, so the port can be opened again. */
     await this.releaseSource();
     const transport = this.o.openReal();
@@ -272,6 +284,10 @@ export class TestController {
   /* ---------- recording ---------- */
   get startProblem(): string {
     if (this.phase !== 'setup') return '';
+    const gate = this.o.machine?.();
+    if (gate && !gate.allowed) return gate.why;
+    const limit = limitProblem(gate?.limits, this.setup.speed, this.method?.name ?? null);
+    if (limit) return limit;
     const probs = Object.values(setupProblems(this.setup, this.test));
     if (probs.length) return probs[0] as string;
     if (!this.recorder || !this.source || (this.source.state !== 'streaming' && this.source.state !== 'stale')) return 'Connect the acquisition device first.';
@@ -290,6 +306,7 @@ export class TestController {
   /** Starts saving samples. Async only because the journal entry is created first; the recorder starts at once. */
   async startRecording(): Promise<void> {
     if (this.startProblem || !this.recorder || !this.source) { this.message = this.startProblem; this.changed(); return; }
+    this.runBy = this.o.machine?.().operator ?? null;
     this.session = this.recorder.start({ allowUncalibrated: this.voltagesOnly });
     this.record = null; this.recordProblem = ''; this.recorded = []; this.header = this.handshake.slice(); this.testProfile = this.setupFile?.profile ?? null; this.commitState = { n: 0 }; this.message = ''; this.saved = false;
     this.startedAt = new Date();
@@ -304,7 +321,7 @@ export class TestController {
       const est = await j.estimate();
       if (est && est.quota - est.usage < 50 * 1024 * 1024) this.message = 'This computer has little storage space left for recordings. Download and remove old recordings soon.';
       await j.begin({ id, test: this.test, setup: this.setup, profile: this.testProfile, calibrations: this.fileCalibrations(), forceZero_N: this.session.forceZero_N, appVersion: APP_VERSION,
-        deviceId: this.source.identity?.deviceId ?? '', startedAt: this.startedAt.toISOString() },
+        deviceId: this.source.identity?.deviceId ?? '', startedAt: this.startedAt.toISOString(), ...(this.runBy ? { operator: this.runBy } : {}) },
         { lines: this.header.map((x) => x.line), receivedAt_ms: this.header.map((x) => x.at) });
       this.journalId = id;
       this.localSave = 'saving';
@@ -377,6 +394,7 @@ export class TestController {
       method: this.method ? { id: this.method.id, name: this.method.name, revision: this.method.revision } : null,
       lines: all.map((x) => x.line), receivedAt_ms: all.map((x) => x.at),
       ...(this.phase === 'done' ? { interrupted: s.interrupted, endReason: s.endReason } : {}), events: s.events.map((e) => ({ ...e })),
+      ...(this.runBy ? { operator: this.runBy } : {}),
     };
   }
 }
@@ -390,5 +408,6 @@ export async function sessionFileFromJournal(j: SessionJournal, id: string): Pro
   const end = meta.status === 'complete' ? { interrupted: false, endReason: meta.endReason }
     : { interrupted: true, endReason: meta.status === 'interrupted' ? meta.endReason : 'Recording interrupted: the app closed before the recording ended. The data saved on this computer up to ' + meta.lastCommitAt + ' is kept.' };
   return { format: 'tensile-tester-session', version: 1, savedAt: meta.lastCommitAt, appVersion: meta.appVersion, recordedFrom: 'real', test: meta.test, setup: meta.setup,
-    profile: meta.profile, calibrations: meta.calibrations, forceZero_N: meta.forceZero_N ?? 0, method: null, lines: l.lines, receivedAt_ms: l.receivedAt_ms, ...end };
+    profile: meta.profile, calibrations: meta.calibrations, forceZero_N: meta.forceZero_N ?? 0, method: null, lines: l.lines, receivedAt_ms: l.receivedAt_ms, ...end,
+    ...(meta.operator ? { operator: meta.operator } : {}) };
 }

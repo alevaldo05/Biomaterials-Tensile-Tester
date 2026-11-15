@@ -58,6 +58,16 @@ input[type="text"], select, input[type="file"], textarea { width: 100%; backgrou
 .update-bar { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; margin: 0; padding: 6px 20px; background: var(--surface); border-bottom: 1px solid var(--line); font-size: 0.9rem; }
 .update-bar .update-close { margin-left: auto; padding: 2px 8px; }
 .view-as { margin: 0; padding: 8px 20px; background: var(--surface); border-bottom: 1px solid var(--line); color: var(--warn); font-size: 0.9rem; }
+/* Sign-in on the lab computer (people.ts): the person in the top bar, a problem with the people list, the end-of-access
+   reminder for a student, the recovery code shown once, and who is running the machine on the Test screen. */
+/* the divider between the sign-in on this computer and the lab-server sign-in, only when both are shown */
+.account-person + .account:not(:empty) { padding-left: 12px; border-left: 1px solid var(--line); }
+.people-problem, .access-ends { margin: 0; padding: 8px 20px; border-radius: 0; border-width: 0 0 1px; }
+.recovery-code { font: 600 1.25rem/1.4 ui-monospace, Consolas, monospace; letter-spacing: 0.08em; padding: 10px 14px; margin: 8px 0 12px; background: var(--panel); border: 1px dashed var(--line); border-radius: var(--radius); text-align: center; user-select: all; }
+.who-runs { display: grid; gap: 8px; margin: 0 0 12px; padding-bottom: 12px; border-bottom: 1px solid var(--line); }
+.who-runs p { margin: 0; }
+.responsible { display: grid; gap: 8px; }
+.responsible p { margin: 0; }
 .app > main { flex: 1 1 auto; }
 .page { width: 100%; max-width: 1280px; margin: 0 auto; padding: 20px 20px 24px; display: grid; gap: 16px; align-content: start; min-width: 0; }
 .page-wide { max-width: 1600px; padding: 16px 16px 16px; }
@@ -537,3 +547,47 @@ button.strong:hover:not(:disabled) { opacity: 0.9; }
 .row-flag td, .row-flag th { background: color-mix(in srgb, var(--mark) 14%, transparent); }
 input[type="text"].bench-num { width: 7.5em; max-width: 100%; }
 .bench-over { font-weight: 600; color: var(--mark); }
+
+/* People screen extras (PeopleExtras.tsx): the training and limits boxes, a short note under a table cell, a file
+   chooser shown as a button, and the sign-in slips, which print alone and are hidden on screen. */
+.checks-box { border: 1px solid var(--line); border-radius: var(--radius); padding: 8px 12px 10px; margin: 0; display: grid; gap: 6px; }
+.checks-box legend { padding: 0 4px; font-weight: 600; }
+.checks-box .hint { margin: 2px 0 0; }
+.cell-note { display: block; margin-top: 4px; color: var(--muted); font-size: 0.85rem; }
+.file-button { position: relative; display: inline-flex; align-items: center; background: var(--panel); border: 1px solid var(--control-line); border-radius: 6px; padding: 7px 14px; min-height: 36px; cursor: pointer; }
+.file-button:hover { border-color: var(--accent); }
+.file-button:focus-within { outline: 2px solid var(--focus); outline-offset: 2px; }
+.file-button input { position: absolute; inset: 0; width: 100%; height: 100%; opacity: 0; cursor: pointer; }
+.slip-sheet { display: none; }
+@media print {
+  body.printing-slips > :not(.slip-sheet) { display: none !important; }
+  body.printing-slips .slip-sheet { display: block; color: #000; background: #fff; }
+  .slip { break-inside: avoid; border: 1px dashed #000; padding: 10px 14px; margin: 0 0 12px; font-size: 11pt; }
+  .slip p { margin: 3px 0; }
+}
+.bad-text { color: var(--danger); font-weight: 600; }
+
+/* People at phone and tablet widths: the tables keep readable columns and scroll sideways in their box (.table-wrap)
+   instead of breaking names and dates letter by letter. */
+.people-table { min-width: 1080px; }
+.usage-table { min-width: 640px; }
+.people-table td:nth-child(-n+4), .usage-table td { white-space: nowrap; overflow-wrap: normal; }
+.people-table td, .usage-table td { overflow-wrap: normal; }
+.people-table td:nth-child(5) { min-width: 8rem; }
+.people-table select { min-width: 8.5rem; }
+/* the actions: whole words on each button, the buttons wrapping onto a second line when needed */
+.people-table td:last-child { min-width: 17rem; }
+.people-table td:last-child .row { flex-wrap: wrap; gap: 6px; }
+.people-table td:last-child button { white-space: nowrap; }
+@media (max-width: 700px) {
+  /* the header wraps: no divider at the end of a line, and even spacing between the wrapped groups */
+  .top { gap: 8px 16px; }
+  .top-space { display: none; }
+  .account-person + .account:not(:empty) { padding-left: 0; border-left: 0; }
+}
+/* The theme choice: labels stay on one line; stacked on a phone. */
+.seg-choice label { white-space: nowrap; }
+@media (max-width: 440px) {
+  .seg-choice { flex-direction: column; }
+  .seg-choice label + label { border-left: 0; border-top: 1px solid var(--control-line); }
+}

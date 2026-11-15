@@ -1,5 +1,6 @@
 /* The frame around the screens: the menu, the status bar, which screen is shown, recovery of interrupted recordings,
    and the Need help button. The lab server is optional; recording never depends on it. */
+import { sealedText } from './seal';
 import { useCallback, useEffect, useMemo, useRef, useState, useSyncExternalStore } from 'react';
 import type { TestType } from '@tensile/core';
 import { App } from './App';
@@ -30,10 +31,16 @@ import type { Destination } from './pages/Home';
 import { LoadTest } from './pages/LoadTest';
 import { Methods } from './pages/Methods';
 import { Settings } from './pages/Settings';
+import { PeoplePage } from './pages/People';
+import { PersonPassword, PersonSignIn, RecoverAdmin, SetUpComputer } from './components/PersonDialogs';
+import { MachineAccess } from './people';
+import type { Me } from './people';
 
-type Page = 'home' | 'test' | 'load' | 'methods' | 'device' | 'history' | 'help' | 'settings' | 'admin';
+type Page = 'home' | 'test' | 'load' | 'methods' | 'device' | 'history' | 'help' | 'settings' | 'admin' | 'people';
 export const PAGE_TITLES: Record<Page, string> = { home: 'Home', test: 'Test', load: 'Load test', methods: 'Test methods', device: 'Device and calibration',
-  history: 'History', help: 'Help', settings: 'Settings', admin: 'Admin' };
+  history: 'History', help: 'Help', settings: 'Settings', admin: 'Admin', people: 'People' };
+/* Activity keeps the sign-in on this computer; at most one note to the app every 30 seconds. */
+const TOUCH_EVERY_MS = 30000;
 
 /** Moves keyboard focus to the main part of the current screen (every screen has one with id main-content). */
 export function focusMain(): void {
@@ -85,10 +92,19 @@ function NewPassword(p: { api: LabApi; required: boolean; onDone: () => void; on
   );
 }
 
-export interface ShellProps { controller: TestController; serialAvailable: boolean; journal: SessionJournal | null; methods: MethodStore }
+export interface ShellProps { controller: TestController; serialAvailable: boolean; journal: SessionJournal | null; methods: MethodStore;
+  /** Who may run the machine (the Windows app's sign-in). Without it: a browser, which does not connect to the tester. */
+  access?: MachineAccess }
 
-export function Shell({ controller: c, serialAvailable, journal, methods }: ShellProps) {
+const NO_ACCESS = new MachineAccess(null);
+
+export function Shell({ controller: c, serialAvailable, journal, methods, access = NO_ACCESS }: ShellProps) {
   useSyncExternalStore(c.subscribe, c.snapshot);
+  const me = useSyncExternalStore(access.subscribe, () => access.me);
+  const people = access.people;
+  const [personDialog, setPersonDialog] = useState<null | 'sign-in' | 'password' | 'setup' | 'recover'>(null);
+  const [peopleProblem, setPeopleProblem] = useState('');
+  const setMe = useCallback((m: Me | null) => access.set(m), [access]);
   const { theme, choice: themeChoice, setChoice: setThemeChoice } = useTheme();
   const api = useMemo(() => new LabApi(), []);
   const [reachable, setReachable] = useState<boolean | null>(null);
@@ -116,7 +132,43 @@ export function Shell({ controller: c, serialAvailable, journal, methods }: Shel
   const effectiveRole = user ? (user.role === 'admin' && !viewAsUser ? 'admin' : 'user') : null;
   const account: Account = { api, reachable, user, viewAsUser, effectiveRole, notSetUp };
   const recording = c.phase === 'recording';
+  const busy = recording || c.connected;
+  /* The sign-in on this computer: first start (no admin yet), the signed-in person, a forced new password. */
+  useEffect(() => {
+    if (!people) return;
+    people.status().then((st) => {
+      if (st.broken) { setPeopleProblem(st.broken); return; }
+      if (!st.setUp) { setPersonDialog('setup'); return; }
+      return people.current().then(setMe);
+    }, (e: unknown) => setPeopleProblem(e instanceof Error ? e.message : String(e)));
+  }, [people, setMe]);
+  useEffect(() => { if (me?.mustChange) setPersonDialog('password'); }, [me?.mustChange]);
+  /* Tell the app about activity (and whether connected or recording, which blocks the automatic sign-out); check now
+     and then whether the sign-in ended after 15 minutes without activity. */
+  const lastTouch = useRef(0);
+  useEffect(() => {
+    if (!people || !me) return;
+    void people.touch(busy).then(setMe, () => undefined);
+    lastTouch.current = Date.now();
+  }, [people, busy, me?.username]);
+  useEffect(() => {
+    if (!people) return;
+    const onActivity = () => { if (access.me && Date.now() - lastTouch.current > TOUCH_EVERY_MS) { lastTouch.current = Date.now(); void people.touch(busy).then(setMe, () => undefined); } };
+    window.addEventListener('pointerdown', onActivity);
+    window.addEventListener('keydown', onActivity);
+    const timer = window.setInterval(() => { if (access.me) void people.current().then(setMe, () => undefined); }, 60000);
+    return () => { window.removeEventListener('pointerdown', onActivity); window.removeEventListener('keydown', onActivity); window.clearInterval(timer); };
+  }, [people, access, busy, setMe]);
+  const personSignOut = () => { if (!people) return; void people.signOut().then(() => { setMe(null); setPersonDialog(null); if (page === 'people') setPage('home'); }, (e: unknown) => setPeopleProblem(e instanceof Error ? e.message : String(e))); };
+  const canManagePeople = !!people && !!me && !me.mustChange && (me.kind === 'admin' || me.kind === 'operator');
   const labMethods = useMemo(() => (user && !user.mustChangePassword ? new LabMethods(api) : null), [user, api]);
+  /* The test methods on this computer and the lab server's, by name, for a student's limits on the People screen. */
+  const [methodNames, setMethodNames] = useState<{ id: string; name: string }[]>([]);
+  useEffect(() => {
+    if (page !== 'people') return;
+    void Promise.all([methods.list().catch(() => []), labMethods ? labMethods.list().catch(() => []) : Promise.resolve([])])
+      .then(([a, b]) => setMethodNames([...a, ...b].filter((m) => !m.archived).map((m) => ({ id: m.id, name: m.name }))));
+  }, [page, methods, labMethods]);
 
   /* Lists for Home and Load test: recordings on this computer, and the lab server's when signed in. */
   const refresh = useCallback(() => {
@@ -124,7 +176,7 @@ export function Shell({ controller: c, serialAvailable, journal, methods }: Shel
     if (user) void api.sessions(effectiveRole === 'admin' ? undefined : user.id).then(setLab, () => setLab([])); else setLab([]);
   }, [journal, user, effectiveRole, api]);
   useEffect(refresh, [refresh, page, c.phase, c.localSave]);
-  useEffect(() => { if (page === 'admin' && effectiveRole !== 'admin') setPage('home'); if (page === 'history' && !user) setPage('home'); }, [effectiveRole, user, page]);
+  useEffect(() => { if (page === 'admin' && effectiveRole !== 'admin') setPage('home'); if (page === 'history' && !user) setPage('home'); if (page === 'people' && !canManagePeople) setPage('home'); }, [effectiveRole, user, page, canManagePeople]);
   useEffect(() => { if (user?.mustChangePassword) setDialog('password'); }, [user]);
   /* Leaving or reloading while recording or with unsaved data: the browser's own warning. */
   useEffect(() => {
@@ -141,7 +193,7 @@ export function Shell({ controller: c, serialAvailable, journal, methods }: Shel
   };
   const openLocal = async (id: string) => { if (!journal) return; try { const f = await sessionFileFromJournal(journal, id); await open('recording-' + id + '.session.json', JSON.stringify(f)); } catch (e) { setLoadError(e instanceof Error ? e.message : String(e)); setPage('load'); } };
   const openLab = async (id: string) => { try { await open('test-' + id + '.session.json', await api.sessionFileText(id)); } catch (e) { setLoadError(e instanceof Error ? e.message : String(e)); setPage('load'); } };
-  const downloadLocal = async (m: JournalMeta) => { if (journal) save('recording-' + m.id + '.session.json', [JSON.stringify(await sessionFileFromJournal(journal, m.id))], 'application/json'); };
+  const downloadLocal = async (m: JournalMeta) => { if (journal) save('recording-' + m.id + '.session.json', [sealedText(await sessionFileFromJournal(journal, m.id))], 'application/json'); };
   const interrupted = local.filter((m) => m.status === 'recording' && m.id !== c.journalId);
   const recover = async (m: JournalMeta, how: 'open' | 'download' | 'dismiss') => {
     if (!journal) return;
@@ -151,7 +203,7 @@ export function Shell({ controller: c, serialAvailable, journal, methods }: Shel
     if (how === 'open') await openLocal(m.id);
   };
   const recent = recentRows(local, lab, (id) => void openLocal(id), (id) => void openLab(id),
-    async (id) => { if (!journal) throw new Error('No storage on this computer.'); return { name: 'recording-' + id + '.session.json', text: JSON.stringify(await sessionFileFromJournal(journal, id)) }; },
+    async (id) => { if (!journal) throw new Error('No storage on this computer.'); return { name: 'recording-' + id + '.session.json', text: sealedText(await sessionFileFromJournal(journal, id)) }; },
     async (id) => ({ name: 'test-' + id + '.session.json', text: await api.sessionFileText(id) }));
   const go = (d: Destination | Page) => setPage(d);
 
@@ -181,9 +233,20 @@ export function Shell({ controller: c, serialAvailable, journal, methods }: Shel
         <span className="brand"><BrandMark />Biomaterials Tensile Tester</span>
         <nav className="navs" aria-label="Main">
           {nav('home', 'Home')}{nav('test', 'Test')}{user ? nav('history', 'History') : null}{nav('device', 'Device')}{nav('help', 'Help')}{nav('settings', 'Settings')}
+          {canManagePeople ? nav('people', 'People') : null}
           {effectiveRole === 'admin' ? nav('admin', 'Admin') : null}
         </nav>
         <span className="top-space" />
+        {people ? (
+          <span className="account account-person">
+            {me ? (<>
+              <span className="who">{me.name}<span className="badge badge-soft">{me.kindName}</span></span>
+              <button type="button" className="quiet" onClick={() => setPersonDialog('password')}>Password</button>
+              <button type="button" className="quiet" disabled={busy} title={busy ? 'Disconnect first' : undefined} onClick={() => { if (!people) return; void people.signOut().then(() => { setMe(null); setPersonDialog('sign-in'); if (page === 'people') setPage('home'); }, (e: unknown) => setPeopleProblem(e instanceof Error ? e.message : String(e))); }}>Switch person</button>
+              <button type="button" className="quiet" disabled={busy} title={busy ? 'Disconnect first' : undefined} onClick={personSignOut}>Sign out</button>
+            </>) : <button type="button" className="primary" disabled={!!peopleProblem} onClick={() => setPersonDialog('sign-in')}>Sign in</button>}
+          </span>
+        ) : null}
         <span className="account">
           {reachable && !user ? <button type="button" onClick={() => setDialog('sign-in')}>Sign in to the lab server</button> : null}
           {user ? (<>
@@ -196,13 +259,17 @@ export function Shell({ controller: c, serialAvailable, journal, methods }: Shel
       </header>
       <StatusIndicators controller={c} account={account} />
       <UpdateBar recording={recording} />
+      {peopleProblem ? <p className="error people-problem" role="alert">{peopleProblem}</p> : null}
+      {me && me.kind === 'student' && me.daysLeft !== null && me.daysLeft <= 7 ? <p className="notice access-ends" role="status">Your access ends {me.daysLeft <= 0 ? 'today' : 'in ' + me.daysLeft + ' day' + (me.daysLeft === 1 ? '' : 's')} ({me.endDate}). Ask your operator if you need it longer.</p> : null}
       {viewAsUser ? <p className="view-as" role="status">Viewing as a user. This changes only what this screen shows; your admin permissions are unchanged. <button type="button" className="link" onClick={() => setViewAsUser(false)}>Back to admin view</button></p> : null}
 
       {page === 'home' ? <Home go={go} recent={recent} interrupted={interrupted} recover={(m, how) => void recover(m, how)} recording={recording} device={glance} /> : null}
-      {page === 'test' ? <App controller={c} serialAvailable={serialAvailable} theme={theme} account={account} onHelpSub={onHelpSub} runTests={runTests} /> : null}
+      {page === 'test' ? <App controller={c} serialAvailable={serialAvailable} theme={theme} account={account} onHelpSub={onHelpSub} runTests={runTests}
+        machine={{ people, me, onSignIn: () => setPersonDialog('sign-in'), onMe: setMe }} /> : null}
       {page === 'load' ? <LoadTest loaded={loaded} error={loadError} theme={theme} recent={recent} openFile={(n, t, h) => void open(n, t, h)} clear={() => { setLoaded(null); setLoadError(''); }} /> : null}
       {page === 'methods' ? <Methods store={methods} lab={labMethods} labAdmin={effectiveRole === 'admin'} controller={c} start={() => setPage('test')} /> : null}
-      {page === 'device' ? <Device controller={c} account={account} serialAvailable={serialAvailable} /> : null}
+      {page === 'device' ? <Device controller={c} account={account} serialAvailable={serialAvailable} makers={people ? (me?.kind === 'admin' && !me.mustChange ? 'yes' : 'admin-only') : 'windows-app'} /> : null}
+      {page === 'people' && canManagePeople && people && me ? <PeoplePage people={people} me={me} methods={methodNames} labAdmin={!!user && user.role === 'admin' && !user.mustChangePassword} /> : null}
       {page === 'history' && user ? <main className="page" id="main-content"><History account={account} onReplay={(text) => void open('lab-test.session.json', text)} /></main> : null}
       {page === 'help' ? <HelpPage openDevice={() => setPage('device')} /> : null}
       {page === 'settings' ? <Settings themeChoice={themeChoice} setThemeChoice={setThemeChoice} journal={journal} download={(m) => void downloadLocal(m)} recording={recording} labChanged={() => { setViewAsUser(false); check(); }} reachable={reachable} /> : null}
@@ -210,6 +277,20 @@ export function Shell({ controller: c, serialAvailable, journal, methods }: Shel
 
       <div className="help-bar"><HelpButton topic={topic} onOpenHelp={() => setPage('help')} /></div>
 
+      {people ? (<>
+        <Dialog open={personDialog === 'sign-in'} title="Sign in to run the machine" onClose={() => setPersonDialog(null)}>
+          {personDialog === 'sign-in' ? <PersonSignIn people={people} onDone={(m) => { setMe(m); setPersonDialog(m.mustChange ? 'password' : null); }} onCancel={() => setPersonDialog(null)} onForgot={() => setPersonDialog('recover')} /> : null}
+        </Dialog>
+        <Dialog open={personDialog === 'password' && !!me} title={me?.mustChange ? 'Choose your own password' : 'Change password'} onClose={() => { if (!me?.mustChange) setPersonDialog(null); }}>
+          {personDialog === 'password' && me ? <PersonPassword people={people} me={me} onDone={(m) => { setMe(m); setPersonDialog(null); }} onCancel={() => (me.mustChange ? personSignOut() : setPersonDialog(null))} /> : null}
+        </Dialog>
+        <Dialog open={personDialog === 'setup'} title="Set up this computer">
+          {personDialog === 'setup' ? <SetUpComputer people={people} onDone={(m) => { setMe(m); setPersonDialog(null); }} /> : null}
+        </Dialog>
+        <Dialog open={personDialog === 'recover'} title="Reset the admin password" onClose={() => setPersonDialog(null)}>
+          {personDialog === 'recover' ? <RecoverAdmin people={people} onDone={() => setPersonDialog('sign-in')} onCancel={() => setPersonDialog('sign-in')} /> : null}
+        </Dialog>
+      </>) : null}
       <Dialog open={dialog === 'sign-in'} title="Sign in to the lab server" onClose={() => setDialog(null)}>
         <SignIn api={api} onDone={(u) => { setUser(u); setDialog(u.mustChangePassword ? 'password' : null); }} onCancel={() => setDialog(null)} />
       </Dialog>

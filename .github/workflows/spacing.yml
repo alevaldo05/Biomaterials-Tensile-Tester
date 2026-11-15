@@ -1,0 +1,50 @@
+# Spacing check for each pull request that changes the website or the tester app: opens every website page and every
+# app screen (with the stand-in Windows app of scripts/app-screenshots.mjs) in Chromium at 1366, 1280, 1024, 768 and
+# 390 px, light and dark, and fails on sideways scroll, overlapping text or controls, controls closer than 4 px,
+# clipped text, or a word split over two lines (scripts/check-spacing.mjs --strict). When it fails, the pictures and
+# report.json are uploaded so the problem can be seen. Chromium only: Safari is not checked here. Publishes nothing.
+name: Spacing check
+
+on:
+  pull_request:
+    branches: [main]
+    paths:
+      - '*.html'
+      - '*.js'
+      - '*.css'
+      - 'css/**'
+      - 'data/**'
+      - 'apps/tester/**'
+      - 'packages/**'
+      - 'scripts/check-spacing.mjs'
+      - 'scripts/app-screenshots.mjs'
+      - '.github/workflows/spacing.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  spacing:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
+        with:
+          persist-credentials: false
+
+      - name: Install, build the app's screens, and check the spacing
+        run: |
+          npm ci --no-audit --no-fund
+          npx playwright install --with-deps chromium
+          npm run app:build
+          node scripts/check-spacing.mjs spacing-out --strict
+
+      - name: Upload the pictures and the report when the check fails
+        if: failure()
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: spacing-check
+          path: |
+            spacing-out/*.png
+            spacing-out/report.json
+          retention-days: 14

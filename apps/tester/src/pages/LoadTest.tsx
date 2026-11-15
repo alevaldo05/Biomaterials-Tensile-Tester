@@ -1,6 +1,8 @@
 /* Load test: open a recorded test (a session file saved by this app, or a CSV file), see its graph and key results,
    and export it. Opening never sends anything to a device. Left: the file; middle: the graph; right: key results;
    along the bottom: the loaded files. A second mode compares several tests (Compare.tsx). */
+import { SEAL_TEXT } from '../seal';
+import { responsibleText, runByText } from '../people';
 import { useRef, useState } from 'react';
 import { usePrintReport } from '../components/usePrintReport';
 import type { TestType } from '@tensile/core';
@@ -11,7 +13,7 @@ import { RecordGraph } from '../components/RecordGraph';
 import { ResultsTable } from '../components/ResultsTable';
 import { SaveMenu } from '../components/SaveMenu';
 import type { MenuItem } from '../components/SaveMenu';
-import { save, svgText, svgToPng, xlsxForRecord } from '../exports';
+import { runByRows, save, svgText, svgToPng, xlsxForRecord } from '../exports';
 import type { LoadedTest } from '../load';
 import type { RecentRow } from './Home';
 import { Compare } from './Compare';
@@ -47,8 +49,8 @@ export function LoadTest(p: {
     else if (what === 'csv' && l.record && l.setup) save(base + '.csv', [buildTestCsv({ ...l.record, source: 'measured' }, {
       spec: { mat: l.setup.material, matLabel: l.setup.material, id: l.setup.specimenId, temp: l.setup.temperature, env: l.setup.environment, notes: l.setup.notes },
       kind: l.test === 'relaxation' ? { slug: 'stress-relaxation', name: 'Stress relaxation' } : { slug: 'uniaxial-tension', name: 'Uniaxial tension' },
-      isRelax: l.test === 'relaxation', startedAt: null, endReason: 'Rebuilt from the session file ' + l.name, checks: {} })], 'text/csv;charset=utf-8');
-    else if (what === 'xlsx' && l.record) { const b = xlsxForRecord(l.record, l.test, l.name, l.provenance); save(base + '.xlsx', [b as BlobPart], 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'); }
+      isRelax: l.test === 'relaxation', startedAt: null, endReason: 'Rebuilt from the session file ' + l.name, checks: {}, ...(l.file ? { runBy: runByRows(l.file.operator) } : {}) })], 'text/csv;charset=utf-8');
+    else if (what === 'xlsx' && l.record) { const b = xlsxForRecord(l.record, l.test, l.name, l.provenance, l.file ? runByRows(l.file.operator) : []); save(base + '.xlsx', [b as BlobPart], 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'); }
     else if (what === 'svg' && svg.current) save(base + '.svg', [svgText(svg.current)], 'image/svg+xml');
     else if (what === 'png' && svg.current) save(base + '.png', [await svgToPng(svg.current)], 'image/png');
   };
@@ -94,6 +96,9 @@ export function LoadTest(p: {
         {l.session ? <><div><dt>Device</dt><dd>{l.session.identity.deviceType} · {l.session.identity.deviceId}</dd></div>
           <div><dt>Samples</dt><dd>{Object.values(l.session.columns).reduce((a, col) => a + col.raw.length, 0)}{l.session.missingSamples ? ' (' + l.session.missingSamples + ' missing in gaps)' : ''}</dd></div>
           <div><dt>Calibration</dt><dd>{l.session.calibrated ? Object.values(l.session.calibrations).map((x) => x?.id).join(', ') : 'none (voltages only)'}</dd></div></> : null}
+        {l.seal ? <div><dt>Changes</dt><dd className={l.seal === 'changed' ? 'bad-text' : undefined}>{SEAL_TEXT[l.seal]}</dd></div> : null}
+        {l.file ? <><div><dt>Run by</dt><dd>{runByText(l.file.operator)}</dd></div>
+          {responsibleText(l.file.operator) ? <div><dt>Responsible operator</dt><dd>{responsibleText(l.file.operator)}</dd></div> : null}</> : null}
       </dl>
     </div>) : null;
 

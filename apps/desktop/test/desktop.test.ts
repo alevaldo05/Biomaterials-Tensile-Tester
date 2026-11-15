@@ -8,6 +8,7 @@ import { fileURLToPath } from 'node:url';
 
 const here = path.dirname(fileURLToPath(import.meta.url)), dir = path.resolve(here, '..');
 const read = (f: string) => readFileSync(path.join(dir, f), 'utf8');
+const PEOPLE = ['status', 'setup', 'sign-in', 'sign-out', 'current', 'touch', 'change-password', 'list', 'responsible-choices', 'confirm-responsible', 'add', 'update', 'recover', 'usage-log', 'training-items', 'sign-off-training', 'usage-report', 'copy-to-lab', 'copy-from-lab'];
 const { uiFile } = createRequire(import.meta.url)('../ui-files.cjs') as { uiFile: (ui: string, p: string) => { file: string; type: string } | null };
 
 describe('Windows app', () => {
@@ -41,9 +42,9 @@ describe('Windows app', () => {
   it('sends no machine commands and has no other way to reach the device', () => {
     expect(main).not.toMatch(/start_stream|stop_stream|set_settings|serialport|child_process/);
   });
-  it('answers only the lab-address, journal, and update calls, and only from its own screens', () => {
-    expect([...main.matchAll(/ipcMain\.(\w+)\('([^']+)'/g)].map((m) => m[1] + ' ' + m[2])).toEqual(['handle journal:', 'handle lab-server:get', 'handle update:check', 'handle update:open', 'handle update:get-setting', 'handle update:set-setting', 'handle lab-server:set']);
-    expect(main.match(/if \(!own\(e\)/g)?.length).toBe(4);
+  it('answers only the lab-address, journal, people, and update calls, and only from its own screens', () => {
+    expect([...main.matchAll(/ipcMain\.(\w+)\('([^']+)'/g)].map((m) => m[1] + ' ' + m[2])).toEqual(['handle journal:', 'handle people:', 'handle lab-server:get', 'handle update:check', 'handle update:open', 'handle update:get-setting', 'handle update:set-setting', 'handle lab-server:set']);
+    expect(main.match(/if \(!own\(e\)/g)?.length).toBe(5);
     expect(main).toContain("ipcMain.handle('update:check', (e) => (own(e) ? updateOnce() : { available: false }));");
     expect(main).toContain("ipcMain.handle('update:get-setting', (e) => (own(e) ? checkUpdates : true));");
     /* the release page is checked before it is opened, and nothing else is opened from an update call */
@@ -55,15 +56,34 @@ describe('Windows app', () => {
     expect(main).toContain('const own = (e) => fromApp(e.senderFrame && e.senderFrame.url);');
     expect(main).toContain('checkLabUrl(');
   });
-  it('the preload gives the screens a fixed label, the lab-address, journal, and update calls, nothing else', () => {
+  it('the preload gives the screens a fixed label, the lab-address, journal, people, and update calls, nothing else', () => {
     const pre = read('preload.cjs');
     expect(pre.match(/exposeInMainWorld/g)).toHaveLength(1);
     expect(pre).toContain("kind: 'windows-app'");
     expect([...pre.matchAll(/ipcRenderer\.(\w+)\('([^']+)'/g)].map((m) => m[1] + ' ' + m[2])).toEqual(['invoke lab-server:get', 'invoke lab-server:set',
       'invoke update:check', 'invoke update:open', 'invoke update:get-setting', 'invoke update:set-setting',
-      ...['begin', 'append', 'finish', 'list', 'lines', 'remove', 'estimate'].map((n) => 'invoke journal:' + n)]);
-    expect(pre.match(/ipcRenderer\./g)).toHaveLength(13);
+      ...['begin', 'append', 'finish', 'list', 'lines', 'remove', 'estimate'].map((n) => 'invoke journal:' + n),
+      ...PEOPLE.map((n) => 'invoke people:' + n)]);
+    expect(pre.match(/ipcRenderer\./g)).toHaveLength(13 + PEOPLE.length);
+    /* every people call the preload offers is answered by the main process, with the same number of arguments at most */
+    const table = Object.fromEntries([...main.split('const PEOPLE_CALLS = {')[1]!.split('};')[0]!.matchAll(/'?([a-z-]+)'?: (\d)/g)].map((m) => [m[1], Number(m[2])]));
+    expect(Object.keys(table)).toEqual(PEOPLE);
     expect(pre).not.toMatch(/require\(['"](fs|node:|child_process|path)/);
+  });
+  it('lets only a signed-in person who may run the machine open the USB port or start a recording, and names them itself', () => {
+    expect(main).toContain("(permission === 'serial' && machineAllowed())");
+    expect(main).toContain("s.setDevicePermissionHandler((d) => d.deviceType === 'serial' && fromApp(d.origin) && machineAllowed());");
+    const pick = main.split("s.on('select-serial-port'")[1]!;
+    expect(pick.indexOf('if (!machineAllowed())')).toBeGreaterThan(-1);
+    expect(pick.indexOf('if (!machineAllowed())')).toBeLessThan(pick.indexOf('callback(pick === cancel'));
+    const begin = main.split("if (name === 'begin') {")[1]!.split('return undefined;')[0]!;
+    expect(begin).toContain('if (!m.allowed) throw new Error(m.why);');
+    /* a student's maximum crosshead speed is checked here too, against the recording's own setup */
+    expect(begin).toContain('const limit = people.checkSetup(args[0] && args[0].setup);');
+    /* the screens' own operator field is replaced by the main process's */
+    expect(begin).toContain("operator: people.operatorBlock() }");
+    expect(begin.indexOf('...(args[0]')).toBeLessThan(begin.indexOf('operator: people.operatorBlock()'));
+    expect(main).toContain('const machineAllowed = () => !!people && people.machine().allowed;');
   });
   it('sends only /api/v1/ requests to the lab server, never screens', () => {
     expect(main).toContain('if (u.pathname.startsWith(API_PREFIX)) return lab.handle(req);');
@@ -89,7 +109,7 @@ describe('Windows app', () => {
     expect(pkg.build.publish).toBeNull();
     expect(pkg.build.nsis.artifactName).toContain('beta-unsigned');
     expect(pkg.build.files).not.toContain('node_modules/**/*');
-    expect(pkg.build.files).toEqual(expect.arrayContaining(['main.cjs', 'preload.cjs', 'ui-files.cjs', 'lab-proxy.cjs', 'journal-files.cjs', 'update-check.cjs', 'ui/**/*']));
+    expect(pkg.build.files).toEqual(expect.arrayContaining(['main.cjs', 'preload.cjs', 'ui-files.cjs', 'lab-proxy.cjs', 'journal-files.cjs', 'people.cjs', 'update-check.cjs', 'ui/**/*']));
   });
   it('uses the curve mark as the Windows icon: a 256 x 256 PNG that electron-builder turns into the .ico', () => {
     const pkg = JSON.parse(read('package.json'));

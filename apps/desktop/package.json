@@ -29,6 +29,7 @@
       "ui-files.cjs",
       "lab-proxy.cjs",
       "journal-files.cjs",
+      "people.cjs",
       "update-check.cjs",
       "ui/**/*",
       "package.json"
