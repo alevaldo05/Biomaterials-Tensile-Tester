@@ -15,6 +15,7 @@ Troubleshooting (problem and action table; USB connection is done in the tester 
 - No search box of its own (the header search is used)
 
 ## Behavior to keep
+- Troubleshooting has the row "I want to run a test on the tester", which points to the Learn section "Getting access to the tester"
 - Keyboard table lists only keys that really work; update it when a key changes
 - Esc closes the search and does not send STOP
 

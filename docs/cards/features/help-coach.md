@@ -20,6 +20,7 @@ A "Need help?" button on the practice page, Load Test, and Calibration, plus sma
 - Hints: one at a time at the bottom left, each with an X; they never take keyboard focus. Triggers: a CSV that cannot be read, a field error still showing after 8 s, and a minute (60 s) without activity on the same step or page
 - **Watch how** (when the context has a tutorial and no test is recording) scrolls to and opens the inline tutorial for that step (see [tutorials](tutorials.md))
 - Settings > **Help prompts** Off stops the automatic hints; the button stays
+- Pages with the button leave room at the end of `main` (`ui.css`, padding-bottom 4rem), so the button never covers the last lines
 
 ## Behavior to keep
 - Hints say what could be wrong and the next step; they never claim to diagnose the device

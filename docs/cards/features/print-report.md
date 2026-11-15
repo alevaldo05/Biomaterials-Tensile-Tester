@@ -12,13 +12,15 @@ A one-page, Draft-labeled report opened in the browser print window.
 
 ## What the user sees
 - Print report button; blank run sheet on Learn
+- Practice page, after a simulated test: **Print practice record** (`TensileReport.printPractice(info)` in `report.js`), a one-page record with lines for the name and "Seen by operator", the test details, the graph, and the key results
 
 ## Behavior to keep
 - Never saved or uploaded
 - States whether data is measured, simulated, or loaded
+- The practice record says it is not a record of a test on the tester and not a training certification
 
 ## Labels that must stay
-- Draft
+- Draft; "Simulated data, not measured" on the practice record
 - "Tare is not a calibration" on the calibration report
 
 ## Depends on

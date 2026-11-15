@@ -16,6 +16,7 @@ Compare force readings typed by hand with known masses. See [calibration](../fea
 ## Behavior to keep
 - Changes no reading anywhere, makes no claim of traceability, saves nothing
 - Flags points only against a tolerance the user enters
+- The Flag column heading does not break across lines (`css/calibration.css`)
 
 ## Labels that must stay
 - "Tare is not a calibration"

@@ -16,6 +16,7 @@ The words on Home, Learn, About, and Help live in plain files.
 
 ## Behavior to keep
 - Headings and layout stay in the HTML
+- A section that holds only its heading on a page that takes its words from `data/text/` must be listed for that page in `text.js`; `check-site.js` check 17 fails otherwise (the Learn `access-title` section was empty until it was listed)
 
 ## Labels that must stay
 - None specific

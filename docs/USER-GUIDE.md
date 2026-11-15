@@ -247,6 +247,20 @@ When the lab server is set up:
 2. **Recordings on this computer**: lists recordings with **Download** and **Remove**. Remove one only after downloading it or saving it to the lab server.
 3. **Lab server**: in the Windows app only, type the lab server address (for example `http://lab-pc:8080`) and press **Save address**. **Check connection** tests it. Changing the address signs you out. Leave it empty to work without a lab server; the status bar then says "Lab server: Not set up".
 
+### 4.11 Signing in and People (Windows app)
+
+Draft; not yet tried on a Windows computer or by real users. Who may run the machine is decided in the Windows app on the lab computer. The website has no sign-in.
+
+1. Press **Sign in** at the top right (or in the Test screen's Connection step). Without a sign-in, Connect and Start recording stay unavailable and say why.
+2. The first time, choose your own password (at least 8 characters for a student, 10 for an operator or admin). The person who gave you access will not know it.
+3. A student first needs their operator to sign off a short training. A student also has an **end date**; after it, sign-in is refused until the operator extends it. In the last 7 days the app says how many days are left.
+4. Before connecting, a student chooses a **Responsible operator** in the Connection step. It starts on the person who gave you access. Choosing someone else asks for that person's password.
+5. The test file records who ran the test and the responsible operator; Load test shows them as Run by and Responsible operator.
+6. **People** (admins and operators) adds students, resets passwords, sets end dates, and signs off training. Use **Switch person** or **Sign out** at the top right when you finish. The app signs you out after 15 minutes without activity.
+7. The first time the app opens on a computer, the admin is created and a recovery code is shown once. Write it down and keep it away from the computer.
+
+Sign-in keeps casual use off the machine; it is not a lock on the tester, and the on-screen STOP is not an emergency stop. Full description: [docs/app/SIGN-IN.md](app/SIGN-IN.md).
+
 ## 5. Using the website
 
 Open the website in Chrome (Windows or Mac) or Safari (Mac). The menu is **Home**, **Learn**, **Protocols**, **Materials**, **Calibration**, **About**, **Help**, **Settings**, and a magnifying-glass **search** button.
