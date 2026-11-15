@@ -10,6 +10,7 @@
      HelpCoach.resolve(problemKey)                the problem went away: its hint closes (and may show again if it returns).
    Used by the practice page, Load Test, and Calibration (the website has no real test pages and no USB, so there are no hints for USB problems).
    Hints are one at a time, small, closable with their X, never take keyboard focus, and never use Esc (Esc is STOP on the practice page).
+   The Need help? card closes with its X, the button pressed again, a click outside it, or Esc while the focus is inside it.
    A hint closed with X stays closed for that problem until the page is reloaded. */
 (function () {
   'use strict';
@@ -96,6 +97,18 @@
     card.innerHTML = '<div class="hc-body"></div><button type="button" class="hc-x" aria-label="Close help">×</button>';
     card.querySelector('.hc-x').addEventListener('click', function () { toggleCard(false); btn.focus(); });
     btn.addEventListener('click', function () { toggleCard(); });
+    /* The card closes with its X, with the Need help? button pressed again, with a click anywhere outside it, and with
+       Esc while the keyboard focus is inside it. That Esc stops here, so on the practice page it does not also send STOP;
+       Esc anywhere else is unchanged (STOP on the practice page). The card is never shown while a test records. */
+    document.addEventListener('pointerdown', function (e) {
+      if (!card.hidden && !card.contains(e.target) && !btn.contains(e.target)) toggleCard(false);
+    }, true);
+    card.addEventListener('keydown', function (e) {
+      if (e.key !== 'Escape' || card.hidden) return;
+      e.stopPropagation();
+      toggleCard(false);
+      btn.focus();
+    });
     document.body.appendChild(card); document.body.appendChild(btn);
   }
   if (document.body) build(); else document.addEventListener('DOMContentLoaded', build);

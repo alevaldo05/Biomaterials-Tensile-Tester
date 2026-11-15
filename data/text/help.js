@@ -67,7 +67,8 @@ window.SITE_TEXT.help = {
             [ "↑ and ↓", "Search box in the header", "Move through the results." ],
             [ "Enter", "Search box in the header", "Open the highlighted result." ],
             [ "Esc", "Leave pop-up", "Chooses Stay. It does not send STOP; use the STOP button in the pop-up while a test is recording." ],
-            [ "Esc", "Search box in the header", "Close the search and return to the search button. On the practice page it closes the search only and does not send STOP." ]
+            [ "Esc", "Search box in the header", "Close the search and return to the search button. On the practice page it closes the search only and does not send STOP." ],
+            [ "Esc", "Need help? card (practice page, Load Test, Calibration), with the focus inside the card", "Close the card and return to the Need help? button. On the practice page it does not also send STOP; Esc anywhere else on the page still does. A click outside the card, or Need help? pressed again, also closes it." ]
           ]
         } }
       ]

@@ -184,6 +184,32 @@ async function runTest(page, issues) {
   else { var f = await dl[0].path(); if (!f || fs.statSync(f).size < 200) issues.push({ k: 'download', m: 'the CSV file is empty or tiny' }); }
   if (!(await visible(page, '#results tr'))) issues.push({ k: 'results', m: 'Key results are not shown after the test' });
 }
+/* The Need help? card: pressing the button again closes it, a click elsewhere closes it, and Esc closes it when the
+   keyboard focus is inside it (focus back on the button). On the practice page (stopKey) Esc inside the card does not
+   also send STOP, and Esc elsewhere still does. */
+async function helpCard(page, issues, stopKey) {
+  if (!(await page.$('#need-help'))) { issues.push({ k: 'help', m: 'the Need help? button is missing' }); return; }
+  var shown = function () { return visible(page, '#hc-card'); };
+  await page.click('#need-help');
+  if (!(await shown())) { issues.push({ k: 'help', m: 'Need help? did not open its card' }); return; }
+  await page.click('#need-help');
+  if (await shown()) issues.push({ k: 'help', m: 'pressing Need help? again did not close the card' });
+  await page.click('#need-help');
+  var h = await page.$('h1'), box = h && await h.boundingBox();
+  if (box) { await page.mouse.click(box.x + 2, box.y + box.height / 2); if (await shown()) issues.push({ k: 'help', m: 'a click outside the card did not close it' }); }
+  if (!(await shown())) await page.click('#need-help');   /* open, whatever the step before left */
+  if (stopKey) await page.evaluate(function () { var m = document.getElementById('r-msg'); if (m) m.textContent = ''; });
+  await page.focus('#hc-card .hc-x');
+  await page.keyboard.press('Escape');
+  if (await shown()) issues.push({ k: 'help', m: 'Esc with the focus in the card did not close it' });
+  if ((await page.evaluate(function () { return document.activeElement && document.activeElement.id; })) !== 'need-help') issues.push({ k: 'help', m: 'after Esc the focus is not back on Need help?' });
+  if (stopKey) {
+    if (/STOP sent/.test(await page.evaluate(function () { return document.getElementById('r-msg').textContent; }))) issues.push({ k: 'help', m: 'Esc inside the Need help? card also sent STOP' });
+    await page.evaluate(function () { document.activeElement.blur(); });
+    await page.keyboard.press('Escape');
+    if (!/STOP sent/.test(await page.evaluate(function () { return document.getElementById('r-msg').textContent; }))) issues.push({ k: 'stop', m: 'Esc outside the Need help? card no longer sends STOP' });
+  }
+}
 async function focusRings(page, issues) {
   await page.evaluate(function () { document.body.focus(); window.scrollTo(0, 0); });
   for (var i = 0; i < 12; i++) {
@@ -201,7 +227,7 @@ async function focusRings(page, issues) {
 }
 async function feature(page, name, port, issues) {
   var base = 'http://127.0.0.1:' + port + '/';
-  if (name === 'practice' || name === 'practice-relaxation') { await runTest(page, issues); return; }   /* the simulator exists only on the practice page; the website has no real test pages */
+  if (name === 'practice' || name === 'practice-relaxation') { await runTest(page, issues); await helpCard(page, issues, true); return; }   /* the simulator exists only on the practice page; the website has no real test pages */
   if (name === 'choose-test') {   /* the Get the App page only sends people elsewhere: the latest release of the Windows app, the practice page, and Load Test */
     var hs = await page.$$eval('main a', function (e) { return e.map(function (x) { return x.getAttribute('href'); }); });
     ['https://github.com/alevaldo05/Biomaterials-Tensile-Tester/releases/latest', 'practice.html', 'load-test.html'].forEach(function (h) { if (hs.indexOf(h) < 0) issues.push({ k: 'getapp', m: 'the Get the App page has no link to ' + h }); });
@@ -225,6 +251,7 @@ async function feature(page, name, port, issues) {
     await page.setInputFiles('#cmp-file', [{ name: 'a.csv', mimeType: 'text/csv', buffer: csv }, { name: 'b.csv', mimeType: 'text/csv', buffer: csv }]);
     await page.waitForSelector('.cmp-table', { timeout: 6000 }).catch(function () { issues.push({ k: 'compare', m: 'Compare did not show its table for two files' }); });
     var r2 = await page.evaluate(inPage); r2.issues.forEach(function (x) { x.m = '(compare) ' + x.m; issues.push(x); });
+    await helpCard(page, issues, false);
     return;
   }
   if (name === 'calibration') {
@@ -234,6 +261,7 @@ async function feature(page, name, port, issues) {
     var r3 = await page.evaluate(inPage); r3.issues.forEach(function (x) { x.m = '(results) ' + x.m; issues.push(x); });
     await page.click('#tut-calibration .tut-toggle').catch(function () { issues.push({ k: 'tutorial', m: 'Calibration: the Watch how button could not be clicked' }); });
     if (!(await visible(page, '#tut-panel-calibration'))) issues.push({ k: 'tutorial', m: 'Calibration: the inline tutorial did not open' }); else { var rc = await page.evaluate(inPage); rc.issues.forEach(function (x) { x.m = '(tutorial open) ' + x.m; issues.push(x); }); }
+    await helpCard(page, issues, false);
     return;
   }
   if (name === 'materials') {
