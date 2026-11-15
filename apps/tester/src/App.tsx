@@ -18,6 +18,7 @@ import { fileBase, samplesCsv, save, sessionDetails, svgText, svgToPng, testCsv,
 import { EXAMPLE_DIMENSIONS, EXAMPLE_SETTINGS, MATERIAL_CHOICES, num, setupProblems, STEP_FIELDS } from './setup';
 import type { Setup } from './setup';
 import { ResponsibleOperator } from './components/ResponsibleOperator';
+import { TrainingCheck } from './components/TrainingCheck';
 import { BROWSER_WHY } from './people';
 import type { Me, People } from './people';
 import type { RunTest } from './run-tests';
@@ -411,7 +412,8 @@ export function App({ controller: c, serialAvailable, theme, account, onHelpSub,
   );
 }
 
-/** Who is running the machine: the signed-in person, a Sign in button, or (for a student) the responsible operator.
+/** Who is running the machine: the signed-in person, a Sign in button, or (for a student) the training check before
+    their first test, then the responsible operator.
     In a browser: the line that tests are run from the Windows app. */
 function WhoRuns({ machine: m, locked }: { machine: NonNullable<TestScreenProps['machine']>; locked: boolean }) {
   if (!m.people) return <p className="hint who-runs">{BROWSER_WHY}</p>;
@@ -420,7 +422,8 @@ function WhoRuns({ machine: m, locked }: { machine: NonNullable<TestScreenProps[
     <div className="who-runs">
       <p className="hint">Running the machine: <strong>{m.me.name}</strong> ({m.me.kindName.toLowerCase()}). Named in the test file.</p>
       {m.me.mustChange ? <p className="hint">Choose your own password first (top right, Password).</p> : null}
-      {m.me.kind === 'student' && !m.me.mustChange ? <ResponsibleOperator people={m.people} me={m.me} locked={locked} onChange={m.onMe} /> : null}
+      {m.me.kind === 'student' && !m.me.mustChange && m.me.needsTraining ? <TrainingCheck people={m.people} me={m.me} locked={locked} onChange={m.onMe} /> : null}
+      {m.me.kind === 'student' && !m.me.mustChange && !m.me.needsTraining ? <ResponsibleOperator people={m.people} me={m.me} locked={locked} onChange={m.onMe} /> : null}
     </div>
   );
 }

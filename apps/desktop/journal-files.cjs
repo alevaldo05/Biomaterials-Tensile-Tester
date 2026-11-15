@@ -46,7 +46,8 @@ function checkMeta(m) {
     ...(operator ? { operator } : {}),
   };
 }
-/* Who ran the test (people.cjs): written by the main process, checked again here. */
+/* Who ran the test (people.cjs): written by the main process, checked again here. A student's block also names the
+   responsible operator and who approved their training, and when. */
 const KINDS = ['admin', 'operator', 'student'], BY = ['gave access', 'password'];
 const shortText = (v, n) => typeof v === 'string' && v.length > 0 && v.length <= n && !/[\u0000-\u001f]/.test(v);
 function checkOperator(o) {
@@ -57,6 +58,11 @@ function checkOperator(o) {
     const r = o.responsible;
     if (typeof r !== 'object' || !shortText(r.name, 80) || !shortText(r.username, 40) || !BY.includes(r.confirmedBy)) fail('The responsible operator is not valid.');
     out.responsible = { name: r.name, username: r.username, confirmedBy: r.confirmedBy };
+  }
+  if (o.training != null) {
+    const t = o.training;
+    if (typeof t !== 'object' || !shortText(t.approvedBy, 80) || !shortText(t.at, 40) || Number.isNaN(Date.parse(t.at))) fail('The training record is not valid.');
+    out.training = { approvedBy: t.approvedBy, at: t.at };
   }
   return out;
 }

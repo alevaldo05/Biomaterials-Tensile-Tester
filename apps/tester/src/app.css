@@ -66,8 +66,8 @@ input[type="text"], select, input[type="file"], textarea { width: 100%; backgrou
 .recovery-code { font: 600 1.25rem/1.4 ui-monospace, Consolas, monospace; letter-spacing: 0.08em; padding: 10px 14px; margin: 8px 0 12px; background: var(--panel); border: 1px dashed var(--line); border-radius: var(--radius); text-align: center; user-select: all; }
 .who-runs { display: grid; gap: 8px; margin: 0 0 12px; padding-bottom: 12px; border-bottom: 1px solid var(--line); }
 .who-runs p { margin: 0; }
-.responsible { display: grid; gap: 8px; }
-.responsible p { margin: 0; }
+.responsible, .training-check { display: grid; gap: 8px; }
+.responsible p, .training-check p { margin: 0; }
 .app > main { flex: 1 1 auto; }
 .page { width: 100%; max-width: 1280px; margin: 0 auto; padding: 20px 20px 24px; display: grid; gap: 16px; align-content: start; min-width: 0; }
 .page-wide { max-width: 1600px; padding: 16px 16px 16px; }
@@ -553,6 +553,9 @@ input[type="text"].bench-num { width: 7.5em; max-width: 100%; }
 .checks-box { border: 1px solid var(--line); border-radius: var(--radius); padding: 8px 12px 10px; margin: 0; display: grid; gap: 6px; }
 .checks-box legend { padding: 0 4px; font-weight: 600; }
 .checks-box .hint { margin: 2px 0 0; }
+/* The line after sign-in naming wrong tries for your username (PersonDialogs.tsx WrongTries). */
+.wrong-tries { display: flex; align-items: center; gap: 8px; }
+.wrong-tries span { flex: 1; }
 .cell-note { display: block; margin-top: 4px; color: var(--muted); font-size: 0.85rem; }
 .file-button { position: relative; display: inline-flex; align-items: center; background: var(--panel); border: 1px solid var(--control-line); border-radius: 6px; padding: 7px 14px; min-height: 36px; cursor: pointer; }
 .file-button:hover { border-color: var(--accent); }

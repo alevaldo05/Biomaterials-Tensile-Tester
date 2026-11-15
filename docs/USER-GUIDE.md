@@ -253,11 +253,12 @@ Draft; not yet tried on a Windows computer or by real users. Who may run the mac
 
 1. Press **Sign in** at the top right (or in the Test screen's Connection step). Without a sign-in, Connect and Start recording stay unavailable and say why.
 2. The first time, choose your own password (at least 8 characters for a student, 10 for an operator or admin). The person who gave you access will not know it.
-3. A student first needs their operator to sign off a short training. A student also has an **end date**; after it, sign-in is refused until the operator extends it. In the last 7 days the app says how many days are left.
-4. Before connecting, a student chooses a **Responsible operator** in the Connection step. It starts on the person who gave you access. Choosing someone else asks for that person's password.
-5. The test file records who ran the test and the responsible operator; Load test shows them as Run by and Responsible operator.
-6. **People** (admins and operators) adds students, resets passwords, sets end dates, and signs off training. Use **Switch person** or **Sign out** at the top right when you finish. The app signs you out after 15 minutes without activity.
-7. The first time the app opens on a computer, the admin is created and a recovery code is shown once. Write it down and keep it away from the computer.
+3. The first time a student runs a test, the Connection step shows **Training**: tick each item, choose an operator, and that operator types their password and presses **Approve**. It is asked once. A student also has an **end date**; after it, sign-in is refused until the operator extends it. In the last 7 days the app says how many days are left.
+4. Before connecting, a student chooses a **Responsible operator** in the Connection step. It starts on the person who gave you access. Choosing someone else shows an **Operator password** box for that person.
+5. The test file records who ran the test, the responsible operator, and who approved a student's training; Load test shows them as Run by, Responsible operator, and Training.
+6. **People** (admins and operators) adds students, resets passwords, and sets end dates; the admin can also save and restore a backup of the list. Use **Switch person** or **Sign out** at the top right when you finish. The app signs you out after 15 minutes without activity.
+7. Wrong passwords lock a username for 1 minute after 5 tries, then 3, 5, 15, and 60 minutes. After you sign in, the app tells you if there were wrong tries for your username. Forgot your password? Students ask their operator, operators ask the admin, and the admin uses the recovery code.
+8. The first time the app opens on a computer, the admin is created and a recovery code is shown once. Write it down and keep it away from the computer.
 
 Sign-in keeps casual use off the machine; it is not a lock on the tester, and the on-screen STOP is not an emergency stop. Full description: [docs/app/SIGN-IN.md](app/SIGN-IN.md).
 

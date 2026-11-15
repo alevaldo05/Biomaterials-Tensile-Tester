@@ -1,7 +1,7 @@
 /* Files the person can save. Everything is built in the browser tab and handed to the browser's own download;
    nothing is uploaded. Numbers stay in base units (N, mm, s, MPa). */
 import { sealedText } from './seal';
-import { responsibleText, runByText } from './people';
+import { responsibleText, runByText, trainingText } from './people';
 import type { OperatorBlock } from './people';
 import { buildTestCsv, buildXlsx, csvCell, csvFileBase, dataChecks, dimSourceText, modulusFitText, sig, sourceTag } from '@tensile/core';
 import type { CsvContext, TestRecord, TestType, XlsxInfo } from '@tensile/core';
@@ -20,10 +20,10 @@ const KIND = { uniaxial: { slug: 'uniaxial-tension', name: 'Uniaxial tension' },
 
 /** Header lines are one line each: a line break typed in a note or carried in an end reason would split the file. */
 export const oneLine = (t: string): string => String(t ?? '').replace(/[\r\n\u2028\u2029]+/g, ' ').trim();
-/** "Run by" and, for a student, "Responsible operator", as label and value pairs for the files. */
+/** "Run by" and, for a student, "Responsible operator" and "Training", as label and value pairs for the files. */
 export function runByRows(o: OperatorBlock | null | undefined): [string, string][] {
-  const r = responsibleText(o);
-  return [['Run by', oneLine(runByText(o))], ...(r ? [['Responsible operator', oneLine(r)] as [string, string]] : [])];
+  const r = responsibleText(o), t = trainingText(o);
+  return [['Run by', oneLine(runByText(o))], ...(r ? [['Responsible operator', oneLine(r)] as [string, string]] : []), ...(t ? [['Training', oneLine(t)] as [string, string]] : [])];
 }
 export function csvContext(c: TestController): CsvContext {
   const s = c.setup;

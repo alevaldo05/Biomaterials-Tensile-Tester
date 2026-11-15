@@ -1,5 +1,5 @@
-/* More of the People screen: a student's training sign-off and limits, the usage report, adding a class from a list,
-   printable sign-in slips, and the copy of the people list to and from the lab server. Every rule is checked again
+/* More of the People screen: a student's limits, the usage report, adding a class from a list, printable sign-in
+   slips, the copy of the people list to and from the lab server, and the backup file. Every rule is checked again
    in the Windows app's main process (apps/desktop/people.cjs). */
 import { useEffect, useState } from 'react';
 import type { JSX } from 'react';
@@ -13,30 +13,6 @@ import { save } from '../exports';
 const msgOf = (e: unknown): string => (e instanceof Error ? e.message : String(e));
 const when = (iso: string | null): string => { if (!iso) return '—'; const d = new Date(iso); return Number.isNaN(d.getTime()) ? iso : d.toLocaleString(); };
 const DATE = /^\d{4}-\d{2}-\d{2}$/;
-
-/** The training items, all ticked by the operator before the student's first sign-in. */
-export function TrainingSignOff(p: { people: People; person: PersonView; onDone: (msg: string) => void; onCancel: () => void }): JSX.Element {
-  const [items, setItems] = useState<string[] | null>(null);
-  const [ticked, setTicked] = useState<boolean[]>([]);
-  const [err, setErr] = useState(''), [busy, setBusy] = useState(false);
-  useEffect(() => { p.people.trainingItems().then((i) => { setItems(i); setTicked(i.map(() => false)); }, (e: unknown) => setErr(msgOf(e))); }, [p.people]);
-  return (
-    <form className="inline-form" onSubmit={(e) => {
-      e.preventDefault(); setBusy(true); setErr('');
-      p.people.signOffTraining(p.person.id, ticked).then(() => p.onDone('Training signed off for ' + p.person.name + '. They can sign in now.'), (x: unknown) => setErr(msgOf(x))).finally(() => setBusy(false));
-    }}>
-      <fieldset className="checks-box">
-        <legend>Training for {p.person.name}</legend>
-        {items?.map((t, i) => (
-          <label key={t} className="check"><input type="checkbox" checked={!!ticked[i]} onChange={(e) => setTicked(ticked.map((v, j) => (j === i ? e.target.checked : v)))} /> {t}</label>
-        ))}
-        <p className="hint">Draft wording. Your sign-off is saved with the date and your name. It is a record, not a safety certification.</p>
-      </fieldset>
-      {err ? <p className="error" role="alert">{err}</p> : null}
-      <span className="row"><button type="submit" className="primary" disabled={busy || !items || !ticked.every(Boolean)}>Sign off training</button><button type="button" onClick={p.onCancel}>Cancel</button></span>
-    </form>
-  );
-}
 
 /** A student's limits: test methods (by name) and a maximum crosshead speed. */
 export function LimitsEditor(p: { people: People; person: PersonView; methods: { id: string; name: string }[]; onDone: (msg: string) => void; onCancel: () => void }): JSX.Element {
@@ -121,7 +97,7 @@ export function ClassList(p: { people: People; onAdded: (slips: Slip[], msg: str
     }
     setBusy(false);
     if (failed.length) setErr('Not added: ' + failed.join(' '));
-    if (slips.length) { setText(''); p.onAdded(slips, slips.length + ' student' + (slips.length === 1 ? '' : 's') + ' added. Sign off their training before their first sign-in.'); }
+    if (slips.length) { setText(''); p.onAdded(slips, slips.length + ' student' + (slips.length === 1 ? '' : 's') + ' added.'); }
   };
   return (
     <details className="page-form more">
@@ -189,6 +165,31 @@ export function LabCopy(p: { people: People; labAdmin: boolean; onDone: () => vo
         {!confirm ? <button type="button" disabled={busy || !p.labAdmin} onClick={() => setConfirm(true)}>Copy from the lab server…</button>
           : <><button type="button" className="primary" disabled={busy} onClick={() => run(async () => { const r = await p.people.copyFromLab(); return r.added + ' added and ' + r.updated + ' updated from the lab server.'; })}>Copy from the lab server now</button><button type="button" onClick={() => setConfirm(false)}>Cancel</button></>}
       </p>
+      {msg ? <p className={msg.bad ? 'error' : 'hint'} role={msg.bad ? 'alert' : 'status'}>{msg.text}</p> : null}
+    </div>
+  );
+}
+
+/** Admin: save the people list to a backup file (a USB stick, for example), or bring one back on a new or repaired lab
+    computer. The file is written and read by the Windows app itself; this screen never sees what is in it. */
+export function Backup(p: { people: People; onDone: () => void }): JSX.Element {
+  const [msg, setMsg] = useState<{ text: string; bad: boolean } | null>(null), [busy, setBusy] = useState(false), [ask, setAsk] = useState(false);
+  const run = (f: () => Promise<string>) => { setBusy(true); setMsg(null); f().then((t) => { if (t) setMsg({ text: t, bad: false }); p.onDone(); }, (e: unknown) => setMsg({ text: msgOf(e), bad: true })).finally(() => { setBusy(false); setAsk(false); }); };
+  const restore = (mode: 'merge' | 'replace') => run(async () => {
+    const r = await p.people.restoreBackup(mode);
+    if (!r.restored) return '';
+    return mode === 'merge' ? (r.added ?? 0) + ' added and ' + (r.updated ?? 0) + ' updated from the backup.' : 'The list is now the backup’s: ' + (r.added ?? 0) + ' people, ' + (r.removed ?? 0) + ' removed. You stay signed in as the admin.';
+  });
+  return (
+    <div className="page-form">
+      <h2>Backup</h2>
+      <p className="hint">The file holds the people list with passwords only in their scrambled form. Keep it somewhere safe.</p>
+      <p className="row">
+        <button type="button" disabled={busy} onClick={() => run(async () => { const r = await p.people.saveBackup(); return r.saved ? 'Backup saved' + (r.name ? ' as ' + r.name : '') + '.' : ''; })}>Save backup…</button>
+        {!ask ? <button type="button" disabled={busy} onClick={() => setAsk(true)}>Restore from backup…</button>
+          : <><button type="button" disabled={busy} onClick={() => restore('merge')}>Merge</button><button type="button" disabled={busy} onClick={() => restore('replace')}>Replace</button><button type="button" onClick={() => setAsk(false)}>Cancel</button></>}
+      </p>
+      {ask ? <p className="hint">Merge adds people from the backup and keeps everyone here. Replace makes the list the backup’s; you stay as the admin.</p> : null}
       {msg ? <p className={msg.bad ? 'error' : 'hint'} role={msg.bad ? 'alert' : 'status'}>{msg.text}</p> : null}
     </div>
   );

@@ -8,7 +8,7 @@ import { fileURLToPath } from 'node:url';
 
 const here = path.dirname(fileURLToPath(import.meta.url)), dir = path.resolve(here, '..');
 const read = (f: string) => readFileSync(path.join(dir, f), 'utf8');
-const PEOPLE = ['status', 'setup', 'sign-in', 'sign-out', 'current', 'touch', 'change-password', 'list', 'responsible-choices', 'confirm-responsible', 'add', 'update', 'recover', 'usage-log', 'training-items', 'sign-off-training', 'usage-report', 'copy-to-lab', 'copy-from-lab'];
+const PEOPLE = ['status', 'setup', 'sign-in', 'sign-out', 'current', 'touch', 'change-password', 'list', 'responsible-choices', 'confirm-responsible', 'add', 'update', 'recover', 'usage-log', 'training-items', 'complete-training', 'usage-report', 'copy-to-lab', 'copy-from-lab', 'save-backup', 'restore-backup'];
 const { uiFile } = createRequire(import.meta.url)('../ui-files.cjs') as { uiFile: (ui: string, p: string) => { file: string; type: string } | null };
 
 describe('Windows app', () => {

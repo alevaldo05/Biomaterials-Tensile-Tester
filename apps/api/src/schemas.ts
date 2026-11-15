@@ -65,10 +65,12 @@ export const SessionFileBody = z.object({
   forceZero_N: z.number().finite().optional(),
   interrupted: z.boolean().optional(),
   endReason: z.string().max(2000).optional(),
-  /* optional, from newer apps: who ran the test on the lab computer, and a student's responsible operator */
+  /* optional, from newer apps: who ran the test on the lab computer, a student's responsible operator and training */
   operator: z.strictObject({
     name: z.string().min(1).max(80), username: z.string().min(1).max(40), kind: z.enum(['admin', 'operator', 'student']),
     responsible: z.strictObject({ name: z.string().min(1).max(80), username: z.string().min(1).max(40), confirmedBy: z.enum(['gave access', 'password']) }).optional(),
+    /* from 1.0.0-beta.3: who approved a student's training, and when */
+    training: z.strictObject({ approvedBy: z.string().min(1).max(80), at: z.string().datetime() }).optional(),
   }).nullable().optional(),
   /* optional, from newer apps: a hash of the rest of the file, so a change can be noticed (apps/tester/src/seal.ts) */
   check: z.strictObject({ sha256: z.string().regex(/^[0-9a-f]{64}$/) }).optional(),

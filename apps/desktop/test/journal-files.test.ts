@@ -42,14 +42,14 @@ describe('recording files', () => {
     expect(fs.readdirSync(j.dir)).toEqual([]);
   });
 
-  it('keeps who ran the test (and a student’s responsible operator), and refuses a malformed one', async () => {
+  it('keeps who ran the test (and a student’s responsible operator and training), and refuses a malformed one', async () => {
     const j = createJournalFiles(tmp());
-    const operator = { name: 'Sam Student', username: 'sam', kind: 'student', responsible: { name: 'Olga Operator', username: 'olga', confirmedBy: 'gave access' } };
+    const operator = { name: 'Sam Student', username: 'sam', kind: 'student', responsible: { name: 'Olga Operator', username: 'olga', confirmedBy: 'gave access' }, training: { approvedBy: 'Olga Operator', at: '2026-11-14T12:00:00.000Z' } };
     await j.begin({ ...meta(), operator } as Parameters<typeof j.begin>[0], { lines: [], receivedAt_ms: [] });
     expect((await j.list())[0]).toMatchObject({ operator });
     await j.begin(meta('s-abc123-none'), { lines: [], receivedAt_ms: [] });
     expect((await j.list()).find((m) => m.id === 's-abc123-none')).not.toHaveProperty('operator');
-    for (const bad of [{ name: '', username: 'x', kind: 'student' }, { name: 'A', username: 'a', kind: 'boss' }, { ...operator, responsible: { name: 'O', username: 'o', confirmedBy: 'trust me' } }]) {
+    for (const bad of [{ name: '', username: 'x', kind: 'student' }, { name: 'A', username: 'a', kind: 'boss' }, { ...operator, responsible: { name: 'O', username: 'o', confirmedBy: 'trust me' } }, { ...operator, training: { approvedBy: '', at: 'x' } }]) {
       await expect(j.begin({ ...meta('s-abc123-bad1'), operator: bad } as Parameters<typeof j.begin>[0], { lines: [], receivedAt_ms: [] })).rejects.toThrow(/not valid/);
     }
   });

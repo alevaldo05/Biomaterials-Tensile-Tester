@@ -6,15 +6,20 @@
    - Everyone signs in the same way: a username, then a password (for a student, the password or code their operator
      set; they choose their own at the first sign-in).
    - Passwords and the admin recovery code are kept only as scrypt hashes (Node's own crypto; no other package), and
-     compared in constant time. After 5 wrong tries in 15 minutes for one name, sign-in for that name pauses.
+     compared in constant time. After 5 wrong tries for one name, that name is locked for 1 minute; each wrong try
+     after a lock locks it for the next step (3, 5, 15 minutes, then 60 minutes each time). A right password starts
+     the ladder again. The locks are kept in lockouts.json, so closing the app does not clear them. At sign-in a person
+     is told how many wrong tries there were for their name since they last signed in.
    - people.json is rewritten whole, through a temporary file and a rename; the previous version is kept as
      people.json.bak. A file that cannot be read is never replaced by an empty list: sign-in is refused instead.
    - usage-log.jsonl is append only: sign-ins, wrong tries, sign-outs, responsible operators, tests started and ended,
      and every change to the people list. No password or code is ever written to it.
-   - A student's first sign-in needs their operator's training sign-off (safety briefing, where the tester's own STOP
-     is, a practice test). An operator may limit a student to chosen test methods and a maximum crosshead speed; the
+   - A student signs in freely. Before their first test (Connect) they complete the training (safety briefing, where
+     the tester's own STOP is, a practice test), approved by any operator or the admin with their own password; it is
+     saved and not asked again. An operator may limit a student to chosen test methods and a maximum crosshead speed; the
      app sends no command, so a limit stops a recording from starting, never the machine.
-   - The admin can copy the list to and from the lab server (exportForLab, importFromLab), for a second lab computer.
+   - The admin can copy the list to and from the lab server (exportForLab, importFromLab), for a second lab computer,
+     or save it to a backup file and restore it (backupFile, restoreFile), with a SHA-256 check that notices changes.
    - Every rule is checked here, in the main process; the screens only ever see names and kinds.
    This keeps casual and unauthorised use off the machine. It is not a lock on the tester, and someone with Windows
    administrator rights can still delete these files. No Electron here, so it can be tested on its own. */
@@ -31,13 +36,18 @@ const MIN_PASSWORD = { admin: 10, operator: 10, student: 8 };
 const MAX_PASSWORD = 200;
 const MAX_NAME = 80;
 const SCRYPT = { N: 16384, r: 8, p: 1, keylen: 32 };
-const TRIES = { max: 5, windowMs: 15 * 60 * 1000 };
+/* Minutes locked: the first lock comes after LOCK_AFTER wrong tries, each later wrong try takes the next step. */
+const LOCK_AFTER = 5;
+const LOCK_STEPS = [1, 3, 5, 15, 60];
+const MAX_LOCK_KEYS = 2000;
 const IDLE_MS = 15 * 60 * 1000;
 const FORMAT = 'tensile-tester-people';
+const BACKUP_FORMAT = 'tensile-tester-people-backup';
 /* The training sign-off items, in order (draft wording, for the owner's review). */
 const TRAINING_ITEMS = ['Safety briefing given', 'Shown where the tester’s own STOP is (the on-screen STOP is not an emergency stop)', 'Practice test completed on the learning website'];
 const MAX_METHODS = 20;
 
+const sha256 = (t) => crypto.createHash('sha256').update(t).digest('hex');
 function fail(msg) { const e = new Error(msg); e.plain = true; throw e; }
 
 /* ---------- hashing ---------- */
@@ -69,16 +79,63 @@ function recoveryCode() {
 const normalCode = (c) => String(c ?? '').toUpperCase().replace(/[^A-Z0-9]/g, '');
 
 /* ---------- wrong tries ---------- */
-function createTries(now) {
-  const seen = new Map();
-  const recent = (key) => (seen.get(key) || []).filter((t) => now() - t < TRIES.windowMs);
+/* Per key ('u:<username>' or 'recovery'): wrong tries in a row, the last lock step, when the lock ends, and wrong
+   tries since the person last signed in (for the line shown at sign-in). Kept in lockouts.json (no password, only
+   names and times); a file that cannot be read starts empty. */
+function createLocks(file, now) {
+  let seen = null;
+  let queue = Promise.resolve();
+  const load = () => {
+    if (seen) return seen;
+    seen = new Map();
+    try {
+      const f = JSON.parse(fs.readFileSync(file, 'utf8'));
+      if (f && typeof f === 'object' && f.locks && typeof f.locks === 'object')
+        for (const [k, v] of Object.entries(f.locks)) if (v && typeof v === 'object') seen.set(k, { tries: Number(v.tries) || 0, step: Number.isInteger(v.step) ? v.step : -1, until: Number(v.until) || 0, since: Number(v.since) || 0, lastAt: typeof v.lastAt === 'string' ? v.lastAt : null });
+    } catch { /* none yet, or unreadable: start empty */ }
+    return seen;
+  };
+  const write = () => {
+    const out = { format: 'tensile-tester-locks', version: 1, locks: Object.fromEntries(load()) };
+    const next = queue.then(async () => {
+      await fsp.mkdir(path.dirname(file), { recursive: true });
+      await fsp.writeFile(file + '.tmp', JSON.stringify(out));
+      await fsp.rename(file + '.tmp', file);
+    });
+    queue = next.catch(() => undefined);
+    return next.catch(() => undefined);   /* a lock that cannot be saved still holds while the app runs */
+  };
+  const tidy = (m, k) => { const e = m.get(k); if (e && !e.tries && e.step < 0 && !e.since) m.delete(k); };
   return {
     /** Minutes to wait, or 0. */
-    paused(key) { const r = recent(key); return r.length >= TRIES.max ? Math.max(1, Math.ceil((TRIES.windowMs - (now() - r[0])) / 60000)) : 0; },
-    wrong(key) { const r = recent(key); r.push(now()); seen.set(key, r); if (seen.size > 10000) seen.delete(seen.keys().next().value); },
-    clear(key) { seen.delete(key); },
+    paused(key) { const e = load().get(key); return e && e.until > now() ? Math.max(1, Math.ceil((e.until - now()) / 60000)) : 0; },
+    /** A wrong try. Returns the minutes of the lock it starts, or 0. */
+    async wrong(key) {
+      const m = load();
+      const e = m.get(key) || { tries: 0, step: -1, until: 0, since: 0, lastAt: null };
+      e.tries++; e.since++; e.lastAt = new Date(now()).toISOString();
+      let minutes = 0;
+      if (e.step >= 0) e.step = Math.min(e.step + 1, LOCK_STEPS.length - 1);
+      else if (e.tries >= LOCK_AFTER) e.step = 0;
+      if (e.step >= 0) { minutes = LOCK_STEPS[e.step]; e.until = now() + minutes * 60000; }
+      m.delete(key); m.set(key, e);
+      while (m.size > MAX_LOCK_KEYS) m.delete(m.keys().next().value);
+      await write();
+      return minutes;
+    },
+    /** A right password: the ladder starts again (the count since the last sign-in is kept). */
+    async clear(key) { const m = load(), e = m.get(key); if (!e || (!e.tries && e.step < 0)) return; e.tries = 0; e.step = -1; e.until = 0; tidy(m, key); await write(); },
+    /** At sign-in: the wrong tries since the last sign-in, then forgotten. */
+    async takeSince(key) {
+      const m = load(), e = m.get(key);
+      if (!e || !e.since) return null;
+      const r = { count: e.since, lastAt: e.lastAt };
+      e.since = 0; tidy(m, key); await write();
+      return r;
+    },
   };
 }
+const waitText = (n) => 'Wait ' + n + ' minute' + (n === 1 ? '' : 's') + ', then try again.';
 
 /* ---------- checks ---------- */
 const today = (now) => { const d = new Date(now()); return d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0'); };
@@ -137,7 +194,14 @@ function validFile(f) {
 function createPeople(dir, opts = {}) {
   const now = opts.now || (() => Date.now());
   const file = path.join(dir, 'people.json'), logFile = path.join(dir, 'usage-log.jsonl');
-  const tries = createTries(now);
+  const tries = createLocks(path.join(dir, 'lockouts.json'), now);
+  /* A wrong password: counted, logged when it starts a lock, and the plain words to show (with the wait, if any). */
+  async function wrongTry(key, words, person) {
+    const minutes = await tries.wrong(key);
+    if (minutes) await log('locked', { person: person || null, minutes });
+    return minutes ? words + ' Too many wrong tries. ' + waitText(minutes) : words;
+  }
+  function checkPaused(key) { const w = tries.paused(key); if (w) fail('Too many wrong tries. ' + waitText(w)); }
   let data = null;          /* the people list once read */
   let broken = '';          /* why it could not be read */
   let session = null;       /* { id, lastActive, busy, responsible: { id, by } | null } */
@@ -206,10 +270,39 @@ function createPeople(dir, opts = {}) {
       training: p.training ? { at: p.training.at, by: p.training.byName } : null,
     };
   }
+  function trainingView(p) { return p.kind === 'student' && p.training ? { at: p.training.at, by: p.training.byName } : null; }
+  /* Admins and operators who may approve a student's training or be their responsible operator. */
+  function approver(id) {
+    const o = byId(String(id ?? ''));
+    return o && (o.kind === 'admin' || o.kind === 'operator') && !o.disabled ? o : null;
+  }
   function responsibleView() {
     if (!session || !session.responsible) return null;
     const r = byId(session.responsible.id);
     return r ? { name: r.name, username: r.username, by: session.responsible.by } : null;
+  }
+  /* Another person's password typed on the spot (responsible operator, training approval): same lock ladder. */
+  async function checkOperatorPassword(o, password, failEvent, s) {
+    const key = 'u:' + o.username;
+    checkPaused(key);
+    if (!(await verifySecret(String(password ?? '').slice(0, MAX_PASSWORD), o.hash))) { await log(failEvent, { person: s.username, responsible: o.username }); fail(await wrongTry(key, o.name + '’s password is not right.', o.username)); }
+    await tries.clear(key);
+  }
+  /* People from a copy or backup, matched by username: a newer one replaces the one here, a new one is added, people
+     only here are kept, and the signed-in admin (actor) is never changed by it. */
+  function merge(copy, actor) {
+    let added = 0, updated = 0;
+    for (const q of copy.people) {
+      const here = byName(q.username);
+      const clean = { id: here ? here.id : q.id, username: q.username, name: checkName(q.name), kind: checkKind(q.kind), hash: String(q.hash), mustChange: !!q.mustChange,
+        disabled: !!q.disabled, endDate: q.endDate && DATE.test(q.endDate) ? q.endDate : null, addedBy: q.addedBy || null, createdAt: q.createdAt || null,
+        lastSignIn: q.lastSignIn || null, limits: q.kind === 'student' ? checkLimits(q.limits) : null, training: q.training && typeof q.training === 'object' ? q.training : null, changedAt: q.changedAt || null };
+      if (here && actor && here.id === actor.id) continue;
+      if (here) { if ((q.changedAt || '') > (here.changedAt || '')) { Object.assign(here, clean); updated++; } }
+      else { if (data.people.some((p) => p.id === clean.id)) clean.id = newId(); data.people.push(clean); added++; }
+    }
+    if (actor && !activeAdmins().length) fail('The copy would leave no admin.');
+    return { added, updated };
   }
   async function dummyCheck(secret) { if (!dummy) dummy = await hashSecret('not a real password, used for timing'); await verifySecret(secret, dummy); }
 
@@ -238,19 +331,17 @@ function createPeople(dir, opts = {}) {
       await ready();
       if (session && session.busy && me()) fail('Disconnect first: another person cannot sign in while connected or recording.');
       const u = String(username ?? '').trim().toLowerCase().slice(0, 40), key = 'u:' + u;
-      const wait = tries.paused(key);
-      if (wait) fail('Too many wrong tries for this username. Wait ' + wait + ' minute' + (wait === 1 ? '' : 's') + ', then try again.');
+      checkPaused(key);
       const p = USERNAME.test(u) ? byName(u) : null;
       const ok = p ? await verifySecret(String(password ?? '').slice(0, MAX_PASSWORD), p.hash) : (await dummyCheck(String(password ?? '')), false);
-      if (!ok) { tries.wrong(key); await log('sign_in_failed', { person: p ? p.username : null }); fail('The username or password is not right.'); }
-      tries.clear(key);
+      if (!ok) { await log('sign_in_failed', { person: p ? p.username : null }); fail(await wrongTry(key, 'The username or password is not right.', p ? p.username : null)); }
+      await tries.clear(key);
       if (p.disabled) { await log('sign_in_refused', { person: p.username, reason: 'turned off' }); fail('This access is turned off. Ask the person who gave it to you.'); }
       if (ended(p)) { await log('sign_in_refused', { person: p.username, reason: 'ended' }); fail('This access ended on ' + p.endDate + '. Ask your operator to extend it.'); }
-      if (p.kind === 'student' && !p.training) { await log('sign_in_refused', { person: p.username, reason: 'training not signed off' }); fail('Your training is not signed off yet. Ask your operator to sign it off on the People screen.'); }
       session = { id: p.id, lastActive: now(), busy: false, responsible: null };
       await serial(async () => { p.lastSignIn = new Date(now()).toISOString(); await save(); });
       await log('sign_in', { person: p.username });
-      return api.current();
+      return { ...api.current(), wrongSince: await tries.takeSince(key) };
     },
     async signOut() {
       const p = session ? byId(session.id) : null;
@@ -264,10 +355,11 @@ function createPeople(dir, opts = {}) {
       const p = me();
       if (!p) return null;
       const responsible = responsibleView();
-      const why = p.mustChange ? 'Choose your own password first.' : p.kind === 'student' && !responsible ? 'Choose your responsible operator first.' : '';
+      const needsTraining = p.kind === 'student' && !p.training;
+      const why = p.mustChange ? 'Choose your own password first.' : needsTraining ? 'Complete the training first.' : p.kind === 'student' && !responsible ? 'Choose your responsible operator first.' : '';
       const daysLeft = p.kind === 'student' && p.endDate ? Math.round((Date.parse(p.endDate + 'T00:00:00Z') - Date.parse(today(now) + 'T00:00:00Z')) / 86400000) : null;
       return { name: p.name, username: p.username, kind: p.kind, kindName: KIND_NAME[p.kind], mustChange: !!p.mustChange, endDate: p.endDate || null, daysLeft, responsible, canRunMachine: !why, why,
-        limits: p.kind === 'student' ? p.limits || null : null };
+        needsTraining, training: trainingView(p), limits: p.kind === 'student' ? p.limits || null : null };
     },
     /** Activity from the screens: keeps the sign-in, and busy (connected or recording) blocks the sign-out. */
     touch(busy) {
@@ -280,9 +372,10 @@ function createPeople(dir, opts = {}) {
       return serial(async () => {
         const p = me();
         if (!p) fail('Sign in first.');
-        const key = 'u:' + p.username, wait = tries.paused(key);
-        if (wait) fail('Too many wrong tries. Wait ' + wait + ' minute' + (wait === 1 ? '' : 's') + '.');
-        if (!(await verifySecret(String(oldPassword ?? '').slice(0, MAX_PASSWORD), p.hash))) { tries.wrong(key); fail('Your current password is not right.'); }
+        const key = 'u:' + p.username;
+        checkPaused(key);
+        if (!(await verifySecret(String(oldPassword ?? '').slice(0, MAX_PASSWORD), p.hash))) fail(await wrongTry(key, 'Your current password is not right.', p.username));
+        await tries.clear(key);
         checkPassword(newPassword, p.kind);
         if (newPassword === oldPassword) fail('Choose a password different from the one you were given.');
         p.hash = await hashSecret(newPassword); p.mustChange = false; p.changedAt = new Date(now()).toISOString();
@@ -309,20 +402,36 @@ function createPeople(dir, opts = {}) {
     async confirmResponsible(id, password) {
       await ready();
       const s = need(['student']);
-      const o = byId(String(id ?? ''));
-      if (!o || (o.kind !== 'admin' && o.kind !== 'operator') || o.disabled) fail('Choose a responsible operator from the list.');
+      if (s.kind === 'student' && !s.training) fail('Complete the training first.');
+      const o = approver(id);
+      if (!o) fail('Choose a responsible operator from the list.');
       let by = 'gave access';
       if (o.id !== s.addedBy) {
-        const key = 'u:' + o.username, wait = tries.paused(key);
-        if (wait) fail('Too many wrong tries for ' + o.name + '. Wait ' + wait + ' minute' + (wait === 1 ? '' : 's') + '.');
-        if (!(await verifySecret(String(password ?? '').slice(0, MAX_PASSWORD), o.hash))) { tries.wrong(key); await log('responsible_failed', { person: s.username, responsible: o.username }); fail(o.name + '’s password is not right.'); }
-        tries.clear(key);
+        await checkOperatorPassword(o, password, 'responsible_failed', s);
         by = 'password';
       }
       if (session && session.busy) fail('Disconnect first: the responsible operator cannot change while connected or recording.');
       session.responsible = { id: o.id, by };
       await log('responsible_confirmed', { person: s.username, responsible: o.username, confirmedBy: by });
       return api.current();
+    },
+    /** A student's training, before their first test: every item ticked, approved by any active operator or the
+        admin with their own password. Saved once. */
+    completeTraining(ticked, approverId, password) {
+      return serial(async () => {
+        await ready();
+        const s = need(['student']);
+        if (s.training) return api.current();
+        if (!Array.isArray(ticked) || ticked.length !== TRAINING_ITEMS.length || !ticked.every((t) => t === true)) fail('Tick every training item first.');
+        const o = approver(approverId);
+        if (!o) fail('Choose an operator from the list.');
+        await checkOperatorPassword(o, password, 'training_failed', s);
+        s.training = { at: new Date(now()).toISOString(), by: o.id, byName: o.name, items: TRAINING_ITEMS.slice() };
+        s.changedAt = s.training.at;
+        await save();
+        await log('training_completed', { person: s.username, approvedBy: o.username });
+        return api.current();
+      });
     },
     add(input) {
       return serial(async () => {
@@ -379,12 +488,11 @@ function createPeople(dir, opts = {}) {
     recover(code, newPassword) {
       return serial(async () => {
         await ready();
-        const wait = tries.paused('recovery');
-        if (wait) fail('Too many wrong tries. Wait ' + wait + ' minute' + (wait === 1 ? '' : 's') + '.');
+        checkPaused('recovery');
         const admin = byId(data.recoveryFor);
         if (!data.recovery || !admin) fail('No recovery code is set on this computer.');
-        if (!(await verifySecret(normalCode(code), data.recovery))) { tries.wrong('recovery'); await log('recovery_failed'); fail('The recovery code is not right.'); }
-        tries.clear('recovery');
+        if (!(await verifySecret(normalCode(code), data.recovery))) { await log('recovery_failed'); fail(await wrongTry('recovery', 'The recovery code is not right.', null)); }
+        await tries.clear('recovery');
         admin.hash = await hashSecret(checkPassword(newPassword, 'admin')); admin.mustChange = false; admin.disabled = false;
         const fresh = recoveryCode();
         data.recovery = await hashSecret(normalCode(fresh));
@@ -402,24 +510,8 @@ function createPeople(dir, opts = {}) {
       for (const line of text.split(/\r?\n/)) { if (!line) continue; try { rows.push(JSON.parse(line)); } catch { /* a line cut off by a crash */ } }
       return rows;
     },
-    /** The training items an operator ticks before a student's first sign-in. */
+    /** The training items a student completes before their first test. */
     trainingItems() { return TRAINING_ITEMS.slice(); },
-    /** An operator (for their own students) or the admin signs off a student's training: every item must be ticked. */
-    signOffTraining(id, ticked) {
-      return serial(async () => {
-        await ready();
-        const actor = need(['admin', 'operator']);
-        const p = byId(String(id ?? ''));
-        if (!p || !canManage(actor, p)) fail('You cannot change this person.');
-        if (p.kind !== 'student') fail('Training sign-off is for students.');
-        if (!Array.isArray(ticked) || ticked.length !== TRAINING_ITEMS.length || !ticked.every((t) => t === true)) fail('Tick every training item first.');
-        p.training = { at: new Date(now()).toISOString(), by: actor.id, byName: actor.name, items: TRAINING_ITEMS.slice() };
-        p.changedAt = p.training.at;
-        await save();
-        await log('training_signed_off', { person: p.username });
-        return view(p);
-      });
-    },
     /** Tests, recording time, and last use per person: the admin sees everyone, an operator their students and
         themselves. Worked out from the usage log. */
     async usageReport() {
@@ -454,19 +546,54 @@ function createPeople(dir, opts = {}) {
         const actor = need(['admin']);
         if (!validFile(copy)) fail('The copy from the lab server is not a people list.');
         let added = 0, updated = 0;
-        for (const q of copy.people) {
-          const here = byName(q.username);
-          const clean = { id: here ? here.id : q.id, username: q.username, name: checkName(q.name), kind: checkKind(q.kind), hash: String(q.hash), mustChange: !!q.mustChange,
-            disabled: !!q.disabled, endDate: q.endDate && DATE.test(q.endDate) ? q.endDate : null, addedBy: q.addedBy || null, createdAt: q.createdAt || null,
-            lastSignIn: q.lastSignIn || null, limits: q.kind === 'student' ? checkLimits(q.limits) : null, training: q.training && typeof q.training === 'object' ? q.training : null, changedAt: q.changedAt || null };
-          if (here && here.id === actor.id) continue;
-          if (here) { if ((q.changedAt || '') > (here.changedAt || '')) { Object.assign(here, clean); updated++; } }
-          else { if (data.people.some((p) => p.id === clean.id)) clean.id = newId(); data.people.push(clean); added++; }
-        }
-        if (!activeAdmins().length) fail('The copy would leave no admin.');
+        const r = merge(copy, actor);
         await save();
-        await log('people_copied_from_lab', { added, updated });
-        return { added, updated };
+        await log('people_copied_from_lab', r);
+        return r;
+      });
+    },
+    /** Admin only: the list as a backup file (JSON text: hashes, never a password; with a SHA-256 check). Called by the
+        main process only, which writes it where the admin chooses; never given to the screens. */
+    async backupFile() {
+      await ready();
+      need(['admin']);
+      const body = { format: BACKUP_FORMAT, version: 1, savedAt: new Date(now()).toISOString(), people: data.people.map((p) => ({ ...p })), recovery: data.recovery || null, recoveryFor: data.recoveryFor || null };
+      await log('people_backup_saved', { count: body.people.length });
+      return JSON.stringify({ ...body, check: { sha256: sha256(JSON.stringify(body)) } }, null, 1);
+    },
+    /** Admin only: brings back a backup file. 'merge' works like the copy from the lab server; 'replace' makes the
+        list the backup's, always keeping the signed-in admin (and this computer's recovery code if it is theirs). */
+    restoreFile(text, mode) {
+      return serial(async () => {
+        await ready();
+        const actor = need(['admin']);
+        if (mode !== 'merge' && mode !== 'replace') fail('Choose Merge or Replace.');
+        let f = null;
+        try { f = JSON.parse(String(text ?? '')); } catch { f = null; }
+        if (!f || f.format !== BACKUP_FORMAT || f.version !== 1 || !f.check || typeof f.check.sha256 !== 'string') fail('This file is not a people backup from this app.');
+        const { check, ...body } = f;
+        if (sha256(JSON.stringify(body)) !== check.sha256) fail('This backup has changed since it was saved, so it is not used.');
+        const list = { format: FORMAT, version: 1, people: body.people };
+        if (!validFile(list)) fail('This file is not a people backup from this app.');
+        if (!list.people.some((q) => q.kind === 'admin' && !q.disabled)) fail('The backup has no admin, so it is not used.');
+        let r;
+        if (mode === 'merge') r = merge(list, actor);
+        else {
+          const names = new Set(list.people.map((q) => q.username));
+          const removed = data.people.filter((p) => p.id !== actor.id && !names.has(p.username)).length;
+          const keep = byId(actor.id);
+          data.people = [];
+          const m = merge(list, null);
+          if (byName(keep.username)) data.people = data.people.filter((p) => p.username !== keep.username);
+          data.people.push(keep);
+          const kept = data.recoveryFor === actor.id;
+          if (!kept && body.recovery && body.recoveryFor && data.people.some((p) => p.id === body.recoveryFor)) { data.recovery = body.recovery; data.recoveryFor = body.recoveryFor; }
+          else if (!kept) { data.recovery = null; data.recoveryFor = null; }
+          r = { added: data.people.length - 1, updated: 0, removed };
+        }
+        await save();
+        await log('people_restored', { mode, ...r });
+        return r;
       });
     },
     /** A copy to the lab server, for the usage log. */
@@ -490,6 +617,7 @@ function createPeople(dir, opts = {}) {
       if (!c || !c.canRunMachine) return null;
       const b = { name: c.name, username: c.username, kind: c.kind };
       if (c.kind === 'student' && c.responsible) b.responsible = { name: c.responsible.name, username: c.responsible.username, confirmedBy: c.responsible.by };
+      if (c.kind === 'student' && c.training) b.training = { approvedBy: c.training.by, at: c.training.at };
       if (c.kind === 'student' && c.limits) b.limits = { maxSpeed: c.limits.maxSpeed, methods: c.limits.methods.map((m) => m.name) };
       return b;
     },
@@ -504,4 +632,4 @@ function createPeople(dir, opts = {}) {
   return api;
 }
 
-module.exports = { createPeople, hashSecret, verifySecret, KINDS, USERNAME, MIN_PASSWORD, IDLE_MS, TRIES, TRAINING_ITEMS };
+module.exports = { createPeople, hashSecret, verifySecret, KINDS, USERNAME, MIN_PASSWORD, IDLE_MS, LOCK_AFTER, LOCK_STEPS, TRAINING_ITEMS };
