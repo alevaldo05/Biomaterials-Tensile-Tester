@@ -16,7 +16,7 @@ A "Need help?" button on the practice page, Load Test, and Calibration, plus sma
 - `data/page-help.js` and `page-help.js`: the button on Home, Learn, the two protocol pages, Materials, About, and Help, with a few lines per page (draft wording) and no automatic hints (`quiet`); these pages load `data/text/help.js` before `data/help-tips.js` for the check
 
 ## What the user sees
-- **Need help?** at the bottom right, above the pinned STOP bar; it opens a small card with the current step's existing help wording and a link to Help > Troubleshooting; X closes it
+- **Need help?** at the bottom right, above the pinned STOP bar; it opens a small card with the current step's existing help wording and a link to Help > Troubleshooting; X closes it, and so do Need help? pressed again, a click outside the card, and Esc while the focus is inside the card (focus returns to the button)
 - Hints: one at a time at the bottom left, each with an X; they never take keyboard focus. Triggers: a CSV that cannot be read, a field error still showing after 8 s, and a minute (60 s) without activity on the same step or page
 - **Watch how** (when the context has a tutorial and no test is recording) scrolls to and opens the inline tutorial for that step (see [tutorials](tutorials.md))
 - Settings > **Help prompts** Off stops the automatic hints; the button stays
@@ -25,7 +25,7 @@ A "Need help?" button on the practice page, Load Test, and Calibration, plus sma
 ## Behavior to keep
 - Hints say what could be wrong and the next step; they never claim to diagnose the device
 - A hint closed with X stays closed for that problem until the page is reloaded
-- Esc is not used to close anything (Esc is STOP on the practice page); neither the button nor a hint covers the pinned STOP bar
+- Esc closes the Need help? card only while the focus is inside it, and that Esc does not also send STOP on the practice page; Esc anywhere else is unchanged (STOP on the practice page). Hints never use Esc. Neither the button nor a hint covers the pinned STOP bar. The card is never shown while a test records. `scripts/check-combinations.js` checks all of this on the practice page, Load Test, and Calibration
 - No one-minute hint while a test is running or finished (the card shows the page's status line)
 - Nothing is stored except the Settings choice
 - Every `match` in `data/help-tips.js` must find a Troubleshooting row (checked by `scripts/check-site.js`)
