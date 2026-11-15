@@ -85,8 +85,8 @@ jobs:
           cd release
           ls -l
           for kind in setup portable; do
-            n=$(ls *-beta-unsigned-"$kind".exe 2>/dev/null | wc -l)
-            [ "$n" = 1 ] || { echo "Expected one *-beta-unsigned-$kind.exe, found $n"; exit 1; }
+            n=$(ls *-beta-"$kind".exe 2>/dev/null | wc -l)
+            [ "$n" = 1 ] || { echo "Expected one *-beta-$kind.exe, found $n"; exit 1; }
           done
           sha256sum *.exe > SHA256SUMS.txt
           cat SHA256SUMS.txt

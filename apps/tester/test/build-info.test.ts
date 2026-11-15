@@ -10,7 +10,8 @@ import info from 'virtual:build-info';
 import { appVersion, buildNumber, commitId, sharedFiles } from '../build-info';
 import { APP_VERSION } from '../src/controller';
 import { HelpPage } from '../src/pages/HelpPage';
-import { versionLine } from '../src/version';
+import { homeVersion, shortVersion, versionLine } from '../src/version';
+import { Home } from '../src/pages/Home';
 
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '../../..');
 const desktop = JSON.parse(readFileSync(path.join(ROOT, 'apps/desktop/package.json'), 'utf8')) as { version: string };
@@ -90,6 +91,16 @@ describe('build stamp', () => {
     expect(copySources(crlf)).toEqual(copySources(lf));
     /* a destination (the last word of a COPY line) is never taken for a source */
     expect(copySources('COPY a b ./dest/\r\nCOPY c ./\r\n')).toEqual(['a', 'b', 'c']);
+  });
+  it('is a simple 0.x number (0.3, 0.4, …), shown short and marked beta at the very bottom of Home', () => {
+    expect(desktop.version).toMatch(/^0\.\d+\.0$/);
+    expect(shortVersion('0.3.0')).toBe('0.3');
+    expect(shortVersion('0.12.0')).toBe('0.12');
+    expect(shortVersion('0.3.1')).toBe('0.3.1');
+    expect(shortVersion('1.0.0-beta.2')).toBe('1.0.0-beta.2');
+    expect(homeVersion()).toBe('Version ' + shortVersion(desktop.version) + ' (beta)');
+    const html = renderToStaticMarkup(createElement(Home, { go: () => undefined, recent: [], interrupted: [], recover: () => undefined, recording: false, device: { state: 'Not connected', detail: '', calibration: 'Not checked' } }));
+    expect(html).toMatch(new RegExp('<p class="hint home-version">' + homeVersion().replace(/[.()]/g, '\\$&') + '</p></main>$'));
   });
   it('is shown on the Help screen', () => {
     const html = renderToStaticMarkup(createElement(HelpPage));

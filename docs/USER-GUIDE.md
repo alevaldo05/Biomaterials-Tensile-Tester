@@ -61,10 +61,11 @@ The tester's output pins, signal scaling, and grounding are **not verified**. No
 The Windows app is built on GitHub, on Windows. A merge into `main` only runs a check (see 3.2.1). A draft is made when you start the build by hand. Nothing is published automatically: a draft is made only when you ask, and only you publish it.
 
 1. On GitHub open **Actions**, choose **Windows app**, and press **Run workflow**.
-2. Wait for it to finish. It runs the checks, builds the screens, builds the installer and a portable program, starts the program once as a check, and creates a **draft release**. It then removes older unpublished app drafts. A run started by hand names the draft `app-v<version>-run.<n>` (for example `app-v1.0.0-beta.1-run.7`).
+2. Wait for it to finish. It runs the checks, builds the screens, builds the installer and a portable program, starts the program once as a check, and creates a **draft release**. It then removes older unpublished app drafts. A run started by hand names the draft `app-v<version>-run.<n>` (for example `app-v0.3.0-run.7`).
 3. The draft holds three files and is visible only to people who can change the repository:
-   - `Biomaterials-Tensile-Tester-<version>-beta-unsigned-setup.exe` (the installer),
-   - `Biomaterials-Tensile-Tester-<version>-beta-unsigned-portable.exe` (runs without installing),
+   - `Biomaterials-Tensile-Tester-beta-setup.exe` (the installer),
+   - `Biomaterials-Tensile-Tester-beta-portable.exe` (runs without installing),
+   The file names are the same for every version; the version is shown at the very bottom of the app's Home ("Version 0.3 (beta)").
    - `SHA256SUMS.txt` (the hash of both).
 4. Download the files. On Windows check each hash and compare it with `SHA256SUMS.txt`:
    ```
@@ -72,7 +73,7 @@ The Windows app is built on GitHub, on Windows. A merge into `main` only runs a 
    ```
 5. Windows SmartScreen will warn, because the files are **unsigned** (code signing is not planned). Choose **More info**, then **Run anyway**.
 6. Install with the setup file, or run the portable `.exe` without installing.
-7. Open **Help** in the app. Its last line reads like `Version 1.0.0-beta.2 · built from <commit> · shared website files <hash>`. On the repository, run:
+7. Open **Help** in the app. Its last line reads like `Version 0.3.0 · built from <commit> · shared website files <hash>`. On the repository, run:
    ```
    node scripts/shared-files.js
    ```
@@ -85,10 +86,11 @@ The Windows app is built on GitHub, on Windows. A merge into `main` only runs a 
 - A merge into `main` that changes the app (`apps/**`, `packages/**`, `package-lock.json`, `scripts/shared-files.js`, `.github/workflows/desktop.yml`) or a shared website file listed in `scripts/shared-files.js` runs Actions, **Windows app**, as a **check only**. It builds the installer and the portable program on Windows and starts the program. It makes no draft and there is nothing to download. A failure shows as a red X in Actions. The run summary says "Check only: no draft made".
 - A draft is made only when you ask: Actions, **Windows app**, **Run workflow** (or a pushed `app-v*` tag). Its tag is `app-v<version>-run.<N>` and its title is "Tester app <version> (Windows, beta)". It is not marked pre-release.
 - A new draft removes older unpublished app drafts (tags starting with `app-v`, except the new one). Published releases and releases that are not the app (for example the pre-release "Backup 2026-11-08") are never removed. If you have not yet published a draft when you ask for a new one, the older draft is removed and the new one replaces it.
-- When enough has changed: (1) raise the version in `apps/desktop/package.json` (for example `1.0.0-beta.1` to `1.0.0-beta.2`) in its own small pull request and merge it, so the update notice names a new version; (2) Actions, **Windows app**, **Run workflow** on `main`; (3) download the draft, check `SHA256SUMS.txt`, and try it; (4) **Publish**. The website's download link and the app's update notice then offer it. Only published releases are offered.
+- When enough has changed: (1) raise the version in `apps/desktop/package.json` (the second number: for example `0.3.0` to `0.4.0`) in its own small pull request and merge it, so the update notice names a new version; (2) Actions, **Windows app**, **Run workflow** on `main`; (3) download the draft, check `SHA256SUMS.txt`, and try it; (4) **Publish**. The website's download link and the app's update notice then offer it. Only published releases are offered.
 - On each pull request that changes the app, a run called **App screenshots** photographs the app's screens so you can see the changes without installing (see `docs/app/WINDOWS-APP.md`, "Seeing app changes without installing"). Open the run's summary and use the two contact sheets (laptop and phone) or the zip. They are kept 14 days. History and Admin need a lab-server sign-in and are not pictured. It has not been tried yet.
-- The Windows app (not the browser version) checks GitHub once when it starts, a few seconds after the window loads. It asks `api.github.com` for this repository's latest releases (10 second timeout; if anything fails it does nothing). If a newer published release exists (a higher version, or the same version with a higher build run number), a small bar under the status line says "Version 1.0.0-beta.2 is available. Download". **Download** opens the release page in the computer's default browser. Installing stays your own click. The bar can be dismissed and is hidden while recording.
+- The Windows app (not the browser version) checks GitHub once when it starts, a few seconds after the window loads. It asks `api.github.com` for this repository's latest releases (10 second timeout; if anything fails it does nothing). If a newer published release exists (a higher version, or the same version with a higher build run number), a small bar under the status line says "Version 0.4.0 is available. Download". **Download** opens the release page in the computer's default browser. Installing stays your own click. The bar can be dismissed and is hidden while recording.
 - People who already have the app see the notice the next time they open it after you publish.
+- To update: download the setup file again, close the app, and run it. Do not uninstall first; the installer replaces the old program, and the people list, recordings, and settings stay. Details: "Updating an installed app" in [docs/app/WINDOWS-APP.md](app/WINDOWS-APP.md).
 - In Settings, the switch **Check for updates when the app starts** is on by default and is remembered on this computer. When it is off, no request is made.
 - The website's download link shows a release only after the first one is published.
 - The update check has not been tried on Windows.
@@ -119,7 +121,8 @@ npm start
 
 - The installer on a real Windows computer: **never installed or run**.
 - The portable `.exe`: built by GitHub (as a check) but **never run**. Where it keeps its data, and whether recordings survive closing it, are unknown.
-- Version `1.0.0-beta.2` has not been released yet (`1.0.0-beta.1` was built by GitHub as a check only).
+- Version `0.3` has not been released yet (`1.0.0-beta.1` and `1.0.0-beta.2`, the old numbering, were built by GitHub but never published).
+- Installing a new version over an old one has not been tried.
 - Safari for the website and a real Windows computer: not tried. Checks so far were in Chrome's engine on Linux.
 - The USB connection with a real board: **never tried**. The hardware connection is untested.
 

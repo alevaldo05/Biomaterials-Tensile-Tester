@@ -1,8 +1,10 @@
 /* Home: the chosen design (split with tiles). Start actions on the left, recent tests on the right, and any
-   recording that did not finish, so it can be recovered. No paragraphs about the tester. */
+   recording that did not finish, so it can be recovered. No paragraphs about the tester. At the very bottom, a small
+   line with the app's version ("Version 0.3 (beta)"). */
 import type { JournalMeta } from '../storage/journal';
 import type { SessionRow } from '../lab-api';
 import { RecentTable } from '../components/RecentTable';
+import { homeVersion } from '../version';
 
 export type Destination = 'test' | 'load' | 'methods' | 'device' | 'history';
 
@@ -81,6 +83,7 @@ export function Home(p: {
           </section>
         </aside>
       </div>
+      <p className="hint home-version">{homeVersion()}</p>
     </main>
   );
 }

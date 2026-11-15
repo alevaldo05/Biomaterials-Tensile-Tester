@@ -43,6 +43,11 @@ describe('version and run comparison', () => {
     expect(u.isNewer({ version: '1.0.0-beta.2', run: 1 }, own)).toBe(true);     /* higher version, any run */
     expect(u.isNewer({ version: '1.0.0', run: 0 }, own)).toBe(true);
     expect(u.isNewer({ version: '0.9.0', run: 99 }, own)).toBe(false);          /* older */
+    /* the simple numbers used from 0.3 on */
+    expect(u.isNewer({ version: '0.4.0', run: 1 }, { version: '0.3.0', run: 40 })).toBe(true);
+    expect(u.isNewer({ version: '0.10.0', run: 1 }, { version: '0.9.0', run: 40 })).toBe(true);
+    expect(u.isNewer({ version: '0.3.0', run: 41 }, { version: '0.3.0', run: 40 })).toBe(true);
+    expect(u.parseTag('app-v0.3.0-run.41')).toEqual({ version: '0.3.0', run: 41 });
   });
   it('skips published releases that are not the app, such as a backup', () => {
     expect(u.pickRelease([rel('backup-2026-11-20'), rel('app-v1.0.0-beta.2-run.30')])).toEqual({ version: '1.0.0-beta.2', run: 30, tag: 'app-v1.0.0-beta.2-run.30' });
