@@ -60,7 +60,7 @@ export const SHEETS: Sheet[] = [
       'The portable `.exe`\'s hash matches `SHA256SUMS.txt` (untried)',
       'SmartScreen warns for the portable `.exe`; "More info" then "Run anyway" starts it without installing (untried)',
       'The portable program opens on the app\'s own Home screen; note where its data folder is and whether recordings are kept after closing it (untried)',
-      'Help ends with "Version 1.0.0-beta.1 · built from … · shared website files …"; the hash matches `node scripts/shared-files.js` for the commit it was built from (installer and portable)',
+      'Help ends with "Version <the release’s version> · built from … · shared website files …"; the hash matches `node scripts/shared-files.js` for the commit it was built from (installer and portable)',
     ],
     after: 'Write any failure into docs/app/FEATURE-STATUS.md.',
   },

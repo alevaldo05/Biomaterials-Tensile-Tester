@@ -22,10 +22,10 @@ The website stays on GitHub Pages; the app is not published there.
 - The installed program closes at once, with a short message, when it is started with a remote-debugging, inspector, or V8-flag switch (`--remote-debugging-port`, `--remote-debugging-pipe`, `--remote-debugging-address`, `--inspect…`, `--js-flags`). Only the build's start-up check (`smoke.cjs`) uses remote debugging; it sets `TT_SMOKE_CHECK=1` for its own run. Someone who can set environment variables on the computer already controls it, so this guards against other programs and shortcuts that add a switch, not against them.
 
 ## Version
-Version 1 of the download is `1.0.0-beta.1`. The version is written in one place, `apps/desktop/package.json` (and the
+The current version is `1.0.0-beta.2` (the first was `1.0.0-beta.1`). The version is written in one place, `apps/desktop/package.json` (and the
 top of its lockfile); the build hands it to the screens (`apps/tester/build-info.ts`), so the Help screen, session
-files, the diagnostic summary, and Session details all show the same number. Sessions saved from now on carry
-`1.0.0-beta.1`; older files keep the version they were saved with.
+files, the diagnostic summary, and Session details all show the same number. Sessions carry the version they were
+saved with.
 
 ## Building an installer
 The installer is built on GitHub, on Windows, by `.github/workflows/desktop.yml`. A merge into `main` that changes the app or a shared website file runs a check only (see below). A draft release is made only when you ask:
@@ -55,7 +55,7 @@ data, and whether SmartScreen treats it differently are all unknown until the ch
 ### Build stamp
 The app's Help screen ends with one line, for example:
 
-`Version 1.0.0-beta.1 · built from 9e0792ec6baa · shared website files 34df1db39cf5`
+`Version 1.0.0-beta.2 · built from 9e0792ec6baa · shared website files 34df1db39cf5`
 
 - **Version**: from `apps/desktop/package.json`.
 - **built from**: the first 12 characters of the commit (`GITHUB_SHA` on GitHub, otherwise Git; "unknown" if neither).
@@ -152,11 +152,13 @@ note for each row. Anything not tried stays blank; nothing here is assumed to wo
 | 10 | The portable `.exe`'s hash matches `SHA256SUMS.txt` (untried) | |
 | 11 | SmartScreen warns for the portable `.exe`; "More info" then "Run anyway" starts it without installing (untried) | |
 | 12 | The portable program opens on the app's own Home screen; note where its data folder is and whether recordings are kept after closing it (untried) | |
-| 13 | Help ends with "Version 1.0.0-beta.1 · built from … · shared website files …"; the hash matches `node scripts/shared-files.js` for the commit it was built from (installer and portable) | |
+| 13 | Help ends with "Version <the release’s version> · built from … · shared website files …"; the hash matches `node scripts/shared-files.js` for the commit it was built from (installer and portable) | |
 
 ## Status
 Built once by GitHub (`.github/workflows/desktop.yml`, run 1, succeeded; draft release `app-v0.2.0-beta.1`). It has not
 been installed or run on a Windows computer, and the USB connection is untested with real hardware.
-Version `1.0.0-beta.1` with the portable target and the build stamp has not been built on GitHub yet; the portable
-`.exe` is untried. The electron-builder settings were checked against electron-builder 26.18.1's own settings schema
+Version `1.0.0-beta.1`, with the portable target and the build stamp, was built by GitHub as a check after merges
+(runs 19 and 20, 2026-11-15: tests, installer, portable, and the start-up check of the unpacked program passed on
+Windows); no draft was made. `1.0.0-beta.2` is the first version planned for a draft release. The portable `.exe` has
+been built but never run. The electron-builder settings were checked against electron-builder 26.18.1's own settings schema
 here (Linux), not by a Windows build.

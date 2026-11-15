@@ -71,7 +71,7 @@ The App checks (tests, firmware build, containers), the website checks, and the 
 From `docs/app/FEATURE-STATUS.md` and related documents:
 
 - Installing the Windows app on a Windows computer (first-install checklist in `WINDOWS-APP.md` is blank).
-- The portable `.exe` (not yet built by GitHub with this version, never run), and version `1.0.0-beta.1` on GitHub.
+- The portable `.exe` (built by GitHub as a check in runs 19 and 20, never run), and a draft or published release of `1.0.0-beta.2`.
 - Safari, for the website and the app. Windows, for anything. All checks so far were in Chrome's engine (Chromium) on Linux.
 - A real board, real USB, or the ADS1115 wiring; the Windows USB drivers; the bench record sheet (`SETUP.md`) and the breadboard test.
 - Any connection to the tensile tester, and its pins, scaling, grounding, and control protocol.
