@@ -1,9 +1,10 @@
 /* Sign-in on the lab computer (the Windows app): sign in, choose your own password, set up this computer (the first
-   admin and the recovery code), and reset a forgotten admin password with that code. Every rule is checked in the
+   admin and the recovery code), a forgotten password (students ask their operator, operators the admin, the admin uses
+   the recovery code), and the line after sign-in that names wrong tries for your username. Every rule is checked in the
    app's main process (apps/desktop/people.cjs); these forms only collect the words and show its answer. */
 import { useState } from 'react';
 import type { JSX } from 'react';
-import type { Me, People } from '../people';
+import type { Me, People, WrongSince } from '../people';
 import { MIN_PASSWORD } from '../people';
 
 const msgOf = (e: unknown): string => (e instanceof Error ? e.message : String(e));
@@ -17,7 +18,7 @@ export function PersonSignIn(p: { people: People; onDone: (me: Me) => void; onCa
       <label className="field"><span className="field-label">Password or code</span><input type="password" autoComplete="current-password" value={pw} onChange={(e) => setPw(e.target.value)} required /></label>
       {err ? <p className="error" role="alert">{err}</p> : null}
       <p className="row"><button type="submit" className="primary" disabled={busy}>Sign in</button><button type="button" onClick={p.onCancel}>Cancel</button></p>
-      <p><button type="button" className="link" onClick={p.onForgot}>Admin: forgot your password?</button></p>
+      <p><button type="button" className="link" onClick={p.onForgot}>Forgot your password?</button></p>
     </form>
   );
 }
@@ -90,12 +91,25 @@ export function RecoverAdmin(p: { people: People; onDone: () => void; onCancel: 
       setBusy(true); setErr('');
       p.people.recover(code, pw).then((r) => setFresh({ code: r.recoveryCode, username: r.username }), (x: unknown) => setErr(msgOf(x))).finally(() => setBusy(false));
     }}>
-      <p className="hint">For the admin only: the recovery code shown when this computer was set up.</p>
+      <p>Students: ask your operator. Operators: ask the admin.</p>
+      <p><strong>Admin: recovery code</strong></p>
       <label className="field"><span className="field-label">Recovery code</span><input type="text" autoComplete="off" autoCapitalize="characters" spellCheck={false} value={code} onChange={(e) => setCode(e.target.value)} required /></label>
       <label className="field"><span className="field-label">New admin password</span><input type="password" autoComplete="new-password" value={pw} onChange={(e) => setPw(e.target.value)} required minLength={MIN_PASSWORD.admin} /><span className="field-hint">At least {MIN_PASSWORD.admin} characters.</span></label>
       <label className="field"><span className="field-label">New password again</span><input type="password" autoComplete="new-password" value={again} onChange={(e) => setAgain(e.target.value)} required /></label>
       {err ? <p className="error" role="alert">{err}</p> : null}
       <p className="row"><button type="submit" className="primary" disabled={busy}>Reset the admin password</button><button type="button" onClick={p.onCancel}>Cancel</button></p>
     </form>
+  );
+}
+
+/** After sign-in: how many wrong tries there were for your username since you last signed in. */
+export function WrongTries(p: { since: WrongSince; onClose: () => void }): JSX.Element {
+  const n = p.since.count;
+  const last = p.since.lastAt ? new Date(p.since.lastAt) : null;
+  return (
+    <p className="notice wrong-tries" role="status">
+      <span>{n} wrong {n === 1 ? 'try' : 'tries'} for your username since you last signed in{last && !Number.isNaN(last.getTime()) ? ' (last: ' + last.toLocaleString() + ')' : ''}.</span>
+      <button type="button" className="quiet" aria-label="Close" onClick={p.onClose}>×</button>
+    </p>
   );
 }

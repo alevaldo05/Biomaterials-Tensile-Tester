@@ -7,7 +7,7 @@ import { Field } from '@tensile/ui';
 import type { Kind, Me, People as PeopleApi, PersonView } from '../people';
 import { KIND_NAMES, MIN_PASSWORD, usageCsv } from '../people';
 import { save } from '../exports';
-import { ClassList, LabCopy, LimitsEditor, Slips, TrainingSignOff, UsageReport } from './PeopleExtras';
+import { Backup, ClassList, LabCopy, LimitsEditor, Slips, UsageReport } from './PeopleExtras';
 import type { Slip } from './PeopleExtras';
 import './pages.css';
 
@@ -15,7 +15,13 @@ const when = (iso: string | null): string => { if (!iso) return '—'; const d =
 const msgOf = (e: unknown): string => (e instanceof Error ? e.message : String(e));
 const localToday = (): string => { const d = new Date(); return d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0'); };
 
-type Edit = { id: string; what: 'password' | 'end' | 'training' | 'limits'; value: string };
+type Edit = { id: string; what: 'password' | 'end' | 'limits'; value: string };
+
+/** The Training column: a student completes it, approved by an operator, before their first test. */
+export function trainingCell(v: Pick<PersonView, 'kind' | 'training'>): string {
+  if (v.kind !== 'student') return '—';
+  return v.training ? 'Done ' + new Date(v.training.at).toLocaleDateString() + ', approved by ' + v.training.by : 'Not yet';
+}
 
 export function PeoplePage(p: { people: PeopleApi; me: Me; methods: { id: string; name: string }[]; labAdmin: boolean }): JSX.Element {
   const admin = p.me.kind === 'admin';
@@ -37,7 +43,7 @@ export function PeoplePage(p: { people: PeopleApi; me: Me; methods: { id: string
   const add = async (e: FormEvent) => {
     e.preventDefault();
     const ok = await run(() => p.people.add({ username: form.username, name: form.name, kind: form.kind, password: form.password, endDate: form.endDate || null }),
-      form.name.trim() + ' added. Give them their username and first password (Print slips); they choose their own at the first sign-in.' + (form.kind === 'student' ? ' Sign off their training before their first sign-in.' : ''));
+      form.name.trim() + ' added. Give them their username and first password (Print slips); they choose their own at the first sign-in.');
     if (ok) { setSlips((l) => [...l, { name: form.name.trim(), username: form.username.trim().toLowerCase(), password: form.password }]); setForm(empty); }
   };
   const sendEdit = async (e: FormEvent) => {
@@ -82,7 +88,7 @@ export function PeoplePage(p: { people: PeopleApi; me: Me; methods: { id: string
                       </select>) : v.kindName}</td>
                     <td>{v.endDate ?? '—'}{v.ended ? <span className="badge badge-soft">Ended</span> : null}</td>
                     <td>{v.disabled ? 'Turned off' : v.mustChange ? 'Must choose a password' : 'Active'}</td>
-                    <td>{v.kind !== 'student' ? '—' : v.training ? 'Signed off ' + new Date(v.training.at).toLocaleDateString() + ' by ' + v.training.by : <strong>Not signed off</strong>}
+                    <td>{trainingCell(v)}
                       {v.kind === 'student' && v.limits ? <span className="cell-note">Limits: {[v.limits.maxSpeed != null ? '≤ ' + v.limits.maxSpeed + ' mm/min' : '', v.limits.methods.map((m) => m.name).join(', ')].filter(Boolean).join('; ')}</span> : null}</td>
                     {admin ? <td>{v.addedBy ?? '—'}</td> : null}
                     <td>{when(v.lastSignIn)}</td>
@@ -91,10 +97,8 @@ export function PeoplePage(p: { people: PeopleApi; me: Me; methods: { id: string
                         <button type="button" disabled={busy} onClick={() => void run(() => p.people.update(v.id, { disabled: !v.disabled }), v.disabled ? 'Access turned on.' : 'Access turned off.')}>{v.disabled ? 'Turn on' : 'Turn off'}</button>
                         <button type="button" disabled={busy} onClick={() => setEdit(edit?.id === v.id && edit.what === 'password' ? null : { id: v.id, what: 'password', value: '' })}>Reset password</button>
                         <button type="button" disabled={busy} onClick={() => setEdit(edit?.id === v.id && edit.what === 'end' ? null : { id: v.id, what: 'end', value: v.endDate ?? '' })}>End date</button>
-                        {v.kind === 'student' && !v.training ? <button type="button" disabled={busy} onClick={() => setEdit(edit?.id === v.id && edit.what === 'training' ? null : { id: v.id, what: 'training', value: '' })}>Training…</button> : null}
                         {v.kind === 'student' ? <button type="button" disabled={busy} onClick={() => setEdit(edit?.id === v.id && edit.what === 'limits' ? null : { id: v.id, what: 'limits', value: '' })}>Limits…</button> : null}
                       </span>
-                      {edit?.id === v.id && edit.what === 'training' ? <TrainingSignOff people={p.people} person={v} onDone={(t) => { setEdit(null); reload(); setMsg({ text: t, bad: false }); }} onCancel={() => setEdit(null)} /> : null}
                       {edit?.id === v.id && edit.what === 'limits' ? <LimitsEditor people={p.people} person={v} methods={p.methods} onDone={(t) => { setEdit(null); reload(); setMsg({ text: t, bad: false }); }} onCancel={() => setEdit(null)} /> : null}
                       {edit?.id === v.id && (edit.what === 'password' || edit.what === 'end') ? (
                         <form className="inline-form" onSubmit={(e) => void sendEdit(e)}>
@@ -143,6 +147,7 @@ export function PeoplePage(p: { people: PeopleApi; me: Me; methods: { id: string
         <Slips slips={slips} onClear={() => setSlips([])} />
         <UsageReport people={p.people} />
         {admin ? <LabCopy people={p.people} labAdmin={p.labAdmin} onDone={reload} /> : null}
+        {admin ? <Backup people={p.people} onDone={reload} /> : null}
         {admin ? (
           <div className="page-form">
             <h2>Usage log</h2>

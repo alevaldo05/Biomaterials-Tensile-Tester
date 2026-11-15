@@ -1,6 +1,6 @@
 /* For a signed-in student, before Connect: the operator responsible for their tests. It starts on the person who gave
-   them access (no password needed); choosing anyone else asks for that person's own password. The main process checks
-   it again (people.cjs) and writes the name into every test file. */
+   them access (no password needed); choosing anyone else shows a box for that person's own password, with no other
+   text. The main process checks it again (people.cjs) and writes the name into every test file. */
 import { useEffect, useState } from 'react';
 import type { JSX } from 'react';
 import { Field } from '@tensile/ui';
@@ -31,18 +31,18 @@ export function ResponsibleOperator(p: { people: People; me: Me; locked: boolean
 
   return (
     <div className="responsible">
-      <Field label="Responsible operator" required hint="Named in every test you run. The person who gave you access needs no password; anyone else confirms with their own.">
+      <Field label="Responsible operator" required>
         <select value={pick} disabled={p.locked || busy || !choices?.length} onChange={(e) => { setPick(e.target.value); setPw(''); setErr(''); }}>
           {choices === null ? <option value="">Loading…</option> : null}
-          {choices?.map((c) => <option key={c.id} value={c.id}>{c.name} ({c.kindName.toLowerCase()}){c.gaveAccess ? ' · gave you access' : ''}</option>)}
+          {choices?.map((c) => <option key={c.id} value={c.id}>{c.name} ({c.kindName.toLowerCase()})</option>)}
         </select>
       </Field>
       {needsPassword && !confirmed ? (
-        <Field label={chosen.name + '’s password'} hint={chosen.name + ' types it here. It is checked on this computer and never saved.'}>
+        <Field label="Operator password">
           <input type="password" autoComplete="off" value={pw} disabled={p.locked || busy} onChange={(e) => setPw(e.target.value)} />
         </Field>
       ) : null}
-      {confirmed ? <p className="hint conn-ok">Responsible operator: <strong>{p.me.responsible!.name}</strong>{p.me.responsible!.by === 'password' ? ' (confirmed with their password)' : ' (gave you access)'}.</p>
+      {confirmed ? <p className="hint conn-ok">Responsible operator: <strong>{p.me.responsible!.name}</strong></p>
         : <p className="row"><button type="button" className="primary" disabled={p.locked || busy || !chosen || (needsPassword && !pw)} onClick={confirm}>Confirm responsible operator</button></p>}
       {err ? <p className="error" role="alert">{err}</p> : null}
     </div>

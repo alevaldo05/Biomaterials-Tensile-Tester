@@ -11,6 +11,7 @@
    Who may run the machine (people.cjs, docs/app/SIGN-IN.md): the USB serial port and a new recording are allowed only
    while someone is signed in who may run the machine (for a student, after naming a responsible operator). This is
    checked here, not only in the screens, and the person running the test is written into the recording here.
+   The admin's backup of the people list is written and read here, through the computer's own save and open windows.
    Update check (update-check.cjs): once per start, when the screens ask and the "Check for updates" setting is on,
    it asks GitHub whether a newer published release exists. It downloads nothing; the person opens the release page. */
 const { app, BrowserWindow, dialog, ipcMain, Menu, net, protocol, session, shell } = require('electron');
@@ -146,7 +147,7 @@ const JOURNAL_CALLS = ['begin', 'append', 'finish', 'list', 'lines', 'remove', '
 /* people:<name> -> the people.cjs call and how many arguments it takes. Errors come back as { error } in plain words. */
 const PEOPLE_CALLS = { status: 0, setup: 1, 'sign-in': 2, 'sign-out': 0, current: 0, touch: 1, 'change-password': 2, list: 0,
   'responsible-choices': 0, 'confirm-responsible': 2, add: 1, update: 2, recover: 2, 'usage-log': 0,
-  'training-items': 0, 'sign-off-training': 2, 'usage-report': 0, 'copy-to-lab': 0, 'copy-from-lab': 0 };
+  'training-items': 0, 'complete-training': 3, 'usage-report': 0, 'copy-to-lab': 0, 'copy-from-lab': 0, 'save-backup': 0, 'restore-backup': 1 };
 /* The admin copies the people list to and from the lab server (for a second lab computer). The hashes go from this
    process to the lab server through the lab connection (lab-proxy.cjs, with the admin's lab sign-in); they never reach
    the screens. */
@@ -163,6 +164,25 @@ async function labPeople(method, body) {
 const peopleExtra = {
   copyToLab: async () => { const list = await people.exportForLab(); const r = await labPeople('PUT', list); await people.noteCopy('people_copied_to_lab', { count: list.people.length }); return { count: r && typeof r.count === 'number' ? r.count : list.people.length }; },
   copyFromLab: async () => { await people.exportForLab(); /* admin only, checked first */ return people.importFromLab(await labPeople('GET')); },
+  /* The admin saves the people list to a backup file, or brings one back ('merge' or 'replace'). The file is chosen in
+     the computer's own save and open windows, here; the screens never see its contents. */
+  saveBackup: async () => {
+    const text = await people.backupFile();   /* admin only, checked first */
+    const d = new Date(), day = d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0');
+    const r = await dialog.showSaveDialog(BrowserWindow.getFocusedWindow() || undefined, { title: 'Save a backup of the people list', defaultPath: 'people-backup-' + day + '.json', filters: [{ name: 'People backup', extensions: ['json'] }] });
+    if (r.canceled || !r.filePath) return { saved: false };
+    await fs.promises.writeFile(r.filePath, text);
+    return { saved: true, name: path.basename(r.filePath) };
+  },
+  restoreBackup: async (mode) => {
+    if (mode !== 'merge' && mode !== 'replace') { const e = new Error('Choose Merge or Replace.'); e.plain = true; throw e; }
+    await people.exportForLab();   /* admin only, checked before the file is chosen */
+    const r = await dialog.showOpenDialog(BrowserWindow.getFocusedWindow() || undefined, { title: 'Restore the people list from a backup', properties: ['openFile'], filters: [{ name: 'People backup', extensions: ['json'] }] });
+    if (r.canceled || !r.filePaths[0]) return { restored: false };
+    const st = await fs.promises.stat(r.filePaths[0]);
+    if (st.size > 5 * 1024 * 1024) { const e = new Error('This file is too large to be a people backup.'); e.plain = true; throw e; }
+    return { restored: true, ...(await people.restoreFile(await fs.promises.readFile(r.filePaths[0], 'utf8'), mode)) };
+  },
 };
 const camel = (n) => n.replace(/-([a-z])/g, (_m, c) => c.toUpperCase());
 function bridge() {

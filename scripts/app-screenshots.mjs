@@ -57,7 +57,7 @@ export function standIn() {
       list: async () => ({ ok: [
         { ...person, id: 'p-1', username: 'admin', name: 'Example Admin', kind: 'admin', kindName: 'Admin', addedBy: null },
         { ...person, id: 'p-2', username: 'op.one', name: 'Example Operator', kind: 'operator', kindName: 'Operator', addedBy: 'Example Admin' },
-        { ...person, id: 'p-3', username: 'student.one', name: 'Example Student', kind: 'student', kindName: 'Student', endDate: '2027-05-31', addedBy: 'Example Operator' },
+        { ...person, id: 'p-3', username: 'student.one', name: 'Example Student', kind: 'student', kindName: 'Student', endDate: '2027-05-31', addedBy: 'Example Operator', training: { at: '2026-11-14T11:00:00.000Z', by: 'Example Operator' } },
         { ...person, id: 'p-4', username: 'student.two', name: 'Second Student', kind: 'student', kindName: 'Student', endDate: '2027-05-31', addedBy: 'Example Operator', mustChange: true },
       ] }),
       usageLog: async () => ({ ok: [] }),

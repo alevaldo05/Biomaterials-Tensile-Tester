@@ -13,9 +13,15 @@ export interface Me {
   endDate: string | null; daysLeft: number | null;
   responsible: { name: string; username: string; by: 'gave access' | 'password' } | null;
   canRunMachine: boolean; why: string;
+  /** A student who has not completed the training yet (asked before their first test), and when it was approved. */
+  needsTraining?: boolean;
+  training?: { at: string; by: string } | null;
+  /** Only in the answer to a sign-in: wrong tries for this username since the last sign-in (null: none). */
+  wrongSince?: WrongSince | null;
   /** A student's limits, set by their operator (null: none). */
   limits?: Limits | null;
 }
+export interface WrongSince { count: number; lastAt: string | null }
 /** What an operator may limit a student to: test methods (matched by name, so a new revision still counts) and a
     maximum crosshead speed in mm/min (checked against the setup; the app cannot slow the machine). */
 export interface Limits { maxSpeed: number | null; methods: { id: string; name: string }[] }
@@ -34,6 +40,8 @@ export interface OperatorBlock {
   responsible?: { name: string; username: string; confirmedBy: 'gave access' | 'password' };
   /** A student's limits when the test was run (method names, maximum speed in mm/min). */
   limits?: { maxSpeed: number | null; methods: string[] };
+  /** Who approved a student's training, and when. */
+  training?: { approvedBy: string; at: string };
 }
 export interface NewPerson { username: string; name: string; kind: Kind; password: string; endDate?: string | null; limits?: Limits | null }
 export interface PersonChanges { name?: string; kind?: Kind; endDate?: string | null; disabled?: boolean; password?: string; limits?: Limits | null }
@@ -56,10 +64,12 @@ export interface PeopleBridge {
   recover(code: string, newPassword: string): Answer<{ recoveryCode: string; username: string }>;
   usageLog(): Answer<UsageRow[]>;
   trainingItems(): Answer<string[]>;
-  signOffTraining(id: string, ticked: boolean[]): Answer<PersonView>;
+  completeTraining(ticked: boolean[], approverId: string, password: string): Answer<Me>;
   usageReport(): Answer<UsageReportRow[]>;
   copyToLab(): Answer<{ count: number }>;
   copyFromLab(): Answer<{ added: number; updated: number }>;
+  saveBackup(): Answer<{ saved: boolean; name?: string }>;
+  restoreBackup(mode: 'merge' | 'replace'): Answer<{ restored: boolean; added?: number; updated?: number; removed?: number }>;
 }
 
 /** The bridge's calls, each giving its value or throwing its plain-words error. */
@@ -85,10 +95,12 @@ export class People {
   recover(code: string, p: string) { return this.call(this.b.recover(code, p)); }
   usageLog() { return this.call(this.b.usageLog()); }
   trainingItems() { return this.call(this.b.trainingItems()); }
-  signOffTraining(id: string, ticked: boolean[]) { return this.call(this.b.signOffTraining(id, ticked)); }
+  completeTraining(ticked: boolean[], approverId: string, password: string) { return this.call(this.b.completeTraining(ticked, approverId, password)); }
   usageReport() { return this.call(this.b.usageReport()); }
   copyToLab() { return this.call(this.b.copyToLab()); }
   copyFromLab() { return this.call(this.b.copyFromLab()); }
+  saveBackup() { return this.call(this.b.saveBackup()); }
+  restoreBackup(mode: 'merge' | 'replace') { return this.call(this.b.restoreBackup(mode)); }
 }
 
 export const BROWSER_WHY = 'Tests are run from the Windows app on the lab computer, where people sign in. This browser version does not connect to the tester.';
@@ -113,6 +125,7 @@ export function operatorBlockOf(me: Me | null): OperatorBlock | null {
   if (!me) return null;
   const b: OperatorBlock = { name: me.name, username: me.username, kind: me.kind };
   if (me.kind === 'student' && me.responsible) b.responsible = { name: me.responsible.name, username: me.responsible.username, confirmedBy: me.responsible.by };
+  if (me.kind === 'student' && me.training) b.training = { approvedBy: me.training.by, at: me.training.at };
   if (me.kind === 'student' && me.limits) b.limits = { maxSpeed: me.limits.maxSpeed, methods: me.limits.methods.map((m) => m.name) };
   return b;
 }
@@ -129,11 +142,17 @@ export const runByText = (o: OperatorBlock | null | undefined): string => (o ? o
 export const responsibleText = (o: OperatorBlock | null | undefined): string | null =>
   o?.responsible ? o.responsible.name + ' (' + o.responsible.username + '; ' + (o.responsible.confirmedBy === 'password' ? 'confirmed with their password' : 'gave access') + ')' : null;
 
+/** "Approved by Otto Operator on 2026-11-14" for the file details, or null. */
+export const trainingText = (o: OperatorBlock | null | undefined): string | null =>
+  o?.training ? 'Approved by ' + o.training.approvedBy + ' on ' + String(o.training.at).slice(0, 10) : null;
+
 const EVENT_NAMES: Record<string, string> = {
   admin_created: 'Admin created', sign_in: 'Signed in', sign_in_failed: 'Wrong password', sign_in_refused: 'Sign-in refused', sign_out: 'Signed out',
   signed_out_idle: 'Signed out (no activity)', password_changed: 'Password changed', password_reset: 'Password reset', person_added: 'Person added',
   person_changed: 'Person changed', responsible_confirmed: 'Responsible operator named', responsible_failed: 'Responsible operator: wrong password',
-  test_started: 'Test started', test_ended: 'Test ended', training_signed_off: 'Training signed off', people_copied_to_lab: 'People list copied to the lab server',
+  test_started: 'Test started', test_ended: 'Test ended', training_signed_off: 'Training signed off', training_completed: 'Training completed',
+  training_failed: 'Training approval: wrong password', locked: 'Locked after wrong tries', people_backup_saved: 'People list backup saved',
+  people_restored: 'People list restored from a backup', people_copied_to_lab: 'People list copied to the lab server',
   people_copied_from_lab: 'People list copied from the lab server', admin_recovered: 'Admin password reset with the recovery code', recovery_failed: 'Wrong recovery code',
 };
 export const eventName = (e: string): string => EVENT_NAMES[e] ?? e;

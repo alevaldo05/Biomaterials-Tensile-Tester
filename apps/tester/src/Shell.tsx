@@ -32,9 +32,9 @@ import { LoadTest } from './pages/LoadTest';
 import { Methods } from './pages/Methods';
 import { Settings } from './pages/Settings';
 import { PeoplePage } from './pages/People';
-import { PersonPassword, PersonSignIn, RecoverAdmin, SetUpComputer } from './components/PersonDialogs';
+import { PersonPassword, PersonSignIn, RecoverAdmin, SetUpComputer, WrongTries } from './components/PersonDialogs';
 import { MachineAccess } from './people';
-import type { Me } from './people';
+import type { Me, WrongSince } from './people';
 
 type Page = 'home' | 'test' | 'load' | 'methods' | 'device' | 'history' | 'help' | 'settings' | 'admin' | 'people';
 export const PAGE_TITLES: Record<Page, string> = { home: 'Home', test: 'Test', load: 'Load test', methods: 'Test methods', device: 'Device and calibration',
@@ -103,6 +103,7 @@ export function Shell({ controller: c, serialAvailable, journal, methods, access
   const me = useSyncExternalStore(access.subscribe, () => access.me);
   const people = access.people;
   const [personDialog, setPersonDialog] = useState<null | 'sign-in' | 'password' | 'setup' | 'recover'>(null);
+  const [wrongSince, setWrongSince] = useState<WrongSince | null>(null);
   const [peopleProblem, setPeopleProblem] = useState('');
   const setMe = useCallback((m: Me | null) => access.set(m), [access]);
   const { theme, choice: themeChoice, setChoice: setThemeChoice } = useTheme();
@@ -260,6 +261,7 @@ export function Shell({ controller: c, serialAvailable, journal, methods, access
       <StatusIndicators controller={c} account={account} />
       <UpdateBar recording={recording} />
       {peopleProblem ? <p className="error people-problem" role="alert">{peopleProblem}</p> : null}
+      {me && wrongSince && wrongSince.count > 0 ? <WrongTries since={wrongSince} onClose={() => setWrongSince(null)} /> : null}
       {me && me.kind === 'student' && me.daysLeft !== null && me.daysLeft <= 7 ? <p className="notice access-ends" role="status">Your access ends {me.daysLeft <= 0 ? 'today' : 'in ' + me.daysLeft + ' day' + (me.daysLeft === 1 ? '' : 's')} ({me.endDate}). Ask your operator if you need it longer.</p> : null}
       {viewAsUser ? <p className="view-as" role="status">Viewing as a user. This changes only what this screen shows; your admin permissions are unchanged. <button type="button" className="link" onClick={() => setViewAsUser(false)}>Back to admin view</button></p> : null}
 
@@ -279,7 +281,7 @@ export function Shell({ controller: c, serialAvailable, journal, methods, access
 
       {people ? (<>
         <Dialog open={personDialog === 'sign-in'} title="Sign in to run the machine" onClose={() => setPersonDialog(null)}>
-          {personDialog === 'sign-in' ? <PersonSignIn people={people} onDone={(m) => { setMe(m); setPersonDialog(m.mustChange ? 'password' : null); }} onCancel={() => setPersonDialog(null)} onForgot={() => setPersonDialog('recover')} /> : null}
+          {personDialog === 'sign-in' ? <PersonSignIn people={people} onDone={(m) => { setWrongSince(m.wrongSince ?? null); setMe(m); setPersonDialog(m.mustChange ? 'password' : null); }} onCancel={() => setPersonDialog(null)} onForgot={() => setPersonDialog('recover')} /> : null}
         </Dialog>
         <Dialog open={personDialog === 'password' && !!me} title={me?.mustChange ? 'Choose your own password' : 'Change password'} onClose={() => { if (!me?.mustChange) setPersonDialog(null); }}>
           {personDialog === 'password' && me ? <PersonPassword people={people} me={me} onDone={(m) => { setMe(m); setPersonDialog(null); }} onCancel={() => (me.mustChange ? personSignOut() : setPersonDialog(null))} /> : null}
@@ -287,7 +289,7 @@ export function Shell({ controller: c, serialAvailable, journal, methods, access
         <Dialog open={personDialog === 'setup'} title="Set up this computer">
           {personDialog === 'setup' ? <SetUpComputer people={people} onDone={(m) => { setMe(m); setPersonDialog(null); }} /> : null}
         </Dialog>
-        <Dialog open={personDialog === 'recover'} title="Reset the admin password" onClose={() => setPersonDialog(null)}>
+        <Dialog open={personDialog === 'recover'} title="Forgot your password?" onClose={() => setPersonDialog(null)}>
           {personDialog === 'recover' ? <RecoverAdmin people={people} onDone={() => setPersonDialog('sign-in')} onCancel={() => setPersonDialog('sign-in')} /> : null}
         </Dialog>
       </>) : null}

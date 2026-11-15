@@ -3,7 +3,8 @@
    and set the lab server address, the seven recording-journal calls (files in the app's data folder), and four update
    calls (ask once whether a newer release exists, open this repository's release page in the computer's browser, and
    read and set the "Check for updates" setting), and the people calls (sign-in and who may run the machine; see
-   people.cjs: the screens get names and kinds only, never a password hash). The main process checks every argument.
+   people.cjs: the screens get names and kinds only, never a password hash; the admin's backup file is written and read
+   by the main process, never passed through here). The main process checks every argument.
    No Node, no file access, no other messages. Anything added here must be reviewed. */
 const { contextBridge, ipcRenderer } = require('electron');
 
@@ -40,9 +41,11 @@ contextBridge.exposeInMainWorld('tensileDesktop', Object.freeze({
     recover: (code, newPassword) => ipcRenderer.invoke('people:recover', String(code), String(newPassword)),
     usageLog: () => ipcRenderer.invoke('people:usage-log'),
     trainingItems: () => ipcRenderer.invoke('people:training-items'),
-    signOffTraining: (id, ticked) => ipcRenderer.invoke('people:sign-off-training', String(id), Array.isArray(ticked) ? ticked.map((t) => t === true) : []),
+    completeTraining: (ticked, approverId, password) => ipcRenderer.invoke('people:complete-training', Array.isArray(ticked) ? ticked.map((t) => t === true) : [], String(approverId), String(password)),
     usageReport: () => ipcRenderer.invoke('people:usage-report'),
     copyToLab: () => ipcRenderer.invoke('people:copy-to-lab'),
     copyFromLab: () => ipcRenderer.invoke('people:copy-from-lab'),
+    saveBackup: () => ipcRenderer.invoke('people:save-backup'),
+    restoreBackup: (mode) => ipcRenderer.invoke('people:restore-backup', mode === 'replace' ? 'replace' : 'merge'),
   }),
 }));

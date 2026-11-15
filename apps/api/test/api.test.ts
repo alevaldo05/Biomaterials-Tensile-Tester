@@ -650,7 +650,7 @@ describe.skipIf(!PG_BIN)('API against a real PostgreSQL', () => {
 
     it('keeps who ran the test on the lab computer in the stored file, and refuses a malformed one', async () => {
       const u = await mkSignedIn();
-      const operator = { name: 'Sam Student', username: 'sam', kind: 'student', responsible: { name: 'Olga Operator', username: 'olga', confirmedBy: 'gave access' } };
+      const operator = { name: 'Sam Student', username: 'sam', kind: 'student', responsible: { name: 'Olga Operator', username: 'olga', confirmedBy: 'gave access' }, training: { approvedBy: 'Olga Operator', at: '2026-11-14T12:00:00.000Z' } };
       const check = { sha256: 'a'.repeat(64) };
       const r = await upload(u.cookie, { ...sessionFile({ samples: 3, material: 'Run by' }), operator, check });
       expect(r.statusCode).toBe(201);
@@ -659,6 +659,7 @@ describe.skipIf(!PG_BIN)('API against a real PostgreSQL', () => {
       expect(back.check).toEqual(check);
       expect((await upload(u.cookie, { ...sessionFile({ samples: 3, material: 'Bad check' }), check: { sha256: 'not a hash' } })).statusCode).toBe(400);
       expect((await upload(u.cookie, { ...sessionFile({ samples: 3, material: 'Bad run by' }), operator: { ...operator, kind: 'boss' } })).statusCode).toBe(400);
+      expect((await upload(u.cookie, { ...sessionFile({ samples: 3, material: 'Bad training' }), operator: { ...operator, training: { approvedBy: 'Olga Operator', at: 'yesterday', extra: 1 } } })).statusCode).toBe(400);
     });
 
     it('refuses a recorded test that used a calibration made for the simulator', async () => {

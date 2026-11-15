@@ -24,7 +24,7 @@ Everything below was checked on Linux only: Chromium, and Playwright's WebKit (t
 
 1. **Usage report.** *Why:* the admin and operators see who uses the machine, how much, and who was responsible. *Built:* People > Usage (tests run, recording time, tests as responsible operator, last use) with a CSV download; the full usage log as CSV for the admin.
 2. **Student limits.** *Why:* a new student can be kept to a known method and a gentle speed. *Built:* an operator may limit a student to chosen test methods and a maximum crosshead speed; outside them Start recording is refused and says why (checked in the screens and again in the main process); the limits go into the test file. *Limit of the design:* the app sends no command, so it cannot slow the machine; the speed is what the student enters as the setup.
-3. **Training sign-off.** *Why:* access only after a safety briefing, knowing where the tester's own STOP is, and a practice test. *Built:* a student's first sign-in needs the operator to tick every item; saved with the date and name. Items are draft wording; it is a record, not a safety certification.
+3. **Training.** *Why:* access only after a safety briefing, knowing where the tester's own STOP is, and a practice test. *Built:* a student signs in freely; at their first test (Connect) they tick every item and any operator or the admin approves with their own password; saved once with the date and name, and written into every test file. (Changed in 1.0.0-beta.3 at the owner's request; it used to be signed off on the People screen before the first sign-in.) Items are draft wording; it is a record, not a safety certification.
 4. **People list for a second lab computer.** *Why:* the same accounts on more than one computer. *Built:* the admin copies the list to the lab server and from it (new table and two admin-only routes); hashes go from the Windows app's main process straight to the lab server, never to the screens; a newer change wins and nobody is lost. *Untried:* with a real lab server and two computers.
 5. **A check on saved test files.** *Why:* notice when a saved file was edited, by accident or not. *Built:* each saved session file carries a SHA-256 of its contents; Load test says "Unchanged since it was saved", "Changed since it was saved", or "Not checked" for older files. *Limit:* it is not a signature; someone who edits the file can also work out a new check.
 
@@ -35,7 +35,10 @@ Everything below was checked on Linux only: Chromium, and Playwright's WebKit (t
 - Printable sign-in slips with the username and first password, kept only on the screen until printed or cleared.
 - Switch person at the top right (not while connected or recording).
 - Password resets in the usage log.
-- Automatic sign-out after 15 minutes without activity (never while connected or recording), 5 wrong tries pause a username, and a one-time admin recovery code.
+- Automatic sign-out after 15 minutes without activity (never while connected or recording) and a one-time admin recovery code.
+- A lock after wrong passwords that grows: 5 wrong tries lock a username for 1 minute, then 3, 5, 15, and 60 minutes; kept on disk; a right password starts again (1.0.0-beta.3).
+- After sign-in, a line names the wrong tries for your username since your last sign-in, so a deliberate lock-out is noticed (1.0.0-beta.3).
+- A backup file of the people list (admin), restored with Merge or Replace, with a SHA-256 check; no lab server needed (1.0.0-beta.3).
 
 ## Ideas not built (for a later decision)
 
@@ -44,3 +47,5 @@ Everything below was checked on Linux only: Chromium, and Playwright's WebKit (t
 - **Live sync** of the people list between computers (today an admin copies it by hand).
 - **Esc on the Need help? card**, if the owner wants it (see website item 5).
 - **Running the spacing check in WebKit on GitHub** too (it doubles the time of the check).
+- **First-start lock-down** (pinned by the owner for later): only a Windows administrator on the computer, or someone with a one-time setup code, can create the first admin, so nobody else can set up a fresh copy and make themselves its admin.
+- *Considered and dropped by the owner:* an operator typing the code of a student's printed practice record at the training approval.
