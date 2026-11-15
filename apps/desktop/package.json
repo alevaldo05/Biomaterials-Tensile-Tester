@@ -1,7 +1,7 @@
 {
   "name": "biomaterials-tensile-tester-desktop",
   "productName": "Biomaterials Tensile Tester",
-  "version": "1.0.0-beta.2",
+  "version": "0.3.0",
   "private": true,
   "description": "The Windows app: the tester app's screens in their own window, with USB serial. Not part of the shared workspace; installed on its own.",
   "main": "main.cjs",
@@ -54,14 +54,14 @@
       ]
     },
     "portable": {
-      "artifactName": "Biomaterials-Tensile-Tester-${version}-beta-unsigned-portable.${ext}"
+      "artifactName": "Biomaterials-Tensile-Tester-beta-portable.${ext}"
     },
     "nsis": {
       "oneClick": false,
       "perMachine": false,
       "allowToChangeInstallationDirectory": true,
       "createDesktopShortcut": true,
-      "artifactName": "Biomaterials-Tensile-Tester-${version}-beta-unsigned-setup.${ext}"
+      "artifactName": "Biomaterials-Tensile-Tester-beta-setup.${ext}"
     },
     "electronFuses": {
       "runAsNode": false,

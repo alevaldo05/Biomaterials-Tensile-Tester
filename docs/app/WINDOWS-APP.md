@@ -22,19 +22,22 @@ The website stays on GitHub Pages; the app is not published there.
 - The installed program closes at once, with a short message, when it is started with a remote-debugging, inspector, or V8-flag switch (`--remote-debugging-port`, `--remote-debugging-pipe`, `--remote-debugging-address`, `--inspect…`, `--js-flags`). Only the build's start-up check (`smoke.cjs`) uses remote debugging; it sets `TT_SMOKE_CHECK=1` for its own run. Someone who can set environment variables on the computer already controls it, so this guards against other programs and shortcuts that add a switch, not against them.
 
 ## Version
-The current version is `1.0.0-beta.2` (the first was `1.0.0-beta.1`). The version is written in one place, `apps/desktop/package.json` (and the
-top of its lockfile); the build hands it to the screens (`apps/tester/build-info.ts`), so the Help screen, session
+The current version is `0.3.0`, shown as **Version 0.3 (beta)** in a small line at the very bottom of Home. Versions
+are simple numbers: each new download raises the second number (0.3, 0.4, 0.5, …); 1.0 would be the first full
+release. (Earlier builds were numbered `1.0.0-beta.1` and `1.0.0-beta.2`; neither was published, so nobody has a copy
+that the update notice would miss.) The version is written in one place, `apps/desktop/package.json` (and the
+top of its lockfile); the build hands it to the screens (`apps/tester/build-info.ts`), so Home, the Help screen, session
 files, the diagnostic summary, and Session details all show the same number. Sessions carry the version they were
-saved with.
+saved with. The download file names do not include the version (see below).
 
 ## Building an installer
 The installer is built on GitHub, on Windows, by `.github/workflows/desktop.yml`. A merge into `main` that changes the app or a shared website file runs a check only (see below). A draft release is made only when you ask:
-1. GitHub > Actions > **Windows app** > Run workflow on `main` (or push a tag such as `app-v1.0.0-beta.1`).
+1. GitHub > Actions > **Windows app** > Run workflow on `main` (or push a tag such as `app-v0.3.0`).
 2. It runs the checks, builds the screens, the installer, and a portable program, and starts the program once (start-up check). A separate `release` job (the only job with write permission) then creates a **draft** release with
-   `Biomaterials-Tensile-Tester-<version>-beta-unsigned-setup.exe` (installs the app),
-   `Biomaterials-Tensile-Tester-<version>-beta-unsigned-portable.exe` (runs without installing; untried), and
+   `Biomaterials-Tensile-Tester-beta-setup.exe` (installs the app),
+   `Biomaterials-Tensile-Tester-beta-portable.exe` (runs without installing; untried), and
    `SHA256SUMS.txt` (the hash of both). The job summary and the release notes show the build stamp line (below).
-   A run started by hand names the draft `app-v<version>-run.<run number>` (for example `app-v1.0.0-beta.1-run.7`);
+   A run started by hand names the draft `app-v<version>-run.<run number>` (for example `app-v0.3.0-run.7`);
    a run started by a tag uses the tag.
 3. The `release` job then removes older unpublished app drafts (see below).
 4. A draft is visible only to people who can change the repository. Download it, try it on the lab computer, and
@@ -55,7 +58,7 @@ data, and whether SmartScreen treats it differently are all unknown until the ch
 ### Build stamp
 The app's Help screen ends with one line, for example:
 
-`Version 1.0.0-beta.2 · built from 9e0792ec6baa · shared website files 34df1db39cf5`
+`Version 0.3.0 · built from 9e0792ec6baa · shared website files 34df1db39cf5`
 
 - **Version**: from `apps/desktop/package.json`.
 - **built from**: the first 12 characters of the commit (`GITHUB_SHA` on GitHub, otherwise Git; "unknown" if neither).
@@ -92,11 +95,27 @@ Drafts on request:
 Update notice (Windows app only, not the browser version):
 - A few seconds after the window loads, the app checks GitHub once. It asks `api.github.com` for this repository's latest releases (10 second timeout). On any failure it does nothing.
 - Only releases with an app tag (`app-v…`) count; other published releases, such as a backup, are skipped.
-- If a newer published release exists (a higher version, or the same version with a higher build run number), a small dismissible bar under the status line says "Version 1.0.0-beta.2 is available. Download". Download opens the release page in the computer's default browser. Installing stays the user's own click.
+- If a newer published release exists (a higher version, or the same version with a higher build run number), a small dismissible bar under the status line says "Version 0.4.0 is available. Download". Download opens the release page in the computer's default browser. Installing stays the user's own click.
 - The bar is hidden while recording.
 - Settings has a switch, "Check for updates when the app starts", on by default and remembered on this computer. When it is off, no request is made.
 - People who have the app see the notice the next time they open it after a release is published.
 - The update check is untried on Windows.
+
+## Updating an installed app
+There is no automatic update: the app never downloads or installs anything by itself.
+1. When a newer version is published, the app's update bar says so the next time it is opened (or use **Download the
+   tester app (beta)** on the website's Get the App page).
+2. Download `Biomaterials-Tensile-Tester-beta-setup.exe` again. The file name is the same for every version; a browser
+   that already has one in Downloads saves the new one as `... (1).exe`. Check its hash as for the first install.
+3. Close the app, then run the new setup file. **Do not uninstall first.** The installer finds the installed app (same
+   app ID) and replaces it in the same place.
+4. The data stays: the people list (admin, operators, students, training, locks), recordings, and settings are kept in
+   `%APPDATA%\Biomaterials Tensile Tester`, which the installer does not touch.
+5. The bottom of Home then shows the new version ("Version 0.4 (beta)"). The old setup file in Downloads can be deleted.
+- Portable program: replace the old `Biomaterials-Tensile-Tester-beta-portable.exe` with the new one.
+- Uninstalling (Windows Settings > Apps) removes the program and is expected to leave the data folder; delete that
+  folder too only to start from nothing.
+- None of this has been tried on a Windows computer yet (first-install checklist).
 
 ## Refreshing the download after a website change
 The app copies some website files when it is built (definitions, materials) and its calculations are checked against
@@ -106,7 +125,7 @@ others. A website change to one of the shared files reaches an installed app onl
 2. If it differs (or a shared file was changed on purpose), a merge into `main` runs the check only. To get a download,
    when enough has changed:
    1. Raise the version in `apps/desktop/package.json` (and its lockfile's top two version fields), for example
-      `1.0.0-beta.1` to `1.0.0-beta.2`, in its own small pull request, and merge it. The update notice then names a new version.
+      `0.3.0` to `0.4.0`, in its own small pull request, and merge it. The update notice then names a new version.
    2. GitHub > Actions > **Windows app** > Run workflow on `main`. The assistant never starts it.
 3. When it finishes, download the files from the draft release (both `.exe` files and `SHA256SUMS.txt`) and
    check their hashes (checklist row 1 and row 10).
@@ -159,6 +178,7 @@ Built once by GitHub (`.github/workflows/desktop.yml`, run 1, succeeded; draft r
 been installed or run on a Windows computer, and the USB connection is untested with real hardware.
 Version `1.0.0-beta.1`, with the portable target and the build stamp, was built by GitHub as a check after merges
 (runs 19 and 20, 2026-11-15: tests, installer, portable, and the start-up check of the unpacked program passed on
-Windows); no draft was made. `1.0.0-beta.2` is the first version planned for a draft release. The portable `.exe` has
+Windows); no draft was made. `1.0.0-beta.2` was built as a draft (run 22) but never published; the versions were then
+renamed to simple numbers, and `0.3.0` is the first version planned for publishing. The portable `.exe` has
 been built but never run. The electron-builder settings were checked against electron-builder 26.18.1's own settings schema
 here (Linux), not by a Windows build.

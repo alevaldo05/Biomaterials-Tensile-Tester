@@ -49,7 +49,7 @@ export function standIn() {
   const person = { disabled: false, endDate: null, ended: false, mustChange: false, createdAt: '2026-11-14T09:00:00.000Z', lastSignIn: '2026-11-14T10:00:00.000Z' };
   window.tensileDesktop = Object.freeze({
     kind: 'windows-app', getLabServer: async () => '', setLabServer: async () => ({}),
-    checkForUpdate: async () => ({ available: true, version: '1.0.0-beta.2', pageUrl: 'https://github.com/alevaldo05/Biomaterials-Tensile-Tester/releases/tag/app-v1.0.0-beta.2-run.1' }),
+    checkForUpdate: async () => ({ available: true, version: '0.4.0', pageUrl: 'https://github.com/alevaldo05/Biomaterials-Tensile-Tester/releases/tag/app-v0.4.0-run.1' }),
     openReleasePage: async () => true, getUpdateCheck: async () => true, setUpdateCheck: async (on) => ({ on }),
     people: Object.freeze({
       status: async () => ({ ok: { setUp: true, broken: null } }),

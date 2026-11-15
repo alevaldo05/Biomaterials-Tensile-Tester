@@ -101,13 +101,13 @@ describe('Windows app', () => {
     expect(uiFile(ui, '/../main.cjs')).toBeNull();
     expect(uiFile(ui, '/secret.exe')).toBeNull();
   });
-  it('is packaged with the hardening switches on, unsigned beta in the file name, and no auto-publish', () => {
+  it('is packaged with the hardening switches on, beta in the file name, and no auto-publish', () => {
     const pkg = JSON.parse(read('package.json'));
     expect(pkg.devDependencies.electron).toMatch(/^\d+\.\d+\.\d+$/);
     expect(pkg.devDependencies['electron-builder']).toMatch(/^\d+\.\d+\.\d+$/);
     expect(pkg.build.electronFuses).toMatchObject({ runAsNode: false, enableNodeOptionsEnvironmentVariable: false, enableNodeCliInspectArguments: false, onlyLoadAppFromAsar: true, enableEmbeddedAsarIntegrityValidation: true });
     expect(pkg.build.publish).toBeNull();
-    expect(pkg.build.nsis.artifactName).toContain('beta-unsigned');
+    expect(pkg.build.nsis.artifactName).toContain('-beta-');
     expect(pkg.build.files).not.toContain('node_modules/**/*');
     expect(pkg.build.files).toEqual(expect.arrayContaining(['main.cjs', 'preload.cjs', 'ui-files.cjs', 'lab-proxy.cjs', 'journal-files.cjs', 'people.cjs', 'update-check.cjs', 'ui/**/*']));
   });
@@ -118,11 +118,14 @@ describe('Windows app', () => {
     expect(png.subarray(1, 4).toString('ascii')).toBe('PNG');
     expect([png.readUInt32BE(16), png.readUInt32BE(20)]).toEqual([256, 256]);
   });
-  it('builds an installer and a portable program, both x64, both named unsigned beta, with the same name before the kind', () => {
+  it('builds an installer and a portable program, both x64, with the same file name every version (no version in it)', () => {
     const pkg = JSON.parse(read('package.json'));
     expect(pkg.build.win.target).toEqual([{ target: 'nsis', arch: ['x64'] }, { target: 'portable', arch: ['x64'] }]);
-    expect(pkg.build.nsis.artifactName).toMatch(/-beta-unsigned-setup\.\$\{ext\}$/);
-    expect(pkg.build.portable.artifactName).toMatch(/-beta-unsigned-portable\.\$\{ext\}$/);
+    expect(pkg.build.nsis.artifactName).toBe('Biomaterials-Tensile-Tester-beta-setup.${ext}');
+    expect(pkg.build.portable.artifactName).toBe('Biomaterials-Tensile-Tester-beta-portable.${ext}');
+    const wf = readFileSync(path.resolve(dir, '../../.github/workflows/desktop.yml'), 'utf8');
+    expect(wf).toContain('ls *-beta-"$kind".exe');
+    expect(wf).not.toContain('beta-unsigned');
     expect(pkg.build.portable.artifactName.replace('-portable.', '-setup.')).toBe(pkg.build.nsis.artifactName);
   });
   it('has its build workflow hash and attach both .exe files, and start-check only the unpacked program', () => {
