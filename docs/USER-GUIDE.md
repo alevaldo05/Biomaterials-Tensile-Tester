@@ -72,7 +72,7 @@ The Windows app is built on GitHub, on Windows. A merge into `main` only runs a 
    ```
 5. Windows SmartScreen will warn, because the files are **unsigned** (code signing is not planned). Choose **More info**, then **Run anyway**.
 6. Install with the setup file, or run the portable `.exe` without installing.
-7. Open **Help** in the app. Its last line reads like `Version 1.0.0-beta.1 · built from <commit> · shared website files <hash>`. On the repository, run:
+7. Open **Help** in the app. Its last line reads like `Version 1.0.0-beta.2 · built from <commit> · shared website files <hash>`. On the repository, run:
    ```
    node scripts/shared-files.js
    ```
@@ -118,8 +118,8 @@ npm start
 ### 3.4 What has not been tried
 
 - The installer on a real Windows computer: **never installed or run**.
-- The portable `.exe`: **never built by GitHub and never run**. Where it keeps its data, and whether recordings survive closing it, are unknown.
-- Version `1.0.0-beta.1` has not been built on GitHub yet.
+- The portable `.exe`: built by GitHub (as a check) but **never run**. Where it keeps its data, and whether recordings survive closing it, are unknown.
+- Version `1.0.0-beta.2` has not been released yet (`1.0.0-beta.1` was built by GitHub as a check only).
 - Safari for the website and a real Windows computer: not tried. Checks so far were in Chrome's engine on Linux.
 - The USB connection with a real board: **never tried**. The hardware connection is untested.
 
