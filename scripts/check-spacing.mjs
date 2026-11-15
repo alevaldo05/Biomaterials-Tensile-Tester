@@ -13,7 +13,8 @@
      (d) clipped text: an element with overflow hidden or clip that holds text and is smaller than its content. Text cut off
          with an ellipsis on purpose (text-overflow: ellipsis, or a line clamp) is listed separately.
      (e) broken words: a word in a button, label, table cell or heading that the browser split across two lines
-         ("Tu / rn of / f"), which happens when a column or button is squeezed narrower than one word.
+         ("Tu / rn of / f"), which happens when a column or button is squeezed narrower than one word. A break after a
+         hyphen or a slash is normal and not counted.
    Saves a full-page picture per page, width, and theme, and report.json, in the output folder (default: spacing-out/ when
    that folder is in .gitignore, otherwise a folder under the computer's temp folder; the path is printed). With --strict
    the exit code is 1 if there is any issue in checks a to e.
@@ -202,7 +203,8 @@ function measure() {
     const walker = document.createTreeWalker(el, NodeFilter.SHOW_TEXT);
     for (let n = walker.nextNode(); n; n = walker.nextNode()) {
       const text = n.textContent || '';
-      for (const m of text.matchAll(/\S+/g)) {
+      /* a break just after a hyphen is normal line breaking ("ramp-and-" / "hold"), so each part is checked alone */
+      for (const m of text.matchAll(/[^\s\-\u2010\u2011\u2013\/]+/g)) {
         if (m[0].length < 2 || m[0].length > 24) continue;
         const r = document.createRange();
         r.setStart(n, m.index); r.setEnd(n, m.index + m[0].length);

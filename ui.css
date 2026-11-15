@@ -48,6 +48,8 @@ body.has-stop-dock .siteui-notes { bottom: 6.5rem; }
 /* Need help? button and card (help-coach.js): bottom right, above the pinned STOP bar, never over it. */
 .hc-btn { position: fixed; right: 1rem; bottom: 1rem; z-index: 36; padding: 0.45rem 0.9rem; border: 1px solid var(--accent); border-radius: 999px; background: var(--surface); color: var(--link); font: inherit; font-weight: 700; font-size: 0.9375rem; cursor: pointer; box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2); }
 .hc-btn:hover { background: var(--bg); }
+/* room at the end of the page so the floating Need help? button never covers the last lines */
+body:has(.hc-btn) main { padding-bottom: 4rem; }
 .hc-btn:focus-visible { outline: 3px solid var(--focus); outline-offset: 2px; }
 .hc-card { position: fixed; right: 1rem; bottom: 4rem; z-index: 36; width: min(24rem, calc(100vw - 2rem)); max-height: calc(100vh - 8rem); overflow: auto; padding: 0.75rem 2.5rem 0.75rem 1rem; border: 1px solid var(--muted); border-left: 4px solid var(--accent); border-radius: 8px; background: var(--surface); color: var(--ink); font-size: 0.9375rem; box-shadow: 0 2px 10px rgba(0, 0, 0, 0.25); }
 .hc-card[hidden] { display: none; }
