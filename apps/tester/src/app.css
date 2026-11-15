@@ -60,7 +60,8 @@ input[type="text"], select, input[type="file"], textarea { width: 100%; backgrou
 .view-as { margin: 0; padding: 8px 20px; background: var(--surface); border-bottom: 1px solid var(--line); color: var(--warn); font-size: 0.9rem; }
 /* Sign-in on the lab computer (people.ts): the person in the top bar, a problem with the people list, the end-of-access
    reminder for a student, the recovery code shown once, and who is running the machine on the Test screen. */
-.account-person { padding-right: 8px; margin-right: 4px; border-right: 1px solid var(--line); }
+/* the divider between the sign-in on this computer and the lab-server sign-in, only when both are shown */
+.account-person + .account:not(:empty) { padding-left: 12px; border-left: 1px solid var(--line); }
 .people-problem, .access-ends { margin: 0; padding: 8px 20px; border-radius: 0; border-width: 0 0 1px; }
 .recovery-code { font: 600 1.25rem/1.4 ui-monospace, Consolas, monospace; letter-spacing: 0.08em; padding: 10px 14px; margin: 8px 0 12px; background: var(--panel); border: 1px dashed var(--line); border-radius: var(--radius); text-align: center; user-select: all; }
 .who-runs { display: grid; gap: 8px; margin: 0 0 12px; padding-bottom: 12px; border-bottom: 1px solid var(--line); }
@@ -565,3 +566,28 @@ input[type="text"].bench-num { width: 7.5em; max-width: 100%; }
   .slip p { margin: 3px 0; }
 }
 .bad-text { color: var(--danger); font-weight: 600; }
+
+/* People at phone and tablet widths: the tables keep readable columns and scroll sideways in their box (.table-wrap)
+   instead of breaking names and dates letter by letter. */
+.people-table { min-width: 1080px; }
+.usage-table { min-width: 640px; }
+.people-table td:nth-child(-n+4), .usage-table td { white-space: nowrap; overflow-wrap: normal; }
+.people-table td, .usage-table td { overflow-wrap: normal; }
+.people-table td:nth-child(5) { min-width: 8rem; }
+.people-table select { min-width: 8.5rem; }
+/* the actions: whole words on each button, the buttons wrapping onto a second line when needed */
+.people-table td:last-child { min-width: 17rem; }
+.people-table td:last-child .row { flex-wrap: wrap; gap: 6px; }
+.people-table td:last-child button { white-space: nowrap; }
+@media (max-width: 700px) {
+  /* the header wraps: no divider at the end of a line, and even spacing between the wrapped groups */
+  .top { gap: 8px 16px; }
+  .top-space { display: none; }
+  .account-person + .account:not(:empty) { padding-left: 0; border-left: 0; }
+}
+/* The theme choice: labels stay on one line; stacked on a phone. */
+.seg-choice label { white-space: nowrap; }
+@media (max-width: 440px) {
+  .seg-choice { flex-direction: column; }
+  .seg-choice label + label { border-left: 0; border-top: 1px solid var(--control-line); }
+}

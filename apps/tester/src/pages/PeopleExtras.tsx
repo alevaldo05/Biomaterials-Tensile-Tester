@@ -84,7 +84,7 @@ export function UsageReport(p: { people: People }): JSX.Element {
       {err ? <p className="error" role="alert">{err}</p> : null}
       {rows === null ? <p className="hint" role="status">Loading…</p> : rows.length ? (
         <div className="table-wrap">
-          <table className="data-table">
+          <table className="data-table usage-table">
             <thead><tr><th scope="col">Name</th><th scope="col">Access</th><th scope="col">Tests run</th><th scope="col">Recording time</th><th scope="col">Responsible for</th><th scope="col">Last use</th></tr></thead>
             <tbody>{rows.map((r) => <tr key={r.username}><td>{r.name}</td><td>{r.kindName}</td><td>{r.tests}</td><td>{r.recordingMinutes} min</td><td>{r.asResponsible} test{r.asResponsible === 1 ? '' : 's'}</td><td>{when(r.lastUse)}</td></tr>)}</tbody>
           </table>

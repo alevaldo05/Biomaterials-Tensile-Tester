@@ -44,7 +44,7 @@ function serve(dir) {
 }
 
 /* The same shape as apps/desktop/preload.cjs gives, with fixed answers (made-up people, not real accounts). */
-function standIn() {
+export function standIn() {
   const me = { name: 'Example Admin', username: 'admin', kind: 'admin', kindName: 'Admin', mustChange: false, endDate: null, daysLeft: null, responsible: null, canRunMachine: true, why: '' };
   const person = { disabled: false, endDate: null, ended: false, mustChange: false, createdAt: '2026-11-14T09:00:00.000Z', lastSignIn: '2026-11-14T10:00:00.000Z' };
   window.tensileDesktop = Object.freeze({
@@ -61,6 +61,11 @@ function standIn() {
         { ...person, id: 'p-4', username: 'student.two', name: 'Second Student', kind: 'student', kindName: 'Student', endDate: '2027-05-31', addedBy: 'Example Operator', mustChange: true },
       ] }),
       usageLog: async () => ({ ok: [] }),
+      trainingItems: async () => ({ ok: ['Safety briefing given', 'Shown where the tester’s own STOP is', 'Practice test completed'] }),
+      usageReport: async () => ({ ok: [
+        { username: 'op.one', name: 'Example Operator', kind: 'operator', kindName: 'Operator', tests: 4, recordingMinutes: 31.5, lastUse: '2026-11-14T10:00:00.000Z', asResponsible: 3 },
+        { username: 'student.one', name: 'Example Student', kind: 'student', kindName: 'Student', tests: 3, recordingMinutes: 18, lastUse: '2026-11-14T11:00:00.000Z', asResponsible: 0 },
+      ] }),
     }),
   });
 }

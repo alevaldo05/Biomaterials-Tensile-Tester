@@ -68,7 +68,7 @@ export function PeoplePage(p: { people: PeopleApi; me: Me; methods: { id: string
         {items && others.length === 0 ? <p className="hint">{admin ? 'No one else yet.' : 'You have not added any students yet.'}</p> : null}
         {others.length > 0 ? (
           <div className="table-wrap">
-            <table className="data-table">
+            <table className="data-table people-table">
               <thead><tr><th scope="col">Name</th><th scope="col">Username</th><th scope="col">Access</th><th scope="col">Ends</th><th scope="col">Status</th><th scope="col">Training</th>{admin ? <th scope="col">Added by</th> : null}<th scope="col">Last sign-in</th><th scope="col">Actions</th></tr></thead>
               <tbody>
                 {others.map((v) => (
