@@ -510,5 +510,92 @@ begin('15. No link to the retired app folder');
   if (failures === before) ok('no page links to app/');
 })();
 
+begin('16. Accessibility of the page source');
+/* Static checks on the HTML as written. Controls that scripts create later are not in the source; the keyboard
+   walk (Playwright, run by hand) covers those. a11yProblems(html) returns a list of plain messages. */
+function a11yProblems(html) {
+  var out = [], ids = {}, labelFor = {}, tags = [], m;
+  var src = html.replace(/<!--[\s\S]*?-->/g, '').replace(/<(script|style|template)\b[\s\S]*?<\/\1\s*>/gi, '<$1></$1>');
+  var re = /<(\/?)([a-zA-Z][a-zA-Z0-9]*)((?:"[^"]*"|'[^']*'|[^>"'])*)>/g;
+  while ((m = re.exec(src))) {
+    var attrs = {}, are = /([^\s"'<>\/=]+)(?:\s*=\s*(?:"([^"]*)"|'([^']*)'|([^\s"'>]+)))?/g, a;
+    if (!m[1]) while ((a = are.exec(m[3]))) attrs[a[1].toLowerCase()] = a[2] !== undefined ? a[2] : a[3] !== undefined ? a[3] : a[4] !== undefined ? a[4] : '';
+    tags.push({ close: !!m[1], name: m[2].toLowerCase(), attrs: attrs, end: re.lastIndex, start: m.index });
+    if (!m[1] && attrs.id) ids[attrs.id] = 1;
+    if (!m[1] && m[2].toLowerCase() === 'label' && attrs['for']) labelFor[attrs['for']] = 1;
+  }
+  function has(attrs, k) { return attrs[k] !== undefined && String(attrs[k]).trim() !== ''; }
+  function named(t, extra) {
+    var at = t.attrs;
+    if (has(at, 'aria-label') || has(at, 'title') || extra) return true;
+    if (has(at, 'aria-labelledby')) {
+      var refs = at['aria-labelledby'].trim().split(/\s+/);
+      if (refs.every(function (r) { return ids[r]; })) return true;
+      out.push('<' + t.name + '> has aria-labelledby="' + at['aria-labelledby'] + '", but no element has that id.');
+      return true;
+    }
+    return !!(at.id && labelFor[at.id]);
+  }
+  var labelDepth = 0, h1 = 0, lastLevel = 0, htmlTag = null;
+  tags.forEach(function (t, i) {
+    if (t.name === 'html' && !t.close) htmlTag = t;
+    if (t.name === 'label') { labelDepth += t.close ? -1 : 1; return; }
+    if (t.close) return;
+    var at = t.attrs, shown = '<' + src.slice(t.start + 1, t.end - 1).replace(/\s+/g, ' ').slice(0, 70) + (t.end - t.start > 72 ? '...' : '') + '>';
+    if (at.hidden !== undefined) return;  /* hidden elements are not in the page for anyone */
+    if (t.name === 'img' && at.alt === undefined) out.push(shown + ' has no alt attribute (use alt="" if it only decorates).');
+    if ((t.name === 'select' || t.name === 'textarea' || (t.name === 'input' && !/^(hidden|submit|button|reset|image)$/i.test(at.type || 'text'))) && !named(t, labelDepth > 0)) {
+      out.push(shown + ' has no accessible name (add a label for="' + (at.id || 'id') + '", wrap it in a label, or add aria-label).');
+    }
+    if (t.name === 'button' && !named(t)) {
+      var j = i, depth = 0, text = '';
+      for (; j < tags.length; j++) {
+        if (tags[j].name === 'button') depth += tags[j].close ? -1 : 1;
+        if (tags[j].name === 'img' && has(tags[j].attrs, 'alt')) text += 'x';
+        text += src.slice(tags[j].end, j + 1 < tags.length ? tags[j + 1].start : src.length);
+        if (depth <= 0) break;
+      }
+      if (!text.replace(/&nbsp;|\s/g, '').length) out.push(shown + ' has no text, aria-label, aria-labelledby, or title.');
+    }
+    if (/^h[1-6]$/.test(t.name)) {
+      var lv = +t.name.charAt(1);
+      if (lv === 1) h1++;
+      if (lastLevel && lv > lastLevel + 1) out.push('Heading skips a level: h' + lastLevel + ' is followed by h' + lv + '. Use h' + (lastLevel + 1) + ' or restructure.');
+      lastLevel = lv;
+    }
+  });
+  if (h1 !== 1) out.push('The page has ' + h1 + ' h1 headings; it needs exactly one.');
+  if (!htmlTag || !has(htmlTag.attrs, 'lang')) out.push('<html> has no lang attribute (for example lang="en").');
+  return out;
+}
+(function () {
+  var before = failures;
+  PAGES.forEach(function (page) {
+    a11yProblems(read(page)).forEach(function (msg) { fail(page + ': ' + msg); });
+  });
+  if (failures === before) ok(PAGES.length + ' pages: images have alt, form controls and buttons have names, headings do not skip, one h1, html lang set');
+})();
+
+begin('17. Every empty text section is filled by its text file');
+/* A page that takes its words from data/text/ (body data-text-page) has sections holding only their heading; text.js
+   fills each one listed for that page. A section missing from the list stays empty on the page. */
+(function () {
+  var before = failures, n = 0;
+  var tj = read('text.js');
+  PAGES.forEach(function (page) {
+    var html = read(page), pm = /data-text-page="([a-z]+)"/.exec(html);
+    if (!pm) return;
+    var lm = new RegExp(pm[1] + ":\\s*\\{[^}]*sections:\\s*\\[([^\\]]*)\\]").exec(tj);
+    if (!lm) { fail(page + ': text.js has no section list for "' + pm[1] + '".'); return; }
+    var listed = (lm[1].match(/'([^']+)'/g) || []).map(function (x) { return x.slice(1, -1); });
+    var re = /<section\b[^>]*aria-labelledby="([^"]+)"[^>]*>\s*<h2\b[^>]*>[^<]*<\/h2>\s*<\/section>/g, m;
+    while ((m = re.exec(html))) {
+      n++;
+      if (listed.indexOf(m[1]) === -1) fail(page + ': the section "' + m[1] + '" holds only its heading, and text.js does not list it for "' + pm[1] + '", so it stays empty.');
+    }
+  });
+  if (failures === before) ok(n + ' empty sections are each filled by their page\'s text file');
+})();
+
 console.log('\n' + (failures ? failures + ' problem' + (failures === 1 ? '' : 's') + ' found. Fix them before merging; the site is not published while a check fails.' : 'All checks passed.'));
 process.exit(failures ? 1 : 0);
