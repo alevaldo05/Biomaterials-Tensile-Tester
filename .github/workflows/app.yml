@@ -20,6 +20,32 @@ jobs:
       - name: Type checks, all tests (API on PostgreSQL, firmware code with a C++ compiler), website checks
         run: docker build -f deploy/test/Dockerfile .
 
+  windows-line-endings:
+    # The Windows app workflow (desktop.yml) runs its tests only after a merge, on a Windows checkout whose text files
+    # end lines in CRLF. This job checks the repository out again WITH CRLF LINE ENDINGS, ON LINUX, and runs the same
+    # lines as desktop.yml's "Checks before building" step, so a test that breaks on CRLF fails on the pull request.
+    # It catches line-ending failures only: other Windows-only failures still show only after a merge.
+    # It runs on the runner (which has git), not in the test image (deploy/test/Dockerfile, which has no git).
+    # Keep the four lines below the same as in desktop.yml; apps/desktop/test/desktop.test.ts checks they agree.
+    runs-on: ubuntu-24.04
+    steps:
+      - name: Check out with Windows line endings
+        run: git config --global core.autocrlf true
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
+        with:
+          persist-credentials: false
+      - name: Make sure the checkout really has CRLF line endings
+        run: |
+          grep -q $'\r$' docs/app/SETUP.md || { echo "docs/app/SETUP.md has no CRLF line endings: the check would prove nothing."; exit 1; }
+          file docs/app/SETUP.md
+      - name: The Windows app workflow's checks, on the CRLF checkout
+        shell: bash
+        run: |
+          npm ci --no-audit --no-fund
+          npm run typecheck
+          npx vitest run --exclude "apps/api/**" --exclude "packages/recording/test/firmware.test.ts"   # these two run on Linux in app.yml
+          node scripts/check-site.js
+
   firmware-build:
     # Compile only, for every board folder: each firmware/*/platformio.ini is built (all its environments).
     # No board or chip is named here; a new folder with its own platformio.ini is picked up by itself. Nothing is

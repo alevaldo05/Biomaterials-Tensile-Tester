@@ -8,10 +8,10 @@ import { SHEETS, emptyEntries, filled, plain, recordCsv } from '../src/bench-rec
 import { HelpPage } from '../src/pages/HelpPage';
 
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '../../..');
-/* The rows of the first markdown table after a heading: [first cell, second cell]. */
-function tableAfter(file: string, heading: string, skipTables = 0): string[][] {
-  const text = readFileSync(path.join(ROOT, file), 'utf8');
-  const lines = text.slice(text.indexOf(heading)).split('\n');
+/* The rows of a markdown table after a heading (the separator row left out). Lines may end in CRLF: a Windows
+   checkout (the Windows app workflow) has them, and the separator row must still be recognised. */
+function tableIn(text: string, heading: string, skipTables = 0): string[][] {
+  const lines = text.slice(text.indexOf(heading)).split(/\r?\n/);
   const tables: string[][][] = [];
   let cur: string[][] | null = null;
   for (const l of lines) {
@@ -20,6 +20,7 @@ function tableAfter(file: string, heading: string, skipTables = 0): string[][] {
   }
   return (tables[skipTables] ?? []).slice(1);
 }
+const tableAfter = (file: string, heading: string, skipTables = 0) => tableIn(readFileSync(path.join(ROOT, file), 'utf8'), heading, skipTables);
 const sheet = (id: string) => SHEETS.find((s) => s.id === id)!;
 
 describe('records to fill in', () => {
@@ -32,6 +33,14 @@ describe('records to fill in', () => {
   it('the Windows checklist has the same checks as docs/app/WINDOWS-APP.md', () => {
     const checks = tableAfter('docs/app/WINDOWS-APP.md', '## First install checklist', 0).map((r) => r[1]);
     expect(sheet('windows').checks).toEqual(checks);
+  });
+  it('reads the docs the same with Windows line endings (CRLF), as on the Windows runner', () => {
+    for (const [file, heading, n] of [['docs/app/SETUP.md', '## First connection: bench record', 0], ['docs/app/SETUP.md', '## First connection: bench record', 1], ['docs/app/WINDOWS-APP.md', '## First install checklist', 0]] as const) {
+      const lf = readFileSync(path.join(ROOT, file), 'utf8').replace(/\r\n/g, '\n');
+      const crlf = lf.replace(/\n/g, '\r\n');
+      expect(tableIn(crlf, heading, n), file).toEqual(tableIn(lf, heading, n));
+      expect(tableIn(crlf, heading, n).some((r) => r.some((c) => /^-+$/.test(c))), file + ' separator row').toBe(false);
+    }
   });
   it('downloads as CSV with every row, in plain words, safe from formulas', () => {
     const s = sheet('bench');
